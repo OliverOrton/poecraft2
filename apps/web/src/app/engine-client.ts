@@ -355,6 +355,20 @@ export class EngineClient {
         return state;
     }
 
+    async openRecombinationPair(request: import("./engine-protocol").RecombinationPairRequest): Promise<number> {
+        const result = await this.call<{pair: number}>("openRecombinationPair", {request});
+        return result.pair;
+    }
+    closeRecombinationPair(pair: number): Promise<void> {
+        return this.call("closeRecombinationPair", {pair});
+    }
+    recombinationCalculate(pair: number, goals: import("./engine-protocol").CalculatorGoalSet): Promise<CalcResult> {
+        return this.call("recombinationCalculate", {pair, goals});
+    }
+    recombinationApply(pair: number, context: number, request: import("./engine-protocol").RecombinationApplyRequest): Promise<import("./engine-protocol").RecombinationApplyResult> {
+        return this.call("recombinationApply", {pair, context, request});
+    }
+
     multiItemApply(context: number, request: import("./engine-protocol").MultiItemRequest): Promise<import("./engine-protocol").MultiItemResult> {
         return this.call("multiItemApply", {context, request});
     }
@@ -396,6 +410,14 @@ export class EngineClient {
 
     hinekoraInfo(context: number, item: number, session: number): Promise<import("./engine-protocol").HinekoraInfo> {
         return this.call("hinekora", {context, item, session, operation: "inspect"});
+    }
+
+    applyHinekoraLock(context: number, item: number, session: number): Promise<import("./engine-protocol").HinekoraInfo> {
+        return this.call("hinekora", {context, item, session, operation: "apply_lock"});
+    }
+
+    observeHinekoraLock(context: number, item: number, session: number, currency: CraftAction): Promise<import("./engine-protocol").HinekoraInfo> {
+        return this.call("hinekora", {context, item, session, operation: "observe", currency});
     }
 
     createHinekoraLock(context: number, item: number, session: number, currency: CraftAction): Promise<import("./engine-protocol").HinekoraInfo> {
@@ -471,6 +493,7 @@ export class EngineClient {
         runOptions?: StrategyEvaluationRunOptions,
     ): Promise<StrategyEvalResult> {
         const strategyJson = encodeJson(strategy);
+        const signal = runOptions?.signal;
         return this.call<StrategyEvalResult>(
             "strategyEvaluate",
             {
@@ -485,9 +508,17 @@ export class EngineClient {
             {
                 transfer: [strategyJson.buffer as ArrayBuffer],
                 onEvaluationProgress: runOptions?.onProgress,
-                signal: runOptions?.signal,
+                signal,
             },
-        );
+        ).then((result) => {
+            // A successful worker reply can already be queued when a progress
+            // listener aborts. Discard that reply before exposing it; the worker
+            // still owns native evaluation cleanup. Preserve native error replies.
+            if (signal?.aborted) {
+                throw new EngineError(1, "strategy evaluation cancelled");
+            }
+            return result;
+        });
     }
 
     async loadEconomy(economy: unknown): Promise<number> {
@@ -565,7 +596,7 @@ export class EngineClient {
         return this.call<{solver: number}>("openCalcInspector", {session}).then(result => result.solver);
     }
 
-    openCalcGoal(session: number, goal: import("./engine-protocol").CalculatorItemGoal): Promise<number> {
+    openCalcGoal(session: number, goal: import("./engine-protocol").CalculatorItemGoal | import("./engine-protocol").CalculatorGoalSet): Promise<number> {
         return this.call<{solver: number}>("openCalcGoal", {session, goal}).then(result => result.solver);
     }
     bestiaryGoalCalc(data: number, solver: number, item: number, action: string): Promise<CalcResult> {

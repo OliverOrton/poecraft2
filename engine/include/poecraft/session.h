@@ -218,7 +218,8 @@ typedef enum pc_mod_reach_kind {
     PC_MOD_REACH_ELDRITCH_IMPLICIT = 9,
     PC_MOD_REACH_RETAINED_INFLUENCE = 10,
     PC_MOD_REACH_RETAINED_ELEVATED = 11,
-    PC_MOD_REACH_RETAINED_ENCHANTMENT = 12
+    PC_MOD_REACH_RETAINED_ENCHANTMENT = 12,
+    PC_MOD_REACH_RETAINED_TRANSFER = 13
 } pc_mod_reach_kind;
 
 pc_result pc_session_get_mod_info(

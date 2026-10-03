@@ -1924,5 +1924,2390 @@
     "no_dependency_install": true,
     "no_data_price_refresh": true,
     "dev_server_untouched": true
+  },
+  "web_solver_scope_guard_checkpoint": {
+    "recorded_utc": "2026-10-03T04:43:20.596410+00:00",
+    "baseline": "3ab862fece9d52ca733ad01a0869fd06cec84810",
+    "status": "local patch prepared, all tests unrun pending coordinated test slot",
+    "ci_run": 37096236872,
+    "ci_job": 111126637666,
+    "ci_url": "https://github.com/OliverOrton/poecraft2/actions/runs/37096236872",
+    "ci_result": "All 17 native targets and 275 bindings pass; npm test fails in product Eldritch dependency wins through release WASM at engine-smoke.test.ts:2161, prepareSolverStrategy:208",
+    "source_contract": "Native solver_compile.cpp emits gated_search_with_paid_root_foulborn_salvage_v2 when paid-root scope is active; strategy-model.ts whitelist/types omit that declared value",
+    "change": "Recognize only the exact native v2 scope in the web document shape guard and type. Preserve all native/compiler/board validation and unknown-scope rejection.",
+    "regressions": [
+      "Declared v2 scope survives clone/roundtrip",
+      "Unknown v3 scope refused by shape guard and prepareSolverStrategy",
+      "Dangling graph still fails board validation",
+      "Real product Eldritch fixture asserts raw transferred native scope before preparation"
+    ],
+    "native_source_unchanged": true,
+    "wasm_unchanged": true,
+    "test_commands_prepared": [
+      "node node_modules/tsx/dist/cli.mjs test/strategy-model.test.ts",
+      "node node_modules/tsx/dist/cli.mjs test/solve-workspace.test.ts",
+      "node node_modules/typescript/bin/tsc --noEmit",
+      "POECRAFT_SMOKE_TEST='Calculator item goals and editors preserve native joint outcomes' npm test"
+    ],
+    "unrun": [
+      "all local tests/typecheck for this patch",
+      "specific product Eldritch real-WASM fixture; its existing 10000-run Simulator tail is unchanged and not selected as local strategy qualification",
+      "new main CI"
+    ],
+    "heavy_slot": "recombination owns, multi-goal next; web test slot requested afterward",
+    "multi_goal": "e45b92b8bd28d6fd0902468d9095ce8c2580e5b7 remains unbuilt/untested and unmerged",
+    "main_unchanged": true,
+    "no_push": true,
+    "no_deployment": true
+  },
+  "web_solver_scope_guard_qualification": {
+    "recorded_utc": "2026-10-03T04:59:55.964683+00:00",
+    "status": "web adapter locally qualified; normal main delivery approved",
+    "baseline": "3ab862fece9d52ca733ad01a0869fd06cec84810",
+    "qualified_source": "7f235bbff9f87d9a216848c226c8cfd47b2eb465",
+    "ci_failure": {
+      "run": 37096236872,
+      "job": 111126637666,
+      "fixture": "product Eldritch dependency wins through release WASM",
+      "stack": "engine-smoke.test.ts:2161 -> prepareSolverStrategy:208",
+      "result": "All 17 native targets and 275 bindings passed; document shape whitelist omitted the exact declared native v2 product scope"
+    },
+    "change": "Add gated_search_with_paid_root_foulborn_salvage_v2 to the web scope type/shape guard; keep prepareSolverStrategy and graph validation unchanged",
+    "checks": [
+      {
+        "command": "node node_modules/tsx/dist/cli.mjs test/strategy-model.test.ts",
+        "exit": 0,
+        "log": "out/local-native-repair/scope-guard-model.log",
+        "includes": "known v2 accepted and roundtripped; unknown v3 and invalid scope refused"
+      },
+      {
+        "command": "node node_modules/tsx/dist/cli.mjs test/solve-workspace.test.ts",
+        "exit": 0,
+        "log": "out/local-native-repair/scope-guard-workspace.log",
+        "includes": "exact scope preserved; unknown v3 refused; dangling graph still board-invalid; exact routers preserved"
+      },
+      {
+        "command": "node node_modules/typescript/bin/tsc --noEmit",
+        "exit": 0,
+        "log": "out/local-native-repair/scope-guard-typescript.log"
+      },
+      {
+        "command": "POECRAFT_SMOKE_TEST='Calculator item goals and editors preserve native joint outcomes' npm test",
+        "exit": 0,
+        "log": "out/local-native-repair/scope-guard-web-chain.log",
+        "scope": "4/4 initial real-worker smoke including selected Calculator case; every later test file in the complete npm chain ran"
+      }
+    ],
+    "native_source_unchanged": true,
+    "native_rebuild_not_required": true,
+    "wasm_unchanged": true,
+    "wasm_sha256": "472f644bed756caee538868b714e4d144989e9ec1990232f82562d2f80b7424f",
+    "runtime_manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "native_authority": "Scope metadata recognition supplies no native programme admission, reachability, lower-bound or exactness claim; all native goal/scope/certificate guards remain unchanged",
+    "unrun": [
+      "Unfiltered engine-smoke suite including the existing product Eldritch 10000-run Simulator tail; unchanged strategy not locally requalified",
+      "new exact-head CI until delivery"
+    ],
+    "heavy_slot_released": true,
+    "owned_heavy_processes_remaining": 0,
+    "source_only_review": [
+      {
+        "checkpoint": "e45b92b8bd28d6fd0902468d9095ce8c2580e5b7",
+        "finding": "merge-base with delivered native repair is dbc142a2; repeat qualification against current combined main, retaining repair and web scope guard. No qualified feature acceptance yet."
+      },
+      {
+        "checkpoint": "e792c0416db955e9ee33fead462eb155626005cc",
+        "finding": "based on 3ab862fe; inspected shared protocol hunks are disjoint. Source completion is not acceptance."
+      }
+    ],
+    "feature_branches_unmerged": true,
+    "no_deployment": true,
+    "no_price_data_refresh": true,
+    "no_dev_server_restart": true
+  },
+  "selective_service_parity_classification": {
+    "recorded_utc": "2026-10-03T05:32:33.430614+00:00",
+    "status": "source/log classification only; reproduction pending slot; no assertion or production change",
+    "ci": {
+      "head": "0187f3d8334c3b9deb9730a6fa89899c051e9931",
+      "run": 37098423243,
+      "job": 111132987553,
+      "url": "https://github.com/OliverOrton/poecraft2/actions/runs/37098423243",
+      "solver_checks": 158188,
+      "solver_failures": 28,
+      "native_targets_passed": 16,
+      "native_targets_total": 17
+    },
+    "correct_case": "run_current_incumbent_continuity_tests IC0/IC2 fixture10 before selective service admission; off/on toggles selective_completion_service, not tracing",
+    "failure_projection": {
+      "2495 logical reforge work": 2,
+      "2490 queue": 5,
+      "2487 graph identity": 4,
+      "2488 successors": 4,
+      "2489 probabilities": 4,
+      "2491 expansion cursor": 5,
+      "2484 phase": 3,
+      "2493 verified identity": 1
+    },
+    "unchanged_source": {
+      "3ab862fe_engine_tree": "53c70f2226ee0274dd544ea5fdfa3821deec5c68",
+      "0187f3d8_engine_tree": "53c70f2226ee0274dd544ea5fdfa3821deec5c68",
+      "wasm_sha256_both": "472f644bed756caee538868b714e4d144989e9ec1990232f82562d2f80b7424f"
+    },
+    "prior_passed_evidence": [
+      "Windows run37096236872 on3ab862fe passed all17 native targets before web failure",
+      "out/local-native-repair/resumed-solver-solve-qualified.log:158188 checks,0 failures; IC0fixture10 steps196, admitted/checking/validating"
+    ],
+    "source_timing_candidate": {
+      "owner": "engine/src/solver_solve_bounds.cpp:729",
+      "rule": "Goal-cover setup yields at2048 work units OR20ms steady wall clock",
+      "test_rule": "Off/on are compared after equal counts of step(1), before service admission",
+      "classification": "Plausible wall-clock-dependent prefix misalignment, not established harmlessness or confirmed root cause. Existing intermittent native execution/fixture issue; web-only patch changes no native source."
+    },
+    "smallest_reproduction_request": {
+      "command": "build/engine/poecraft_engine_tests.exe --solver-integrity-only continuity",
+      "artifact": "build/engine/poecraft_engine_tests.exe",
+      "artifact_sha256": "849ad1f3c670a711b9ce30b163f118a2cc7a0924e3f0f873f723c12204a1072d",
+      "first_run": "single serial finite run with existing matching executable; no rebuild/data/pricing/benchmark",
+      "conditional_followup": "If first passes, at most two more serial finite repetitions to assess recurrence; if mismatch, diagnostic-only first mismatch record of fixture/step/setup stage/phase/logical work/queue/cursor, retaining every existing assertion",
+      "limits": "Existing bounded toy fixture limits; no long solve or five-mod invocation"
+    },
+    "unrun": [
+      "all new local reproductions",
+      "any timing perturbation or diagnostic rebuild",
+      "any proposed fix qualification"
+    ],
+    "bad_alloc_case": {
+      "task": "01a10034-1cbb-76ed-8c32-a692b16a701e",
+      "relation": "Separate actual Rare5modConquest native_construction_refused:std::bad_alloc case, no CI bad_alloc evidence or demonstrated connection. Do not mix/revert Bow or metamod paths."
+    },
+    "heavy_slot": "held by other task; user-prioritized actual bad_alloc diagnostic takes precedence",
+    "owned_heavy_processes_remaining": 0,
+    "main_unchanged": true,
+    "no_push": true,
+    "no_production_fix": true
+  },
+  "selective_service_parity_one_run": {
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 25264,
+    "process_identity_token": "25264:134354793659746957",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 951.8671999685466,
+    "completed_utc": "2026-10-03T05:36:06.926447+00:00",
+    "command": [
+      "C:\\Users\\Oliver\\Documents\\poecraft2-local-native-repair\\build\\engine\\poecraft_engine_tests.exe",
+      "--solver-integrity-only",
+      "continuity"
+    ],
+    "executable_sha256": "849ad1f3c670a711b9ce30b163f118a2cc7a0924e3f0f873f723c12204a1072d",
+    "failure_lines": 0,
+    "summaries": [
+      "solver integrity tests: 51511 checks, 0 failures"
+    ],
+    "first_mismatch_context": null,
+    "fixture10_summary": [
+      "IC0 fixture=10 goals=4 steps=196 done=1 candidate=1 checked=1 admitted=1 checking=1 validating=1 entry_cost=31984.615384614921 status=censored_finish_or_cap"
+    ],
+    "stage_capture_limit": "Preserved binary has standard assertions and fixture summary only; exact first mismatch setup/step values require a diagnostic rebuild if recurrence occurs.",
+    "run_count": 1,
+    "supervisor": "poecraft_ingest.solver_worker.run_isolated_process",
+    "host_watchdog_seconds": 300.0,
+    "stdout_log": "out/local-native-repair/parity-one-run.log",
+    "slot_released": true,
+    "classification": "Non-reproduction does not explain or dismiss CI failure; no repeated run, rebuild or assertion change authorized/performed."
+  },
+  "selective_service_parity_instrumentation_ready": {
+    "recorded_utc": "2026-10-03T05:47:54.498522+00:00",
+    "status": "test-only first-mismatch instrumentation prepared, unbuilt/unrun",
+    "source_file": "engine/tests/test_solver_solve.cpp",
+    "diagnostic_labels": [
+      "IC_PARITY_FIRST",
+      "IC_PARITY_SIDE",
+      "IC_PARITY_TRACE"
+    ],
+    "scope": "first pre-admission parity mismatch per existing continuity fixture; no added selector or supervisor",
+    "mask_bits": [
+      "phase",
+      "values",
+      "policy_rows",
+      "graph_identity",
+      "successors",
+      "probabilities",
+      "queue",
+      "expansion_cursor",
+      "global_lower",
+      "verified_identity",
+      "logical_reforge_work",
+      "service_calc_absent",
+      "service_checker_absent",
+      "service_validator_absent"
+    ],
+    "captures": [
+      "fixture and zero-based step iteration",
+      "phase/setup stage before and after each step(1)",
+      "goal-cover/retention/root-checker continuation presence before/after",
+      "per-call steady wall nanoseconds and goal-cover charged time delta",
+      "state/row/kernel/queue sizes, expanded count, expansion state/cursor",
+      "logical work, graph and verified identity, service phase",
+      "existing bounded native progress traces"
+    ],
+    "yield_reason_limit": "Native coroutine does not expose whether2048-unit or20ms branch won. Record not_exposed_unit_or_wall_time; >=20ms is an observed timing indicator only, not an inferred reason.",
+    "preserves": "All14 original PC_CHECK expressions remain unchanged; production source, clocks/budgets/semantics, native laws, bounds/publication guards and WASM unchanged.",
+    "partial_output": "Flush first mismatch and side records before trace formatting; existing supervisor preserves stdout if stopped",
+    "pending_command": "powershell -NoProfile -File scripts/dev-engine.ps1 -Task Tests -Jobs 2, then one instrumented --solver-integrity-only continuity invocation through existing run_isolated_process with300.0-second bound, only after explicit slot grant",
+    "unrun": [
+      "diagnostic build",
+      "instrumented selector",
+      "new broad CI retry"
+    ],
+    "prior_result": "One preserved-binary run passed51511 checks in0.952s; CI root cause remains open",
+    "main_unchanged": "0187f3d8334c3b9deb9730a6fa89899c051e9931",
+    "no_push": true,
+    "no_production_fix": true,
+    "owned_heavy_processes_remaining": 0,
+    "priority": "Cap/five-mod diagnostic owns slot; cases remain separate"
+  },
+  "selective_service_parity_instrumentation_qualification": {
+    "recorded_utc": "2026-10-03T06:00:57.857783+00:00",
+    "status": "test-only first-mismatch instrumentation qualified locally; CI divergence unresolved",
+    "source": "050643620bdd4c3cb71d5378f79c0b4e25257f36",
+    "baseline_delivered_main": "0187f3d8334c3b9deb9730a6fa89899c051e9931",
+    "build": {
+      "command": "powershell -NoProfile -File scripts/dev-engine.ps1 -Task Tests -Jobs 2",
+      "target": "Tests only",
+      "max_build_jobs": 2,
+      "exit_code": 0,
+      "wall_seconds": 30.0349999,
+      "log": "out/local-native-repair/parity-instrumented-build.log"
+    },
+    "run": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 43320,
+      "process_identity_token": "43320:134354805857741552",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 1200.2918999642134,
+      "completed_utc": "2026-10-03T05:56:26.755966+00:00",
+      "source": "050643620bdd4c3cb71d5378f79c0b4e25257f36",
+      "command": [
+        "C:\\Users\\Oliver\\Documents\\poecraft2-local-native-repair\\build\\engine\\poecraft_engine_tests.exe",
+        "--solver-integrity-only",
+        "continuity"
+      ],
+      "executable_sha256": "561db89f3dace0f4d09c6fc1a91fcb678483be7818c211c92ba19a653d3f4166",
+      "failure_lines": 0,
+      "summaries": [
+        "solver integrity tests: 51511 checks, 0 failures"
+      ],
+      "first_mismatch_records": [],
+      "fixture10_summary": [
+        "IC0 fixture=10 goals=4 steps=196 done=1 candidate=1 checked=1 admitted=1 checking=1 validating=1 entry_cost=31984.615384614921 status=censored_finish_or_cap"
+      ],
+      "full_output_log": "out/local-native-repair/parity-instrumented-run.log"
+    },
+    "preflight": {
+      "source": "050643620bdd4c3cb71d5378f79c0b4e25257f36",
+      "started_utc": "2026-10-03T05:56:25.554686+00:00",
+      "command": [
+        "C:\\Users\\Oliver\\Documents\\poecraft2-local-native-repair\\build\\engine\\poecraft_engine_tests.exe",
+        "--solver-integrity-only",
+        "continuity"
+      ],
+      "executable_sha256": "561db89f3dace0f4d09c6fc1a91fcb678483be7818c211c92ba19a653d3f4166",
+      "host_watchdog_seconds": 300.0,
+      "run_count": 1
+    },
+    "assertion_review": {
+      "original_PC_CHECK_count": 14,
+      "all_original_expressions_verbatim": true,
+      "production_native_and_wasm_diff_from_baseline": []
+    },
+    "bounds": {
+      "local_instrumented_invocations": 1,
+      "host_watchdog_seconds": 300.0,
+      "owned_heavy_processes_remaining": 0,
+      "slot_released_before_receipt_work": true
+    },
+    "interpretation": "No local divergence captured. The timing/setup hypothesis remains unproved. This pass does not explain or dismiss prior exact-head CI failures.",
+    "unrun": [
+      "New broad local suite",
+      "Native/WASM rebuild (unchanged production source)",
+      "One authorized exact-head post-push CI (pending normal delivery)"
+    ],
+    "delivery": "Normal main fast-forward/push is authorized for these test-only diagnostics. Actual remote and one post-push CI result will be recorded separately; no deployment."
+  },
+  "currency_expansion_guard_fixture_ready": {
+    "recorded_utc": "2026-10-03T06:32:08.641177+00:00",
+    "status": "test-only expected-rejection correction prepared; build/test unrun; cap owner retains local heavy slot",
+    "baseline": "0fecbc404925548dc978ecdcf4d2aa0e62c91e1a",
+    "ci": {
+      "run_id": 37101710211,
+      "job_id": 111142371722,
+      "conclusion": "failure",
+      "native_targets": "17/17 passed",
+      "bindings": "275 passed",
+      "failing_file": "apps/web/test/engine-smoke.test.ts:2534",
+      "expected": "/Pro/",
+      "actual_code": 4,
+      "actual_detail": "Foresight, memory strands, absent resources and enchantment effects require solver integration; state cannot be dropped",
+      "prior_product_eldritch_scope_case": "passed",
+      "native_parity": "intermittently unreproduced; not proved fixed"
+    },
+    "root_state": {
+      "memory_strands": 73,
+      "modes": [
+        "current",
+        "strategy_finder"
+      ]
+    },
+    "contract": {
+      "native_guards": [
+        "engine/src/solver_api.cpp:2224",
+        "engine/src/solver_api.cpp:2307"
+      ],
+      "code": "engine/include/poecraft/result.h:15 PC_RESULT_UNSUPPORTED_FEATURE = 4",
+      "precedence": "Unsupported concrete carrier-state refusal precedes mode/profile dispatch in both entry points"
+    },
+    "change": {
+      "file": "apps/web/test/engine-smoke.test.ts",
+      "sha256": "5a15759ad1f7ac69366859c3f2a9071113c6dc5a07595602243915c012fffef2",
+      "expected_error": "EngineError instance, code4, exact state-preservation guard detail",
+      "additional_negative_check": "Exported remembered root equals pre-solve snapshot after rejection in both modes",
+      "production_native_wasm_diff": []
+    },
+    "preserved": [
+      "Memory73 clone/imprint roundtrip",
+      "Invalid legacy mod identity rejection",
+      "Memory101 invalid-import rejection",
+      "Unavailable alchemy/tempering actions",
+      "Both ordinary product solve/compile/independent graph evaluations",
+      "Disabled foulborn rejection",
+      "Missing-price accounting",
+      "Rare original-root witness"
+    ],
+    "pending_checks": [
+      "POECRAFT_SMOKE_TEST=currency expansion state and original-root policy contracts; npx tsx test/engine-smoke.test.ts",
+      "Same smoke filter with npm test (complete following web chain)",
+      "npx tsc --noEmit"
+    ],
+    "local_owned_heavy_processes": 0,
+    "build_tests_started": false,
+    "no_new_ci_rerun": true,
+    "no_push": true
+  },
+  "currency_guard_full_validation": {
+    "source": "f9e46c6af4639c5b8bd754198ed354b16189b1a7",
+    "wasm_sha256": "472f644bed756caee538868b714e4d144989e9ec1990232f82562d2f80b7424f",
+    "smoke_filter": null,
+    "results": [
+      {
+        "exit_code": 1,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 29196,
+        "process_identity_token": "29196:134354872352761433",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 38477.50960011035,
+        "name": "npm",
+        "command": [
+          "cmd.exe",
+          "/d",
+          "/s",
+          "/c",
+          "npm test"
+        ],
+        "source": "f9e46c6af4639c5b8bd754198ed354b16189b1a7",
+        "watchdog_seconds": 900.0,
+        "log": "out/local-native-repair/currency-guard-full-npm.log",
+        "summary": [
+          "║ Looks like Playwright Test or Playwright was just installed or updated. ║",
+          "║ Please run the following command to download new browsers:              ║",
+          "║                                                                         ║",
+          "║     npx playwright install                                              ║",
+          "║                                                                         ║",
+          "║ <3 Playwright Team                                                      ║",
+          "╚═════════════════════════════════════════════════════════════════════════╝",
+          "    at <anonymous> (C:\\Users\\Oliver\\Documents\\poecraft2-local-native-repair\\apps\\web\\test\\workspace-resources.test.ts:6:32) {",
+          "  name: 'Error'",
+          "}",
+          "",
+          "Node.js v20.20.0"
+        ],
+        "smoke_summaries": [
+          "37/37 passed",
+          "Lock worker: paid preview, exact restore, failed import, Undo/Redo spend, context cleanup and native strand editing passed",
+          "Lock controls: selected-request preview, read-only numerical rolls and separate payment/commit passed",
+          "solver lab Calculator export tests passed",
+          "Edit history: snapshots, branching, recovery, grouping and limits passed"
+        ],
+        "errors": []
+      },
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 93948,
+        "process_identity_token": "93948:134354872737545208",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 8011.302399914712,
+        "name": "typescript",
+        "command": [
+          "cmd.exe",
+          "/d",
+          "/s",
+          "/c",
+          "npx tsc --noEmit"
+        ],
+        "source": "f9e46c6af4639c5b8bd754198ed354b16189b1a7",
+        "watchdog_seconds": 300.0,
+        "log": "out/local-native-repair/currency-guard-full-typescript.log",
+        "summary": [],
+        "smoke_summaries": [],
+        "errors": []
+      }
+    ],
+    "completed_utc": "2026-10-03T07:48:01.766062+00:00",
+    "owned_processes_remaining": 0
+  },
+  "currency_guard_optional_chrome_channel_ready": {
+    "recorded_utc": "2026-10-03T07:59:33.463844+00:00",
+    "status": "source-only optional Chrome test channel prepared; new source unrun/unpushed",
+    "source_file": "apps/web/test/workspace-resources.test.ts",
+    "file_sha256": "5137c13389eb82aea3ae66308a08a4c2fe9bc10ca993d432965d025a8dd00da6",
+    "launch": {
+      "default": "Pinned Playwright Chromium headless shell, unchanged when env unset",
+      "local_override": "POECRAFT_TEST_BROWSER_CHANNEL=chrome",
+      "validation": "Only unset or chrome accepted; invalid override fails",
+      "profile": "Existing chromium.launch creates a fresh temporary user-data directory; no launchPersistentContext, userDataDir or user profile supplied"
+    },
+    "versions": {
+      "playwright": "1.58.2",
+      "playwright_core": "1.58.2",
+      "chrome": "152.0.7977.83",
+      "chrome_executable": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+      "pinned_chromium": "145.0.7632.6",
+      "pinned_revision": "1208"
+    },
+    "coverage": "Existing workspace resource assertion and cleanup body verbatim unchanged; real browser IndexedDB/atomic apply/Undo/Redo/stale and alias checks retained",
+    "compatibility": "Installed Chrome with pinned Playwright is untested; report any launch/protocol incompatibility without weakening assertions. Alternative browser qualification does not prove pinned-browser parity.",
+    "preserved_failure": {
+      "source": "f9e46c6af4639c5b8bd754198ed354b16189b1a7",
+      "npm_log": "out/local-native-repair/currency-guard-full-npm.log",
+      "npm_exit_code": 1,
+      "full_smoke": "37/37 passed",
+      "stop": "Missing pinned headless-shell executable at workspace-resources.test.ts:6",
+      "typescript": "passed",
+      "results": "out/local-native-repair/currency-guard-full-results.json"
+    },
+    "pending_checks": [
+      "Clear POECRAFT_SMOKE_TEST; set POECRAFT_TEST_BROWSER_CHANNEL=chrome; full npm test",
+      "npx tsc --noEmit on new source"
+    ],
+    "no_install": true,
+    "no_browser_launched": true,
+    "no_native_wasm_build": true,
+    "owned_heavy_processes_remaining": 0,
+    "slot": "Diagnostic has next priority; no local heavy command granted"
+  },
+  "currency_guard_chrome_qualification": {
+    "recorded_utc": "2026-10-03T08:28:25.842670+00:00",
+    "status": "Full unfiltered local web chain and TypeScript qualified with installed Chrome; pinned-browser qualification unrun",
+    "source": "9f28a09939c1f0d8a2ff66efa2a1ce7b1dbaefe6",
+    "baseline_delivered_main": "0fecbc404925548dc978ecdcf4d2aa0e62c91e1a",
+    "test_corrections": [
+      "Exact unsupported carrier-state EngineError/code/detail and unchanged-root rejection in both modes",
+      "Validated optional installed Chrome channel; unset retains original pinned default"
+    ],
+    "qualification": {
+      "started_utc": "2026-10-03T08:23:08.588308+00:00",
+      "source": "9f28a09939c1f0d8a2ff66efa2a1ce7b1dbaefe6",
+      "wasm_sha256": "472f644bed756caee538868b714e4d144989e9ec1990232f82562d2f80b7424f",
+      "runtime": {
+        "schema_version": 1,
+        "runtime_directory": "data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+        "manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+        "source_lock": "fixtures/repoe/production-source-manifest.json",
+        "economy": {
+          "mode": "bundled",
+          "index": "economy/league-index.json"
+        }
+      },
+      "smoke_filter": null,
+      "browser_channel": "chrome",
+      "playwright_version": "1.58.2",
+      "chrome_version": "152.0.7977.83",
+      "chrome_executable": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+      "chrome_executable_sha256": "caf423e184f0bcefe2ee5bef40539a3c005c63beb44e3321c0834929a13af733",
+      "profile": "Playwright chromium.launch owns a fresh temporary profile; no persistent/user profile",
+      "commands": [
+        [
+          "cmd.exe",
+          "/d",
+          "/s",
+          "/c",
+          "npm test"
+        ],
+        [
+          "cmd.exe",
+          "/d",
+          "/s",
+          "/c",
+          "npx tsc --noEmit"
+        ]
+      ],
+      "watchdog_seconds": [
+        900,
+        300
+      ],
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-local-native-repair\\apps\\web",
+      "no_install": true,
+      "no_native_build": true,
+      "pinned_browser_parity": false,
+      "results": [
+        {
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 30484,
+          "process_identity_token": "30484:134354893885894653",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 44582.60059985332,
+          "name": "npm",
+          "command": [
+            "cmd.exe",
+            "/d",
+            "/s",
+            "/c",
+            "npm test"
+          ],
+          "source": "9f28a09939c1f0d8a2ff66efa2a1ce7b1dbaefe6",
+          "watchdog_seconds": 900.0,
+          "log": "out/local-native-repair/chrome-full-npm.log",
+          "summary": [
+            "  ...",
+            "# Subtest: artwork packaging rejects wrong runtime, dangling references and corrupt image bytes",
+            "ok 5 - artwork packaging rejects wrong runtime, dangling references and corrupt image bytes",
+            "  ---",
+            "  duration_ms: 5.5314",
+            "  ...",
+            "1..5",
+            "# tests 5",
+            "# suites 0",
+            "# pass 5",
+            "# fail 0",
+            "# cancelled 0",
+            "# skipped 0",
+            "# todo 0",
+            "# duration_ms 78.8862"
+          ],
+          "smoke_summaries": [
+            "37/37 passed",
+            "Lock worker: paid preview, exact restore, failed import, Undo/Redo spend, context cleanup and native strand editing passed",
+            "Lock controls: selected-request preview, read-only numerical rolls and separate payment/commit passed",
+            "solver lab Calculator export tests passed",
+            "Edit history: snapshots, branching, recovery, grouping and limits passed",
+            "Workspace resources: atomic apply, Undo/Redo, memory, spend and stale/alias rejection passed",
+            "Craft spend: repeated quantities, unknown consumption, history trimming/branching and Harvest material recipes passed"
+          ],
+          "errors": []
+        },
+        {
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 29584,
+          "process_identity_token": "29584:134354894331729059",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 3585.8656000345945,
+          "name": "typescript",
+          "command": [
+            "cmd.exe",
+            "/d",
+            "/s",
+            "/c",
+            "npx tsc --noEmit"
+          ],
+          "source": "9f28a09939c1f0d8a2ff66efa2a1ce7b1dbaefe6",
+          "watchdog_seconds": 300.0,
+          "log": "out/local-native-repair/chrome-full-typescript.log",
+          "summary": [],
+          "smoke_summaries": [],
+          "errors": []
+        }
+      ],
+      "completed_utc": "2026-10-03T08:23:56.761883+00:00",
+      "chrome_executable_sha256_after": "caf423e184f0bcefe2ee5bef40539a3c005c63beb44e3321c0834929a13af733",
+      "chrome_executable_unchanged": true,
+      "owned_processes_remaining": 0
+    },
+    "preserves": "All native guards, exact scope/proof authorities and original workspace resource assertion/cleanup body unchanged; no production native/include/WASM diff",
+    "prior_failed_run": "Original f9e46c6a full npm failure remains in currency-guard-full-*; pinned browser absent, not an assertion failure",
+    "slot_release": "Reported immediately when local commands finished, before receipt/commit work; no owned heavy process",
+    "remaining": [
+      "Pinned-browser parity unrun locally",
+      "Authorized exact-head hosted CI pending delivery",
+      "Native prefix parity cause remains intermittently unreproduced, not proved fixed"
+    ],
+    "excluded": [
+      "Solver recovery c04e42ee (native-only qualification; not integrated)",
+      "Lock e2b6ff70 and other pending features (not integrated)",
+      "Installation, dependency/price/data refresh, deployment"
+    ]
+  },
+  "evaluation_cancel_response_race_ready": {
+    "recorded_utc": "2026-10-03T09:05:12.738351+00:00",
+    "status": "evaluation-only queued-success cancellation repair prepared; runtime checks unrun; no push",
+    "baseline_main": "c00bb449102d76442bb6515eb34fd1c1a9bfd21f",
+    "failed_ci": {
+      "run_id": 37109852631,
+      "job_id": 111165480624,
+      "head_sha": "c00bb449102d76442bb6515eb34fd1c1a9bfd21f",
+      "conclusion": "failure",
+      "native": "17/17 passed",
+      "python_bindings": "275 passed",
+      "first_failure": "FAILED: AssertionError [ERR_ASSERTION]: Missing expected rejection.",
+      "location": "apps/web/test/engine-smoke.test.ts:1099",
+      "fixture": "exact evaluation cancellation is prompt and leaks no handles",
+      "timestamp": "2026-10-03T08:47:45.6915345Z",
+      "url": "https://github.com/OliverOrton/poecraft2/actions/runs/37109852631",
+      "parity_first_mismatch_records_visible": 0,
+      "web_guard_and_workspace_cases": "Not reached by this CI; earlier cancellation fixture stops the chain"
+    },
+    "source_classification": {
+      "client": "Abort listener only posts cancel; generic successful response still resolves. strategyEvaluate previously exposed that result without checking its original signal.",
+      "worker": "Progress is posted before native continuation/finish; cross-thread cancel may arrive after success is queued. Native evaluator cleanup remains in finally.",
+      "limitation": "CI has no progress/cancel timing trace. Source demonstrates the allowed ordering consistent with the failure; exact scheduling is not directly observed."
+    },
+    "repair": {
+      "file": "apps/web/src/app/engine-client.ts",
+      "scope": "strategyEvaluate only",
+      "behavior": "Capture original signal; reject an otherwise-successful reply with EngineError1 cancelled if signal is aborted before API completion is observed. Preserve native error replies.",
+      "other_request_types": "Unchanged, including solverSolve Finish/Cancel and runStrategy",
+      "native_worker_cleanup": "Unchanged",
+      "file_sha256": "87d6ab0004822d140342c55fd3ef9b16118586c4454bc0a86691f27f99612be4"
+    },
+    "finite_regression": {
+      "file": "apps/web/test/engine-client-transfer.test.ts",
+      "ordering": "Force progress callback abort before reading a queued successful response, independent of main/worker timing",
+      "controls": [
+        "Ordinary success survives",
+        "Native capacity error8/max_transitions survives an abort",
+        "Late abort after settlement sends no stale cancel"
+      ],
+      "file_sha256": "a7f6fe23106c25828276cb4999cee89b7b0b2c99be7c187f66800ed43f8bbdb3"
+    },
+    "preserved": "Original six real-WASM cancellation rejections,1000ms bound and handle accounting are byte-for-byte unchanged; production native/include/WASM and all game/proof/scope authorities unchanged.",
+    "pending_checks": [
+      "Focused engine-client-transfer finite cases",
+      "Full unfiltered npm test with explicit existing Chrome channel",
+      "npx tsc --noEmit"
+    ],
+    "unrun": [
+      "New finite regression",
+      "Full npm/TypeScript on this new source",
+      "New hosted CI"
+    ],
+    "local_owned_heavy_processes": 0,
+    "slot": "Multi-goal owns slot; no local heavy command starts",
+    "installation": false,
+    "native_wasm_rebuild_needed": false,
+    "solver_feature_integration": false
+  },
+  "evaluation_cancel_lifetime_review": {
+    "recorded_utc": "2026-10-03T09:12:41.744399+00:00",
+    "production_source": "aa19a2d8adf64707b247efa6a51c1750d5004a56",
+    "status": "Lifetime/order review complete; expanded finite and pre-cancelled native cases prepared; runtime qualification now granted",
+    "ownership": {
+      "client": "First terminal message deletes pending entry and removes abort listener before resolve/reject; duplicates/stale progress have no invocation to call. Wrapper only rejects a successful result, allocates/closes no native handle.",
+      "worker": "Already-cancelled request token is bound before dispatch; evaluateStrategy refuses before compile. For active work one existing finally closes evaluator/economy/strategy; wrapper adds no cleanup owner.",
+      "unrelated": "Generic call, other methods and worker/native behavior unchanged"
+    },
+    "cases": [
+      "Abort before worker readiness/dispatch sets atomic request.cancelled and emits no request until ready",
+      "Progress abort before queued success rejects cancelled",
+      "Ordinary success and post-completion abort leave settled result untouched",
+      "Native error8 preserves its detail both before and after abort",
+      "Duplicate terminal/stale progress/late abort cannot re-enter old callbacks or emit stale cancel"
+    ],
+    "native_smoke": "Added pre-cancelled real-WASM request and live-handle baseline check; all original six reject/promptness/handle assertions unchanged",
+    "original_six_loop_verbatim": true,
+    "production_patch_unchanged": true,
+    "test_hashes": {
+      "apps/web/test/engine-client-transfer.test.ts": "1eaff002054ccf113b9550c9c565c4cb92ad240c2a3262a5596e3d6f3438505e",
+      "apps/web/test/engine-smoke.test.ts": "7a6285e46d344daa377d0459a6ade92196b914af214a46c8734cc8a205f359f4"
+    },
+    "unrun": [
+      "Focused finite client test",
+      "Full unfiltered npm with Chrome",
+      "TypeScript"
+    ],
+    "slot": "Diagnostic explicitly released; parent granted this task focused/full npm/TS; commands start after source checkpoint",
+    "owned_heavy_processes_remaining": 0,
+    "no_install": true,
+    "no_wasm_rebuild": true
+  },
+  "evaluation_cancel_qualification": {
+    "recorded_utc": "2026-10-03T09:18:31.367449+00:00",
+    "status": "Evaluation-only cancellation reply-ordering qualified by finite controls/full unfiltered Chrome npm/TypeScript",
+    "source": "532b22191487c737774c35b32f8f907dd8f5e1cd",
+    "production_fix": "aa19a2d8adf64707b247efa6a51c1750d5004a56",
+    "qualification": {
+      "started_utc": "2026-10-03T09:14:33.414414+00:00",
+      "source": "532b22191487c737774c35b32f8f907dd8f5e1cd",
+      "wasm_sha256": "472f644bed756caee538868b714e4d144989e9ec1990232f82562d2f80b7424f",
+      "runtime": {
+        "schema_version": 1,
+        "runtime_directory": "data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+        "manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+        "source_lock": "fixtures/repoe/production-source-manifest.json",
+        "economy": {
+          "mode": "bundled",
+          "index": "economy/league-index.json"
+        }
+      },
+      "smoke_filter": null,
+      "browser_channel": "chrome",
+      "playwright_version": "1.58.2",
+      "chrome_version": "152.0.7977.83",
+      "chrome_executable_sha256": "caf423e184f0bcefe2ee5bef40539a3c005c63beb44e3321c0834929a13af733",
+      "commands": [
+        {
+          "name": "focused",
+          "command": [
+            "cmd.exe",
+            "/d",
+            "/s",
+            "/c",
+            "npx tsx test/engine-client-transfer.test.ts"
+          ],
+          "watchdog_seconds": 120.0
+        },
+        {
+          "name": "npm",
+          "command": [
+            "cmd.exe",
+            "/d",
+            "/s",
+            "/c",
+            "npm test"
+          ],
+          "watchdog_seconds": 900.0
+        },
+        {
+          "name": "typescript",
+          "command": [
+            "cmd.exe",
+            "/d",
+            "/s",
+            "/c",
+            "npx tsc --noEmit"
+          ],
+          "watchdog_seconds": 300.0
+        }
+      ],
+      "profile": "Fresh temporary Playwright launch profile; no persistent/user profile",
+      "no_install": true,
+      "no_native_build": true,
+      "pinned_browser_parity": false,
+      "completed_utc": "2026-10-03T09:15:22.122833+00:00",
+      "results": [
+        {
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 22036,
+          "process_identity_token": "22036:134354924734155506",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 995.5821000039577,
+          "name": "focused",
+          "command": [
+            "cmd.exe",
+            "/d",
+            "/s",
+            "/c",
+            "npx tsx test/engine-client-transfer.test.ts"
+          ],
+          "source": "532b22191487c737774c35b32f8f907dd8f5e1cd",
+          "watchdog_seconds": 120.0,
+          "log": "out/local-native-repair/evaluation-cancel-focused.log",
+          "summary": [
+            "  ok - strategy graphs cross client/worker boundaries as transferable JSON bytes",
+            "  ok - evaluation cancellation ordering, native errors and terminal callback cleanup remain intact"
+          ],
+          "summaries": [
+            "  ok - evaluation cancellation ordering, native errors and terminal callback cleanup remain intact"
+          ],
+          "errors": []
+        },
+        {
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 53868,
+          "process_identity_token": "53868:134354924744117326",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 44173.51939994842,
+          "name": "npm",
+          "command": [
+            "cmd.exe",
+            "/d",
+            "/s",
+            "/c",
+            "npm test"
+          ],
+          "source": "532b22191487c737774c35b32f8f907dd8f5e1cd",
+          "watchdog_seconds": 900.0,
+          "log": "out/local-native-repair/evaluation-cancel-npm.log",
+          "summary": [
+            "# Subtest: artwork packaging rejects wrong runtime, dangling references and corrupt image bytes",
+            "ok 5 - artwork packaging rejects wrong runtime, dangling references and corrupt image bytes",
+            "  ---",
+            "  duration_ms: 4.621",
+            "  ...",
+            "1..5",
+            "# tests 5",
+            "# suites 0",
+            "# pass 5",
+            "# fail 0",
+            "# cancelled 0",
+            "# skipped 0",
+            "# todo 0",
+            "# duration_ms 78.5273"
+          ],
+          "summaries": [
+            "37/37 passed",
+            "  ok - evaluation cancellation ordering, native errors and terminal callback cleanup remain intact",
+            "Lock worker: paid preview, exact restore, failed import, Undo/Redo spend, context cleanup and native strand editing passed",
+            "Lock controls: selected-request preview, read-only numerical rolls and separate payment/commit passed",
+            "solver lab Calculator export tests passed",
+            "Edit history: snapshots, branching, recovery, grouping and limits passed",
+            "Workspace resources: atomic apply, Undo/Redo, memory, spend and stale/alias rejection passed",
+            "Craft spend: repeated quantities, unknown consumption, history trimming/branching and Harvest material recipes passed"
+          ],
+          "errors": []
+        },
+        {
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 73380,
+          "process_identity_token": "73380:134354925185861422",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 3532.6895001344383,
+          "name": "typescript",
+          "command": [
+            "cmd.exe",
+            "/d",
+            "/s",
+            "/c",
+            "npx tsc --noEmit"
+          ],
+          "source": "532b22191487c737774c35b32f8f907dd8f5e1cd",
+          "watchdog_seconds": 300.0,
+          "log": "out/local-native-repair/evaluation-cancel-typescript.log",
+          "summary": [],
+          "summaries": [],
+          "errors": []
+        }
+      ],
+      "chrome_executable_sha256_after": "caf423e184f0bcefe2ee5bef40539a3c005c63beb44e3321c0834929a13af733",
+      "chrome_executable_unchanged": true,
+      "owned_processes_remaining": 0
+    },
+    "case_count": 5,
+    "native_smoke": "Pre-cancelled handle check and original six reject/1000ms/handle iterations pass unchanged",
+    "preserves": "Native error replies, other request contracts and worker cleanup unchanged; no native/include/WASM diff",
+    "prior_failure": "Windows37109852631/job111165480624 on c00bb449: missing cancellation rejection1099;17 native/275 bindings passed",
+    "slot_release": "Immediate after all commands, before docs/publication; no survivor",
+    "unrun": [
+      "Pinned-browser parity locally",
+      "Exact-head post-publication hosted CI pending"
+    ],
+    "excluded": [
+      "Solver recovery and all pending feature integration",
+      "Installation/data/price refresh/deployment"
+    ]
+  },
+  "hosted_pinned_browser_setup": {
+    "recorded_utc": "2026-10-03T09:50:40.605156+00:00",
+    "status": "Hosted exact-head Windows scope All and Solver knowledge completed successfully",
+    "baseline": "75270c83c7d14c17a4de231d5cc3af1810d2d7ff",
+    "failure_receipt": "out/local-native-repair/evaluation-cancel-hosted-browser-failure.json",
+    "change": {
+      "workflow": ".github/workflows/windows.yml:69 opts into -InstallTestBrowser",
+      "owner": "scripts/test.ps1",
+      "command": "node ./node_modules/playwright/cli.js install chromium --only-shell",
+      "order": [
+        "npm ci (exactly once)",
+        "Opt-in installed project Playwright CLI",
+        "build:data",
+        "full unfiltered npm test",
+        "TypeScript"
+      ],
+      "default": "Browser install switch off; only Windows CI explicitly opts in",
+      "sources": "Default official Playwright CDN from project-pinned installed CLI; no floating npx package install",
+      "destination": "C:\\Users\\runneradmin\\AppData\\Local\\ms-playwright",
+      "scope": "Disposable hosted runner, not user PC"
+    },
+    "passed": [
+      "PowerShell Parser::ParseFile: zero errors",
+      "Switch present with no enabled default",
+      "PyYAML safe_parse: valid workflow and exact opt-in call",
+      "Command/error guards/order checked; npm ci occurs once",
+      "git diff --check"
+    ],
+    "runtime_unrun": [
+      "Local browser download (excluded; no local installation)"
+    ],
+    "preserves": [
+      "Pinned default Chromium",
+      "All native/web assertions and limits",
+      "All project-native/WASM source/artifacts",
+      "Full npm chain and TypeScript"
+    ],
+    "local_installations": 0,
+    "local_heavy_processes": 0,
+    "new_feature_integration": false,
+    "file_hashes": {
+      "scripts/test.ps1": "da0b5ff084046f6bbd00784cc57b748ba08b345f3031dc78d16ad496da0e044e",
+      ".github/workflows/windows.yml": "8ec1bba0f7b78a5dd35a76c96f2bb7640570a9ec00f7ce5e9a28805996450415"
+    },
+    "terminal_receipt": "out/local-native-repair/ci-pinned-browser-terminal-success.json"
+  },
+  "hosted_ci_terminal": {
+    "schema": "poecraft2.hosted-ci-terminal.v1",
+    "inspected_utc": "2026-10-03T10:23:11Z",
+    "head_sha": "4b092b0bf73b26a006c81859029ce34147a07e21",
+    "windows": {
+      "run_id": 37114415245,
+      "job_id": 111178311856,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/OliverOrton/poecraft2/actions/runs/37114415245",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Classify required validation",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Native validation not applicable",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 5
+        },
+        {
+          "name": "Bind project Python and install test dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Run msys2/setup-msys2@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "Configure UCRT64 tool paths",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9
+        },
+        {
+          "name": "Build",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10
+        },
+        {
+          "name": "Test",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11
+        },
+        {
+          "name": "Preserve frozen runtime identity failure",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 12
+        },
+        {
+          "name": "Preserve native test failure",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 13
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 24
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 25
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 26
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 27
+        }
+      ]
+    },
+    "solver_knowledge": {
+      "run_id": 37114415162,
+      "head_sha": "4b092b0bf73b26a006c81859029ce34147a07e21",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/OliverOrton/poecraft2/actions/runs/37114415162"
+    },
+    "passed": {
+      "native_ctest_targets": 17,
+      "python_tests": 275,
+      "engine_smoke": 37,
+      "full_unfiltered_web_chain": true,
+      "finite_evaluation_cancellation_controls": true,
+      "workspace_resource_browser_test": true,
+      "typescript": true
+    },
+    "browser": {
+      "channel": "project-pinned default chromium headless shell",
+      "version": "145.0.7632.6",
+      "revision": 1208,
+      "hosted_destination": "C:\\Users\\runneradmin\\AppData\\Local\\ms-playwright\\chromium_headless_shell-1208",
+      "local_installations": 0
+    },
+    "log_projection": [
+      "2026-10-03T10:01:56.5608023Z 275 passed in 128.68s (0:02:08)",
+      "2026-10-03T10:05:29.0333023Z 100% tests passed out of 17",
+      "2026-10-03T10:05:36.8762424Z Downloading Chrome Headless Shell 145.0.7632.6 (playwright chromium-headless-shell v1208) from https://cdn.playwright.dev/builds/cft/145.0.7632.6/win64/chrome-headless-shell-win64.zip",
+      "2026-10-03T10:05:40.5827193Z Chrome Headless Shell 145.0.7632.6 (playwright chromium-headless-shell v1208) downloaded to C:\\Users\\runneradmin\\AppData\\Local\\ms-playwright\\chromium_headless_shell-1208",
+      "2026-10-03T10:06:22.2837567Z 37/37 passed",
+      "2026-10-03T10:06:22.6621913Z   ok - evaluation cancellation ordering, native errors and terminal callback cleanup remain intact",
+      "2026-10-03T10:06:35.6636239Z Workspace resources: atomic apply, Undo/Redo, memory, spend and stale/alias rejection passed",
+      "2026-10-03T10:06:43.4775837Z > tsc --noEmit",
+      "2026-10-03T10:06:49.1949369Z Validation completed for scope All. Other scopes were not selected. Optional GUI coverage is reported by pytest."
+    ],
+    "scope": "Hosted scope All on current main only; feature branches were not integrated",
+    "rerun_requested": false,
+    "solver_parity_limit": "The passing run does not prove the historical intermittent prefix parity mismatch fixed.",
+    "local_heavy_processes": 0
+  },
+  "combined_source_review": {
+    "schema": "poecraft2.combined-source-review.v1",
+    "recorded_utc": "2026-10-03T10:23:11Z",
+    "status": "source-only integration review complete; combined build, acceptance and rendered review unrun",
+    "integration_base": "4b092b0bf73b26a006c81859029ce34147a07e21",
+    "common_feature_ancestor": "0187f3d8334c3b9deb9730a6fa89899c051e9931",
+    "qualified_inputs": [
+      {
+        "name": "Lock",
+        "checkpoint": "e2b6ff700f452e91b6b8d4067762e4b765eb239f",
+        "native_source": "3a7b80b9d275b7d8b0517969723e94aeeabbe395",
+        "engine_tree": "38f7455bd83fd912beeae2ad607599bcd5c4f308",
+        "wasm_sha256": "ce4a8bc6c744fd16a0c792cee8728a4f25be95896037e8e4fac8678c85e1995b",
+        "passed": [
+          "Native Engine/shared/header builds, header smoke, maximum two compiler jobs",
+          "64 focused Python lifecycle tests",
+          "Full nine-file Lock web chain and TypeScript"
+        ],
+        "authority": "Owner-approved independent-cached-lock-v1 approximate emulator previews; no solver/exact adaptive authority",
+        "receipt": "../2026-10-03-lock-multi-preview/qualification.json"
+      },
+      {
+        "name": "Calculator multi-goal",
+        "checkpoint": "b269a564867f061f089ac117aed566d2a98a9767",
+        "tested_source": "53be4ce80d2c54b17f964f0371673f6b3bcc2bc7",
+        "native_source": "ac67c8ebfdec81de52db7308de8406d78e2069a3",
+        "engine_tree": "71d7f655086e3816b9366c715a6c891fd12eafc2",
+        "wasm_sha256": "143f21f387dce691753d3bf68a36967f3667a2ea569d950bee42232ef9324518",
+        "passed": [
+          "Calculator incoming 10681; observation layout839; solver-calc1775297; zero failures",
+          "Explicit real-WASM goal-set worker transport and nonvisual controller/model",
+          "Full unfiltered npm including37/37 smoke and all30 owners, installed Chrome; TypeScript"
+        ],
+        "qualification_limit": "53be4ce8..b269a564 changes only three documentation files; rendered/pinned/combined feature checks unrun",
+        "authority": "Read-only Calculator per-goal and any-goal union; Strategy finder freezes the active individual SolverGoal",
+        "receipt": "C:/Users/Oliver/Documents/poecraft2-calculator-goal-set/out/calculator-goal-set-qualification/qualification.json"
+      }
+    ],
+    "source_review": [
+      "Lock request reservations use native apply_action, preserve full runtime/item/request identity, serialize seen and unseen outcomes, and validate the complete ordered domain before replacement. No new game-law decision found.",
+      "Goal-set parser is bounded to one through eight unique IDs and inspection_only handles. Both strategy solve entry points refuse those handles. startSolve freezes only activeGoal and opens a SolverGoal.",
+      "New goal-set finite oracle iterates native weighted physical pools and constructs concrete item outcomes with a local family/group/tier predicate. Renewal uses an independent ordered physical recursion, not the production compiled Calculator recurrence. Shared primitive is the native weighted-pool law. Cases cover overlap, nested tiers, disjoint goals, fractured incoming exclusion, extras policy, one/eight goals, conservation and choice refusal.",
+      "Recombination observer test supplies three hand-written terminal outcomes in one output session; it is not qualification of mixed-frame dispatch or finalizer integration.",
+      "Shared EngineClient, EngineBindings and worker changes affect separate Lock methods and openCalcGoal signatures; protocol additions affect separate type blocks. No production fix proposed from this bounded review; actual merge/conflict review remains pending."
+    ],
+    "integration_order": [
+      "Create a new sibling integration worktree/branch from current main4b092b0b, incorporating this docs-only receipt commit if useful. Leave all feature-owner branches unchanged.",
+      "Ordinary merge qualified Lock e2b6ff70, then qualified Calculator b269a564. Preserve ancestry; do not cherry-pick their copied main test-only changes again.",
+      "Retain main evaluation cancellation gate and finite terminal-order controls, pre-cancelled real-WASM handle test and original six time/handle checks, exact unsupported guard assertions, optional Chrome test channel, and hosted pinned-browser provisioning.",
+      "Reconcile shared adapter hunks and short current HANDOFF; audit exact path diff. Individual WASM binaries remain historical feature evidence and are not a combined runtime.",
+      "Wait for parent selection of Recomb's terminal qualified source; review only its owned delta before inclusion. Exclude pending solver recovery/Bow5 economic and product authority.",
+      "Freeze combined source/engine tree, exact build/test commands and frozen runtime/data/prices before slot grant. Build matching native and WASM once after final source selection, then qualify combined behavior."
+    ],
+    "runtime_manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "test_plan": {
+      "slot": "Parent serial LOCAL grant required; Recomb currently owns LOCAL. All commands unrun on combined source.",
+      "native": "Reuse owned CMake setup and explicit --parallel2 for Engine/shared/header/test targets; do not call the unbounded build.ps1 --parallel path as-is. Use existing deterministic supervision, no new wrapper.",
+      "focused": [
+        "Combined native --calculator-incoming-only with frozen artifact",
+        "--solver-observation-layout-only",
+        "--solver-calc-only",
+        "64 Lock Python tests against combined DLL",
+        "Recomb owner-selected finite controls after terminal receipt"
+      ],
+      "wasm": "scripts/build-wasm.ps1 self-activates existing C:/emsdk; record source and SHA256 before worker checks",
+      "web": [
+        "Explicit npx tsx test/calculator-goal-set-wasm.test.ts against rebuilt module",
+        "Full unfiltered npm test in apps/web with approved installed Chrome temporary profile; it already covers Lock web owners",
+        "npx tsc --noEmit"
+      ],
+      "final_scope": "Select final native/Python checks from actual Recomb+Lock+Calculator ABI delta; run full acceptance only once if justified after preflighting immutable source/runtime inputs. Do not repeat unchanged solver experiments or Simulator qualification.",
+      "processes": "Stop and report actionable failure; release LOCAL immediately when commands end, before docs/commits. No existing user dev-server restart or dependency installation."
+    },
+    "rendered_plan": [
+      "Calculator: add/rename/reorder/select/delete goals; reopen persisted document; verify All/coverage fields and selected goal; overlapping native goals report per-goal odds and any-goal union once; edits invalidate stale odds.",
+      "Strategy finder: selected individual goal is visible and frozen across an asynchronous run; list names/order/active UI selection do not enter native probability identity or broaden strategy objective.",
+      "Lock: apply with no selected currency; observe different configured requests and repeat full numerical cached previews; disclose approximate independent model; readonly previews and separate Lock/currency spend; successful consumption, decline/no-op, incomplete import, unseen reservation Undo/Redo and missing quotes remain correct.",
+      "Combined carrier: Emulator-to-Calculator incoming state retains foresight/memory/cluster identity. Unsupported solver carriers still refuse. No UI probability law, pooled approximation or frame substitution.",
+      "Donor/resources: displayed donor snapshot freezes before await; changed full payload or data becomes stale even under the same ID. Review distinct resources and mixed-frame selected output only after qualified Recomb integration.",
+      "Run on a new isolated preview or a separately approved existing server with a fresh browser test profile; capture feature checklist and screenshots. Rendered review remains Oliver-owned unless parent explicitly delegates execution."
+    ],
+    "authority_promoted": false,
+    "main_modified": false,
+    "feature_branches_modified": false,
+    "merge_simulation_run": false,
+    "local_builds_tests_browser_launches": 0,
+    "owned_processes": 0,
+    "exclusions": [
+      "Pending solver recovery and source-only Bow5/product economic checks",
+      "Data/price refresh, dependency installation, deployment",
+      "Individual feature artifacts as combined qualification"
+    ]
+  },
+  "actual_source_integration": {
+    "schema": "poecraft2.feature-source-integration.v1",
+    "recorded_utc": "2026-10-03T10:53:16.275470+00:00",
+    "status": "All three qualified feature checkpoints source-integrated; exact combined source/inputs prepared; native/WASM/worker/web/rendered tests await parent slot",
+    "base": "4b092b0bf73b26a006c81859029ce34147a07e21",
+    "receipt_parent": "db1d8404478ad97f9e62b7bdd3941e5d892edc16",
+    "worktree": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+    "branch": "dot/features-integration-20261003",
+    "source_commit": "db96aae275f8692f0aa89878cf584dafe6d89071",
+    "engine_tree": "4f3741ae7b20095575125efe710f5ba89d97c989",
+    "merges": [
+      {
+        "feature": "Lock",
+        "checkpoint": "e2b6ff700f452e91b6b8d4067762e4b765eb239f",
+        "merge_commit": "1e2d6eabdabadfeff95e3b169689fa93a3f76b9f",
+        "conflicts": [
+          "HANDOFF.md"
+        ]
+      },
+      {
+        "feature": "Calculator goal set",
+        "checkpoint": "b269a564867f061f089ac117aed566d2a98a9767",
+        "tested_source": "53be4ce80d2c54b17f964f0371673f6b3bcc2bc7",
+        "merge_commit": "d4c854f80c293d64a6f2a7e3451985ad7ad9da38",
+        "conflicts": [
+          "bindings/wasm/dist/poecraft_engine.wasm"
+        ]
+      },
+      {
+        "feature": "Random recombination",
+        "checkpoint": "e830a3a54ad3fd2c71660d113c5e5f3f6f72d043",
+        "qualified_source_before_receipt": "6617e9f5c07515f8df0f4eebe8d234c9f81b1470",
+        "merge_commit": "84467e4d208985d2759a535fd273268b1534c2f9",
+        "shared_goal_ancestor": "3107843931b7b066c6ab90466dc3bb3b1551b58b",
+        "conflicts": [
+          "HANDOFF.md",
+          "bindings/wasm/dist/poecraft_engine.wasm"
+        ]
+      }
+    ],
+    "source_conflict_resolution": "Only handoff/binary conflicts; production sources/adapters merged automatically. Shared31078439 goal/donor ancestry retained once. WASM and MJS restored as matching main placeholders, both explicitly unqualified for combined features.",
+    "wasm_placeholder": {
+      "path": "bindings/wasm/dist/poecraft_engine.wasm",
+      "sha256": "472f644bed756caee538868b714e4d144989e9ec1990232f82562d2f80b7424f",
+      "bytes": 8372123,
+      "qualified_for_combined": false,
+      "source": "4b092b0bf73b26a006c81859029ce34147a07e21"
+    },
+    "static_passed": [
+      "Exact byte retention of main strategyEvaluate method",
+      "Exact byte retention of main finite client tests, engine smoke, Windows workflow and test.ps1",
+      "Exact byte retention of workspace browser setup prefix; no duplicate copied correction",
+      "Combined Lock methods and CalculatorGoalSet client signature coexist",
+      "Ordinary merge ancestry contains both qualified feature checkpoints",
+      "Frozen runtime manifest matches runtime.lock; price inputs equal main",
+      "git diff --check",
+      "Async-aware uniqueness checks for combined Lock/goal/pair client methods",
+      "Lock controls preserve qualified callback occurrences alongside single Recomb panel",
+      "Recomb critical native/UI source hash checks against terminal qualification",
+      "Exact shared Calculator files match b269a564; no duplicated parser or donor fix",
+      "Qualified Recomb and current main ancestor checks pass",
+      "Frozen read-only SQLite copied byte-for-byte and source/target hashes rechecked"
+    ],
+    "static_initial_failure": {
+      "check": "Environment-setting literal occurrence count wrongly expected1; actual main prefix contains setting and explanatory error text",
+      "impact": "Check stopped before HANDOFF rewrite; shell continued and created Calculator merge commit",
+      "resolution": "Rechecked exact browser setup prefix against main; passes. All earlier byte-retention assertions passed. Current checkpoint corrects the handoff; no runtime/qualification claim made."
+    },
+    "unchanged_main_files": [
+      {
+        "path": "apps/web/test/engine-client-transfer.test.ts",
+        "sha256": "1eaff002054ccf113b9550c9c565c4cb92ad240c2a3262a5596e3d6f3438505e",
+        "bytes": 6474
+      },
+      {
+        "path": "apps/web/test/engine-smoke.test.ts",
+        "sha256": "7a6285e46d344daa377d0459a6ade92196b914af214a46c8734cc8a205f359f4",
+        "bytes": 117978
+      },
+      {
+        "path": ".github/workflows/windows.yml",
+        "sha256": "8ec1bba0f7b78a5dd35a76c96f2bb7640570a9ec00f7ce5e9a28805996450415",
+        "bytes": 3418
+      },
+      {
+        "path": "scripts/test.ps1",
+        "sha256": "da0b5ff084046f6bbd00784cc57b748ba08b345f3031dc78d16ad496da0e044e",
+        "bytes": 7947
+      }
+    ],
+    "runtime": {
+      "lock": {
+        "path": "apps/web/runtime.lock.json",
+        "sha256": "bafe2c54c2659348c8fa6836564b9300a9ffb0ac5f86d717302176b7239c0ad1",
+        "bytes": 380
+      },
+      "resolved": {
+        "schema_version": 1,
+        "runtime_directory": "data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+        "manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+        "source_lock": "fixtures/repoe/production-source-manifest.json",
+        "economy": {
+          "mode": "bundled",
+          "index": "economy/league-index.json"
+        }
+      },
+      "files": [
+        {
+          "path": "data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d/manifest.json",
+          "sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+          "bytes": 5983
+        },
+        {
+          "path": "data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d/game-data.json",
+          "sha256": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e",
+          "bytes": 16914460
+        },
+        {
+          "path": "data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d/strings.json",
+          "sha256": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6",
+          "bytes": 6740473
+        }
+      ],
+      "compiled_link": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\data\\compiled\\current",
+      "canonical_sqlite_modified": false,
+      "sqlite_fixture": {
+        "path": "data/sqlite/poecraft.db",
+        "sha256": "f239ec69f995504d555f34ebd3a2c105128aab54f6d5900fc61bb1b264676a9a",
+        "bytes": 81133568,
+        "read_only": true,
+        "source": "C:/Users/Oliver/Documents/poecraft2-recombs-random/data/sqlite/poecraft.db",
+        "refreshed": false,
+        "qualified_hash": "f239ec69f995504d555f34ebd3a2c105128aab54f6d5900fc61bb1b264676a9a"
+      }
+    },
+    "prices": {
+      "mode": "unchanged bundled tracked snapshots",
+      "files": [
+        {
+          "path": "apps/web/public/economy/league-index.json",
+          "sha256": "2d71a5a96a669ac835b6e5bc06750c12ef8e5af3d7d9966c43fec0c62e86a2cd",
+          "bytes": 6144
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/494a62ac05535e4a2671acdb190c74327e4e50b2f403a3aed1d18edad73e29c9.json",
+          "sha256": "992b82f831976ffa6098a68f95e1c3a17ad1ab4f04dc7404f1a302c3599bd696",
+          "bytes": 99568
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/49d5d98e06d6271a6d799a7cee2b8c79f3b7d0319321ed9df90289033a6db615.json",
+          "sha256": "3a6c5f53c7e7e2b05c70fa75471a9f11f63a2ec2981b8e483a9bcbd618ea3ba2",
+          "bytes": 99258
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/4c117949e086de69a41c76fe632d8c9ae95d0f8a62d80f6149ae518dd8bcc00d.json",
+          "sha256": "10bc79bedaa12563f3a4893651ee9dbce747dd60a24f8407d47d68f7d6ffb0af",
+          "bytes": 84915
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/6b0ef5a757e4adc23bd753f9d9f69a2f96ace9c9f4eddf5fddac1424b0973e5f.json",
+          "sha256": "51a7a77833a1d6ab629fe7b07bf8afd3f8952e8b2e931a1ea1f4be0ebcad2d2b",
+          "bytes": 104679
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/7da0b6fe6884582874c8e75bbcc19e2c9cf76388992a68d546f14c967a469702.json",
+          "sha256": "ec93341dff8f7b1b69209ae6fb5589f09d39c686ab824aca46c1ce3176fd4a31",
+          "bytes": 146419
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/8feaa2c8e0ae609baace236430f00d9baef171e56ade19cfadaec83c5ad2527e.json",
+          "sha256": "95774f68dcb610e5669cf866d2d128bce62a1d204b75bfbb39278e29c22891ff",
+          "bytes": 93673
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f.json",
+          "sha256": "9cae91c13f2c8a6bb06fe0d22487cfc77ca44983817a221de131e5fc3e72cb0e",
+          "bytes": 94189
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/94964eb5b0bcd8f3d7152dbd12d213dd3b83bc2579b27e1a05c5b73b7cd40f6a.json",
+          "sha256": "f60df63f33655e7ad243a3ac87e60734de8b88a0ee357acc37e1729eba24e7de",
+          "bytes": 87190
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/9dece258da8894eb75cbb28115c89cca3149a03b885510e10ab6c22836dbc2fc.json",
+          "sha256": "f6f5d0ade010423d20303af6714cbf6ff5bd0f8af1f7f03dba6f603ff31442b6",
+          "bytes": 141469
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/a122cad9494aa3361016b6f9c542e029e7aa1465de6d04bd6b5b150b5d26c485.json",
+          "sha256": "05cddc3b8440bed43049ae0e36bb5feba9d9ca28eb4277c101aa9764ed55c88d",
+          "bytes": 143727
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/b199684d293012331b8d4a57dea44a1f7241d5d4664ba6579de94848d82f0cff.json",
+          "sha256": "70ccf9da8b3711853081713087fb9be010d2e2741449e0defdce7e14203e22cb",
+          "bytes": 142844
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/b9dffc0f61e35d25fc2174f9b6922587edd4981f5ebcc49c345e1ea1a1ed8556.json",
+          "sha256": "aed49c066f9acbf723bca828388aa299802315d5252104e57ad1025e86e45621",
+          "bytes": 100525
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/c09d72d5fa7f330924f0e218a33f2954805c22b06331fcb07c5d14b0cece397e.json",
+          "sha256": "9d145f4c39300638154c4c4971d3aa81378a1f309aa17d89cc28db0b1aed1aa9",
+          "bytes": 84135
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/d1e6d94836059ea643b91376890bdc2e9ffa52298d568f726aae4158746f1eb8.json",
+          "sha256": "eefa7576625aac55ccfa26a49fa1031646dd317cd1d860fc45698c435058ea5c",
+          "bytes": 86915
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+          "sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92",
+          "bytes": 141941
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/fea4d53e86df578a17c8b549ced2d7a7f85a53fb41b852667483364427d58bad.json",
+          "sha256": "ee0efb7d27519909f4188fcbd09171506b6a1d7070f9ae3dc1b1d2284cdb0e00",
+          "bytes": 99312
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/ff59e7f60886430318976be46a4ea971fc20c8381274be2ef18c8a92193feb82.json",
+          "sha256": "c4d2d610c7ca8f67185edd655b45a6235893e1ac31b70e051bf52e6025df779d",
+          "bytes": 151536
+        }
+      ],
+      "refresh": false
+    },
+    "dependencies": {
+      "mode": "Existing main node_modules junction; no install",
+      "package_lock": {
+        "path": "apps/web/package-lock.json",
+        "sha256": "244102b6e9a380054cb847b8ecbed3ef3f7956eb79a18bf8562acbc200d5be3c",
+        "bytes": 61622
+      },
+      "package": {
+        "path": "apps/web/package.json",
+        "sha256": "730964ee6cf1752330b5dbc4a028de84980995a316d821f1c6abd885aff03424",
+        "bytes": 2800
+      },
+      "existing_target": "C:/Users/Oliver/Documents/poecraft2/apps/web/node_modules"
+    },
+    "batch_preconditions": [
+      "Explicit parent serial LOCAL grant; Diagnostic currently owns LOCAL",
+      "Before timing, recheck exact source/engine/file hashes and resolved tools/commands against this freeze",
+      "Recheck frozen runtime/SQLite/economy/package identities; use existing deterministic supervision with compiler/Binaryen/linker concurrency at most2",
+      "No feature push until combined native/WASM/worker/web and requested rendered qualification"
+    ],
+    "next_batch": [
+      {
+        "command": "powershell -NoProfile -File scripts/dev-engine.ps1 -Task Tests -Jobs 2",
+        "cwd": "integration root"
+      },
+      {
+        "command": "Resolved project CMake --build build/engine --target poecraft_engine_shared poecraft_header_smoke --parallel 2",
+        "cwd": "integration root"
+      },
+      {
+        "command": "build/engine/poecraft_header_smoke.exe",
+        "cwd": "integration root"
+      },
+      {
+        "command": "build/engine/poecraft_engine_tests.exe --random-recombination-only data/compiled/current",
+        "cwd": "integration root"
+      },
+      {
+        "command": "build/engine/poecraft_engine_tests.exe --currency-contracts-only data/compiled/current",
+        "cwd": "integration root"
+      },
+      {
+        "command": "build/engine/poecraft_engine_tests.exe --calculator-incoming-only data/compiled/current",
+        "cwd": "integration root"
+      },
+      {
+        "command": "build/engine/poecraft_engine_tests.exe --solver-observation-layout-only",
+        "cwd": "integration root"
+      },
+      {
+        "command": "build/engine/poecraft_engine_tests.exe --solver-calc-only data/compiled/current",
+        "cwd": "integration root"
+      },
+      {
+        "command": "py -3 -B -m pytest bindings/python/tests/test_hinekora_lock.py bindings/python/tests/test_hinekora_multi_preview.py bindings/python/tests/test_random_recombination.py bindings/python/tests/test_currency_calculator.py -q -p no:cacheprovider --basetemp out/feature-integration/pytest-tmp",
+        "cwd": "integration root",
+        "env": {
+          "PYTHONPATH": "tools/ingest;bindings/python",
+          "POECRAFT_ENGINE_LIBRARY": "Resolved combined build/engine/poecraft_engine.dll",
+          "POECRAFT_TEST_ARTIFACT": "Resolved integration data/compiled/current"
+        }
+      },
+      {
+        "command": "powershell -NoProfile -File scripts/build-wasm.ps1",
+        "cwd": "integration root",
+        "env": {
+          "EMCC_CORES": "2",
+          "BINARYEN_CORES": "2"
+        }
+      },
+      {
+        "command": "npm run build:data",
+        "cwd": "apps/web",
+        "purpose": "Owned frozen runtime packaging; no ingest/economy refresh"
+      },
+      {
+        "command": "npx tsx test/calculator-goal-set-wasm.test.ts",
+        "cwd": "apps/web"
+      },
+      {
+        "command": "npm test",
+        "cwd": "apps/web",
+        "env": {
+          "POECRAFT_TEST_BROWSER_CHANNEL": "chrome",
+          "POECRAFT_SMOKE_TEST": null
+        },
+        "covers": "Full unfiltered chain includes Lock, goal-set model, real Recomb worker/Apply and Calculator controls; do not repeat those separate files routinely."
+      },
+      {
+        "command": "npx tsc --noEmit",
+        "cwd": "apps/web"
+      }
+    ],
+    "pending_recomb_batch": "Resolved: --random-recombination-only and --currency-contracts-only; four combined Python files; real Recomb worker/Apply and Calculator controls included in full npm. Explicit shared goal-set worker remains separate because package test omits it.",
+    "rendered_coverage": "Prepared combined_source_review.rendered_plan, extended with estimated Random carrier/base/averaged-level rows, per-goal/union probability, readonly original inputs, donor same-ID/full-payload/data staleness, two-input atomic Apply/native full output/stored Undo/Redo and gold/dust unknown. Saved Imprint compound Apply remains unsupported.",
+    "combined_runtime_qualified": false,
+    "rendered_qualified": false,
+    "solver_authority_promoted": false,
+    "local_heavy_commands": 0,
+    "owned_processes": 0,
+    "excluded": [
+      "Pending feeder source",
+      "Pending solver recovery/Bow5 economics/product controls",
+      "Price/data refresh",
+      "Dependency installation",
+      "Feature publication"
+    ],
+    "mjs_placeholder": {
+      "path": "bindings/wasm/dist/poecraft_engine.mjs",
+      "sha256": "c3f63141397c06cf966487c0ad5787a338000401dc46f707bba522c959296e9c",
+      "bytes": 21307,
+      "qualified_for_combined": false,
+      "source": "4b092b0bf73b26a006c81859029ce34147a07e21"
+    },
+    "native_bridge_review": [
+      "Recomb parser reuses bounded shared Calculator schema; each output carrier gets a native observation session with original family/tier identities",
+      "Carrier laws are normalized within carrier, finalized at0.5 each and checked for mass1; any-goal union is observed once in each law",
+      "game_odds_estimated/model/projection identities and null/incomplete gold/dust preserved; terminal projection has no solver/continuation authority",
+      "Pair ordinary-category guard and generic resource validator reject PC_ITEM_FORESEEN; full output Apply preserves real carrier properties",
+      "Critical dispatcher/API/kernel/session-builder and pc-calculator source hashes match qualified Recomb receipt; shared goal model/persistence/worker tests match b269a564"
+    ],
+    "finite_safety_regressions": {
+      "source": "db96aae275f8692f0aa89878cf584dafe6d89071",
+      "file": {
+        "path": "engine/tests/test_recombination.cpp",
+        "sha256": "e351940fad2a449c3adf13beeeeb2b3a3fa941bd1d1f5aeb142fc8f5839ce862",
+        "bytes": 28043
+      },
+      "cases": [
+        "Foreseen second input refused before native pair construction",
+        "Foreseen first input refused before native pair construction"
+      ],
+      "production_fix": false,
+      "runtime_status": "unrun until parent LOCAL grant; covered by --random-recombination-only"
+    },
+    "source_files_sha256": {
+      "apps/web/package.json": "730964ee6cf1752330b5dbc4a028de84980995a316d821f1c6abd885aff03424",
+      "apps/web/src/app/calculator-goal-set.ts": "a9efdea0655a689523b3c1dbb30eadd1b99d6dea617cf14cb437c2dac6495f84",
+      "apps/web/src/app/components/document-shells.tsx": "0727ea37c0b1935215672f2144a89906273ccce9054fb21aa99adea859689d6a",
+      "apps/web/src/app/components/pc-calculator.tsx": "b831a00024851e6c569eb65854da5ef2111573e7614e16a55d68d0484dbed20c",
+      "apps/web/src/app/components/pc-craft-controls.tsx": "6752e24408f508d3b09a81c758335ad9c2baa65bb44b39616a6eddac3b4d0298",
+      "apps/web/src/app/components/pc-emulator.tsx": "064efd9cac414653e0f8dbff49f51fbe762d8d193792e30e984bad041a829528",
+      "apps/web/src/app/components/pc-workspace.ts": "269c580f8a6a75597650a2b3fa1be6c82aec69ecdba038687367e4f41e352bac",
+      "apps/web/src/app/engine-client.ts": "d3022505b45796a8e377c3cff24c9d88a9e75dbfdcae8e08f8d940c51d4fbe31",
+      "apps/web/src/app/engine-protocol.ts": "ccf6c054636678db239b219365baca92cd0deed2115526fa520897b6856337cf",
+      "apps/web/src/app/engine-wasm.ts": "daa056a19a8a3de87e1d483c7bc3078ae10cfd052607a60a193f1b49f45974b2",
+      "apps/web/src/app/engine-worker.ts": "affaa2346f2e733c0f3f6d0646ac2f4032f2bba89f9056b6a3d4cb5666c10371",
+      "apps/web/src/app/workspace/persistence.ts": "db8d4b01fabe7108eff38c0e1ee35de12dd40c88d75bcaab434bf4efb2979e87",
+      "apps/web/src/styles/continuity.css": "c4a1621387147c9bffa21ed41c88441f843ac40317f86eefe2b281bb887d93e7",
+      "apps/web/test/calculator-currency-controls.test.ts": "ed107e21428b54f1c0d986f9d53ebf53f84a580fa6639c89460ce7c38b7e7dfc",
+      "apps/web/test/calculator-goal-set-wasm.test.ts": "8321c9d26c0516c3a2595d691eb561d2a1be8a8449d95ae871bf3768b4069d40",
+      "apps/web/test/calculator-goal-set.test.ts": "403150252e5552d04f7ad0dbf4cd497361f2ee864ed480ad8762b78dddde99ce",
+      "apps/web/test/hinekora-bindings.test.ts": "cb4c0b2660ac7d7eee35fbd68e903fafe35cb70d7d087954b91fd421a4938af3",
+      "apps/web/test/hinekora-controls.test.ts": "70862d3e1d1b7e95a7d367932bd9e3fa36b893df6bb49a310ef25470d894e576",
+      "apps/web/test/recombination-wasm.test.ts": "d76c5ed20ace928f0c0b0523eadd1b8bb4c15a1172335bb3909ae68d9b039725",
+      "apps/web/test/workspace-resources.test.ts": "4a1f624a8dd2cc2b00d2115972061994af04586eebd7cd65d53504261d9820f3",
+      "bindings/python/poecraft_engine/__init__.py": "c334ae8bbeea4ff81a821ed3fb2f4114a7768d6b6f7f22789f7701916d3875d1",
+      "bindings/python/poecraft_engine/_binding.py": "ef2699baceecd29329e6903a23f23031cfc41a7f6885902cbd3357711cbb2871",
+      "bindings/python/tests/test_hinekora_multi_preview.py": "4d3770a04b6c44556d74b66697a5ef7b9657cbb03cfda403e4864130505175ac",
+      "bindings/python/tests/test_random_recombination.py": "c18939b59ae441a7fc60c820e8f7d4cf52c3954bd27325f004d93ef305ed118f",
+      "bindings/wasm/wasm-exports.txt": "a63d266fc38e059e778aead1160a11e3bda94c43b4c43698ce1251c5e1a671a3",
+      "bindings/wasm/wasm_api.cpp": "43346cc6b683f1a75854422a361dc545aa053d043db453829dcef48ccc11c1a6",
+      "engine/CMakeLists.txt": "51ba59e4cfd80f273e6f6e7280bb98c98f53b721ef485cdca298fb36cb12b614",
+      "engine/engine-sources.txt": "2c331a0aefcb52cba78f60ff33695ba1cca231334ad53d110d9c8a0ff0f6e224",
+      "engine/include/poecraft/hinekora.h": "ae517ce783ed3a302aedf0d37978ea9b07fc8443d3d741786211287aeabcbb68",
+      "engine/include/poecraft/recombination.h": "78386b54a414eac8ea9577f196dff983b4886623b1d046e9f257aa3ebd456f5b",
+      "engine/include/poecraft/session.h": "99bf99f94df60f32e90ab89592924331d2d87e0d348abc0bfa82ad7d54333f98",
+      "engine/include/poecraft/solver.h": "aa77b3ef76c36fb7ff378532208a11fcd18569a5fe1699f91de3f9248f34f3d4",
+      "engine/src/calculator_currency.cpp": "69c31691f392ee8d519adc02714eafcb25f88355aec21ae9e9bc035877c765b0",
+      "engine/src/calculator_currency.hpp": "a6c7e0e95c378bb98ca006b5c4cc11060e5ef94ff9906a9be3c904bdb278fd01",
+      "engine/src/engine_internal.hpp": "b544dd12effee98a43390e25c487e63dd109e38d1a685540a1285fd10b3a9953",
+      "engine/src/hinekora.cpp": "bb50299b6ff57c7c95b72b1f05e1f960a3392340540fb3e026c1349ffbd012e0",
+      "engine/src/hinekora_internal.hpp": "777ff7a6beb364ffe373641ef2b7284bb367fa07b22c778e700cd09010e48b30",
+      "engine/src/multi_item.cpp": "0c54d284ed1810a427335ecf7016f53791b367fd2de06878160f0625b520f453",
+      "engine/src/multi_item.hpp": "1619bf5398a53d6571fc9e7ac0b3d1d10125a5f8e8421816fea4390df9404fe3",
+      "engine/src/recombination.cpp": "904d9b0d32e3d72b5399eb95a832509b145d191be9870addf4f24292292e6236",
+      "engine/src/recombination.hpp": "fe3c5810ecb2d51875dfc749d1b22bad931c96d92a17e508d169dc1b134d1915",
+      "engine/src/recombination_api.cpp": "c297b614d865e5c0aa39e12fdc2a8277c4018c04c87619bd3af7086ef59cca8a",
+      "engine/src/recombination_calculator.cpp": "43ca6e83293da8f690b6e3375578247231903a1ded2cc8f2aa537cadcfedc284",
+      "engine/src/recombination_calculator.hpp": "4fbf8f3ee4a6a1b691e9cbd5152bc9f1232744570f1c91fc13eea82c55421ff8",
+      "engine/src/session_builder.cpp": "d2ef35ff296eafc1b439f72026dff068ae0d21d0fad6dcd7dd5ddfe1e726e2ce",
+      "engine/src/solver_api.cpp": "2e8aed5a52a30dd8a583f8f0ec7e4c6297b1bcd648995cd3b9681b1901630858",
+      "engine/src/solver_calc.cpp": "b9a9b7884fab20ba632807e9e93f5dc732b085c4732d67baa684dcbd3b202338",
+      "engine/src/solver_calc_types.hpp": "64abf3e3cd8e88fa98ef284445d22efe0d60e8b248c0a3c4ba2dd164e29c889c",
+      "engine/tests/header_smoke.cpp": "d45e6e3e430438041e27d751dbc852feef8b488d40910e08656d616bd3a428c4",
+      "engine/tests/test_main.cpp": "bf3538a1b2bebf2bba78eee64b76d3152e59b5aa9cc3b7f9bf18af34b8c9241e",
+      "engine/tests/test_recombination.cpp": "e351940fad2a449c3adf13beeeeb2b3a3fa941bd1d1f5aeb142fc8f5839ce862",
+      "engine/tests/test_solver_calc.cpp": "d38773aed3916484c78964973656bd76ae2bdbe0b22725279a90c174ac81ba28",
+      "engine/tests/tests.hpp": "7a9ff83828b5920666975209b999518bc069b5ab42c719c2c43b1523db335c76"
+    }
+  },
+  "combined_feature_qualification": {
+    "schema": "poecraft2.feature-integration-qualified.v1",
+    "recorded_utc": "2026-10-03T11:32:12.408205+00:00",
+    "status": "Combined native/Python/WASM/worker/web/TypeScript and supported rendered controlled-transport flows qualified locally; authorized publication ready",
+    "qualified_source": "5cc2e185b503fe7a9182b3f003411ef8a8040554",
+    "engine_tree": "4f3741ae7b20095575125efe710f5ba89d97c989",
+    "merged_inputs": [
+      "e2b6ff700f452e91b6b8d4067762e4b765eb239f",
+      "b269a564867f061f089ac117aed566d2a98a9767",
+      "e830a3a54ad3fd2c71660d113c5e5f3f6f72d043"
+    ],
+    "source_changed_after_checks": false,
+    "commands": [
+      {
+        "name": "native-tests-build",
+        "command": [
+          "C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe",
+          "-NoProfile",
+          "-File",
+          "scripts/dev-engine.ps1",
+          "-Task",
+          "Tests",
+          "-Jobs",
+          "2"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "watchdog_seconds": 1200
+      },
+      {
+        "name": "native-shared-header-build",
+        "command": [
+          "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/cmake.exe",
+          "--build",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\build\\engine",
+          "--target",
+          "poecraft_engine_shared",
+          "poecraft_header_smoke",
+          "--parallel",
+          "2"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "watchdog_seconds": 600
+      },
+      {
+        "name": "native-header",
+        "command": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\build\\engine\\poecraft_header_smoke.exe"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "watchdog_seconds": 60
+      },
+      {
+        "name": "native-pair",
+        "command": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\build\\engine\\poecraft_engine_tests.exe",
+          "--random-recombination-only",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\data\\compiled\\current"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "watchdog_seconds": 180
+      },
+      {
+        "name": "native-currency",
+        "command": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\build\\engine\\poecraft_engine_tests.exe",
+          "--currency-contracts-only",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\data\\compiled\\current"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "watchdog_seconds": 180
+      },
+      {
+        "name": "native-incoming",
+        "command": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\build\\engine\\poecraft_engine_tests.exe",
+          "--calculator-incoming-only",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\data\\compiled\\current"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "watchdog_seconds": 180
+      },
+      {
+        "name": "native-layout",
+        "command": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\build\\engine\\poecraft_engine_tests.exe",
+          "--solver-observation-layout-only"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "watchdog_seconds": 120
+      },
+      {
+        "name": "native-calculator",
+        "command": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\build\\engine\\poecraft_engine_tests.exe",
+          "--solver-calc-only",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\data\\compiled\\current"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "watchdog_seconds": 300
+      },
+      {
+        "name": "python-four-files",
+        "command": [
+          "py",
+          "-3",
+          "-B",
+          "-m",
+          "pytest",
+          "bindings/python/tests/test_hinekora_lock.py",
+          "bindings/python/tests/test_hinekora_multi_preview.py",
+          "bindings/python/tests/test_random_recombination.py",
+          "bindings/python/tests/test_currency_calculator.py",
+          "-q",
+          "-p",
+          "no:cacheprovider",
+          "--basetemp",
+          "out/feature-integration/pytest-tmp"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "watchdog_seconds": 300
+      },
+      {
+        "name": "wasm-build",
+        "command": [
+          "C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe",
+          "-NoProfile",
+          "-File",
+          "scripts/build-wasm.ps1"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "watchdog_seconds": 1200
+      },
+      {
+        "name": "web-data",
+        "command": [
+          "cmd.exe",
+          "/d",
+          "/s",
+          "/c",
+          "npm run build:data"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\apps\\web",
+        "watchdog_seconds": 180
+      },
+      {
+        "name": "web-goal-worker",
+        "command": [
+          "cmd.exe",
+          "/d",
+          "/s",
+          "/c",
+          "npx tsx test/calculator-goal-set-wasm.test.ts"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\apps\\web",
+        "watchdog_seconds": 180
+      },
+      {
+        "name": "web-full",
+        "command": [
+          "cmd.exe",
+          "/d",
+          "/s",
+          "/c",
+          "npm test"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\apps\\web",
+        "watchdog_seconds": 900
+      },
+      {
+        "name": "web-typescript",
+        "command": [
+          "cmd.exe",
+          "/d",
+          "/s",
+          "/c",
+          "npx tsc --noEmit"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\apps\\web",
+        "watchdog_seconds": 300
+      }
+    ],
+    "results": [
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 8184,
+        "process_identity_token": "8184:134354996462979837",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 244243.49889997393,
+        "name": "native-tests-build",
+        "command": [
+          "C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe",
+          "-NoProfile",
+          "-File",
+          "scripts/dev-engine.ps1",
+          "-Task",
+          "Tests",
+          "-Jobs",
+          "2"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "completed_utc": "2026-10-03T11:18:10.542836+00:00",
+        "log": "out\\feature-integration\\native-tests-build.log",
+        "log_sha256": "57843c6eb12a5e88fe3c0ea1e336ec54c70077d2e351429b2217b16468d12b89",
+        "summary": [
+          "[91/101] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_refinement.cpp.obj",
+          "[92/101] Building CXX object CMakeFiles/poecraft_engine_tests.dir/benchmarks/solver_executable_fragment_engine.cpp.obj",
+          "[93/101] Building CXX object CMakeFiles/poecraft_engine_tests.dir/benchmarks/solver_executable_fragment.cpp.obj",
+          "[94/101] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_quotient_proof.cpp.obj",
+          "[95/101] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_fragment.cpp.obj",
+          "[96/101] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_quotient_partition.cpp.obj",
+          "[97/101] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_quotient_bellman.cpp.obj",
+          "[98/101] Linking CXX executable poecraft_header_smoke.exe",
+          "[99/101] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_quotient_lower.cpp.obj",
+          "[100/101] Linking CXX executable poecraft_engine_tests.exe"
+        ]
+      },
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 40024,
+        "process_identity_token": "40024:134354998905487523",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 596.1589000653476,
+        "name": "native-shared-header-build",
+        "command": [
+          "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/cmake.exe",
+          "--build",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\build\\engine",
+          "--target",
+          "poecraft_engine_shared",
+          "poecraft_header_smoke",
+          "--parallel",
+          "2"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "completed_utc": "2026-10-03T11:18:11.144673+00:00",
+        "log": "out\\feature-integration\\native-shared-header-build.log",
+        "log_sha256": "aa00facd995c2d0df8ed245a837764cf27504b9217b6b8e12200c390421e24f6",
+        "summary": [
+          "[0/2] Re-checking globbed directories...",
+          "[1/2] Linking CXX shared library poecraft_engine.dll"
+        ]
+      },
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 71016,
+        "process_identity_token": "71016:134354998911611734",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 30.85159999318421,
+        "name": "native-header",
+        "command": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\build\\engine\\poecraft_header_smoke.exe"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "completed_utc": "2026-10-03T11:18:11.180252+00:00",
+        "log": "out\\feature-integration\\native-header.log",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summary": []
+      },
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 56152,
+        "process_identity_token": "56152:134354998914350639",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 605.3967999760062,
+        "name": "native-pair",
+        "command": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\build\\engine\\poecraft_engine_tests.exe",
+          "--random-recombination-only",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\data\\compiled\\current"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "completed_utc": "2026-10-03T11:18:11.786575+00:00",
+        "log": "out\\feature-integration\\native-pair.log",
+        "log_sha256": "f7744202afe554e9e92f62cebc117347feac350e9f0eed3c0620350fd562dd12",
+        "summary": [
+          "random recombination tests: 237 checks, 0 failures"
+        ]
+      },
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 72736,
+        "process_identity_token": "72736:134354998917926192",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 285.82119988277555,
+        "name": "native-currency",
+        "command": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\build\\engine\\poecraft_engine_tests.exe",
+          "--currency-contracts-only",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\data\\compiled\\current"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "completed_utc": "2026-10-03T11:18:12.078232+00:00",
+        "log": "out\\feature-integration\\native-currency.log",
+        "log_sha256": "6a30ffdb686617d30d582e40eda263b6207854bfbc777a4eb6b73af8e91cf1a0",
+        "summary": [
+          "Currency contracts: 6484 checks, 0 failures"
+        ]
+      },
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 25732,
+        "process_identity_token": "25732:134354998920831633",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 1514.9912999477237,
+        "name": "native-incoming",
+        "command": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\build\\engine\\poecraft_engine_tests.exe",
+          "--calculator-incoming-only",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\data\\compiled\\current"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "completed_utc": "2026-10-03T11:18:13.597902+00:00",
+        "log": "out\\feature-integration\\native-incoming.log",
+        "log_sha256": "66d20c2e9291ba77d44c2af84f95e33f9be07a0a1b7f793eb8d8f9bc63201d1b",
+        "summary": [
+          "Original Foulborn carrier Calculator probability: 0.21153846153846151",
+          "Calculator incoming tests: 10681 checks, 0 failures"
+        ]
+      },
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 30380,
+        "process_identity_token": "30380:134354998936031881",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 29.400300001725554,
+        "name": "native-layout",
+        "command": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\build\\engine\\poecraft_engine_tests.exe",
+          "--solver-observation-layout-only"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "completed_utc": "2026-10-03T11:18:13.632397+00:00",
+        "log": "out\\feature-integration\\native-layout.log",
+        "log_sha256": "babd3f9921ae883beb5a34385798e77a4d137b5f5128ceda7aee2260426dc8b7",
+        "summary": [
+          "solver observation layout tests: 839 checks, 0 failures"
+        ]
+      },
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 83492,
+        "process_identity_token": "83492:134354998936368639",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 7908.1276000943035,
+        "name": "native-calculator",
+        "command": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\build\\engine\\poecraft_engine_tests.exe",
+          "--solver-calc-only",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\data\\compiled\\current"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "completed_utc": "2026-10-03T11:18:21.544926+00:00",
+        "log": "out\\feature-integration\\native-calculator.log",
+        "log_sha256": "f035c11cc097e8a82d7286579df94c04fd4bbb3d652b702aba1e684b95692884",
+        "summary": [
+          "retained occupancy held=3 forced=1 pool=2: total3=0 total4=1 total5=0 total6=0; suffix-full old=0 new=0",
+          "finite cross-goal terminal projection: scenario=0 cases=126 materialized=450 Annul-rows=450 V3-commits=69; complete native laws checked",
+          "finite cross-goal terminal projection: scenario=1 cases=126 materialized=5679 Annul-rows=5679 V3-commits=104; complete native laws checked",
+          "finite cross-goal terminal projection: scenario=2 cases=126 materialized=5679 Annul-rows=5679 V3-commits=104; complete native laws checked",
+          "Original Foulborn carrier Calculator probability: 0.21153846153846151",
+          "solver calc artifact: 110 states interned",
+          "solver reforge artifact: chaos goal-hit p=0.159585 over 12 outcomes",
+          "solver reforge artifact: 21 states after chaos/essence/fossil/harvest",
+          "solver special artifact: 11752 states after veiled/eldritch",
+          "solver calc tests: 1775297 checks, 0 failures"
+        ]
+      },
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 73988,
+        "process_identity_token": "73988:134354999015741245",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 29479.540300089866,
+        "name": "python-four-files",
+        "command": [
+          "py",
+          "-3",
+          "-B",
+          "-m",
+          "pytest",
+          "bindings/python/tests/test_hinekora_lock.py",
+          "bindings/python/tests/test_hinekora_multi_preview.py",
+          "bindings/python/tests/test_random_recombination.py",
+          "bindings/python/tests/test_currency_calculator.py",
+          "-q",
+          "-p",
+          "no:cacheprovider",
+          "--basetemp",
+          "out/feature-integration/pytest-tmp"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "completed_utc": "2026-10-03T11:18:51.031534+00:00",
+        "log": "out\\feature-integration\\python-four-files.log",
+        "log_sha256": "fb2f9725b1c4abd2249f326dc4d685711a4caa5e505c89e89cbd69e517440003",
+        "summary": [
+          "........................................................................ [ 80%]",
+          ".................                                                        [100%]",
+          "89 passed in 28.95s"
+        ]
+      },
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 70296,
+        "process_identity_token": "70296:134354999310368354",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 362791.24749987386,
+        "name": "wasm-build",
+        "command": [
+          "C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe",
+          "-NoProfile",
+          "-File",
+          "scripts/build-wasm.ps1"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "completed_utc": "2026-10-03T11:24:53.827974+00:00",
+        "log": "out\\feature-integration\\wasm-build.log",
+        "log_sha256": "424a39cf8b5ce31d1b2cd0f791910a53ef93dabd872b30d513d940d621d671ed",
+        "summary": [
+          "      |                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
+          " 1544 |                         (sizeof(std::uint8_t) + sizeof(double))",
+          "      |                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
+          "1 warning generated.",
+          "In file included from C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\engine\\src\\solver_compile.cpp:1:",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\engine\\src\\solver_compile_serialization.hpp:216:13: warning: 6 enumeration values not handled in switch: 'Remembrance', 'Unravelling', 'Tempering'... [-Wswitch]",
+          "  216 |     switch (action.params.type) {",
+          "      |             ^~~~~~~~~~~~~~~~~~",
+          "1 warning generated.",
+          "WASM engine written to C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\bindings\\wasm\\dist\\poecraft_engine.mjs"
+        ]
+      },
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 79396,
+        "process_identity_token": "79396:134355002938348985",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 1341.731899883598,
+        "name": "web-data",
+        "command": [
+          "cmd.exe",
+          "/d",
+          "/s",
+          "/c",
+          "npm run build:data"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\apps\\web",
+        "completed_utc": "2026-10-03T11:24:55.176280+00:00",
+        "log": "out\\feature-integration\\web-data.log",
+        "log_sha256": "347c92fb445f70dfb1b0f4d023d8b57730fd38783849aeead34ff89b1ef6d450",
+        "summary": [
+          "",
+          "> @poecraft/web@0.0.0 build:data",
+          "> node ../../scripts/build-data-bundle.mjs",
+          "",
+          "Verified runtime 82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d; ABI 3; bundle 23660953 bytes; build 628ab7cd5fe51f187d45e8cb5b98065fd777af52ab79c15b984887bfee5eb161"
+        ]
+      },
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 66352,
+        "process_identity_token": "66352:134355002951831715",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 2250.9968001395464,
+        "name": "web-goal-worker",
+        "command": [
+          "cmd.exe",
+          "/d",
+          "/s",
+          "/c",
+          "npx tsx test/calculator-goal-set-wasm.test.ts"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\apps\\web",
+        "completed_utc": "2026-10-03T11:24:57.433006+00:00",
+        "log": "out\\feature-integration\\web-goal-worker.log",
+        "log_sha256": "6a8309554e6a58549de8de97e22c47b908d31734d311e945811d36f4c8cef3e4",
+        "summary": [
+          "Source-matched WASM goal-set worker transport passed"
+        ]
+      },
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 65392,
+        "process_identity_token": "65392:134355002974380492",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 47212.72290009074,
+        "name": "web-full",
+        "command": [
+          "cmd.exe",
+          "/d",
+          "/s",
+          "/c",
+          "npm test"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\apps\\web",
+        "completed_utc": "2026-10-03T11:25:44.650470+00:00",
+        "log": "out\\feature-integration\\web-full.log",
+        "log_sha256": "8c16cb739780129810c03e8636626ff3197e407172aa0593978f15ed1d5d5881",
+        "summary": [
+          "  ...",
+          "1..5",
+          "# tests 5",
+          "# suites 0",
+          "# pass 5",
+          "# fail 0",
+          "# cancelled 0",
+          "# skipped 0",
+          "# todo 0",
+          "# duration_ms 79.1924"
+        ]
+      },
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 31736,
+        "process_identity_token": "31736:134355003446579128",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 3605.4187000263482,
+        "name": "web-typescript",
+        "command": [
+          "cmd.exe",
+          "/d",
+          "/s",
+          "/c",
+          "npx tsc --noEmit"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\apps\\web",
+        "completed_utc": "2026-10-03T11:25:48.262990+00:00",
+        "log": "out\\feature-integration\\web-typescript.log",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summary": []
+      }
+    ],
+    "native_and_python_counts": {
+      "pair": 237,
+      "currency": 6484,
+      "calculator_incoming": 10681,
+      "observation_layout": 839,
+      "calculator": 1775297,
+      "python": 89,
+      "engine_smoke": 37
+    },
+    "wasm_artifacts": {
+      "build\\engine\\poecraft_engine_tests.exe": {
+        "sha256": "52ff427ace918bc680ea06b31a1c279554035afbbc311e14b11de5b8a50449b0",
+        "bytes": 19836932
+      },
+      "build\\engine\\poecraft_engine.dll": {
+        "sha256": "ed31beba021b380852f4bb4f3e4fe27ed5c2f9f64b22adc52b7e83116668eb3d",
+        "bytes": 14456519
+      },
+      "bindings\\wasm\\dist\\poecraft_engine.mjs": {
+        "sha256": "23c405b984e19595b4007259d8d45fe713ea31a534c091c2ef9433ffbe2f1363",
+        "bytes": 21788
+      },
+      "bindings\\wasm\\dist\\poecraft_engine.wasm": {
+        "sha256": "10da55d0f6cfc6021118a5a6be5cce560c6a6b55060ed1b278f2ef9aafbcb568",
+        "bytes": 8521566
+      }
+    },
+    "frozen_inputs_unchanged": true,
+    "rendered": {
+      "schema": "poecraft2.rendered-controlled-flows.v1",
+      "started_utc": "2026-10-03T11:26:49.778Z",
+      "browser_channel": "chrome",
+      "profile": "Fresh ephemeral Playwright profile",
+      "mode": "Real Chromium DOM/React with existing controlled transport fixtures; CLI real-worker tests separately own native execution",
+      "server": "No dev/preview server launched or restarted",
+      "results": [
+        {
+          "fixture": "calculator-goal-set.test.ts",
+          "source_sha256": "403150252e5552d04f7ad0dbf4cd497361f2ee864ed480ad8762b78dddde99ce",
+          "bundle_sha256": "7f861a7be7dfc7de752bd6af163355de402fb1300360f7da10757ca7b52d358f",
+          "status": "pass",
+          "assertions": 47,
+          "page_errors": [],
+          "screenshot": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\out\\feature-integration\\rendered-calculator-goal-set.png",
+          "screenshot_sha256": "96fcb9469ba63147dc33ff68091624bc02a4db98bf47faaddd1409d731c42816"
+        },
+        {
+          "fixture": "hinekora-controls.test.ts",
+          "source_sha256": "70862d3e1d1b7e95a7d367932bd9e3fa36b893df6bb49a310ef25470d894e576",
+          "bundle_sha256": "c22ff1d6df01205af036dee7c39abb04909791212b2f851aca0820abf36d7a0a",
+          "status": "pass",
+          "assertions": 21,
+          "page_errors": [],
+          "screenshot": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\out\\feature-integration\\rendered-hinekora-controls.png",
+          "screenshot_sha256": "d1291d0f6589b31e0325eab07b6b5fa93a3572ff9c67495e1595697c0a5cf98e"
+        },
+        {
+          "fixture": "calculator-currency-controls.test.ts",
+          "source_sha256": "ed107e21428b54f1c0d986f9d53ebf53f84a580fa6639c89460ce7c38b7e7dfc",
+          "bundle_sha256": "06be75509f48296446fe4e9e7b34f334f4781fec5aaf029d9f3830e83e9f2b0f",
+          "status": "pass",
+          "assertions": 68,
+          "page_errors": [],
+          "screenshot": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\out\\feature-integration\\rendered-calculator-currency-controls.png",
+          "screenshot_sha256": "29f8d65feadd8ccb4309e8736aa75b63b2989f80ffa27c9c5648aaf1c31ad35b"
+        }
+      ],
+      "status": "passed",
+      "completed_utc": "2026-10-03T11:26:51.671Z",
+      "browser_closed": true
+    },
+    "rendered_process": {
+      "started_utc": "2026-10-03T11:26:49.332192+00:00",
+      "command": [
+        "C:/Program Files/nodejs/node.exe",
+        "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\out\\feature-integration\\rendered-flows.mjs"
+      ],
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+      "watchdog_seconds": 150,
+      "script_sha256": "ef1b9d2760787352bb8d1f51b4efaa146327275c2b9e624516adc707e250a760",
+      "source": "5cc2e185b503fe7a9182b3f003411ef8a8040554",
+      "browser_channel": "chrome",
+      "fresh_profile": true,
+      "server_created_or_restarted": false,
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 52296,
+      "process_identity_token": "52296:134355004093434423",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 2341.6484999470413,
+      "completed_utc": "2026-10-03T11:26:51.684457+00:00"
+    },
+    "screenshot_review": {
+      "reviewed_utc": "2026-10-03T11:32:12.408217+00:00",
+      "reviewer": "Codex integrator",
+      "files": [
+        "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\out\\feature-integration\\rendered-calculator-goal-set.png",
+        "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\out\\feature-integration\\rendered-hinekora-controls.png",
+        "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\out\\feature-integration\\rendered-calculator-currency-controls.png"
+      ],
+      "findings": [
+        "Goal selected label/tabs readable in minimal fixture markup",
+        "Lock numeric roll10 remains visible and readonly, approximate cached-model disclosure visible, missing quote remains unpriced",
+        "Recomb estimated odds and fresh-two-input assumptions visible; gold/dust explicitly unknown"
+      ],
+      "material_visual_issue": false,
+      "limits": "Server-free fixture pages with real Chromium DOM/React and controlled transport. Goal fixture is intentionally partial markup, not full workspace layout. Native odds/Apply/cleanup separately pass real worker tests; no end-to-end interaction with a running product dev server."
+    },
+    "local_slot": {
+      "released_utc": "2026-10-03T11:26:51.684457+00:00",
+      "owned_processes_remaining": 0,
+      "parent_notified_before_receipts": true,
+      "no_server_start_restart": true
+    },
+    "publication_approval": {
+      "user_reply_utc": "2026-10-03T04:12:21.629661+00:00",
+      "reply": "1.yes\n2.yes",
+      "approved_request": "Use disclosed independent cached Lock and preserved-tier/roll recombination models; merge and push completed tested overnight changes to main",
+      "evidence": "Parent directly verified room-history transcript at11:09UTC and authorized publication after completed checks/review",
+      "deployment_authorized": false
+    },
+    "remaining_limits": [
+      "Independent cached Lock and Random game odds remain disclosed approximations; no new solver/exact adaptive authority",
+      "Gold/dust incomplete and unsupported categories/compound saved-Imprint Apply remain refused",
+      "Full rendered workspace layout and product-server end-to-end flows were not exercised",
+      "Pinned Chromium parity for new features unrun locally; installed Chrome used; exact-head hosted CI still pending",
+      "Historical intermittent native prefix parity issue is not proved fixed by this pass",
+      "Feeder and incomplete solver recovery/Bow5 economics/product controls excluded"
+    ],
+    "local_installations": 0,
+    "data_or_price_refresh": false,
+    "publication_result": "Record separately after normal guarded fast-forward/push and exact remote/CI inspection"
   }
 }

@@ -75,3 +75,7 @@ _pcw_item_edit
 _pcw_solver_protected_scour_diagnostic
 
 _pcw_hinekora
+_pcw_recombination_pair_open
+_pcw_recombination_pair_close
+_pcw_recombination_pair_calculate
+_pcw_recombination_pair_apply

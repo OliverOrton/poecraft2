@@ -1,16 +1,154 @@
-# Feeder-first source checkpoint; qualification held (2026-10-03)
+# Feeder-first source checkpoint; qualification resumed (2026-10-03)
 
 Oliver resumed this prepared scope at 04:00 UTC. Isolated sibling
 `poecraft2-strategy-feeder`, branch `dot/strategy-feeder-20261003`, starts from
 remote-verified `3ab862fe`. The [living feeder record](docs/active/2026-10-03-strategy-feeder/README.md)
 owns pinned paid native child invocation, actual output predicates, shared parent
-limits, explicit move/discard recycling, item ports and history source at `56245ed0` plus `1654f694`. Source is
-UNTESTED; native/web/typecheck and matching WASM remain held pending the parent's
-shared heavy-slot release. No owned heavy process, slot usage or expanded budget.
-Recombination full Apply and exact inventory evaluation remain refused. Local
-commits belong to integration owner 01a0fd2f-7f88-7588-a1ea-bfe1e6991036; no merge,
+limits, explicit move/discard recycling, item ports and history source at `56245ed0` plus `1654f694`. Source qualification now owns the parent-approved local heavy slot. Align with
+qualified main `1ffba88e`, then run serial native/web/typecheck and matching WASM
+with at most two compiler jobs. No budget expansion.
+Builder recombination execution and exact inventory evaluation remain refused;
+qualified native pair Apply belongs to the recombination owner. Local
+commits belong to integration owner 01a0fd2f-7f88-7588-a1ea-bfe1e6991036; no main integration,
 push, deployment, data refresh or dev-server restart. Next step: authorized
 two-job native qualification, focused web/typecheck and source-matched WASM.
+
+# Combined Lock, Calculator and Recomb qualified; publication authorized (2026-10-03)
+
+Source5cc2e185 retains qualified e2b6ff70/b269a564/e830a3a5 ancestry and main
+cancellation/tests/CI. Frozen serial native/header/shared, pair237/currency6484/
+incoming10681/layout839/Calculator1775297, Python89, matching WASM, real worker,
+unfiltered npm37/37 plus all owners, and TypeScript pass. WASM10da55d0/MJS23c405b9
+match combined source; no source change after checks. Rendered fresh Chrome
+DOM/React controlled-transport flows pass136 assertions; three screenshots reviewed,
+no material issue. Separate real-worker checks own native behavior. Full workspace
+layout/product-server end-to-end and local pinned-browser parity remain unrun.
+LOCAL released11:26:51UTC, no survivor/server restart. Verified user04:12approval
+and parent instruction authorize normal qualified merge/push, followed by exact
+remote/CI inspection; no deployment. The
+[living integration record](docs/active/2026-10-02-sprint-integration/README.md)
+and combined_feature_qualification own evidence/limits. Feeder/recovery excluded;
+approximate models, unknown costs, unsupported categories and parity uncertainty
+retain their limits. Actual publication receipt follows separately.
+
+# Current main CI green; combined features source-reviewed (2026-10-03)
+
+Main 4b092b0b passes Windows37114415245/job111178311856:17 native targets,
+275 Python tests,37/37 smoke/full web chain/TypeScript with pinned headless-shell1208.
+Solver knowledge37114415162 passes. No local install/heavy process. Lock e2b6ff70
+and Calculator b269a564 (tested53be4ce8) are individually qualified; combined and
+rendered checks remain unrun. Prepared order: fresh isolated branch from main,
+ordinary Lock then Calculator merges, retain main cancellation/guard/CI changes,
+review Recomb's terminal qualified delta, rebuild matching combined native/WASM.
+Recomb owns LOCAL; wait for parent slot before heavy commands. No feature merged
+or published. Pending solver recovery/Bow5 is excluded. The
+[living integration record](docs/active/2026-10-02-sprint-integration/README.md)
+and qualification's hosted_ci_terminal/combined_source_review own exact evidence
+and integration/test/rendered plans. Prior failures and parity uncertainty remain.
+
+# Evaluation cancellation reply ordering qualified (2026-10-03)
+
+532b2219 qualifies unchanged adapter fixaa19a2d8: five finite ordering controls,
+full unfiltered Chrome npm (37/37 smoke/all following files), and TypeScript pass.
+Pre-cancelled real-WASM handle check and original six reject/time/handle iterations
+pass. Native errors, other requests, worker cleanup and native/WASM unchanged.
+No survivor; local slot released before receipts. Qualified normal publication is
+approved; actual remote/CI receipt is `out/local-native-repair/evaluation-cancel-delivery.json`.
+The [living integration record](docs/active/2026-10-02-sprint-integration/README.md)
+and `evaluation_cancel_qualification` own passed/failed/unrun evidence. Prior CI
+failure retained; pinned-browser parity locally unrun. Solver recovery/features
+stay separate; diagnostic can use local capacity.
+
+# Evaluation cancellation lifetime review complete (2026-10-03)
+
+Production aa19a2d8 adapter remains unchanged. Expanded finite cases cover all
+requested cancellation/error/terminal orderings; pre-cancelled real-WASM case
+checks baseline handles. Original six reject/time/handle iterations are verbatim.
+Worker finally remains sole native cleanup owner; other request contracts unchanged.
+Diagnostic released, parent grants focused/full unfiltered Chrome npm/TS. These
+checks are unrun until following this checkpoint; release slot immediately after
+commands. The [living integration record](docs/active/2026-10-02-sprint-integration/README.md)
+and `evaluation_cancel_lifetime_review` own source review and pending evidence.
+No install/WASM rebuild/feature integration.
+
+# Evaluation queued-success cancellation repair prepared (2026-10-03)
+
+Main c00bb449 is remote-verified. CI37109852631 passes17 native/275 binding
+tests, then unchanged smoke1099 misses a cancellation rejection; knowledge CI
+passes. Client can expose a queued success after progress aborts. Evaluation-only
+source correction discards that success using the original signal; native errors,
+other requests, native cleanup and all six real-WASM rejection/time/handle checks
+remain. Finite ordering regression with success/error/late-abort controls prepared.
+All new checks unrun; no push/heavy command, multi-goal owns local slot. The
+[living integration record](docs/active/2026-10-02-sprint-integration/README.md)
+and `evaluation_cancel_response_race_ready` own exact failure/source/pending
+focused/full npm/TypeScript checks. No native/WASM rebuild or feature integration.
+
+# Currency guard/full web chain qualified (2026-10-03)
+
+`9f28a099` passes full unfiltered npm (37/37 smoke and every following file)
+and TypeScript with Playwright1.58.2 / installed Chrome152.0.7977.83 in a fresh
+temporary profile. Native/WASM and all guard/resource assertions remain unchanged.
+Prior missing pinned-browser failure is retained; pinned-browser parity is unrun.
+Local slot released immediately, no survivor; normal qualified test-only main
+publication and hosted CI inspection are authorized. The
+[living integration record](docs/active/2026-10-02-sprint-integration/README.md)
+and `currency_guard_chrome_qualification` own exact receipts/exclusions. Actual
+remote/CI result lives in `out/local-native-repair/currency-guard-delivery.json`.
+Solver recovery c04e42ee, Lock e2b6ff70 and pending features stay separate. Native
+parity remains intermittently unreproduced; no local heavy command is selected.
+
+# Currency expansion smoke guard fixture prepared (2026-10-03)
+
+CI `37101710211` on `0fecbc40` passes17 native targets/275 bindings, then web
+smoke2534 expects `/Pro/` for a73-memory-strand root. Native entry guards correctly
+return unsupported-feature4 before profile/mode dispatch. Test-only correction
+requires the exact EngineError/code/detail in both modes and unchanged root; all
+other fixture checks remain. Native/WASM unchanged. Unrun/unpushed; cap owner
+holds the local heavy slot. The
+[living integration record](docs/active/2026-10-02-sprint-integration/README.md)
+and `currency_expansion_guard_fixture_ready` own the pending filtered npm/TypeScript
+checks. No owned heavy process. Native parity remains intermittently unreproduced.
+
+# Parity first-mismatch diagnostics qualified (2026-10-03)
+
+Test-only source `05064362` passed the approved two-job Tests build and one
+300-second-host-bounded continuity selector: 51,511 checks, zero failures, 1.200s,
+no timeout/survivor. Fixture10 took196 steps; no mismatch record was emitted. All14
+original assertions and production native/WASM semantics remain unchanged. Slot
+released before receipt work; no owned process. CI cause remains open. The
+[living integration record](docs/active/2026-10-02-sprint-integration/README.md)
+and `selective_service_parity_instrumentation_qualification` own exact evidence.
+Normal test-diagnostic publication and one exact-head CI inspection are approved;
+actual delivery/CI result is recorded separately. No blind repeat or production
+fix selected; five-mod allocation and other feature owners remain coordinated.
+
+# Selective-service prefix parity; source classification (2026-10-03)
+
+Latest `0187f3d8` CI has28 native prefix parity failures in fixture10 before
+selective-service admission; this toggles service, not tracing. Native source and
+WASM match the prior all17-pass `3ab862fe`. Goal-cover20ms cooperative yields are
+a plausible mismatch with equal-step-count comparison, not confirmed harmlessness.
+No assertion/production change. Exactly one host-bounded continuity run on
+preserved executable849ad1f3 passed51,511 checks in0.952s; no survivor. CI cause
+remains unresolved; no repeats/rebuild authorized. Slot released immediately.
+The [living integration record](docs/active/2026-10-02-sprint-integration/README.md)
+and `selective_service_parity_classification` own exact evidence/commands. No new
+heavy run or push; actual five-mod bad_alloc diagnostic has priority and stays
+separate. No owned process remains.
+
+# Web solver scope adapter qualified (2026-10-03)
+
+Repair source `7f235bbf` recognizes only the native product v2 scope. Focused
+shape/roundtrip, unknown-scope and invalid-graph controls, TypeScript and complete
+filtered npm chain pass; native/WASM unchanged. Heavy slot released immediately;
+no owned heavy process remains. Normal main delivery approved; actual remote/CI
+outcome lives in `out/local-native-repair/scope-guard-delivery.json`.
+The [living integration record](docs/active/2026-10-02-sprint-integration/README.md)
+and `web_solver_scope_guard_qualification` receipt own evidence/exclusions.
+Multi-goal `e45b92b8` is based on pre-repair `dbc142a2`; qualify combined current
+source, not that old isolated native base. Lock `e792c041` source completion is
+unqualified. Feature branches remain separate; parent coordinates their slots.
 
 # Native CI repair qualified (2026-10-03)
 
@@ -27,6 +165,18 @@ Actual normal main/remote/CI outcome is in `out/local-native-repair/delivery.jso
 No deployment, refresh, dev-server restart or other feature integration is selected
 by this checkpoint. Parent coordinates the remaining isolated owners and combined
 qualification; new model approvals supply no game-exact solver authority.
+
+# Calculator goal-set qualified local checkpoint (2026-10-03)
+
+Isolated `dot/calculator-goal-set-20261003`, qualified source `53be4ce8`, includes
+main `0187f3d8`. Native, retained matching WASM worker, nonvisual goal/donor/lifetime,
+real Chrome IndexedDB, complete npm and TypeScript checks pass. The [living record](docs/active/2026-10-03-calculator-goal-set/README.md)
+owns exact source/module identities, native counts, corrected inherited `/Pro/`
+assertion and raw receipts. Web slot released at 08:52 UTC; no owned heavy process
+remains. Parent owns combined integration/publication and recombination's mixed
+output-session dispatcher. K>1 observed-choice refusal remains. Rendered
+Calculator review and pinned-browser parity remain unrun. No push, main merge,
+publication, refresh, dev restart or deployment occurred here.
 
 # Combined completion batch delivered; paused (2026-10-02)
 

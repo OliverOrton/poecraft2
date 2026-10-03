@@ -572,6 +572,14 @@ class _MultiItemResult(ct.Structure):
                 ("consumed_price_key", ct.c_char_p)]
 
 
+class _RecombinationResult(ct.Structure):
+    _fields_ = [("struct_size", ct.c_uint32), ("abi_version", ct.c_uint32),
+                ("pair_version", ct.c_uint32), ("carrier", ct.c_uint32),
+                ("model_id", ct.c_char_p), ("transaction", _MultiItemResult),
+                ("output_session", ct.c_void_p), ("output_item", _ItemState),
+                ("gold_cost_complete", ct.c_uint32), ("dust_cost_complete", ct.c_uint32)]
+
+
 class EngineError(RuntimeError):
     def __init__(self, code: int, message: str):
         self.code = code
@@ -789,6 +797,10 @@ _lib.pc_apply_action.argtypes = [
     ct.POINTER(_ErrorInfo),
 ]
 _lib.pc_apply_action.restype = ct.c_int32
+_lib.pc_hinekora_lock_apply.argtypes = [_handle, ct.POINTER(_ItemState), ct.POINTER(_handle), ct.POINTER(_ErrorInfo)]
+_lib.pc_hinekora_lock_apply.restype = ct.c_int32
+_lib.pc_hinekora_lock_observe.argtypes = [_handle, ct.POINTER(_ItemState), ct.POINTER(_ActionRequest), ct.POINTER(_ItemState), ct.POINTER(_ActionResult), ct.POINTER(_ErrorInfo)]
+_lib.pc_hinekora_lock_observe.restype = ct.c_int32
 _lib.pc_hinekora_lock_create.argtypes = [_handle, ct.POINTER(_ItemState), ct.POINTER(_ActionRequest), ct.POINTER(_handle), ct.POINTER(_ErrorInfo)]
 _lib.pc_hinekora_lock_create.restype = ct.c_int32
 _lib.pc_hinekora_lock_preview.argtypes = [_handle, ct.POINTER(_ItemState), ct.POINTER(_ItemState), ct.POINTER(_ActionResult), ct.POINTER(_ErrorInfo)]
@@ -2512,7 +2524,7 @@ class Simulator(_OwnedHandle):
 
 
 class HinekoraLock(_OwnedHandle):
-    """Item-bound, fixed-currency foresight. Observation is free; commit is paid.
+    """Item-bound foresight. Observation is free; commit is paid.
 
     Invalidate before editing the raw item, Bestiary/multi-item mutation, or item
     replacement. Destroying a handle does not authorize a fresh unchanged-item
@@ -2530,6 +2542,15 @@ class HinekoraLock(_OwnedHandle):
         _check(_lib.pc_hinekora_lock_status(self._handle, ct.byref(self._item._state),
             ct.byref(active), ct.byref(error)), error)
         return bool(active.value)
+
+    def observe(self, currency: str | Mapping[str, Any]) -> tuple[Item, ActionResult]:
+        """Free stable observation under independent-cached-lock-v1 (approximate)."""
+        request, keepalive = _action_request(currency)
+        state, result, error = _ItemState(), _ActionResult(), _error()
+        _check(_lib.pc_hinekora_lock_observe(self._handle, ct.byref(self._item._state),
+            ct.byref(request), ct.byref(state), ct.byref(result), ct.byref(error)), error)
+        del keepalive
+        return Item(self._item._session, state), ActionResult(bool(result.applied), result.added, result.removed)
 
     def preview(self) -> tuple[Item, ActionResult]:
         state, result, error = _ItemState(), _ActionResult(), _error()
@@ -2565,12 +2586,18 @@ class ActionContext(_OwnedHandle):
         if item._session is not self._session:
             raise ValueError("item belongs to a different session")
 
-    def hinekora_lock(self, item: Item, currency: str | Mapping[str, Any]) -> HinekoraLock:
-        """Spend one Lock to reserve one selected native currency outcome.
+    def hinekora_lock(self, item: Item, currency: str | Mapping[str, Any] | None = None) -> HinekoraLock:
+        """Apply one Lock with approximate independent cached requests when currency
+        is omitted; supplying currency retains legacy fixed-request semantics.
 
-        No cross-currency joint distribution or exact strategy value is implied.
+        No exact cross-currency game law or adaptive strategy value is implied.
         """
         self._check_item(item)
+        if currency is None:
+            handle, error = _handle(), _error()
+            _check(_lib.pc_hinekora_lock_apply(self._handle, ct.byref(item._state), ct.byref(handle), ct.byref(error)), error)
+            self._retained_foresight_item = item
+            return HinekoraLock(handle, item, self)
         request, keepalive = _action_request(currency)
         handle, error = _handle(), _error()
         _check(_lib.pc_hinekora_lock_create(self._handle, ct.byref(item._state),
@@ -2579,12 +2606,12 @@ class ActionContext(_OwnedHandle):
         self._retained_foresight_item = item
         return HinekoraLock(handle, item, self)
 
-    def restore_hinekora_lock(self, item: Item, currency: str | Mapping[str, Any], snapshot: Mapping[str, Any]) -> HinekoraLock:
+    def restore_hinekora_lock(self, item: Item, currency: str | Mapping[str, Any] | None, snapshot: Mapping[str, Any]) -> HinekoraLock:
         """Restore a paid emulator checkpoint without drawing another outcome."""
         self._check_item(item)
-        request, keepalive = _action_request(currency)
+        request, keepalive = _action_request(currency) if currency is not None else (None, None)
         encoded, handle, error = _json_bytes(snapshot), _handle(), _error()
-        _check(_lib.pc_hinekora_lock_restore(self._handle, ct.byref(item._state), ct.byref(request), encoded, len(encoded), ct.byref(handle), ct.byref(error)), error)
+        _check(_lib.pc_hinekora_lock_restore(self._handle, ct.byref(item._state), ct.byref(request) if request is not None else None, encoded, len(encoded), ct.byref(handle), ct.byref(error)), error)
         del keepalive
         self._retained_foresight_item = item
         return HinekoraLock(handle, item, self)
@@ -2862,3 +2889,85 @@ def engine_abi_version() -> int:
 
 def engine_library_path() -> Path:
     return Path(str(_lib._name)).resolve()
+
+
+class RandomRecombination(_OwnedHandle):
+    """Versioned estimated two-input model; no automatic solver integration.
+
+    Native mechanics own count/selection, carrier/base/level and atomic Apply.
+    The approved initial model preserves selected tiers/recorded rolls and
+    omits unverified upgrades. Gold/dust quotes remain unknown.
+    """
+
+    @staticmethod
+    def _destroy(handle):
+        function = _lib.pc_recombination_pair_destroy
+        function.argtypes, function.restype = [_handle], None
+        function(handle)
+
+    def __init__(self, left: Item, right: Item, *, left_identity: str, right_identity: str):
+        self._inputs = [(left_identity, "left", left), (right_identity, "right", right)]
+        native = self._resources(self._inputs)
+        function = _lib.pc_recombination_pair_create
+        function.argtypes = [ct.POINTER(_CraftResource), ct.POINTER(_CraftResource),
+                             ct.c_uint32, ct.POINTER(_handle), ct.POINTER(_ErrorInfo)]
+        function.restype = ct.c_int32
+        handle, error = _handle(), _error()
+        _check(function(ct.byref(native[0]), ct.byref(native[1]), 1,
+                        ct.byref(handle), ct.byref(error)), error)
+        super().__init__(handle)
+
+    @staticmethod
+    def _resources(resources: list[tuple[str, str, Item]]):
+        return (_CraftResource * len(resources))(*[
+            _CraftResource(identity.encode(), role.encode(), item._session._handle,
+                           ct.pointer(item._state)) for identity, role, item in resources])
+
+    def calculate(self) -> dict[str, Any]:
+        function = _lib.pc_recombination_pair_calculate_json
+        function.argtypes = [_handle, ct.c_void_p, ct.c_size_t,
+                             ct.POINTER(ct.c_size_t), ct.POINTER(_ErrorInfo)]
+        function.restype = ct.c_int32
+        length, error = ct.c_size_t(), _error()
+        result = function(self._handle, None, 0, ct.byref(length), ct.byref(error))
+        if result != RESULT_BUFFER_TOO_SMALL:
+            _check(result, error)
+        buffer = ct.create_string_buffer(length.value + 1)
+        _check(function(self._handle, buffer, len(buffer), ct.byref(length), ct.byref(error)), error)
+        return json.loads(buffer.value)
+
+    def output_session(self, carrier: int) -> Session:
+        function = _lib.pc_recombination_pair_output_session
+        function.argtypes = [_handle, ct.c_uint32, ct.POINTER(_handle), ct.POINTER(_ErrorInfo)]
+        function.restype = ct.c_int32
+        handle, error = _handle(), _error()
+        _check(function(self._handle, carrier, ct.byref(handle), ct.byref(error)), error)
+        return Session(handle, self._inputs[carrier][2]._session._data)
+
+    def apply(self, context: ActionContext, *, output_identity: str,
+              resources: list[tuple[str, str, Item]] | None = None) -> dict[str, Any]:
+        inventory = self._inputs if resources is None else resources
+        native = self._resources(inventory)
+        function = _lib.pc_recombination_pair_apply
+        function.argtypes = [_handle, _handle, ct.POINTER(_CraftResource), ct.c_uint32,
+                             ct.c_char_p, ct.POINTER(_RecombinationResult), ct.POINTER(_ErrorInfo)]
+        function.restype = ct.c_int32
+        result, error = _RecombinationResult(), _error()
+        encoded_output = output_identity.encode()
+        _check(function(self._handle, context._handle, native, len(inventory), encoded_output,
+                        ct.byref(result), ct.byref(error)), error)
+        session = Session(_handle(result.output_session), self._inputs[result.carrier][2]._session._data)
+        output = Item(session, _copy_item_state(result.output_item))
+        by_identity = {identity: item for identity, _, item in inventory}
+        changes = []
+        for change in result.transaction.resources[:result.transaction.resource_count]:
+            identity = _decode(change.identity)
+            source = None if change.effect == 2 else by_identity[identity]
+            changes.append({"identity": identity, "effect": change.effect,
+                            "before": None if source is None else Item(source._session, _copy_item_state(change.before)),
+                            "after": output if source is None else Item(source._session, _copy_item_state(change.after))})
+        return {"pair_version": result.pair_version, "model_id": _decode(result.model_id),
+                "game_odds_estimated": True, "carrier": result.carrier,
+                "cost_complete": bool(result.gold_cost_complete and result.dust_cost_complete),
+                "gold_cost": None, "dust_cost": None, "cost_keys": [],
+                "item": output, "session": session, "resources": changes}

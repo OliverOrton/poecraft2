@@ -731,6 +731,9 @@ struct ConcreteRefill {
     bool observe_affixes = true;
 };
 
+// Shared native terminal predicate for both solver and Calculator observers.
+GoalAssessment assess_terminal_goal(const GoalSpec&, const AbstractState&);
+
 class CalcContext {
   public:
     // Calculator-only terminal projection from a concrete prepared base.

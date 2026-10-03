@@ -338,3 +338,14 @@ Default capability discovery discloses unavailable current Fossil laws as filter
 explicit selected primitives/loadouts/dependencies retain their refusal. Matching
 combined product acceptance remains pending; historical owner cost receipts are
 not transferred across the approved rare-count law. Pause after this batch.
+
+## Persistent multi-preview Lock isolated qualification (2026-10-03)
+
+Oliver resumed the [isolated Lock programme](../active/2026-10-03-lock-multi-preview/README.md)
+and approved the versioned independent cached simulation model. Native lifecycle,
+portable seen/unseen outcome reservations and Emulator controls pass isolated
+native/shared/header builds, 64 focused Python contracts, matching WASM, the
+complete nine-file worker/web Lock chain and TypeScript. The programme receipt
+pins this delta; combined-feature integration and rendered review remain unrun.
+No adaptive exact value or ordinary Calculator, Current,
+Finder, authored Simulator, pending Unveil or donor-preview admission is added.

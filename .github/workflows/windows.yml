@@ -66,7 +66,7 @@ jobs:
       - name: Test
         if: steps.changes.outputs.native_required == 'true'
         shell: pwsh
-        run: ./scripts/test.ps1 -SkipBuild -FetchPinnedData
+        run: ./scripts/test.ps1 -SkipBuild -FetchPinnedData -InstallTestBrowser
       - name: Preserve frozen runtime identity failure
         if: failure() && steps.changes.outputs.native_required == 'true'
         uses: actions/upload-artifact@v4

@@ -16,20 +16,25 @@ const observations: CraftAction[]=[], actual: CraftAction[]=[], entries: CraftHi
 const catalog: Catalog={groupKeyById:[],groupNameById:[],essences:[],fossils:[],bench:[],harvestTags:[],influences:[]};
 const access=emulator as unknown as {
     client: unknown; catalog: Catalog; item: number; session: number; context: number; busy: boolean;
-    lockNext: boolean; lockInfo: HinekoraInfo | null; lockPreview: unknown;
+    lockInfo: HinekoraInfo | null; lockPreview: unknown;
     pendingHistoryEntry: CraftHistoryEntry | null; currentWork: Promise<void>|null; craftCosts: unknown;
     renderShell():void; renderMechanicControls():void; markChanged():Promise<void>;
-    applyConfiguredAction(action:CraftAction):Promise<void>;
+    applyLock():Promise<void>; applyConfiguredAction(action:CraftAction,commit?:boolean):Promise<void>;
 };
-Object.assign(access,{catalog,item:1,session:2,context:3,busy:false,lockNext:true,
-    client:{createHinekoraLock:async(_context:number,_item:number,_session:number,currency:CraftAction)=>{
-        observations.push(structuredClone(currency));return{active:true,currency,cost_keys:["hinekora_lock"]};},
+Object.assign(access,{catalog,item:1,session:2,context:3,busy:false,
+    client:{applyHinekoraLock:async()=>({active:true,cost_keys:["hinekora_lock"]}),
+        observeHinekoraLock:async(_context:number,_item:number,_session:number,currency:CraftAction)=>{
+            observations.push(structuredClone(currency));return{active:true,currency,cost_keys:[]};},
         apply:async(_context:number,_item:number,currency:CraftAction)=>{actual.push(structuredClone(currency));return{applied:true,added:1,removed:0};}},
     craftCosts:{forAction:async()=>["original-essence-price-key"]}});
 access.markChanged=async()=>{if(access.pendingHistoryEntry)entries.push(access.pendingHistoryEntry);access.pendingHistoryEntry=null;};
+await access.applyLock();
+assert.deepEqual(observations,[]);assert.deepEqual(actual,[]);
+assert.deepEqual(entries[0].costKeys,["hinekora_lock"]);
+access.lockInfo={active:true,cost_keys:[],model:"independent-cached-lock-v1",approximate:true};
 await access.applyConfiguredAction(configured);
 assert.deepEqual(observations,[configured]);assert.deepEqual(actual,[]);
-assert.equal(access.lockNext,false);assert.deepEqual(entries[0].costKeys,["hinekora_lock"]);
+assert.deepEqual(entries[1].costKeys,[]);
 access.lockInfo={active:true,currency:configured,cost_keys:[],preview:{}};
 access.lockPreview={kind:"concrete",readOnly:true,itemFlags:0,rarity:"rare",influences:[],implicits:[],suffixes:[],
     prefixes:[{sessionModId:0,key:"Strength1",tierIndex:1,textLines:["+10 Strength"],classificationTags:[],fractured:false,crafted:false,rollValues:[10]}],maxPrefix:3,maxSuffix:3};
@@ -37,15 +42,15 @@ access.renderShell();
 const model=()=>(emulator.querySelector("pc-craft-controls") as unknown as {model:CraftControlsModel}).model;
 assert.match(emulator.textContent!,/Hinekora's Lock/);
 assert.match(emulator.textContent!,/Roll values: 10/);
-assert.equal(emulator.querySelector<HTMLInputElement>('[aria-label="Hinekora\'s Lock"] input')!.disabled,true);
+assert.equal(emulator.querySelector<HTMLInputElement>('[data-lock-apply]')!.disabled,true);
 assert.equal(emulator.querySelector('[aria-label="Hinekora\'s Lock"] .pc-item-remove-mod'),null);
 // Inspection/render and changing UI settings never execute the cached action.
 model().onValue("essence-key","a-different-current-selection");
 assert.deepEqual(actual,[]);
 model().onLockCommit?.();await access.currentWork;
-assert.deepEqual(actual,[configured]);assert.deepEqual(entries[1].costKeys,["original-essence-price-key"]);
+assert.deepEqual(actual,[configured]);assert.deepEqual(entries[2].costKeys,["original-essence-price-key"]);
 assert.equal(observations.length,1,"Commit cannot reserve/pay another Lock");
-console.log("Lock controls: selected-request preview, read-only numerical rolls and separate payment/commit passed");
+console.log("Lock controls: Apply Lock, free independent-request preview, read-only numerical rolls and separate payment/commit passed");
 
 const {setFallbackPrice,setPrice}=await import("../src/app/workspace/prices");
 setFallbackPrice(null);setPrice("hinekora_lock",null);

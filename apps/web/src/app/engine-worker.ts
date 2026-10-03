@@ -915,6 +915,14 @@ async function dispatch(
             );
         case "exportItem":
             return { state: bindings.exportItem(params.item as number, params.session as number ?? 0) };
+        case "openRecombinationPair":
+            return {pair: bindings.openRecombinationPair(params.request as import("./engine-protocol").RecombinationPairRequest)};
+        case "closeRecombinationPair":
+            bindings.closeRecombinationPair(params.pair as number); return {};
+        case "recombinationCalculate":
+            return bindings.recombinationCalculate(params.pair as number, params.goals as import("./engine-protocol").CalculatorGoalSet);
+        case "recombinationApply":
+            return bindings.recombinationApply(params.pair as number, params.context as number, params.request as import("./engine-protocol").RecombinationApplyRequest);
         case "multiItemApply":
             return bindings.multiItemApply(params.context as number, params.request);
         case "importItem":
@@ -942,7 +950,7 @@ async function dispatch(
             return {};
         case "hinekora":
             return bindings.hinekora(params.context as number, params.item as number, params.session as number,
-                params.operation as "create" | "inspect", params.currency as CraftAction | undefined);
+                params.operation as "create" | "inspect" | "apply_lock" | "observe", params.currency as CraftAction | undefined);
         case "apply":
             return {
                 result: bindings.apply(
@@ -1035,7 +1043,7 @@ async function dispatch(
         case "openCalcInspector":
             return {solver: bindings.openCalcInspector(params.session as number)};
         case "openCalcGoal":
-            return {solver: bindings.openCalcGoal(params.session as number, params.goal as import("./engine-protocol").CalculatorItemGoal)};
+            return {solver: bindings.openCalcGoal(params.session as number, params.goal as import("./engine-protocol").CalculatorItemGoal | import("./engine-protocol").CalculatorGoalSet)};
         case "bestiaryGoalCalc":
             return bindings.bestiaryGoalCalc(params.data as number, params.solver as number, params.item as number, params.action as string);
         case "editItem":

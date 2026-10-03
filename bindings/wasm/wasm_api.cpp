@@ -29,6 +29,8 @@
 #include "poecraft/bestiary.h"
 #include "poecraft/hinekora.h"
 #include "poecraft/multi_item.h"
+#include "poecraft/recombination.h"
+#include "handles_internal.hpp"
 #include "poecraft/api.h"
 #include "poecraft/item_state.h"
 #include "poecraft/session.h"
@@ -100,6 +102,7 @@ struct LockEntry {
     std::uint32_t context = 0;
     std::string currency;
     std::string snapshot;
+    bool independent = false;
 };
 std::unordered_map<std::uint32_t, LockEntry> g_locks;
 std::unordered_map<std::uint32_t, pc_bestiary_craft_state> g_bestiary_states;
@@ -107,6 +110,7 @@ std::unordered_map<std::uint32_t, pc_strategy_handle> g_strategies;
 std::unordered_map<std::uint32_t, pc_economy_handle> g_economies;
 std::unordered_map<std::uint32_t, pc_simulator_handle> g_simulators;
 std::unordered_map<std::uint32_t, pc_solver_handle> g_solvers;
+std::unordered_map<std::uint32_t, pc_recombination_pair_handle> g_recombination_pairs;
 /* Last complete native progress for each live solver. Compact ordinary steps
  * update this once; a reporting boundary serializes it without doing more
  * solver work. It is observational WASM-host storage, not solver authority. */
@@ -1301,12 +1305,14 @@ void restore_lock(std::uint32_t item_id, std::uint32_t context_id, pc_session_ha
     std::string actual, expected;
     append_item_state(actual, *item, session); append_item_state(expected, stored, session);
     if (actual != expected) throw std::invalid_argument("Lock checkpoint full transported item identity mismatch");
-    const auto spec = Parser(entry->currency.data(), entry->currency.size()).parse();
     pc_action_request request{}; std::vector<std::string> strings; std::string message;
-    if (!parse_action(spec, request, strings, message)) throw std::invalid_argument(message);
+    if (!entry->currency.empty()) {
+        const auto spec = Parser(entry->currency.data(), entry->currency.size()).parse();
+        if (!parse_action(spec, request, strings, message)) throw std::invalid_argument(message);
+    }
     const auto before = *item; *item = stored;
     pc_hinekora_lock_handle handle = nullptr;
-    if (pc_hinekora_lock_restore(*context, item, &request, entry->snapshot.data(), entry->snapshot.size(), &handle, &error) != PC_RESULT_OK) {
+    if (pc_hinekora_lock_restore(*context, item, entry->currency.empty() ? nullptr : &request, entry->snapshot.data(), entry->snapshot.size(), &handle, &error) != PC_RESULT_OK) {
         *item = before; throw std::invalid_argument(error.message);
     }
     if (entry->handle) pc_hinekora_lock_destroy(entry->handle);
@@ -1760,7 +1766,7 @@ const char* pcw_item_clone(uint32_t item_id) {
     g_items[id] = *item;
     if (const auto* session_id = find(g_item_sessions, item_id)) g_item_sessions[id] = *session_id;
     if (auto* entry = find(g_locks, item_id)) {
-        try { g_locks[id] = {nullptr, 0, entry->currency, lock_snapshot(*entry, *item)}; }
+        try { g_locks[id] = {nullptr, 0, entry->currency, lock_snapshot(*entry, *item), entry->independent}; }
         catch (const std::exception& e) { g_items.erase(id); g_item_sessions.erase(id); return fail(PC_RESULT_INVALID_ARGUMENT, e.what()); }
     }
     if (auto* original = sync_bestiary_state(item_id, *item)) {
@@ -2037,6 +2043,119 @@ const char* pcw_multi_item_apply(uint32_t context_id, const char* request_json) 
     } catch (const std::exception& e) { return fail(PC_RESULT_INVALID_ARGUMENT, e.what()); }
 }
 
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_recombination_pair_open(const char* request_json) {
+    try {
+        const auto request = Parser(request_json, std::strlen(request_json)).parse();
+        const auto& values = request.at("resources").as_array();
+        if (values.size() != 2) return fail(PC_RESULT_INVALID_ARGUMENT, "Random recombination needs two inputs");
+        pc_craft_resource resources[2]{};
+        for (unsigned i = 0; i < 2; ++i) {
+            const auto sid = obj_u32(values[i], "session"), iid = obj_u32(values[i], "item");
+            const auto* session = find(g_sessions, sid); auto* item = find(g_items, iid);
+            if (!session || !item || g_item_sessions.at(iid) != sid)
+                return fail(PC_RESULT_INVALID_ARGUMENT, "Pair item must belong to its interpreting session");
+            resources[i] = {values[i].at("identity").as_string().c_str(),
+                values[i].at("role").as_string().c_str(), *session, item};
+        }
+        pc_recombination_pair_handle handle = nullptr; pc_error_info error = make_error();
+        const auto rc = pc_recombination_pair_create(&resources[0], &resources[1], PC_RECOMBINATION_PAIR_VERSION, &handle, &error);
+        if (rc != PC_RESULT_OK) return fail(error);
+        std::unique_ptr<pc_recombination_pair, decltype(&pc_recombination_pair_destroy)> owned(handle, pc_recombination_pair_destroy);
+        const auto id = g_next_id++;
+        std::string out = "{\"ok\":true,\"pair\":" + std::to_string(id) + "}";
+        g_recombination_pairs.emplace(id, handle); owned.release();
+        return respond(std::move(out));
+    } catch (const std::exception& ex) { return fail(PC_RESULT_INVALID_ARGUMENT, ex.what()); }
+}
+EMSCRIPTEN_KEEPALIVE
+void pcw_recombination_pair_close(uint32_t id) {
+    const auto found = g_recombination_pairs.find(id);
+    if (found != g_recombination_pairs.end()) { pc_recombination_pair_destroy(found->second); g_recombination_pairs.erase(found); }
+}
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_recombination_pair_calculate(uint32_t id, const char* goal_json) {
+    const auto* pair = find(g_recombination_pairs, id);
+    if (!pair || !goal_json) return fail(PC_RESULT_NOT_FOUND, "Unknown recombination pair or goal set");
+    try {
+        size_t length = 0; pc_error_info error = make_error();
+        const auto size = std::strlen(goal_json);
+        auto rc = pc_recombination_pair_goal_outcomes_json(*pair, goal_json, size, nullptr, 0, &length, &error);
+        if (rc != PC_RESULT_BUFFER_TOO_SMALL) return fail(error);
+        std::vector<char> buffer(length + 1);
+        rc = pc_recombination_pair_goal_outcomes_json(*pair, goal_json, size, buffer.data(), buffer.size(), &length, &error);
+        if (rc != PC_RESULT_OK) return fail(error);
+        return respond(std::string(buffer.data(), length));
+    } catch (const std::exception& ex) { return fail(PC_RESULT_INVALID_ARGUMENT, ex.what()); }
+}
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_recombination_pair_apply(uint32_t id, uint32_t context_id, const char* request_json) {
+    const auto* pair = find(g_recombination_pairs, id); const auto* context = find(g_contexts, context_id);
+    if (!pair || !context) return fail(PC_RESULT_NOT_FOUND, "Unknown recombination pair or context");
+    const auto saved_rng = (*context)->impl->rng;
+    std::vector<std::pair<pc_item_state*, pc_item_state>> saved_items;
+    const auto output_session_id = g_next_id++, output_item_id = g_next_id++;
+    pc_recombination_result result{};
+    const auto rollback = [&] {
+        (*context)->impl->rng = saved_rng;
+        for (const auto& [address, before] : saved_items) *address = before;
+        pc_session_destroy(result.output_session); result.output_session = nullptr;
+        g_sessions.erase(output_session_id); g_items.erase(output_item_id);
+        g_item_sessions.erase(output_item_id); g_bestiary_states.erase(output_item_id);
+    };
+    try {
+        const auto request = Parser(request_json, std::strlen(request_json)).parse();
+        const auto& input = request.at("resources").as_array();
+        if (input.size() < 2 || input.size() > PC_MAX_CRAFT_RESOURCES)
+            throw std::invalid_argument("Invalid recombination inventory count");
+        std::vector<pc_craft_resource> resources;
+        for (const auto& value : input) {
+            const auto sid = obj_u32(value, "session"), iid = obj_u32(value, "item");
+            const auto* session = find(g_sessions, sid); auto* item = find(g_items, iid);
+            if (!session || !item || g_item_sessions.at(iid) != sid)
+                throw std::invalid_argument("Inventory item must belong to its interpreting session");
+            if (const auto* compound = find(g_bestiary_states, iid); compound && compound->checkpoint_present)
+                throw std::invalid_argument("Random Apply of a saved Imprint resource requires compound inventory integration");
+            resources.push_back({value.at("identity").as_string().c_str(), value.at("role").as_string().c_str(), *session, item});
+            saved_items.emplace_back(item, *item);
+        }
+        // Allocate all registry nodes before consuming resources. Native or
+        // facade serialization errors restore the inputs and RNG together.
+        g_sessions.emplace(output_session_id, nullptr);
+        g_items.emplace(output_item_id, pc_item_state{});
+        g_item_sessions.emplace(output_item_id, output_session_id);
+        reset_bestiary_state(output_item_id, pc_item_state{});
+        pc_error_info error = make_error();
+        const auto rc = pc_recombination_pair_apply(*pair, *context, resources.data(), uint32_t(resources.size()),
+            request.at("output_identity").as_string().c_str(), &result, &error);
+        if (rc != PC_RESULT_OK) { rollback(); return fail(error); }
+        const auto& s = *result.output_session->impl;
+        std::string out = "{\"ok\":true,\"pair_version\":1,\"game_odds_estimated\":true,\"model_id\":";
+        append_escaped(out, result.model_id);
+        out += ",\"carrier\":" + std::to_string(result.carrier) + ",\"output_session\":" + std::to_string(output_session_id);
+        out += ",\"output_item\":" + std::to_string(output_item_id) + ",\"base_metadata_path\":";
+        append_escaped(out, s.data->string_at(s.data->base_metadata_path_sid.at(s.base_index)).c_str());
+        out += ",\"item_level\":" + std::to_string(s.item_level);
+        out += ",\"gold_cost\":null,\"dust_cost\":null,\"cost_complete\":false,\"cost_keys\":[],\"resources\":[";
+        for (unsigned i = 0; i < result.transaction.resource_count; ++i) {
+            const auto& change = result.transaction.resources[i];
+            pc_session_handle interpreting = result.output_session;
+            for (const auto& resource : resources) if (std::strcmp(resource.identity, change.identity) == 0) interpreting = resource.session;
+            if (i) out += ',';
+            out += "{\"identity\":"; append_escaped(out, change.identity);
+            out += ",\"effect\":" + std::to_string(change.effect) + ",\"before\":";
+            append_item_state(out, change.before, interpreting);
+            out += ",\"after\":"; append_item_state(out, change.after, interpreting); out += '}';
+        }
+        out += "]}";
+        g_sessions.at(output_session_id) = result.output_session;
+        g_items.at(output_item_id) = result.output_item;
+        reset_bestiary_state(output_item_id, result.output_item);
+        result.output_session = nullptr; // transferred to the registry
+        return respond(std::move(out));
+    } catch (const std::exception& ex) { rollback(); return fail(PC_RESULT_INVALID_ARGUMENT, ex.what()); }
+}
+
 // Reconstruct an item from a previously exported state document and register it
 // as a fresh handle. The input is the {"state":{...}} document or the bare
 // state object.
@@ -2111,7 +2230,7 @@ const char* pcw_item_import(const char* state_json, uint32_t session_id, uint32_
             const auto& snapshot = foresight->at("snapshot").as_string();
             // Currency is preserved as a JSON string by export for exact replay.
             const auto& currency_text = foresight->at("currency_json").as_string();
-            g_locks[id] = {nullptr, 0, currency_text, snapshot};
+            g_locks[id] = {nullptr, 0, currency_text, snapshot, Parser(snapshot.data(), snapshot.size()).parse().at("version").as_string() == "independent-cached-lock-v1"};
         }
         if (context_id) restore_lock(id, context_id, session);
     } catch (const std::exception& e) {
@@ -2235,6 +2354,26 @@ const char* pcw_hinekora(uint32_t context_id, uint32_t item_id, uint32_t session
                 pc_hinekora_lock_destroy(previous->handle);
             g_locks[item_id] = {handle, context_id, currency, ""};
             paid = "["; append_escaped(paid, pc_hinekora_lock_cost_key()); paid += ']';
+        } else if (operation == "apply_lock") {
+            if (const auto* previous = find(g_locks, item_id); previous && !previous->handle)
+                return fail(PC_RESULT_UNSUPPORTED_FEATURE, "Restore the paid Lock checkpoint before creating another Lock");
+            pc_hinekora_lock_handle handle = nullptr; auto error = make_error();
+            if (pc_hinekora_lock_apply(*context, item, &handle, &error) != PC_RESULT_OK) return fail(error);
+            if (const auto* previous = find(g_locks, item_id); previous && previous->handle)
+                pc_hinekora_lock_destroy(previous->handle);
+            g_locks[item_id] = {handle, context_id, "", "", true};
+            paid = "["; append_escaped(paid, pc_hinekora_lock_cost_key()); paid += ']';
+        } else if (operation == "observe") {
+            auto* entry = find(g_locks, item_id);
+            if (!entry || !entry->handle || entry->context != context_id)
+                return fail(PC_RESULT_UNSUPPORTED_FEATURE, "Observe requires the original live paid Lock context");
+            const auto& currency = options.at("currency_json").as_string();
+            const auto spec = Parser(currency.data(), currency.size()).parse();
+            pc_action_request request{}; std::vector<std::string> strings; std::string message;
+            if (!parse_action(spec, request, strings, message)) return fail(PC_RESULT_INVALID_ARGUMENT, message.c_str());
+            pc_item_state preview{}; pc_action_result result{}; auto error = make_error();
+            if (pc_hinekora_lock_observe(entry->handle, item, &request, &preview, &result, &error) != PC_RESULT_OK) return fail(error);
+            entry->currency = currency;
         } else if (operation != "inspect") return fail(PC_RESULT_INVALID_ARGUMENT, "Unknown Lock operation");
         auto* entry = find(g_locks, item_id);
         if (!entry) {
@@ -2246,8 +2385,10 @@ const char* pcw_hinekora(uint32_t context_id, uint32_t item_id, uint32_t session
         auto error = make_error(); std::int32_t active = 0;
         if (pc_hinekora_lock_status(entry->handle, item, &active, &error) != PC_RESULT_OK) return fail(error);
         std::string out = "{\"ok\":true,\"active\":"; out += active ? "true" : "false";
-        out += ",\"currency\":" + entry->currency + ",\"cost_keys\":" + paid;
-        if (active) {
+        out += ",\"cost_keys\":" + paid;
+        if (entry->independent) out += ",\"model\":\"independent-cached-lock-v1\",\"approximate\":true";
+        if (!entry->currency.empty()) out += ",\"currency\":" + entry->currency;
+        if (active && !entry->currency.empty()) {
             pc_item_state preview{}; pc_action_result result{};
             if (pc_hinekora_lock_preview(entry->handle, item, &preview, &result, &error) != PC_RESULT_OK) return fail(error);
             out += ",\"preview\":"; append_item_state(out, preview, *session);

@@ -8,6 +8,12 @@ int g_failures = 0;
 } // namespace pctest
 
 int main(int argc, char** argv) {
+    if (argc > 1 && std::string(argv[1]) == "--random-recombination-only") {
+        run_two_input_result_tests();
+        run_random_recombination_tests(argc > 2 ? argv[2] : nullptr);
+        std::printf("random recombination tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     if (argc > 1 && std::string(argv[1]) == "--reforge-count-law-only") {
         run_reforge_count_law_tests();
         run_reforge_saved_graph_law_tests();
@@ -122,6 +128,8 @@ int main(int argc, char** argv) {
         run_data_loader_tests(artifact_dir);
         run_session_builder_tests(artifact_dir, fixtures_dir);
         run_action_tests(artifact_dir);
+        run_two_input_result_tests();
+        run_random_recombination_tests(artifact_dir);
         run_bestiary_tests();
         run_simulator_tests(artifact_dir);
         std::printf("engine core tests: %d checks, %d failures\n",
@@ -351,6 +359,8 @@ int main(int argc, char** argv) {
     run_data_loader_tests(artifact_dir);
     run_session_builder_tests(artifact_dir, fixtures_dir);
     run_action_tests(artifact_dir);
+    run_two_input_result_tests();
+    run_random_recombination_tests(artifact_dir);
     run_bestiary_tests();
     run_simulator_tests(artifact_dir);
     run_solver_abstract_tests(artifact_dir);

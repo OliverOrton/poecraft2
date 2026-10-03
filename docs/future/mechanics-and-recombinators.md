@@ -1,7 +1,10 @@
 # Parked Mechanic And Recombinator Extensions
 
-**Status: parked future work.** No work in this document is selected or active.
-Oliver must explicitly choose and plan a chunk before implementation begins.
+**Status: automatic and unselected extensions remain parked.** Oliver selected
+current Random recombination's estimated native pair kernel separately; its
+[implemented contract](../engine/recombination.md) and
+[living receipt](../active/2026-10-03-random-recombination/README.md) own that scope.
+The automatic planning sketches below remain future work.
 
 Parent: [Future work](README.md)
 

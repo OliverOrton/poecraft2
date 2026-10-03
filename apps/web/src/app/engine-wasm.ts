@@ -266,6 +266,19 @@ export class EngineBindings {
         return this.callJson("pcw_item_export", ["number", "number"], [item, session]).state;
     }
 
+    openRecombinationPair(request: import("./engine-protocol").RecombinationPairRequest): number {
+        return this.callJson("pcw_recombination_pair_open", ["string"], [JSON.stringify(request)]).pair as number;
+    }
+    closeRecombinationPair(pair: number): void {
+        this.module.ccall("pcw_recombination_pair_close", null, ["number"], [pair]);
+    }
+    recombinationCalculate(pair: number, goals: import("./engine-protocol").CalculatorGoalSet): CalcResult {
+        return this.callJson("pcw_recombination_pair_calculate", ["number", "string"], [pair, JSON.stringify(goals)]) as unknown as CalcResult;
+    }
+    recombinationApply(pair: number, context: number, request: import("./engine-protocol").RecombinationApplyRequest): import("./engine-protocol").RecombinationApplyResult {
+        return this.callJson("pcw_recombination_pair_apply", ["number", "number", "string"], [pair, context, JSON.stringify(request)]) as unknown as import("./engine-protocol").RecombinationApplyResult;
+    }
+
     multiItemApply(context: number, request: unknown): import("./engine-protocol").MultiItemResult {
         return this.callJson("pcw_multi_item_apply", ["number", "string"], [context, JSON.stringify(request)]) as unknown as import("./engine-protocol").MultiItemResult;
     }
@@ -316,7 +329,7 @@ export class EngineBindings {
         );
     }
 
-    hinekora(context: number, item: number, session: number, operation: "create" | "inspect", currency?: CraftAction): import("./engine-protocol").HinekoraInfo {
+    hinekora(context: number, item: number, session: number, operation: "create" | "inspect" | "apply_lock" | "observe", currency?: CraftAction): import("./engine-protocol").HinekoraInfo {
         return this.callJson("pcw_hinekora", ["number", "number", "number", "string"],
             [context, item, session, JSON.stringify({operation, currency_json: currency && JSON.stringify(currency)})]) as unknown as import("./engine-protocol").HinekoraInfo;
     }
@@ -549,7 +562,7 @@ export class EngineBindings {
         return this.callJson("pcw_calc_inspector", ["number"], [session]).solver as number;
     }
 
-    openCalcGoal(session: number, goal: import("./engine-protocol").CalculatorItemGoal): number {
+    openCalcGoal(session: number, goal: import("./engine-protocol").CalculatorItemGoal | import("./engine-protocol").CalculatorGoalSet): number {
         return this.callJson("pcw_calc_goal", ["number", "string"], [session, JSON.stringify(goal)]).solver as number;
     }
     bestiaryGoalCalc(data: number, solver: number, item: number, action: string): CalcResult {

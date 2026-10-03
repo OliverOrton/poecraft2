@@ -132,3 +132,17 @@ pc-craft-spend { display: block; margin-bottom: 14px; padding-bottom: 12px; bord
 .pc-spend-price { display: flex; align-items: center; gap: 8px; margin-top: 5px; color: var(--pc-text-dim); }
 .pc-spend-price input { width: 85px; min-width: 0; }
 @media (max-width: 1000px) { .pc-harvest-layout { grid-template-columns: minmax(0, 1fr) 230px; gap: 10px; } }
+
+/* Bounded Calculator goal tabs share the existing item editor surface. */
+.pc-calc-goal-tabs, .pc-calc-goal-edit {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .35rem;
+}
+.pc-calc-goal-tabs button[aria-selected="true"] {
+    outline: 1px solid currentColor;
+}
+.pc-calc-goal-edit label { display: flex; align-items: center; gap: .35rem; min-width: 0; }
+.pc-calc-goal-edit input { width: 9rem; max-width: 100%; }
+.pc-calc-goal-summary ul { padding-left: 1.2rem; }

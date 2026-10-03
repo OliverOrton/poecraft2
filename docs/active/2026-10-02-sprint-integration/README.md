@@ -463,3 +463,508 @@ actual local/remote commit and CI projection are written separately to
 qualification alone. Main/remote changes require the recorded normal delivery
 step. Other feature owners remain isolated until parent coordination and combined
 qualification. The short later audit remains proposed, not started.
+
+
+## Latest-head web strategy scope guard checkpoint
+
+Windows run [37096236872](https://github.com/OliverOrton/poecraft2/actions/runs/37096236872),
+job **111126637666**, passes all **17 native targets** and **275 bindings**, then
+fails npm test. The specific fixture is `product Eldritch dependency wins through
+release WASM`; its call at `engine-smoke.test.ts:2161` fails the shape guard in
+`prepareSolverStrategy` at `solve-workspace.ts:208`. The earlier generic browser
+solver and Calculator picker cases passed; this does not show that all native
+solver graphs are invalid.
+
+Source inspection identifies the missing adapter value: native
+`solver_compile.cpp` emits `gated_search_with_paid_root_foulborn_salvage_v2` for
+active product paid-root scope, while the web strategy scope type/shape whitelist
+only accepts the four older values. The local patch recognizes that exact v2
+value. `prepareSolverStrategy`, native parsing/provenance/scope authority and
+board validation are unchanged. Unknown future scope v3 and dangling graphs
+remain explicit negative controls. The real WASM fixture also asserts the native
+scope before preparation so future contract mismatches are specific.
+
+No native source or WASM changes are made; the qualified `472f644b…` artifact is
+reused. All tests for this patch are **unrun** pending the coordinated web-test
+slot after recombination and multi-goal. Prepared commands and exclusions live in
+`web_solver_scope_guard_checkpoint` in [qualification.json](qualification.json).
+The existing product Eldritch fixture's 10,000-run Simulator tail is unchanged;
+it is not selected as local strategy qualification for this adapter-only change.
+Main remains `3ab862fe`; no new push or deployment. Multi-goal `e45b92b8` is
+unbuilt/untested and must not be integrated as qualified.
+
+
+### Web scope adapter qualified
+
+Source `7f235bbf` passes focused strategy-model and solve-workspace checks,
+including exact v2 roundtrip, unknown v3 refusal and invalid-graph rejection.
+TypeScript and the complete npm test chain pass with the existing Calculator
+carrier/goal smoke selection (4/4). Every later test file in the chain executes.
+`scope-guard-qualified.json` under `out/local-native-repair` and
+`web_solver_scope_guard_qualification` in [qualification.json](qualification.json)
+own exact commands, logs and exclusions. The specific product Eldritch smoke's
+unchanged 10,000-run Simulator tail is unrun locally; normal CI keeps the full
+fixture unchanged. No native/WASM rebuild is required or performed.
+
+The serial slot was released immediately after all test commands exited, before
+receipt/commit work. Main delivery is separately approved. Actual remote/CI
+result is recorded in `out/local-native-repair/scope-guard-delivery.json` after
+normal delivery; local qualification alone claims no remote success.
+
+Lightweight pinned-source review found multi-goal `e45b92b8` forked from
+`dbc142a2`, before the delivered native repair. Its eventual acceptance must
+qualify the current combined source and matching WASM, retaining the repair and
+scope adapter. Lock `e792c041` is based on `3ab862fe`; inspected shared protocol
+hunks are disjoint. Neither source-only feature has been merged or accepted by
+this review. Other native/model/WASM qualification remains with their owners.
+
+
+## Latest-head selective-service prefix parity classification
+
+Windows run **37098423243**, job **111132987553**, on delivered `0187f3d8`
+fails **28** checks in native `solver_solve` (158,188 checks total); 16/17 native
+targets pass. All failures lie in IC0/IC2 fixture **10**, before selective-service
+admission. The off/on control toggles `selective_completion_service`, not tracing.
+Assertions cover logical reforge work, graph/kernel/queue/cursor, phase and checked
+identity. No assertion is weakened or native production source changed.
+
+`3ab862fe` and `0187f3d8` have identical engine tree
+`53c70f2226ee0274dd544ea5fdfa3821deec5c68` and identical WASM `472f644b…`.
+The former CI passed all 17 native targets; the preserved matching local full
+solver run also passes all 158,188 checks and reports fixture10 at196 steps.
+The web scope patch therefore did not change this native algorithm. That evidence
+does not establish that the intermittent native failure is harmless.
+
+A concrete timing candidate exists: goal-cover setup's existing cooperative owner
+at `solver_solve_bounds.cpp:729` yields after 2,048 units **or20ms**. The test
+compares state after equal `step(1)` counts, which can differ in logical progress
+if only one setup coroutine crosses the wall-clock boundary. This is a source
+hypothesis, not a demonstrated root cause or proof that all final outputs match.
+
+Smallest requested reproduction: existing finite
+`build/engine/poecraft_engine_tests.exe --solver-integrity-only continuity`, with
+matching SHA256 `849ad1f3c670a711b9ce30b163f118a2cc7a0924e3f0f873f723c12204a1072d`.
+One serial run first; if it passes, at most two further finite repetitions. No
+rebuild or long solver benchmark is needed initially. If it diverges, first
+mismatch diagnostics should record fixture/step, setup stages, phase, logical
+work and queue/cursor without relaxing any assertion. All such runs/edits are
+pending the parent's slot; the actual five-mod allocation diagnostic has priority.
+
+`out/local-native-repair/parity-classification.json` and
+`selective_service_parity_classification` in [qualification.json](qualification.json)
+own the compact evidence/request. The actual Rare5modConquest construction
+`std::bad_alloc` task is separate: no CI allocation exception or demonstrated
+connection is present. No Bow/metamod path is reverted. No build/test/push starts
+from this source-only classification; no owned heavy process remains.
+
+
+The parent authorized exactly one preserved-binary continuity run. Existing
+`run_isolated_process` supervised it with a300.0-second host bound. It passed
+**51,511 checks, zero failures** in **0.952s**, exit0, no timeout or survivor;
+fixture10 completed at196 steps. The slot was released immediately. Raw output
+and metadata are `out/local-native-repair/parity-one-run.log` and
+`parity-one-run-result.json`; the qualification receipt owns their projection.
+This non-reproduction does not explain/dismiss CI. No repeat, rebuild or assertion
+change starts; future first-mismatch setup/step capture requires a diagnostic
+instrumentation slot if selected. The five-mod allocation case remains separate.
+
+
+Test-only first-mismatch instrumentation is now prepared, **unbuilt/unrun**.
+`IC_PARITY_FIRST` records fixture, zero-based step and differing-field mask;
+`IC_PARITY_SIDE` records off/on before-after setup/phase, continuation presence,
+call/setup timing, logical work and graph/queue/cursor/checked identity;
+`IC_PARITY_TRACE` retains each existing bounded native trace. The14 original
+assertions are unchanged. No production clocks/budgets/semantics or WASM changed.
+The native coroutine does not expose which2048-unit/20ms branch won: diagnostics
+explicitly record an unexposed reason, not a reason inferred from elapsed time.
+First/side records are flushed so partial output survives a stopped process.
+
+A future explicit slot must first allow the two-job test build and then one
+existing finite continuity selector through the existing300-second supervisor.
+No command starts automatically, no broad CI retry is selected, and main0187
+stays unchanged. The cap/five-mod owner has priority. Exact design/status is in
+`out/local-native-repair/parity-instrumentation-ready.json` and the qualification
+receipt; CI cause remains open after the one non-reproducing run.
+
+
+### First-mismatch diagnostics locally qualified
+
+The parent released the heavy slot for exactly one two-job Tests build and one
+instrumented continuity selector, source `05064362`. The build passed in 30.035s;
+existing `run_isolated_process` bounded the one selector at 300 seconds. It passed
+**51,511 checks, zero failures** in **1.200s**, exit0, no timeout or survivor.
+Fixture10 again completed at196 steps; no first-mismatch record was emitted. The
+heavy slot was released immediately, before receipt/commit work. The executable is
+SHA256 `561db89f3dace0f4d09c6fc1a91fcb678483be7818c211c92ba19a653d3f4166`.
+
+All14 original prefix assertions are verified verbatim against delivered `0187f3d8`.
+Production native source/include and WASM have no diff from that baseline. The
+local pass leaves CI divergence unresolved and does not confirm the timing/setup
+hypothesis. No broad local suite or native/WASM rebuild is selected. Exact logs,
+command/hash and process evidence live in `out/local-native-repair/parity-instrumented-*`
+and `selective_service_parity_instrumentation_qualification` in
+[qualification.json](qualification.json).
+
+The approved bounded next step is normal publication of these test diagnostics
+and inspection of exactly one resulting exact-head CI, without blind reruns.
+Actual main/remote/CI evidence is recorded separately after delivery. No production
+fix, cap-case authority, other feature integration or deployment is claimed.
+
+
+## Currency expansion smoke expected-rejection correction prepared
+
+Exact-head Windows CI `37101710211`, job `111142371722`, on `0fecbc40`
+passes all17 native targets and275 bindings. The earlier product Eldritch scope
+case also passes. Web smoke then fails at `engine-smoke.test.ts:2534`: it expects
+`/Pro/` when solving a root carrying73 memory strands. Both native solve entry
+points correctly refuse that unsupported carrier state before profile/mode
+dispatch, with `PC_RESULT_UNSUPPORTED_FEATURE` (4) and the explicit no-state-drop
+guard detail. This is a specific stale fixture expectation; production guard
+behavior is preserved. Native prefix parity remains intermittently unreproduced,
+not proved fixed by this passing native run.
+
+The prepared test-only correction requires an `EngineError` instance, code4 and
+the exact existing guard detail in both Current and Strategy Finder. It also
+checks that the exported remembered root is unchanged after each rejection.
+Existing invalid imports, unavailable/disabled actions, missing-price accounting,
+product solve/compile/evaluation checks and rare original-root witness remain.
+No native source, WASM, mechanics, scope or proof authority changes.
+
+`currency_expansion_guard_fixture_ready` in [qualification.json](qualification.json)
+and `out/local-native-repair/currency-guard-fixture-ready.json` own the specific
+source/contract and proposed checks. All checks are **unrun** pending parent
+coordination: the cap owner retains the local heavy slot. The existing exact smoke
+filter selects this fixture plus the three ABI/data/session setup cases; use it
+for the focused smoke and complete following npm chain, plus TypeScript. No
+native/WASM rebuild or blind remote retry is selected. No new push.
+
+
+### Full web qualification and optional local Chrome launch
+
+On `f9e46c6a`, the authorized full unfiltered `npm test` passes **37/37 engine
+smoke cases**, including both corrected remembered-root rejections and the
+remaining original-root product witnesses. Subsequent test files run until
+`workspace-resources.test.ts:6` cannot find Playwright's pinned headless-shell
+executable. npm exits1 in38.478s; TypeScript passes in8.011s. Both supervised
+process groups exit without survivors and the local heavy slot is released
+immediately. Full-chain qualification remains incomplete. The original failure
+log/results are preserved under `out/local-native-repair/currency-guard-full-*`.
+
+Playwright/core1.58.2 expects Chromium145.0.7632.6, revision1208. Default cached
+revision directories are empty. Installed Chrome152.0.7977.83 is available at
+`C:\Program Files\Google\Chrome\Application\chrome.exe`. The parent selected
+an optional local test channel without installation. `POECRAFT_TEST_BROWSER_CHANNEL`
+may be unset (unchanged pinned Chromium default) or `chrome`; other values fail.
+The existing `chromium.launch` owner creates a fresh temporary profile. No user
+profile path, persistent context or browser installation is used. Every existing
+resource-test assertion and cleanup statement remains verbatim unchanged.
+
+This channel change is source-only and **unrun**. At the next coordinated slot,
+clear the smoke filter, set the Chrome override, run the full npm chain and
+TypeScript. Record any Chrome/Playwright compatibility failure without relaxing
+checks. A passing installed-Chrome run will qualify that alternative locally; it
+will not claim pinned-browser parity. Native/WASM remains unchanged at472f644b.
+`currency_guard_optional_chrome_channel_ready` in
+[qualification.json](qualification.json) owns exact versions, retained failure
+and pending commands. Diagnostic has priority; no heavy command or push starts
+from this source-only checkpoint.
+
+
+### Full web chain qualified with installed Chrome
+
+Source `9f28a099` passes **full unfiltered npm test** in44.583s, including
+**37/37 engine smoke cases** and every following file through hosted-tester,
+then TypeScript in3.586s. The original expected-state correction remains strict
+in both modes, and workspace atomic resource/Undo/Redo/stale/alias assertions
+execute in a real browser. Playwright1.58.2 uses installed Chrome152.0.7977.83
+via the validated explicit channel and a fresh temporary profile. Chrome
+executable SHA256 `caf423e184f0bcefe2ee5bef40539a3c005c63beb44e3321c0834929a13af733`
+is unchanged before/after. Both supervised process groups exit without survivors;
+the local heavy slot is released immediately, before receipt work.
+
+This is installed-Chrome local qualification; it does not establish parity with
+the missing pinned Chromium145/revision1208. Unset channel retains CI's original
+pinned default. The original unfiltered f9e46c6a browser-availability failure is
+preserved. No assertion is bypassed, no browser/dependency installation occurs
+and native/WASM stays unchanged at472f644b. Native prefix parity remains
+intermittently unreproduced, not proved fixed.
+
+`currency_guard_chrome_qualification` in [qualification.json](qualification.json)
+and `out/local-native-repair/currency-guard-qualified.json` own exact commands,
+versions, process evidence and exclusions. The parent explicitly resumes the
+authorized normal main delivery of these qualified test corrections and hosted
+CI inspection. Actual remote head and terminal CI are recorded separately in
+`out/local-native-repair/currency-guard-delivery.json`. Solver recovery c04e42ee,
+Lock e2b6ff70 and other pending features are not integrated by this delivery.
+No local heavy capacity is held during receipt/publication/remote monitoring.
+
+
+## Exact-head evaluation cancellation race; source repair prepared
+
+Normal main delivery is remote-verified at `c00bb449`. Windows CI37109852631,
+job111165480624, passes17 native targets and275 bindings, then stops at the
+unchanged exact-evaluation cancellation smoke (`engine-smoke.test.ts:1099`):
+**Missing expected rejection**. No native parity mismatch is visible. This CI
+does not reach the later guard/resource cases; it neither proves nor disproves
+local Chrome qualification or pinned-browser parity. Solver knowledge37109852682
+passes. The exact failed run and compact failure are preserved in
+`evaluation_cancel_response_race_ready` and the delivery receipt.
+
+Source exposes the response/control ordering behind the failure: abort posts a
+message to the worker, but a successful reply may already be queued. The client
+previously resolved that reply even when the original evaluation signal had
+already aborted. Worker progress does not acknowledge client receipt, so the
+32-node fixture cannot guarantee cross-thread cancellation delivery before
+completion. Actual CI progress/cancel timestamps are absent; this is a source
+path consistent with the observed result, not a measured round-trip trace.
+
+The prepared adapter correction affects `strategyEvaluate` only: capture the
+original signal and reject a successful reply when that signal is already aborted
+before exposing completion. Native error replies and other request types remain
+unchanged. Native worker cleanup still closes evaluator, economy and strategy in
+its existing finally owner. No clocks, work budgets, game laws, native source,
+WASM, scope or proof authority changes. All six original real-WASM rejection
+assertions,1000ms promptness bound and handle checks remain byte-for-byte unchanged.
+
+A finite transport regression forces progress-abort-before-queued-success without
+relying on machine timing. Controls retain ordinary success, native capacity
+errors after an abort, and removal of stale cancellation listeners after
+settlement. It is **unrun**, as are full unfiltered npm and TypeScript on this
+new source. Multi-goal owns the local heavy slot; no command/push begins from
+source readiness. Existing matched WASM472f644b requires no rebuild.
+`out/local-native-repair/evaluation-cancel-race-ready.json` and the qualification
+receipt own exact source hashes, preserved failure and proposed checks.
+
+
+### Cancellation lifetime/order review
+
+The aa19a2d8 adapter correction adds no handle or cleanup owner. Client terminal
+observation first removes the pending invocation and abort listener; late/duplicate
+messages cannot re-enter it. Already-aborted requests carry the existing atomic
+cancelled bit before native dispatch, so evaluation refuses before compiling any
+native handle. Active work still has exactly one unchanged worker finally that
+closes evaluator/economy/strategy. Native errors remain errors; solverSolve and
+other request contracts remain unchanged.
+
+Finite source regressions now cover pre-readiness abort, queued success after
+progress abort, ordinary success/late abort, native errors before/after abort,
+and duplicate terminal/stale progress cleanup. A pre-cancelled real-WASM request
+also checks live handles against the baseline. The original six cancellation
+iterations are verified verbatim unchanged, including1000ms promptness and final
+handle accounting. Production adapter/worker/native/WASM source is unchanged from
+aa19a2d8. All new runtime checks remain unrun at this source checkpoint.
+
+The diagnostic explicitly released its process/slot, and the parent now grants
+focused finite ordering tests, full unfiltered npm with explicit Chrome, and
+TypeScript on this reviewed follow-up. Record identities before running and
+release the local slot immediately after commands, before receipts/publication.
+`evaluation_cancel_lifetime_review` and its ignored receipt preserve this review.
+
+
+### Evaluation cancellation correction qualified
+
+Source532b2219 (production adapteraa19a2d8 unchanged) passes focused finite
+ordering checks in0.996s, full unfiltered npm in44.174s (37/37 smoke and every
+following file), and TypeScript in3.533s. Five controlled orderings cover abort
+before readiness/dispatch, queued success after progress abort, ordinary success,
+and native errors before/after abort. Duplicate terminal, stale progress and late
+abort controls pass. The real-WASM pre-cancelled request retains baseline handles,
+and all original six cancellation/time/handle iterations pass verbatim unchanged.
+
+Qualification uses installed Chrome152.0.7977.83 / Playwright1.58.2 with a fresh
+temporary profile and unchanged executable hash. It does not claim pinned-browser
+parity. Native/WASM472f644b, other request contracts, native errors and sole worker
+cleanup owner remain unchanged. All processes exit without survivors; local slot
+is released immediately before receipt work. Prior failed CI remains preserved.
+
+`evaluation_cancel_qualification` in [qualification.json](qualification.json)
+and `out/local-native-repair/evaluation-cancel-qualified.json` own exact evidence.
+Normal qualified publication is approved; actual remote and hosted terminal result
+are recorded separately in `out/local-native-repair/evaluation-cancel-delivery.json`.
+No solver recovery, Lock or other pending feature is integrated by this delivery.
+No local heavy capacity is held for publication or hosted CI.
+
+
+## Hosted pinned-browser dependency setup
+
+Exact-head Windows37112607929/job111173301597 on75270c83 passes17 native
+targets,275 bindings and37/37 engine smoke cases, then fails browser launch at
+workspace-resources:11. The disposable runner has no pinned headless-shell1208
+executable. This is a missing CI dependency, not an assertion failure. The failed
+run/projection remains in `evaluation-cancel-hosted-browser-failure.json`.
+
+The parent explicitly approves hosted-runner-only browser provisioning. Existing
+test.ps1 gains an opt-in InstallTestBrowser switch, disabled by default; Windows
+CI explicitly supplies it. After exactly one npm ci, the project's installed
+Playwright CLI provisions Chromium headless shell from its official default
+Playwright sources, then the unchanged full web chain and TypeScript run. Setup
+failure stops validation. No local browser/package installation, channel override
+in CI, assertion change, native/WASM change or pending-feature integration occurs.
+
+PowerShell parser, workflow YAML parser, default-switch/error guards, exact command
+order and diff checks pass. Browser download/runtime execution is intentionally
+unrun locally; normal post-push hosted CI will validate the selected setup. The
+[official headless-shell setup](https://playwright.dev/docs/browsers#chromium-headless-shell)
+supports the minimal only-shell choice. `hosted_pinned_browser_setup` and
+`out/local-native-repair/ci-pinned-browser-qualified.json` own evidence/exclusions.
+Actual remote/run/terminal outcome is recorded separately in
+`out/local-native-repair/ci-pinned-browser-delivery.json`. No local slot is held.
+
+
+## Current main CI and prepared feature integration (2026-10-03)
+
+Exact main **4b092b0b** passes [Windows37114415245](https://github.com/OliverOrton/poecraft2/actions/runs/37114415245)
+(job111178311856):17 native targets,275 Python tests,37/37 engine smoke,
+finite cancellation-order controls, the complete unfiltered web chain and
+TypeScript. Hosted setup downloads pinned Chromium headless-shell1208
+(version145.0.7632.6). [Solver knowledge37114415162](https://github.com/OliverOrton/poecraft2/actions/runs/37114415162)
+also passes. No local installation or heavy command was needed. A successful CI
+run does not establish that the historical intermittent prefix-parity issue is
+fixed. hosted_ci_terminal records terminal steps and the exact log projection;
+prior failures remain preserved.
+
+Lock **e2b6ff70** and Calculator multi-goal **b269a564**, tested at **53be4ce8**,
+remain individually qualified. The latter's final delta is documentation only.
+Source review confirms separate adapter/type additions, inspection-only native
+goal-set handles, and active individual-goal Strategy finder dispatch. The new
+goal-set oracle enumerates concrete native weighted-pool draws with a separate
+family/group/tier predicate; its renewal recursion differs from the compiled
+Calculator recurrence. It covers overlap, nested tiers, disjoint outcomes,
+fractured incoming blockers, extras, conservation and bounded goal/choice cases.
+The three hand-written Recombination terminal outcomes qualify a single-output
+observer only. Mixed-frame dispatch/finalization remains outstanding.
+
+The prepared order is current main4b092b0b, ordinary merge of Lock, then
+Calculator, on a new isolated sibling integration branch. Retain main's
+evaluation cancellation gate and controls, original six cancellation/time/handle
+checks, unsupported-carrier guard, optional Chrome fixture and hosted browser
+setup. Calculator's copied c00bb449 test hunks must appear once. Both feature
+branches change WASM: neither individual binary qualifies combined source.
+Review Recomb's terminal qualified delta when selected by the parent, then freeze
+source/runtime/data/prices and exact commands before rebuilding native and WASM.
+
+Recomb currently owns LOCAL. After a parent serial slot grant, use the existing
+build/supervision owners with at most two compiler jobs, combined Calculator
+incoming/observation/calc checks, Lock Python lifecycle checks, the explicit
+real-WASM goal-set transport test, full unfiltered npm and TypeScript. The npm
+chain already covers Lock web owners. Select final checks from the actual merged
+ABI delta; preflight immutable inputs before any full acceptance. Release LOCAL
+immediately after commands, before receipt/publication work.
+
+Rendered review is still unrun. The prepared checklist covers persisted goal
+editing/selection and union odds; selected-goal Strategy finder scope; selection-free
+Lock application, full cached numerical previews, approximate-model disclosure,
+payment/consumption/import/Undo/Redo; incoming foresight/memory/cluster carrier
+identity; and donor staleness/distinct resources after qualified Recomb integration.
+Use an isolated preview and fresh browser profile without restarting Oliver's
+existing server. combined_source_review owns exact source/artifact identities,
+integration order, test and rendered plans. No merge, build, browser launch,
+combined qualification or feature publication occurred in this source-only pass.
+Pending solver recovery/Bow5 economic and product checks are excluded.
+
+
+## Lock and Calculator source integration performed (2026-10-03)
+
+The parent authorized actual source integration. Fresh sibling
+poecraft2-feature-integration, branch dot/features-integration-20261003,
+starts at main4b092b0b plus receipt db1d8404. Ordinary Lock merge1e2d6eab
+and Calculator merge d4c854f8 contain their qualified checkpoints with ancestry
+preserved. Only Lock HANDOFF and Calculator WASM required conflict handling;
+all production source/shared API additions merged automatically. Main's evaluation
+cancellation method, finite controls, full smoke file and hosted browser setup are
+byte-for-byte retained. Workspace browser setup matches main exactly; goal-list
+IndexedDB assertions are added once. An initial static occurrence-count mistake
+is recorded and corrected by exact prefix comparison before this checkpoint.
+
+The WASM binary is deliberately the old main472f644b placeholder. It is explicitly
+unqualified for combined source and must be rebuilt after final feature selection.
+The new worktree has its own frozen runtime junction and uses existing main
+node_modules without installation. Runtime manifest/game-data/strings, runtime
+lock, bundled economy inputs and package metadata are hashed in
+actual_source_integration. No canonical data, prices or dependencies changed.
+
+Recomb's terminal qualified checkpoint is still awaited for review/integration;
+feeder and solver recovery remain excluded. The receipt records the exact
+serial native/Lock-Python/WASM/worker/full-npm/TypeScript batch, with two compiler
+jobs and retained checks. No LOCAL heavy command, browser session or feature push
+has occurred. Rendered coverage remains prepared and unrun; combined source and
+runtime qualification are separate obligations.
+
+
+## All three qualified checkpoints source-integrated (2026-10-03)
+
+Qualified Recomb **e830a3a5** is now ordinarily merged at **84467e4d**. Its shared
+Calculator ancestor **31078439** leaves one goal parser/observer and frozen donor
+implementation. Only HANDOFF and WASM conflict; no production source conflicts.
+The qualified Calculator model/persistence/worker fixtures are retained exactly,
+and critical Recomb dispatcher/kernel/API/session builder/Calculator hashes match
+its terminal qualification. Main's cancellation method, smoke/client tests and
+hosted CI setup remain exact. WASM and MJS are paired old-main placeholders; both
+are unqualified for this combined source.
+
+Bounded source review confirms carrier-specific native observation and half-weight
+finalization with conservation, estimated model/projection identities, unknown
+costs and separate terminal/solver authority. Native pair admission already rejects
+foresight. Test-only checkpoint **db96aae2** adds explicit foreseen-first and
+foreseen-second safety regressions; those runtime checks are unrun. No production
+fix or new game-law decision was needed.
+
+The final prepared source is **db96aae2**, engine tree
+**4f3741ae7b20095575125efe710f5ba89d97c989**. Read-only SQLite fixture
+f239ec69 is copied byte-for-byte from the qualified owner and rechecked, with no
+canonical/source modification. All eighteen bundled economy inputs, runtime files,
+package inputs and affected source hashes are pinned in actual_source_integration.
+Generated web fixtures will be created by the existing build:data owner only after
+matching combined WASM is built.
+
+The pending serial batch now includes native pair/currency/incoming/observation/
+Calculator checks and header smoke; all four finite Lock/pair/currency Python files
+against the combined DLL and frozen fixtures; matching WASM; standard build:data;
+explicit goal-set worker; full unfiltered npm; TypeScript. Full npm already includes
+the real Recomb worker/atomic Apply and Calculator controls, so no routine duplicate
+runs are added. Compiler/Binaryen/linker concurrency stays at most two.
+
+Diagnostic owns LOCAL. No combined build/test/browser command, feature push or
+owned process has begun. Rendered coverage includes goal persistence/scope/union,
+Lock lifecycle/full cached numeric previews/spend, Random estimated carrier rows,
+unknown gold/dust, full frozen donor staleness, readonly calculation inputs and
+atomic output/Undo/Redo. Rendered execution remains unrun; feeder and incomplete
+solver recovery remain excluded.
+
+
+## Combined features locally qualified and reviewed (2026-10-03)
+
+Source **5cc2e185**, engine tree **4f3741ae**, completes the frozen14-stage serial
+batch. Native/header/shared builds and pair237, currency6484, incoming10681,
+layout839 and Calculator1775297 checks pass with zero failures. The four finite
+Python files pass89/89. Matching WASM, standard frozen build:data, explicit real
+shared-goal worker, full unfiltered npm (37/37 smoke and all following owners,
+including real pair/atomic Apply and Lock controls) and TypeScript pass. All frozen
+runtime/SQLite/economy/package inputs remain identical. No product/test source
+changed after these checks; only generated matching WASM/MJS and this receipt are
+being committed.
+
+The release WASM is **10da55d0f6cfc6021118a5a6be5cce560c6a6b55060ed1b278f2ef9aafbcb568**
+(8521566bytes), MJS **23c405b984e19595b4007259d8d45fe713ea31a534c091c2ef9433ffbe2f1363**.
+Maximum compiler/Binaryen/linker concurrency is two. No watchdog/cancellation or
+survivor failure occurs. LOCAL is released at11:26:51UTC before receipt work.
+
+Supported rendered flows pass136 assertions across three fresh Chrome fixture
+pages. They exercise real DOM/React with existing controlled transport, including
+repeated goal selection, rejected stale/interrupted replies with handle cleanup,
+repeated readonly Lock previews, and Calculator/Random controls. Native execution
+is qualified separately by real WASM/worker tests. No dev/preview server was started
+or restarted. All three screenshots are actually inspected: covered labels,
+numerical readonly preview, approximate/estimated model disclosures and unknown/
+unpriced costs are readable, with no material visual issue found. The goal fixture
+uses minimal markup; full workspace layout and product-server end-to-end flows
+remain unrun. This is not an expanded native game-law or solver certificate.
+
+User approval at04:12:21UTC explicitly covers the disclosed initial models and
+merge/push of completed tested changes. The parent directly verified that transcript
+and instructs qualified publication after this review. Normal guarded publication
+may now proceed; actual main/remote/CI results are recorded separately. No deployment,
+dependency installation or refresh is authorized or performed. Pending feeder and
+solver recovery remain excluded. Historical parity uncertainty and unsupported
+categories/costs remain explicit. combined_feature_qualification and
+out/feature-integration/qualified-final.json own exact passed/unrun evidence.

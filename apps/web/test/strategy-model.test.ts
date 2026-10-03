@@ -75,6 +75,21 @@ import type { Catalog } from "../src/app/engine-protocol";
     reopened.solver_policy_scope =
         "no_economic_restart_policy_restriction";
     assert.equal(isStrategyDocument(reopened), true);
+    reopened.solver_policy_scope =
+        "gated_search_with_paid_root_foulborn_salvage_v2";
+    assert.equal(isStrategyDocument(reopened), true);
+    assert.equal(
+        JSON.parse(JSON.stringify(cloneStrategy(reopened))).solver_policy_scope,
+        "gated_search_with_paid_root_foulborn_salvage_v2",
+    );
+    assert.equal(
+        isStrategyDocument({
+            ...reopened,
+            solver_policy_scope: "gated_search_with_paid_root_foulborn_salvage_v3",
+        }),
+        false,
+        "unknown future controller scopes must still be refused",
+    );
     assert.equal(
         isStrategyDocument({ ...reopened, solver_policy_scope: "invalid" }),
         false,

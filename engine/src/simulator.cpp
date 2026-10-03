@@ -1568,7 +1568,7 @@ void compile_operation(
     StrategyNode& node) {
     const std::string type = string_member(operation, "type");
     if (type == "recombination")
-        invalid("Executable recombination is held until the pair owner's full native Apply is qualified");
+        invalid("Executable Builder recombination is held until resource-slot integration preserves the qualified pair Apply output session");
     if (type == "move_resource" || type == "discard_resource") {
         const auto& params = require_object_member(operation, "params", Type::Object);
         node.resource_id = string_member(params, type == "move_resource" ? "to" : "resource_id");

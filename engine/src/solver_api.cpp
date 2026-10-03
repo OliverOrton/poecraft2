@@ -9,6 +9,7 @@
 #include <limits>
 #include <memory>
 #include <optional>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -309,14 +310,12 @@ solver::ActionRegistryBuildOptions registry_build_options(
     return options;
 }
 
-solver::GoalSpec parse_goal(
+solver::GoalSpec parse_goal_value(
     const poecraft::SessionImpl& session,
-    const char* goal_json,
-    std::size_t goal_json_size,
+    const Value& root,
     std::vector<std::uint32_t>& out_candidates,
     const solver::ActionRegistry& registry, bool calculator_only = false) {
     const poecraft::DataImpl& data = *session.data;
-    Value root = Parser(goal_json, goal_json_size).parse();
     if (root.type != Type::Object) {
         throw std::runtime_error("goal: root must be an object");
     }
@@ -619,11 +618,18 @@ solver::GoalSpec parse_goal(
     return goal;
 }
 
+solver::GoalSpec parse_goal(const poecraft::SessionImpl& session,
+        const char* text, std::size_t size, std::vector<std::uint32_t>& candidates,
+        const solver::ActionRegistry& registry, bool calculator_only = false) {
+    return parse_goal_value(session, Parser(text, size).parse(), candidates, registry, calculator_only);
+}
+
 } // namespace
 
 struct pc_solver {
     bool inspection_only = false;
     solver::CalculatorItemGoal item_goal;
+    std::vector<solver::CalculatorGoal> calculator_goals;
     std::string currency_calculation_json;
     std::shared_ptr<const poecraft::SessionImpl> session;
     std::unique_ptr<solver::CalcContext> calc;
@@ -2056,10 +2062,13 @@ pc_result pc_calc_currency_outcomes_json(
     try {
         solver->currency_calculation_json = solver::calculate_currency_json(
             *solver->calc, *receiver, action,
-            donor_session ? donor_session->impl.get() : nullptr, donor, solver->item_goal);
+            donor_session ? donor_session->impl.get() : nullptr, donor, solver->item_goal, solver->calculator_goals);
         *out_json = solver->currency_calculation_json.c_str();
         clear_error(out_error);
         return PC_RESULT_OK;
+    } catch (const std::length_error& ex) {
+        set_error(out_error, PC_RESULT_CAPACITY_EXCEEDED, ex.what());
+        return PC_RESULT_CAPACITY_EXCEEDED;
     } catch (const std::exception& ex) {
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT, ex.what());
         return PC_RESULT_INVALID_ARGUMENT;
@@ -2068,6 +2077,62 @@ pc_result pc_calc_currency_outcomes_json(
 
 pc_result pc_calc_create_goal(pc_session_handle session, const char* goal_json,
         size_t goal_json_size, pc_solver_handle* out_solver, pc_error_info* out_error) {
+    if (out_solver) *out_solver = nullptr;
+    if (!session || !goal_json || !out_solver) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "Calculator goal requires session, JSON and output");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    try {
+        if (goal_json_size > 256 * 1024) throw std::length_error("Calculator goal request byte cap exceeded");
+        const auto root = Parser(goal_json, goal_json_size).parse();
+        if (string_member(root, "version") == "calculator_goal_set_v1") {
+            const auto* entries = root.find("goals");
+            if (!entries || entries->type != Type::Array || entries->array.empty() ||
+                    entries->array.size() > solver::kMaxCalculatorGoals)
+                throw std::invalid_argument("Calculator goal set requires one to eight goals");
+            auto holder = std::make_unique<pc_solver>();
+            holder->inspection_only = true; holder->session = session->impl;
+            auto options = registry_build_options(*holder->session, goal_json, goal_json_size);
+            options.exhaustive_fossils = false;
+            options.automatic_dominance = false;
+            options.automatic_candidates = false;
+            auto registry = solver::build_action_registry(*holder->session, options);
+            std::set<std::string> ids;
+            for (const auto& entry : entries->array) {
+                solver::CalculatorGoal goal;
+                goal.id = string_member(entry, "id");
+                if (goal.id.empty() || goal.id.size() > 64 ||
+                    goal.id.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-.") != std::string::npos ||
+                    !ids.insert(goal.id).second)
+                    throw std::invalid_argument("Calculator goal IDs must be unique bounded ASCII identifiers");
+                const auto& value = entry.at("goal");
+                std::vector<std::uint32_t> candidates;
+                goal.explicit_goal = parse_goal_value(*holder->session, value, candidates, registry, true);
+                if (goal.explicit_goal.automatic_candidates || !goal.explicit_goal.fixed_options.empty() ||
+                    goal.explicit_goal.disabled_action_families)
+                    throw std::invalid_argument("Calculator goal-set members cannot change shared action scope");
+                goal.item_goal = solver::parse_calculator_item_goal(*holder->session, value);
+                solver::build_abstract_layout(*holder->session, goal.explicit_goal, registry, {}, true, false);
+                holder->calculator_goals.push_back(std::move(goal));
+            }
+            std::sort(holder->calculator_goals.begin(), holder->calculator_goals.end(),
+                [](const auto& a, const auto& b) { return a.id < b.id; });
+            std::vector<std::uint64_t> reachable(holder->session->words, 0);
+            for (std::uint32_t mod = 0; mod < holder->session->mod_count; ++mod)
+                if (holder->session->gen_type[mod] <= 1) poecraft::pc_bitset_set(reachable.data(), mod);
+            holder->item_goal = holder->calculator_goals[0].item_goal;
+            holder->calc = std::make_unique<solver::CalcContext>(holder->session,
+                holder->calculator_goals[0].explicit_goal, std::move(registry),
+                std::vector<std::uint32_t>{}, true, false, false, std::nullopt,
+                std::vector<solver::CountObservation>{}, false, reachable,
+                false, false, false, false, false, nullptr, false, false, true);
+            *out_solver = holder.release(); clear_error(out_error); return PC_RESULT_OK;
+        }
+    } catch (const std::length_error& ex) {
+        set_error(out_error, PC_RESULT_CAPACITY_EXCEEDED, ex.what()); return PC_RESULT_CAPACITY_EXCEEDED;
+    } catch (const std::exception& ex) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, ex.what()); return PC_RESULT_INVALID_ARGUMENT;
+    }
     return create_solver(session, goal_json, goal_json_size, std::nullopt,
         solver::GoalTerminalDiagnosticMode::LegacyClean, out_solver, out_error, true);
 }
@@ -3204,4 +3269,20 @@ pc_result pc_strategy_eval_memory_stats(
     out_stats->serialized_output_bytes = serialized;
     clear_error(out_error);
     return PC_RESULT_OK;
+}
+
+namespace poecraft::solver {
+std::vector<CalculatorGoal> bind_calculator_goal_set(
+        std::shared_ptr<const SessionImpl> session, const char* text, std::size_t size) {
+    pc_session wrapper;
+    wrapper.impl = std::const_pointer_cast<SessionImpl>(std::move(session));
+    pc_solver_handle handle = nullptr;
+    pc_error_info error{};
+    const auto code = pc_calc_create_goal(&wrapper, text, size, &handle, &error);
+    if (code != PC_RESULT_OK) throw std::invalid_argument(error.message);
+    std::unique_ptr<pc_solver, decltype(&pc_solver_destroy)> owned(handle, pc_solver_destroy);
+    if (handle->calculator_goals.empty())
+        throw std::invalid_argument("Pair Calculator requires calculator_goal_set_v1");
+    return handle->calculator_goals;
+}
 }
