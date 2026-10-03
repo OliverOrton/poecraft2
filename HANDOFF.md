@@ -54,6 +54,18 @@ No deployment, refresh, dev-server restart or other feature integration is selec
 by this checkpoint. Parent coordinates the remaining isolated owners and combined
 qualification; new model approvals supply no game-exact solver authority.
 
+# Calculator goal-set native qualification checkpoint (2026-10-03)
+
+Isolated `dot/calculator-goal-set-20261003` now includes qualified main `0187f3d8`.
+Native source `ac67c8eb` passes 10,681 incoming/goal-set, 839 observation-layout
+and 1,775,297 Calculator checks (overlapping counts). The [living record](docs/active/2026-10-03-calculator-goal-set/README.md)
+owns logs, source identity, contracts and remaining checks. The matching WASM
+build completed (module SHA-256 `143f21f3…`); it was already running when Oliver
+prioritized the five-mod trace diagnosis. Heavy slot released at 05:27 UTC;
+no owned heavy process remains. Hold web qualification for the next explicit grant. Donor-freezing web follow-up is preserved but unrun.
+No rendered review, push, main merge, publication or deployment. Recombination
+still owns mixed-output-session dispatch; K>1 observed-choice refusal remains.
+
 # Combined completion batch delivered; paused (2026-10-02)
 
 The [living integration record](docs/active/2026-10-02-sprint-integration/README.md)

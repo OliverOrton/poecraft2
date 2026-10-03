@@ -138,3 +138,12 @@ Redo receipt and the dedicated UI route. These new tests and sources remain
 unbuilt/unrun until the parent grants the next heavy slot. Installed web
 dependencies are referenced through an isolated node_modules junction;
 the normal checkout and its development server are unchanged.
+
+The isolated branch now merges the goal owner's qualified checkpoint
+`31078439` (shared native observer interface unchanged from its initial source
+contract), including concrete renewal fixtures and frozen donor request
+lifetimes. Random pair requests adopt the same captured data/second-input
+snapshot. The imported goal-only WASM remains insufficient for this branch's
+new pair exports; a matching rebuild is mandatory before product qualification.
+The merge keeps one shared observer, parser and goal schema, with the small
+native binding bridge added by this programme.

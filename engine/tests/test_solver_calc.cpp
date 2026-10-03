@@ -4145,6 +4145,14 @@ void run_foulborn_kernel_tests() {
 // every v1 predicate. Single-goal evaluations below are test parity controls.
 void run_calculator_goal_set_tests() {
     auto session = make_calc_session();
+    const auto mod_satisfies_goal_slot = [](const SessionImpl& physical, std::uint32_t mod, const GoalSlot& slot) {
+        bool member = slot.family_id != kNoId && physical.family_id[mod] == slot.family_id;
+        if (slot.group_id != kNoId)
+            for (auto i = physical.group_offsets[mod]; i < physical.group_offsets[mod+1]; ++i)
+                member |= physical.group_ids[i] == slot.group_id;
+        const auto tier = physical.family_tier_index[mod];
+        return member && (!slot.min_tier || (tier && tier <= slot.min_tier));
+    };
     auto registry = build_action_registry(*session);
     const auto make_goal = [](std::uint32_t family, std::uint32_t tier = 0) {
         GoalSpec goal; goal.slots.push_back({kNoId, family, tier});
@@ -4215,6 +4223,59 @@ void run_calculator_goal_set_tests() {
     check({{"life",life,{}},{"fire",fire,{}}},held); // physical incoming exclusion
     auto clean = fire; clean.terminal.extras = ExtraExplicitPolicy::ForbidUnmatched;
     check({{"clean",clean,{}},{"covered",fire,{}}},held);
+    // Independent ordered physical draws for ordinary 8:3:1 renewal.
+    // Complete exclusion groups remain present in every intermediate item.
+    auto coverage = life; coverage.slots.push_back(fire.slots[0]); coverage.min_satisfied_slots = 1;
+    const std::vector<CalculatorGoal> renewal_goals{{"tier",life_t1,{}},{"coverage",coverage,{}}};
+    const auto physical_hit = [&](const pc_item_state& item, const GoalSpec& goal) {
+        unsigned satisfied = 0;
+        for (const auto& slot : goal.slots) {
+            bool hit = false;
+            for (unsigned i = 0; i < item.prefix_count; ++i) hit |= mod_satisfies_goal_slot(*session,item.prefixes[i].mod_id,slot);
+            for (unsigned i = 0; i < item.suffix_count; ++i) hit |= mod_satisfies_goal_slot(*session,item.suffixes[i].mod_id,slot);
+            satisfied += hit;
+        }
+        return item.rarity == goal.rarity && satisfied >= goal.required_satisfied_slots() &&
+            (goal.terminal.extras == ExtraExplicitPolicy::Allow || item.prefix_count + item.suffix_count == satisfied);
+    };
+    for (const auto& [action, initial] : std::vector<std::pair<std::string,pc_item_state>>{
+            {"alchemy",[] {pc_item_state item; pc_item_clear(&item); return item;}()}, {"chaos",held}}) {
+        CalcContext caller(session,life,registry,{},true,false);
+        const auto text = calculate_currency_json(caller,initial,action,nullptr,nullptr,{},renewal_goals);
+        const auto result = json::Parser(text.data(),text.size()).parse();
+        std::array<long double,2> expected{}; long double expected_any = 0;
+        ActionContextImpl context(0); context.session = session;
+        auto base = initial; base.prefix_count = base.suffix_count = 0; base.rarity = PC_RARITY_RARE;
+        for (unsigned i = 0; i < initial.prefix_count; ++i)
+            if (initial.prefixes[i].flags & PC_MOD_SLOT_FRACTURED)
+                PC_CHECK(pc_item_add_mod(&base,PC_SIDE_PREFIX,initial.prefixes[i].mod_id,initial.prefixes[i].group_id,initial.prefixes[i].flags,nullptr) == PC_RESULT_OK);
+        const auto observe = [&](const pc_item_state& item, long double probability) {
+            bool any = false;
+            for (std::size_t g = 0; g < renewal_goals.size(); ++g) if (physical_hit(item,renewal_goals[g].explicit_goal)) {
+                expected[g] += probability; any = true;
+            }
+            if (any) expected_any += probability;
+        };
+        const auto draw = [&](auto&& self, pc_item_state item, unsigned target, long double probability) -> void {
+            if (item.prefix_count + item.suffix_count >= target) {observe(item,probability);return;}
+            PoolBuildRequest request;
+            request.side_filter = item.prefix_count == 3 ? 1 : item.suffix_count == 3 ? 0 : -1;
+            const auto pool = get_weighted_pool(context,&item,request);
+            if (!pool.total_weight) {observe(item,probability);return;}
+            for (const auto& row : pool.entries) {
+                auto next = item;
+                PC_CHECK(pc_item_add_mod(&next,row.gen_type,row.session_mod_id,static_cast<std::uint16_t>(row.primary_group),0,nullptr) == PC_RESULT_OK);
+                self(self,next,target,probability * row.final_weight / pool.total_weight);
+            }
+        };
+        draw(draw,base,4,8.0L/12); draw(draw,base,5,3.0L/12); draw(draw,base,6,1.0L/12);
+        PC_CHECK(near(result.at("any_goal_probability").as_number(),double(expected_any),1e-12));
+        for (std::size_t g = 0; g < renewal_goals.size(); ++g)
+            PC_CHECK(near(result.at("goal_results").array[g].at("success_probability").as_number(),double(expected[g]),1e-12));
+        double total = 0;
+        for (const auto& row : result.at("outcomes").array) total += row.at("probability").as_number();
+        PC_CHECK(near(total,1,1e-12));
+    }
     std::vector<CalculatorGoal> eight;
     for (unsigned i = 0; i < 8; ++i) eight.push_back({"g"+std::to_string(i), life,{}});
     check(eight,input);
@@ -4256,6 +4317,7 @@ void run_calculator_goal_set_tests() {
 }
 
 void run_calculator_incoming_tests(const char* artifact_dir) {
+    run_calculator_goal_set_tests();
     // The oracle builds the execution authority's pool from the concrete
     // carrier and observes each concrete successor. It never reconstructs
     // the incoming item through the Calculator's or the caller's layout.
@@ -4435,6 +4497,24 @@ void run_calculator_incoming_tests(const char* artifact_dir) {
     const auto p = check_add(session, goal, item, "foulborn_exalt");
     PC_CHECK(near(p, 0.21153846153846154, 1e-12));
     std::printf("Original Foulborn carrier Calculator probability: %.17g\n", p);
+    // Expanded corruption branches retain native final-property predicates.
+    GoalSpec unrestricted; unrestricted.terminal.extras = ExtraExplicitPolicy::Allow;
+    CalculatorItemGoal corrupted, clean_item; corrupted.corrupted = true; clean_item.corrupted = false;
+    const auto registry = build_action_registry(*session);
+    CalcContext caller(session,unrestricted,registry,{},true,false);
+    for (const char* action : {"vaal","double_corruption"}) {
+        const auto text = calculate_currency_json(caller,item,action,nullptr,nullptr,{},
+            {{"corrupted",unrestricted,corrupted},{"uncorrupted",unrestricted,clean_item}});
+        const auto result = json::Parser(text.data(),text.size()).parse();
+        const double expected = std::string(action) == "vaal" ? 1 : 0.5;
+        PC_CHECK(near(result.at("any_goal_probability").as_number(),expected,1e-12));
+        PC_CHECK(near(result.at("goal_results").array[0].at("success_probability").as_number(),expected,1e-12));
+        PC_CHECK(result.at("goal_results").array[1].at("success_probability").as_number() == 0);
+        double conserved = 0;
+        for (const auto& row : result.at("outcomes").array) conserved += row.at("probability").as_number();
+        PC_CHECK(near(conserved,1,1e-12));
+    }
+
 }
 
 void run_reforge_count_law_tests() {
@@ -4783,7 +4863,6 @@ void run_solver_calc_tests(const char* artifact_dir) {
     run_reforge_cross_goal_projection_tests();
     run_foulborn_kernel_tests();
     run_calculator_incoming_tests(artifact_dir);
-    run_calculator_goal_set_tests();
     run_product_dead_feature_reduction_tests();
     run_exact_goal_member_materialization_test();
     run_goal_threshold_tests();

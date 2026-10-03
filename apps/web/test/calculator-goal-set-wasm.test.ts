@@ -37,5 +37,58 @@ try {
     finally {await client.closeSolver(single);await client.closeSolver(one);}
     await assert.rejects(client.openCalcGoal(session,{...set,goals:Array.from({length:9},(_,i)=>({id:`g${i}`,goal}))}),/eight/);
     await assert.rejects(client.openCalcGoal(session,{...set,goals:[set.goals[0],set.goals[0]]}),/unique/);
+    // Nested implicit/property goals use the same chosen final item law.
+    await client.closeItem(item); item=await client.createItem(session,{rarity:"rare",withImplicits:true});
+    const rarityGoal:CalculatorItemGoal={version:"v1",rarity:"rare",slots:[],allow_extra_modifiers:true,corrupted:true};
+    const probe=await client.openCalcGoal(session,rarityGoal);
+    let implicitId:number, implicitProbability:number;
+    try {
+        const vaal=await client.currencyCalc(probe,item,"vaal");
+        const implicit=vaal.implicit_outcomes?.find(implicit=>implicit.present_probability>0);
+        assert.ok(implicit);implicitId=implicit.mod;implicitProbability=implicit.present_probability;
+    } finally {await client.closeSolver(probe);}
+    const implicitKey=(await client.modInfo(session,implicitId)).key;
+    const nested=await client.openCalcGoal(session,{version:"calculator_goal_set_v1",actions:[],goals:[
+        {id:"property",goal:rarityGoal},{id:"implicit",goal:{...rarityGoal,implicit_mod_keys:[implicitKey]}}]});
+    try {
+        const vaal=await client.currencyCalc(nested,item,"vaal");
+        assert.equal(vaal.any_goal_probability,1);
+        assert.ok(Math.abs(vaal.goal_results!.find(goal=>goal.id==="implicit")!.success_probability-implicitProbability)<1e-12);
+        assert.ok(Math.abs(vaal.goal_results!.find(goal=>goal.id==="implicit")!.implicit_satisfied[0]-implicitProbability)<1e-12);
+        const temple=await client.currencyCalc(nested,item,"double_corruption");
+        assert.ok(Math.abs(temple.any_goal_probability!-0.5)<1e-12);
+    } finally {await client.closeSolver(nested);}
+    // Bestiary is a deterministic native successor followed by shared observation.
+    await client.closeItem(item);item=await client.createItem(session,{rarity:"magic",withImplicits:true});
+    const beast=await client.openCalcGoal(session,{version:"calculator_goal_set_v1",actions:[],goals:[
+        {id:"magic",goal:{version:"v1",rarity:"magic",slots:[],allow_extra_modifiers:true}},
+        {id:"rare",goal:{version:"v1",rarity:"rare",slots:[],allow_extra_modifiers:true}}]});
+    try {
+        const before=await client.exportItem(item,session);
+        const result=await client.bestiaryGoalCalc(data,beast,item,"bestiary:imprint");
+        assert.equal(result.any_goal_probability,1);
+        assert.equal(result.goal_results!.find(goal=>goal.id==="magic")!.success_probability,1);
+        assert.equal(result.goal_results!.find(goal=>goal.id==="rare")!.success_probability,0);
+        assert.deepEqual(await client.exportItem(item,session),before);
+    } finally {await client.closeSolver(beast);}
+    // Configured cluster law remains in the selected native output session.
+    const cluster=await client.createSession(data,"Metadata/Items/Jewels/JewelPassiveTreeExpansionSmall",84,
+        {passiveKey:"affliction_maximum_life",passiveCount:2});
+    let clusterItem=0,clusterGoal=0;
+    try {
+        clusterItem=await client.createItem(cluster,{rarity:"normal"});
+        clusterGoal=await client.openCalcGoal(cluster,{version:"calculator_goal_set_v1",actions:["alchemy"],goals:[
+            {id:"rare",goal:{version:"v1",rarity:"rare",slots:[],allow_extra_modifiers:true}},
+            {id:"normal",goal:{version:"v1",rarity:"normal",slots:[]}}]});
+        const before=await client.exportItem(clusterItem,cluster);
+        const result=await client.currencyCalc(clusterGoal,clusterItem,"alchemy");
+        assert.equal(result.any_goal_probability,1);
+        assert.equal(result.goal_results!.find(goal=>goal.id==="rare")!.success_probability,1);
+        assert.equal(result.goal_results!.find(goal=>goal.id==="normal")!.success_probability,0);
+        assert.deepEqual(await client.exportItem(clusterItem,cluster),before);
+        await assert.rejects(client.currencyCalc(clusterGoal,clusterItem,"vaal"),/not yet approved|not yet.*qualified/);
+    } finally {
+        if(clusterGoal)await client.closeSolver(clusterGoal);if(clusterItem)await client.closeItem(clusterItem);await client.closeSession(cluster);
+    }
     console.log("Source-matched WASM goal-set worker transport passed");
 } finally {if(item)await client.closeItem(item);if(session)await client.closeSession(session);client.dispose();await worker.terminate();}
