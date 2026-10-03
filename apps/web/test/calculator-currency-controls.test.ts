@@ -149,14 +149,16 @@ await editAccess.addInputMod("shaper-mod", "prefix");
 assert.deepEqual(calls, [[1, 2, {add_implicit: "vaal-implicit"}], [1, 2, {add_explicit: "shaper-mod", fractured: false}]]);
 // The dedicated pair route carries the shared goal set without creating a
 // receiver-only currency inspector or adding a registry strategy action.
+const pairCalls: unknown[][] = [];
+access.client.closeItem = async (...args) => { pairCalls.push(["closeItem", ...args]); };
 const pairAccess = calculator as unknown as {calculateRandomRecombination: (...args: unknown[]) => Promise<CalcResult>};
-pairAccess.calculateRandomRecombination = async (...args) => { calls.push(["randomPair", ...args]); return {...result, game_odds_estimated: true, cost_complete: false}; };
-calls.length = 0; access.actionId = "random_recombination";
+pairAccess.calculateRandomRecombination = async (...args) => { pairCalls.push(["randomPair", ...args]); return {...result, game_odds_estimated: true, cost_complete: false}; };
+pairCalls.length = 0; access.actionId = "random_recombination";
 await access.recalc();
-assert.equal(calls[0][0], "randomPair");
-assert.equal((calls[0][3] as {version: string}).version, "calculator_goal_set_v1");
-assert.deepEqual((calls[0][3] as {actions: string[]}).actions, []);
-assert.deepEqual(calls.map(call => call[0]), ["randomPair", "closeItem"]);
+assert.equal(pairCalls[0][0], "randomPair");
+assert.equal((pairCalls[0][3] as {version: string}).version, "calculator_goal_set_v1");
+assert.deepEqual((pairCalls[0][3] as {actions: string[]}).actions, []);
+assert.deepEqual(pairCalls.map(call => call[0]), ["randomPair", "closeItem"]);
 access.renderResults();
 assert.match(calculator.querySelector(".pc-calc-output")?.textContent ?? "", /Gold and dust cost is unknown/);
 const {loadGameAssets} = await import("../src/app/game-assets");

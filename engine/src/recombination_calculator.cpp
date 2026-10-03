@@ -1,6 +1,7 @@
 #include "recombination_calculator.hpp"
 #include "calculator_currency.hpp"
 #include "json.hpp"
+#include "poecraft/bitset.h"
 #include <algorithm>
 #include <cmath>
 #include <iomanip>
@@ -97,9 +98,9 @@ std::shared_ptr<SessionImpl> observation_session(const SessionImpl& reference, c
             for (auto level : reference_levels.at(found->second)) if (level > session->required_level[m]) ++rank;
             session->family_tier_index[m] = rank;
         } else {
-            const auto [found, inserted] = foreign.emplace(session->family_id[m], fresh);
+            const auto [foreign_entry, inserted] = foreign.emplace(session->family_id[m], fresh);
             if (inserted) ++fresh;
-            session->family_id[m] = found->second;
+            session->family_id[m] = foreign_entry->second;
         }
     }
     return session;

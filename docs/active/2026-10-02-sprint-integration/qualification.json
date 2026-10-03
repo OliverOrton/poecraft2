@@ -2024,5 +2024,884 @@
     "no_deployment": true,
     "no_price_data_refresh": true,
     "no_dev_server_restart": true
+  },
+  "selective_service_parity_classification": {
+    "recorded_utc": "2026-10-03T05:32:33.430614+00:00",
+    "status": "source/log classification only; reproduction pending slot; no assertion or production change",
+    "ci": {
+      "head": "0187f3d8334c3b9deb9730a6fa89899c051e9931",
+      "run": 37098423243,
+      "job": 111132987553,
+      "url": "https://github.com/OliverOrton/poecraft2/actions/runs/37098423243",
+      "solver_checks": 158188,
+      "solver_failures": 28,
+      "native_targets_passed": 16,
+      "native_targets_total": 17
+    },
+    "correct_case": "run_current_incumbent_continuity_tests IC0/IC2 fixture10 before selective service admission; off/on toggles selective_completion_service, not tracing",
+    "failure_projection": {
+      "2495 logical reforge work": 2,
+      "2490 queue": 5,
+      "2487 graph identity": 4,
+      "2488 successors": 4,
+      "2489 probabilities": 4,
+      "2491 expansion cursor": 5,
+      "2484 phase": 3,
+      "2493 verified identity": 1
+    },
+    "unchanged_source": {
+      "3ab862fe_engine_tree": "53c70f2226ee0274dd544ea5fdfa3821deec5c68",
+      "0187f3d8_engine_tree": "53c70f2226ee0274dd544ea5fdfa3821deec5c68",
+      "wasm_sha256_both": "472f644bed756caee538868b714e4d144989e9ec1990232f82562d2f80b7424f"
+    },
+    "prior_passed_evidence": [
+      "Windows run37096236872 on3ab862fe passed all17 native targets before web failure",
+      "out/local-native-repair/resumed-solver-solve-qualified.log:158188 checks,0 failures; IC0fixture10 steps196, admitted/checking/validating"
+    ],
+    "source_timing_candidate": {
+      "owner": "engine/src/solver_solve_bounds.cpp:729",
+      "rule": "Goal-cover setup yields at2048 work units OR20ms steady wall clock",
+      "test_rule": "Off/on are compared after equal counts of step(1), before service admission",
+      "classification": "Plausible wall-clock-dependent prefix misalignment, not established harmlessness or confirmed root cause. Existing intermittent native execution/fixture issue; web-only patch changes no native source."
+    },
+    "smallest_reproduction_request": {
+      "command": "build/engine/poecraft_engine_tests.exe --solver-integrity-only continuity",
+      "artifact": "build/engine/poecraft_engine_tests.exe",
+      "artifact_sha256": "849ad1f3c670a711b9ce30b163f118a2cc7a0924e3f0f873f723c12204a1072d",
+      "first_run": "single serial finite run with existing matching executable; no rebuild/data/pricing/benchmark",
+      "conditional_followup": "If first passes, at most two more serial finite repetitions to assess recurrence; if mismatch, diagnostic-only first mismatch record of fixture/step/setup stage/phase/logical work/queue/cursor, retaining every existing assertion",
+      "limits": "Existing bounded toy fixture limits; no long solve or five-mod invocation"
+    },
+    "unrun": [
+      "all new local reproductions",
+      "any timing perturbation or diagnostic rebuild",
+      "any proposed fix qualification"
+    ],
+    "bad_alloc_case": {
+      "task": "01a10034-1cbb-76ed-8c32-a692b16a701e",
+      "relation": "Separate actual Rare5modConquest native_construction_refused:std::bad_alloc case, no CI bad_alloc evidence or demonstrated connection. Do not mix/revert Bow or metamod paths."
+    },
+    "heavy_slot": "held by other task; user-prioritized actual bad_alloc diagnostic takes precedence",
+    "owned_heavy_processes_remaining": 0,
+    "main_unchanged": true,
+    "no_push": true,
+    "no_production_fix": true
+  },
+  "selective_service_parity_one_run": {
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 25264,
+    "process_identity_token": "25264:134354793659746957",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 951.8671999685466,
+    "completed_utc": "2026-10-03T05:36:06.926447+00:00",
+    "command": [
+      "C:\\Users\\Oliver\\Documents\\poecraft2-local-native-repair\\build\\engine\\poecraft_engine_tests.exe",
+      "--solver-integrity-only",
+      "continuity"
+    ],
+    "executable_sha256": "849ad1f3c670a711b9ce30b163f118a2cc7a0924e3f0f873f723c12204a1072d",
+    "failure_lines": 0,
+    "summaries": [
+      "solver integrity tests: 51511 checks, 0 failures"
+    ],
+    "first_mismatch_context": null,
+    "fixture10_summary": [
+      "IC0 fixture=10 goals=4 steps=196 done=1 candidate=1 checked=1 admitted=1 checking=1 validating=1 entry_cost=31984.615384614921 status=censored_finish_or_cap"
+    ],
+    "stage_capture_limit": "Preserved binary has standard assertions and fixture summary only; exact first mismatch setup/step values require a diagnostic rebuild if recurrence occurs.",
+    "run_count": 1,
+    "supervisor": "poecraft_ingest.solver_worker.run_isolated_process",
+    "host_watchdog_seconds": 300.0,
+    "stdout_log": "out/local-native-repair/parity-one-run.log",
+    "slot_released": true,
+    "classification": "Non-reproduction does not explain or dismiss CI failure; no repeated run, rebuild or assertion change authorized/performed."
+  },
+  "selective_service_parity_instrumentation_ready": {
+    "recorded_utc": "2026-10-03T05:47:54.498522+00:00",
+    "status": "test-only first-mismatch instrumentation prepared, unbuilt/unrun",
+    "source_file": "engine/tests/test_solver_solve.cpp",
+    "diagnostic_labels": [
+      "IC_PARITY_FIRST",
+      "IC_PARITY_SIDE",
+      "IC_PARITY_TRACE"
+    ],
+    "scope": "first pre-admission parity mismatch per existing continuity fixture; no added selector or supervisor",
+    "mask_bits": [
+      "phase",
+      "values",
+      "policy_rows",
+      "graph_identity",
+      "successors",
+      "probabilities",
+      "queue",
+      "expansion_cursor",
+      "global_lower",
+      "verified_identity",
+      "logical_reforge_work",
+      "service_calc_absent",
+      "service_checker_absent",
+      "service_validator_absent"
+    ],
+    "captures": [
+      "fixture and zero-based step iteration",
+      "phase/setup stage before and after each step(1)",
+      "goal-cover/retention/root-checker continuation presence before/after",
+      "per-call steady wall nanoseconds and goal-cover charged time delta",
+      "state/row/kernel/queue sizes, expanded count, expansion state/cursor",
+      "logical work, graph and verified identity, service phase",
+      "existing bounded native progress traces"
+    ],
+    "yield_reason_limit": "Native coroutine does not expose whether2048-unit or20ms branch won. Record not_exposed_unit_or_wall_time; >=20ms is an observed timing indicator only, not an inferred reason.",
+    "preserves": "All14 original PC_CHECK expressions remain unchanged; production source, clocks/budgets/semantics, native laws, bounds/publication guards and WASM unchanged.",
+    "partial_output": "Flush first mismatch and side records before trace formatting; existing supervisor preserves stdout if stopped",
+    "pending_command": "powershell -NoProfile -File scripts/dev-engine.ps1 -Task Tests -Jobs 2, then one instrumented --solver-integrity-only continuity invocation through existing run_isolated_process with300.0-second bound, only after explicit slot grant",
+    "unrun": [
+      "diagnostic build",
+      "instrumented selector",
+      "new broad CI retry"
+    ],
+    "prior_result": "One preserved-binary run passed51511 checks in0.952s; CI root cause remains open",
+    "main_unchanged": "0187f3d8334c3b9deb9730a6fa89899c051e9931",
+    "no_push": true,
+    "no_production_fix": true,
+    "owned_heavy_processes_remaining": 0,
+    "priority": "Cap/five-mod diagnostic owns slot; cases remain separate"
+  },
+  "selective_service_parity_instrumentation_qualification": {
+    "recorded_utc": "2026-10-03T06:00:57.857783+00:00",
+    "status": "test-only first-mismatch instrumentation qualified locally; CI divergence unresolved",
+    "source": "050643620bdd4c3cb71d5378f79c0b4e25257f36",
+    "baseline_delivered_main": "0187f3d8334c3b9deb9730a6fa89899c051e9931",
+    "build": {
+      "command": "powershell -NoProfile -File scripts/dev-engine.ps1 -Task Tests -Jobs 2",
+      "target": "Tests only",
+      "max_build_jobs": 2,
+      "exit_code": 0,
+      "wall_seconds": 30.0349999,
+      "log": "out/local-native-repair/parity-instrumented-build.log"
+    },
+    "run": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 43320,
+      "process_identity_token": "43320:134354805857741552",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 1200.2918999642134,
+      "completed_utc": "2026-10-03T05:56:26.755966+00:00",
+      "source": "050643620bdd4c3cb71d5378f79c0b4e25257f36",
+      "command": [
+        "C:\\Users\\Oliver\\Documents\\poecraft2-local-native-repair\\build\\engine\\poecraft_engine_tests.exe",
+        "--solver-integrity-only",
+        "continuity"
+      ],
+      "executable_sha256": "561db89f3dace0f4d09c6fc1a91fcb678483be7818c211c92ba19a653d3f4166",
+      "failure_lines": 0,
+      "summaries": [
+        "solver integrity tests: 51511 checks, 0 failures"
+      ],
+      "first_mismatch_records": [],
+      "fixture10_summary": [
+        "IC0 fixture=10 goals=4 steps=196 done=1 candidate=1 checked=1 admitted=1 checking=1 validating=1 entry_cost=31984.615384614921 status=censored_finish_or_cap"
+      ],
+      "full_output_log": "out/local-native-repair/parity-instrumented-run.log"
+    },
+    "preflight": {
+      "source": "050643620bdd4c3cb71d5378f79c0b4e25257f36",
+      "started_utc": "2026-10-03T05:56:25.554686+00:00",
+      "command": [
+        "C:\\Users\\Oliver\\Documents\\poecraft2-local-native-repair\\build\\engine\\poecraft_engine_tests.exe",
+        "--solver-integrity-only",
+        "continuity"
+      ],
+      "executable_sha256": "561db89f3dace0f4d09c6fc1a91fcb678483be7818c211c92ba19a653d3f4166",
+      "host_watchdog_seconds": 300.0,
+      "run_count": 1
+    },
+    "assertion_review": {
+      "original_PC_CHECK_count": 14,
+      "all_original_expressions_verbatim": true,
+      "production_native_and_wasm_diff_from_baseline": []
+    },
+    "bounds": {
+      "local_instrumented_invocations": 1,
+      "host_watchdog_seconds": 300.0,
+      "owned_heavy_processes_remaining": 0,
+      "slot_released_before_receipt_work": true
+    },
+    "interpretation": "No local divergence captured. The timing/setup hypothesis remains unproved. This pass does not explain or dismiss prior exact-head CI failures.",
+    "unrun": [
+      "New broad local suite",
+      "Native/WASM rebuild (unchanged production source)",
+      "One authorized exact-head post-push CI (pending normal delivery)"
+    ],
+    "delivery": "Normal main fast-forward/push is authorized for these test-only diagnostics. Actual remote and one post-push CI result will be recorded separately; no deployment."
+  },
+  "currency_expansion_guard_fixture_ready": {
+    "recorded_utc": "2026-10-03T06:32:08.641177+00:00",
+    "status": "test-only expected-rejection correction prepared; build/test unrun; cap owner retains local heavy slot",
+    "baseline": "0fecbc404925548dc978ecdcf4d2aa0e62c91e1a",
+    "ci": {
+      "run_id": 37101710211,
+      "job_id": 111142371722,
+      "conclusion": "failure",
+      "native_targets": "17/17 passed",
+      "bindings": "275 passed",
+      "failing_file": "apps/web/test/engine-smoke.test.ts:2534",
+      "expected": "/Pro/",
+      "actual_code": 4,
+      "actual_detail": "Foresight, memory strands, absent resources and enchantment effects require solver integration; state cannot be dropped",
+      "prior_product_eldritch_scope_case": "passed",
+      "native_parity": "intermittently unreproduced; not proved fixed"
+    },
+    "root_state": {
+      "memory_strands": 73,
+      "modes": [
+        "current",
+        "strategy_finder"
+      ]
+    },
+    "contract": {
+      "native_guards": [
+        "engine/src/solver_api.cpp:2224",
+        "engine/src/solver_api.cpp:2307"
+      ],
+      "code": "engine/include/poecraft/result.h:15 PC_RESULT_UNSUPPORTED_FEATURE = 4",
+      "precedence": "Unsupported concrete carrier-state refusal precedes mode/profile dispatch in both entry points"
+    },
+    "change": {
+      "file": "apps/web/test/engine-smoke.test.ts",
+      "sha256": "5a15759ad1f7ac69366859c3f2a9071113c6dc5a07595602243915c012fffef2",
+      "expected_error": "EngineError instance, code4, exact state-preservation guard detail",
+      "additional_negative_check": "Exported remembered root equals pre-solve snapshot after rejection in both modes",
+      "production_native_wasm_diff": []
+    },
+    "preserved": [
+      "Memory73 clone/imprint roundtrip",
+      "Invalid legacy mod identity rejection",
+      "Memory101 invalid-import rejection",
+      "Unavailable alchemy/tempering actions",
+      "Both ordinary product solve/compile/independent graph evaluations",
+      "Disabled foulborn rejection",
+      "Missing-price accounting",
+      "Rare original-root witness"
+    ],
+    "pending_checks": [
+      "POECRAFT_SMOKE_TEST=currency expansion state and original-root policy contracts; npx tsx test/engine-smoke.test.ts",
+      "Same smoke filter with npm test (complete following web chain)",
+      "npx tsc --noEmit"
+    ],
+    "local_owned_heavy_processes": 0,
+    "build_tests_started": false,
+    "no_new_ci_rerun": true,
+    "no_push": true
+  },
+  "currency_guard_full_validation": {
+    "source": "f9e46c6af4639c5b8bd754198ed354b16189b1a7",
+    "wasm_sha256": "472f644bed756caee538868b714e4d144989e9ec1990232f82562d2f80b7424f",
+    "smoke_filter": null,
+    "results": [
+      {
+        "exit_code": 1,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 29196,
+        "process_identity_token": "29196:134354872352761433",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 38477.50960011035,
+        "name": "npm",
+        "command": [
+          "cmd.exe",
+          "/d",
+          "/s",
+          "/c",
+          "npm test"
+        ],
+        "source": "f9e46c6af4639c5b8bd754198ed354b16189b1a7",
+        "watchdog_seconds": 900.0,
+        "log": "out/local-native-repair/currency-guard-full-npm.log",
+        "summary": [
+          "║ Looks like Playwright Test or Playwright was just installed or updated. ║",
+          "║ Please run the following command to download new browsers:              ║",
+          "║                                                                         ║",
+          "║     npx playwright install                                              ║",
+          "║                                                                         ║",
+          "║ <3 Playwright Team                                                      ║",
+          "╚═════════════════════════════════════════════════════════════════════════╝",
+          "    at <anonymous> (C:\\Users\\Oliver\\Documents\\poecraft2-local-native-repair\\apps\\web\\test\\workspace-resources.test.ts:6:32) {",
+          "  name: 'Error'",
+          "}",
+          "",
+          "Node.js v20.20.0"
+        ],
+        "smoke_summaries": [
+          "37/37 passed",
+          "Lock worker: paid preview, exact restore, failed import, Undo/Redo spend, context cleanup and native strand editing passed",
+          "Lock controls: selected-request preview, read-only numerical rolls and separate payment/commit passed",
+          "solver lab Calculator export tests passed",
+          "Edit history: snapshots, branching, recovery, grouping and limits passed"
+        ],
+        "errors": []
+      },
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 93948,
+        "process_identity_token": "93948:134354872737545208",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 8011.302399914712,
+        "name": "typescript",
+        "command": [
+          "cmd.exe",
+          "/d",
+          "/s",
+          "/c",
+          "npx tsc --noEmit"
+        ],
+        "source": "f9e46c6af4639c5b8bd754198ed354b16189b1a7",
+        "watchdog_seconds": 300.0,
+        "log": "out/local-native-repair/currency-guard-full-typescript.log",
+        "summary": [],
+        "smoke_summaries": [],
+        "errors": []
+      }
+    ],
+    "completed_utc": "2026-10-03T07:48:01.766062+00:00",
+    "owned_processes_remaining": 0
+  },
+  "currency_guard_optional_chrome_channel_ready": {
+    "recorded_utc": "2026-10-03T07:59:33.463844+00:00",
+    "status": "source-only optional Chrome test channel prepared; new source unrun/unpushed",
+    "source_file": "apps/web/test/workspace-resources.test.ts",
+    "file_sha256": "5137c13389eb82aea3ae66308a08a4c2fe9bc10ca993d432965d025a8dd00da6",
+    "launch": {
+      "default": "Pinned Playwright Chromium headless shell, unchanged when env unset",
+      "local_override": "POECRAFT_TEST_BROWSER_CHANNEL=chrome",
+      "validation": "Only unset or chrome accepted; invalid override fails",
+      "profile": "Existing chromium.launch creates a fresh temporary user-data directory; no launchPersistentContext, userDataDir or user profile supplied"
+    },
+    "versions": {
+      "playwright": "1.58.2",
+      "playwright_core": "1.58.2",
+      "chrome": "152.0.7977.83",
+      "chrome_executable": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+      "pinned_chromium": "145.0.7632.6",
+      "pinned_revision": "1208"
+    },
+    "coverage": "Existing workspace resource assertion and cleanup body verbatim unchanged; real browser IndexedDB/atomic apply/Undo/Redo/stale and alias checks retained",
+    "compatibility": "Installed Chrome with pinned Playwright is untested; report any launch/protocol incompatibility without weakening assertions. Alternative browser qualification does not prove pinned-browser parity.",
+    "preserved_failure": {
+      "source": "f9e46c6af4639c5b8bd754198ed354b16189b1a7",
+      "npm_log": "out/local-native-repair/currency-guard-full-npm.log",
+      "npm_exit_code": 1,
+      "full_smoke": "37/37 passed",
+      "stop": "Missing pinned headless-shell executable at workspace-resources.test.ts:6",
+      "typescript": "passed",
+      "results": "out/local-native-repair/currency-guard-full-results.json"
+    },
+    "pending_checks": [
+      "Clear POECRAFT_SMOKE_TEST; set POECRAFT_TEST_BROWSER_CHANNEL=chrome; full npm test",
+      "npx tsc --noEmit on new source"
+    ],
+    "no_install": true,
+    "no_browser_launched": true,
+    "no_native_wasm_build": true,
+    "owned_heavy_processes_remaining": 0,
+    "slot": "Diagnostic has next priority; no local heavy command granted"
+  },
+  "currency_guard_chrome_qualification": {
+    "recorded_utc": "2026-10-03T08:28:25.842670+00:00",
+    "status": "Full unfiltered local web chain and TypeScript qualified with installed Chrome; pinned-browser qualification unrun",
+    "source": "9f28a09939c1f0d8a2ff66efa2a1ce7b1dbaefe6",
+    "baseline_delivered_main": "0fecbc404925548dc978ecdcf4d2aa0e62c91e1a",
+    "test_corrections": [
+      "Exact unsupported carrier-state EngineError/code/detail and unchanged-root rejection in both modes",
+      "Validated optional installed Chrome channel; unset retains original pinned default"
+    ],
+    "qualification": {
+      "started_utc": "2026-10-03T08:23:08.588308+00:00",
+      "source": "9f28a09939c1f0d8a2ff66efa2a1ce7b1dbaefe6",
+      "wasm_sha256": "472f644bed756caee538868b714e4d144989e9ec1990232f82562d2f80b7424f",
+      "runtime": {
+        "schema_version": 1,
+        "runtime_directory": "data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+        "manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+        "source_lock": "fixtures/repoe/production-source-manifest.json",
+        "economy": {
+          "mode": "bundled",
+          "index": "economy/league-index.json"
+        }
+      },
+      "smoke_filter": null,
+      "browser_channel": "chrome",
+      "playwright_version": "1.58.2",
+      "chrome_version": "152.0.7977.83",
+      "chrome_executable": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+      "chrome_executable_sha256": "caf423e184f0bcefe2ee5bef40539a3c005c63beb44e3321c0834929a13af733",
+      "profile": "Playwright chromium.launch owns a fresh temporary profile; no persistent/user profile",
+      "commands": [
+        [
+          "cmd.exe",
+          "/d",
+          "/s",
+          "/c",
+          "npm test"
+        ],
+        [
+          "cmd.exe",
+          "/d",
+          "/s",
+          "/c",
+          "npx tsc --noEmit"
+        ]
+      ],
+      "watchdog_seconds": [
+        900,
+        300
+      ],
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-local-native-repair\\apps\\web",
+      "no_install": true,
+      "no_native_build": true,
+      "pinned_browser_parity": false,
+      "results": [
+        {
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 30484,
+          "process_identity_token": "30484:134354893885894653",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 44582.60059985332,
+          "name": "npm",
+          "command": [
+            "cmd.exe",
+            "/d",
+            "/s",
+            "/c",
+            "npm test"
+          ],
+          "source": "9f28a09939c1f0d8a2ff66efa2a1ce7b1dbaefe6",
+          "watchdog_seconds": 900.0,
+          "log": "out/local-native-repair/chrome-full-npm.log",
+          "summary": [
+            "  ...",
+            "# Subtest: artwork packaging rejects wrong runtime, dangling references and corrupt image bytes",
+            "ok 5 - artwork packaging rejects wrong runtime, dangling references and corrupt image bytes",
+            "  ---",
+            "  duration_ms: 5.5314",
+            "  ...",
+            "1..5",
+            "# tests 5",
+            "# suites 0",
+            "# pass 5",
+            "# fail 0",
+            "# cancelled 0",
+            "# skipped 0",
+            "# todo 0",
+            "# duration_ms 78.8862"
+          ],
+          "smoke_summaries": [
+            "37/37 passed",
+            "Lock worker: paid preview, exact restore, failed import, Undo/Redo spend, context cleanup and native strand editing passed",
+            "Lock controls: selected-request preview, read-only numerical rolls and separate payment/commit passed",
+            "solver lab Calculator export tests passed",
+            "Edit history: snapshots, branching, recovery, grouping and limits passed",
+            "Workspace resources: atomic apply, Undo/Redo, memory, spend and stale/alias rejection passed",
+            "Craft spend: repeated quantities, unknown consumption, history trimming/branching and Harvest material recipes passed"
+          ],
+          "errors": []
+        },
+        {
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 29584,
+          "process_identity_token": "29584:134354894331729059",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 3585.8656000345945,
+          "name": "typescript",
+          "command": [
+            "cmd.exe",
+            "/d",
+            "/s",
+            "/c",
+            "npx tsc --noEmit"
+          ],
+          "source": "9f28a09939c1f0d8a2ff66efa2a1ce7b1dbaefe6",
+          "watchdog_seconds": 300.0,
+          "log": "out/local-native-repair/chrome-full-typescript.log",
+          "summary": [],
+          "smoke_summaries": [],
+          "errors": []
+        }
+      ],
+      "completed_utc": "2026-10-03T08:23:56.761883+00:00",
+      "chrome_executable_sha256_after": "caf423e184f0bcefe2ee5bef40539a3c005c63beb44e3321c0834929a13af733",
+      "chrome_executable_unchanged": true,
+      "owned_processes_remaining": 0
+    },
+    "preserves": "All native guards, exact scope/proof authorities and original workspace resource assertion/cleanup body unchanged; no production native/include/WASM diff",
+    "prior_failed_run": "Original f9e46c6a full npm failure remains in currency-guard-full-*; pinned browser absent, not an assertion failure",
+    "slot_release": "Reported immediately when local commands finished, before receipt/commit work; no owned heavy process",
+    "remaining": [
+      "Pinned-browser parity unrun locally",
+      "Authorized exact-head hosted CI pending delivery",
+      "Native prefix parity cause remains intermittently unreproduced, not proved fixed"
+    ],
+    "excluded": [
+      "Solver recovery c04e42ee (native-only qualification; not integrated)",
+      "Lock e2b6ff70 and other pending features (not integrated)",
+      "Installation, dependency/price/data refresh, deployment"
+    ]
+  },
+  "evaluation_cancel_response_race_ready": {
+    "recorded_utc": "2026-10-03T09:05:12.738351+00:00",
+    "status": "evaluation-only queued-success cancellation repair prepared; runtime checks unrun; no push",
+    "baseline_main": "c00bb449102d76442bb6515eb34fd1c1a9bfd21f",
+    "failed_ci": {
+      "run_id": 37109852631,
+      "job_id": 111165480624,
+      "head_sha": "c00bb449102d76442bb6515eb34fd1c1a9bfd21f",
+      "conclusion": "failure",
+      "native": "17/17 passed",
+      "python_bindings": "275 passed",
+      "first_failure": "FAILED: AssertionError [ERR_ASSERTION]: Missing expected rejection.",
+      "location": "apps/web/test/engine-smoke.test.ts:1099",
+      "fixture": "exact evaluation cancellation is prompt and leaks no handles",
+      "timestamp": "2026-10-03T08:47:45.6915345Z",
+      "url": "https://github.com/OliverOrton/poecraft2/actions/runs/37109852631",
+      "parity_first_mismatch_records_visible": 0,
+      "web_guard_and_workspace_cases": "Not reached by this CI; earlier cancellation fixture stops the chain"
+    },
+    "source_classification": {
+      "client": "Abort listener only posts cancel; generic successful response still resolves. strategyEvaluate previously exposed that result without checking its original signal.",
+      "worker": "Progress is posted before native continuation/finish; cross-thread cancel may arrive after success is queued. Native evaluator cleanup remains in finally.",
+      "limitation": "CI has no progress/cancel timing trace. Source demonstrates the allowed ordering consistent with the failure; exact scheduling is not directly observed."
+    },
+    "repair": {
+      "file": "apps/web/src/app/engine-client.ts",
+      "scope": "strategyEvaluate only",
+      "behavior": "Capture original signal; reject an otherwise-successful reply with EngineError1 cancelled if signal is aborted before API completion is observed. Preserve native error replies.",
+      "other_request_types": "Unchanged, including solverSolve Finish/Cancel and runStrategy",
+      "native_worker_cleanup": "Unchanged",
+      "file_sha256": "87d6ab0004822d140342c55fd3ef9b16118586c4454bc0a86691f27f99612be4"
+    },
+    "finite_regression": {
+      "file": "apps/web/test/engine-client-transfer.test.ts",
+      "ordering": "Force progress callback abort before reading a queued successful response, independent of main/worker timing",
+      "controls": [
+        "Ordinary success survives",
+        "Native capacity error8/max_transitions survives an abort",
+        "Late abort after settlement sends no stale cancel"
+      ],
+      "file_sha256": "a7f6fe23106c25828276cb4999cee89b7b0b2c99be7c187f66800ed43f8bbdb3"
+    },
+    "preserved": "Original six real-WASM cancellation rejections,1000ms bound and handle accounting are byte-for-byte unchanged; production native/include/WASM and all game/proof/scope authorities unchanged.",
+    "pending_checks": [
+      "Focused engine-client-transfer finite cases",
+      "Full unfiltered npm test with explicit existing Chrome channel",
+      "npx tsc --noEmit"
+    ],
+    "unrun": [
+      "New finite regression",
+      "Full npm/TypeScript on this new source",
+      "New hosted CI"
+    ],
+    "local_owned_heavy_processes": 0,
+    "slot": "Multi-goal owns slot; no local heavy command starts",
+    "installation": false,
+    "native_wasm_rebuild_needed": false,
+    "solver_feature_integration": false
+  },
+  "evaluation_cancel_lifetime_review": {
+    "recorded_utc": "2026-10-03T09:12:41.744399+00:00",
+    "production_source": "aa19a2d8adf64707b247efa6a51c1750d5004a56",
+    "status": "Lifetime/order review complete; expanded finite and pre-cancelled native cases prepared; runtime qualification now granted",
+    "ownership": {
+      "client": "First terminal message deletes pending entry and removes abort listener before resolve/reject; duplicates/stale progress have no invocation to call. Wrapper only rejects a successful result, allocates/closes no native handle.",
+      "worker": "Already-cancelled request token is bound before dispatch; evaluateStrategy refuses before compile. For active work one existing finally closes evaluator/economy/strategy; wrapper adds no cleanup owner.",
+      "unrelated": "Generic call, other methods and worker/native behavior unchanged"
+    },
+    "cases": [
+      "Abort before worker readiness/dispatch sets atomic request.cancelled and emits no request until ready",
+      "Progress abort before queued success rejects cancelled",
+      "Ordinary success and post-completion abort leave settled result untouched",
+      "Native error8 preserves its detail both before and after abort",
+      "Duplicate terminal/stale progress/late abort cannot re-enter old callbacks or emit stale cancel"
+    ],
+    "native_smoke": "Added pre-cancelled real-WASM request and live-handle baseline check; all original six reject/promptness/handle assertions unchanged",
+    "original_six_loop_verbatim": true,
+    "production_patch_unchanged": true,
+    "test_hashes": {
+      "apps/web/test/engine-client-transfer.test.ts": "1eaff002054ccf113b9550c9c565c4cb92ad240c2a3262a5596e3d6f3438505e",
+      "apps/web/test/engine-smoke.test.ts": "7a6285e46d344daa377d0459a6ade92196b914af214a46c8734cc8a205f359f4"
+    },
+    "unrun": [
+      "Focused finite client test",
+      "Full unfiltered npm with Chrome",
+      "TypeScript"
+    ],
+    "slot": "Diagnostic explicitly released; parent granted this task focused/full npm/TS; commands start after source checkpoint",
+    "owned_heavy_processes_remaining": 0,
+    "no_install": true,
+    "no_wasm_rebuild": true
+  },
+  "evaluation_cancel_qualification": {
+    "recorded_utc": "2026-10-03T09:18:31.367449+00:00",
+    "status": "Evaluation-only cancellation reply-ordering qualified by finite controls/full unfiltered Chrome npm/TypeScript",
+    "source": "532b22191487c737774c35b32f8f907dd8f5e1cd",
+    "production_fix": "aa19a2d8adf64707b247efa6a51c1750d5004a56",
+    "qualification": {
+      "started_utc": "2026-10-03T09:14:33.414414+00:00",
+      "source": "532b22191487c737774c35b32f8f907dd8f5e1cd",
+      "wasm_sha256": "472f644bed756caee538868b714e4d144989e9ec1990232f82562d2f80b7424f",
+      "runtime": {
+        "schema_version": 1,
+        "runtime_directory": "data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+        "manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+        "source_lock": "fixtures/repoe/production-source-manifest.json",
+        "economy": {
+          "mode": "bundled",
+          "index": "economy/league-index.json"
+        }
+      },
+      "smoke_filter": null,
+      "browser_channel": "chrome",
+      "playwright_version": "1.58.2",
+      "chrome_version": "152.0.7977.83",
+      "chrome_executable_sha256": "caf423e184f0bcefe2ee5bef40539a3c005c63beb44e3321c0834929a13af733",
+      "commands": [
+        {
+          "name": "focused",
+          "command": [
+            "cmd.exe",
+            "/d",
+            "/s",
+            "/c",
+            "npx tsx test/engine-client-transfer.test.ts"
+          ],
+          "watchdog_seconds": 120.0
+        },
+        {
+          "name": "npm",
+          "command": [
+            "cmd.exe",
+            "/d",
+            "/s",
+            "/c",
+            "npm test"
+          ],
+          "watchdog_seconds": 900.0
+        },
+        {
+          "name": "typescript",
+          "command": [
+            "cmd.exe",
+            "/d",
+            "/s",
+            "/c",
+            "npx tsc --noEmit"
+          ],
+          "watchdog_seconds": 300.0
+        }
+      ],
+      "profile": "Fresh temporary Playwright launch profile; no persistent/user profile",
+      "no_install": true,
+      "no_native_build": true,
+      "pinned_browser_parity": false,
+      "completed_utc": "2026-10-03T09:15:22.122833+00:00",
+      "results": [
+        {
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 22036,
+          "process_identity_token": "22036:134354924734155506",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 995.5821000039577,
+          "name": "focused",
+          "command": [
+            "cmd.exe",
+            "/d",
+            "/s",
+            "/c",
+            "npx tsx test/engine-client-transfer.test.ts"
+          ],
+          "source": "532b22191487c737774c35b32f8f907dd8f5e1cd",
+          "watchdog_seconds": 120.0,
+          "log": "out/local-native-repair/evaluation-cancel-focused.log",
+          "summary": [
+            "  ok - strategy graphs cross client/worker boundaries as transferable JSON bytes",
+            "  ok - evaluation cancellation ordering, native errors and terminal callback cleanup remain intact"
+          ],
+          "summaries": [
+            "  ok - evaluation cancellation ordering, native errors and terminal callback cleanup remain intact"
+          ],
+          "errors": []
+        },
+        {
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 53868,
+          "process_identity_token": "53868:134354924744117326",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 44173.51939994842,
+          "name": "npm",
+          "command": [
+            "cmd.exe",
+            "/d",
+            "/s",
+            "/c",
+            "npm test"
+          ],
+          "source": "532b22191487c737774c35b32f8f907dd8f5e1cd",
+          "watchdog_seconds": 900.0,
+          "log": "out/local-native-repair/evaluation-cancel-npm.log",
+          "summary": [
+            "# Subtest: artwork packaging rejects wrong runtime, dangling references and corrupt image bytes",
+            "ok 5 - artwork packaging rejects wrong runtime, dangling references and corrupt image bytes",
+            "  ---",
+            "  duration_ms: 4.621",
+            "  ...",
+            "1..5",
+            "# tests 5",
+            "# suites 0",
+            "# pass 5",
+            "# fail 0",
+            "# cancelled 0",
+            "# skipped 0",
+            "# todo 0",
+            "# duration_ms 78.5273"
+          ],
+          "summaries": [
+            "37/37 passed",
+            "  ok - evaluation cancellation ordering, native errors and terminal callback cleanup remain intact",
+            "Lock worker: paid preview, exact restore, failed import, Undo/Redo spend, context cleanup and native strand editing passed",
+            "Lock controls: selected-request preview, read-only numerical rolls and separate payment/commit passed",
+            "solver lab Calculator export tests passed",
+            "Edit history: snapshots, branching, recovery, grouping and limits passed",
+            "Workspace resources: atomic apply, Undo/Redo, memory, spend and stale/alias rejection passed",
+            "Craft spend: repeated quantities, unknown consumption, history trimming/branching and Harvest material recipes passed"
+          ],
+          "errors": []
+        },
+        {
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 73380,
+          "process_identity_token": "73380:134354925185861422",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 3532.6895001344383,
+          "name": "typescript",
+          "command": [
+            "cmd.exe",
+            "/d",
+            "/s",
+            "/c",
+            "npx tsc --noEmit"
+          ],
+          "source": "532b22191487c737774c35b32f8f907dd8f5e1cd",
+          "watchdog_seconds": 300.0,
+          "log": "out/local-native-repair/evaluation-cancel-typescript.log",
+          "summary": [],
+          "summaries": [],
+          "errors": []
+        }
+      ],
+      "chrome_executable_sha256_after": "caf423e184f0bcefe2ee5bef40539a3c005c63beb44e3321c0834929a13af733",
+      "chrome_executable_unchanged": true,
+      "owned_processes_remaining": 0
+    },
+    "case_count": 5,
+    "native_smoke": "Pre-cancelled handle check and original six reject/1000ms/handle iterations pass unchanged",
+    "preserves": "Native error replies, other request contracts and worker cleanup unchanged; no native/include/WASM diff",
+    "prior_failure": "Windows37109852631/job111165480624 on c00bb449: missing cancellation rejection1099;17 native/275 bindings passed",
+    "slot_release": "Immediate after all commands, before docs/publication; no survivor",
+    "unrun": [
+      "Pinned-browser parity locally",
+      "Exact-head post-publication hosted CI pending"
+    ],
+    "excluded": [
+      "Solver recovery and all pending feature integration",
+      "Installation/data/price refresh/deployment"
+    ]
+  },
+  "hosted_pinned_browser_setup": {
+    "recorded_utc": "2026-10-03T09:50:40.605156+00:00",
+    "status": "CI-only pinned headless-shell setup syntax/order qualified; hosted runtime execution pending",
+    "baseline": "75270c83c7d14c17a4de231d5cc3af1810d2d7ff",
+    "failure_receipt": "out/local-native-repair/evaluation-cancel-hosted-browser-failure.json",
+    "change": {
+      "workflow": ".github/workflows/windows.yml:69 opts into -InstallTestBrowser",
+      "owner": "scripts/test.ps1",
+      "command": "node ./node_modules/playwright/cli.js install chromium --only-shell",
+      "order": [
+        "npm ci (exactly once)",
+        "Opt-in installed project Playwright CLI",
+        "build:data",
+        "full unfiltered npm test",
+        "TypeScript"
+      ],
+      "default": "Browser install switch off; only Windows CI explicitly opts in",
+      "sources": "Default official Playwright CDN from project-pinned installed CLI; no floating npx package install",
+      "destination": "C:\\Users\\runneradmin\\AppData\\Local\\ms-playwright",
+      "scope": "Disposable hosted runner, not user PC"
+    },
+    "passed": [
+      "PowerShell Parser::ParseFile: zero errors",
+      "Switch present with no enabled default",
+      "PyYAML safe_parse: valid workflow and exact opt-in call",
+      "Command/error guards/order checked; npm ci occurs once",
+      "git diff --check"
+    ],
+    "runtime_unrun": [
+      "Browser download locally (explicitly excluded)",
+      "New hosted pinned-browser execution pending publication"
+    ],
+    "preserves": [
+      "Pinned default Chromium",
+      "All native/web assertions and limits",
+      "All project-native/WASM source/artifacts",
+      "Full npm chain and TypeScript"
+    ],
+    "local_installations": 0,
+    "local_heavy_processes": 0,
+    "new_feature_integration": false,
+    "file_hashes": {
+      "scripts/test.ps1": "da0b5ff084046f6bbd00784cc57b748ba08b345f3031dc78d16ad496da0e044e",
+      ".github/workflows/windows.yml": "8ec1bba0f7b78a5dd35a76c96f2bb7640570a9ec00f7ce5e9a28805996450415"
+    }
   }
 }

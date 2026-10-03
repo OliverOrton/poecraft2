@@ -1093,6 +1093,11 @@ test("exact evaluation cancellation is prompt and leaks no handles", async () =>
         baseline.scope,
         "facade_registries_plus_solver_and_evaluator_owned_allocations",
     );
+    const preCancelled = new AbortController();
+    preCancelled.abort();
+    await assert.rejects(client.strategyEvaluate(sessionId, graph, undefined,
+        {signal: preCancelled.signal}), /cancelled/);
+    assert.equal((await client.memoryStats()).live_handles, baseline.live_handles);
     for (let attempt = 0; attempt < 6; attempt += 1) {
         const controller = new AbortController();
         const started = performance.now();
@@ -2530,8 +2535,20 @@ test("currency expansion state and original-root policy contracts", async () => 
     const economy = await client.loadEconomy(economySpec);
     const solver = await client.openSolver(sessionId, goal);
     try {
+        const rememberedBeforeSolve = await client.exportItem(remembered, sessionId);
         for (const mode of ["current", "strategy_finder"] as const) {
-            await assert.rejects(client.solverSolve(solver, remembered, economy, {solver_mode: mode}), /Pro/);
+            // Unsupported carrier state is refused before solve-profile checks.
+            await assert.rejects(
+                client.solverSolve(solver, remembered, economy, {solver_mode: mode}),
+                (error: unknown) => {
+                    assert.ok(error instanceof EngineError);
+                    assert.equal(error.code, 4); // PC_RESULT_UNSUPPORTED_FEATURE
+                    assert.equal(error.detail,
+                        "Foresight, memory strands, absent resources and enchantment effects require solver integration; state cannot be dropped");
+                    return true;
+                },
+            );
+            assert.deepEqual(await client.exportItem(remembered, sessionId), rememberedBeforeSolve);
             const result = await client.solverSolve(solver, item, economy, {solver_mode: mode, solve_profile: "calculator_product_v1"});
             assert.equal(result.cancelled, false);
             if (result.cancelled) assert.fail("unexpected cancellation");

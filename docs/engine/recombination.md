@@ -94,12 +94,29 @@ execution, subgoals/ports, priced acquisition, retries/recycling and budgets.
 No selected-mod mode, dedicated recombination solver, strategy registry entry,
 Current/Finder action scope or exact closure is introduced.
 
-## Qualification boundary
+## Shared structural goal projection and qualification
 
-Native public pair/API/transaction checks pass with the pinned frozen artifact;
-the Python adapter delegates all mechanics to the C API. Shared goal schema and
-Calculator UI belong to the multi-goal owner. Their mixed-carrier dispatcher and
-native finalizer must bind each conditional stream to its actual output session,
-combine goal/union membership using carrier mass rather than independent events,
-and retain carrier identity in sparse rows. Matching WASM, web transport and
-TypeScript qualification remain required before browser activation.
+`pc_recombination_pair_goal_outcomes_json` accepts bounded
+`calculator_goal_set_v1` goals in input A's original interpreting session.
+The shared parser binds native goals once. The pair dispatcher creates distinct
+carrier/base/level observation sessions retaining canonical identities, preserves
+the reference family tier thresholds, maps implicit goals explicitly, supplies
+the native full output stream, then finalizes both conditional laws at half mass.
+Sparse result IDs are unique and each row retains its carrier/base/level.
+Overlapping goal marginals do not replace the native joint union.
+
+The goal projection `calculator-structural-goals-carrier-session-v1` observes
+explicit structure, selected implicits and represented flag goals. Recorded
+rolls, strands, sockets, enchantments and defence percentiles are explicitly
+unobserved in this terminal copy; full materialization/Apply retain represented
+properties. Unsupported goal fields and unbound tiered group categories refuse.
+
+Native/DLL, Python, matching release WASM, real-worker pair/Apply and shared-goal
+checks, Calculator controls, unfiltered web suite and TypeScript pass under the
+frozen data identity. Exact code/artifact/log hashes and retained failures are in
+the [living receipt](../active/2026-10-03-random-recombination/README.md).
+These checks certify the implemented estimated model, never game-exact odds or
+optimality. Calculator stays read-only; the dedicated pair Apply API returns an
+owned output session and atomic receipt for Builder. WASM Apply of a saved
+Imprint resource awaits compound inventory integration and refuses meanwhile.
+Oliver owns rendered review; the parent integrator owns combined publication.

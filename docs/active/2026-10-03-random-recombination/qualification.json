@@ -138,11 +138,9 @@
   "shared_goal_source_inspected_unqualified": "e45b92b8bd28d6fd0902468d9095ce8c2580e5b7",
   "main_repair_delta_inspected_not_imported": "3ab862fece9d52ca733ad01a0869fd06cec84810",
   "unrun": [
-    "current dispatcher native build and focused pair/shared goal observer checks",
-    "current matching shared DLL and finite Python rerun (nine original failures remain unqualified)",
-    "matching pair WASM rebuild and real-worker pair/goal/Apply checks",
-    "web tests and TypeScript for current product integration",
-    "Oliver rendered UI review"
+    "Oliver rendered UI review (not requested)",
+    "combined integration with independently qualified Lock owner (integrator responsibility)",
+    "deployment/publication (integrator responsibility)"
   ],
   "gold_cost_complete": false,
   "dust_cost_complete": false,
@@ -165,9 +163,9 @@
   },
   "initial_validation_applies_to": "791b9ba66ab0dbe54f9eea8426e796ba79ac1512",
   "current_product_integration": {
-    "status": "source_ready_unbuilt_unrun_heavy_slot_required",
+    "status": "qualified_local_only_integration_owner_publishes",
     "checkpoint_before_receipt": "6617e9f5c07515f8df0f4eebe8d234c9f81b1470",
-    "qualified_main_integrated": "0187f3d8",
+    "qualified_main_integrated": "4b092b0b",
     "shared_goal_qualified_source": "31078439",
     "native_dispatch_commit": "8a62f87d",
     "wasm_worker_ui_commit": "e3325fdc",
@@ -177,11 +175,11 @@
       "apps/web/package.json": "730964ee6cf1752330b5dbc4a028de84980995a316d821f1c6abd885aff03424",
       "apps/web/src/app/components/pc-calculator.tsx": "b831a00024851e6c569eb65854da5ef2111573e7614e16a55d68d0484dbed20c",
       "apps/web/src/app/components/pc-craft-controls.tsx": "135f52bc538bd62a36b427f06013dacab82703d58e92596e318fad582d326b9f",
-      "apps/web/src/app/engine-client.ts": "acf652b86fd4c61a7083f315260c998754a59f8b9ce637b7811b9ca09a4899ca",
+      "apps/web/src/app/engine-client.ts": "ff376669e8eb965697cae46232d49bf85bb82979bfef457304f05d7a5d22ec61",
       "apps/web/src/app/engine-protocol.ts": "17f5deb290fa8cbe2a58f4b63e1ad14f41a87dbc611208019f6e39f6324d4416",
       "apps/web/src/app/engine-wasm.ts": "2dc6247782ab247217736d1fc95a17b5e9aeded16b619aea1a71f049b909ebc2",
       "apps/web/src/app/engine-worker.ts": "accbda628816677d89f8d4df8df7aba2c6290ee96e324a00c065bd788a427b7a",
-      "apps/web/test/calculator-currency-controls.test.ts": "eed6bd7eba8c5f19537cd3fefc3609ce5cb215574a5daa8d8b8057d1706768bd",
+      "apps/web/test/calculator-currency-controls.test.ts": "ed107e21428b54f1c0d986f9d53ebf53f84a580fa6639c89460ce7c38b7e7dfc",
       "apps/web/test/recombination-wasm.test.ts": "d76c5ed20ace928f0c0b0523eadd1b8bb4c15a1172335bb3909ae68d9b039725",
       "bindings/python/poecraft_engine/__init__.py": "c334ae8bbeea4ff81a821ed3fb2f4114a7768d6b6f7f22789f7701916d3875d1",
       "bindings/python/poecraft_engine/_binding.py": "b9636f56926e3621087ea442dc663186b27f01c4103f778a249cb337f5b2d923",
@@ -200,7 +198,7 @@
       "engine/src/recombination.cpp": "904d9b0d32e3d72b5399eb95a832509b145d191be9870addf4f24292292e6236",
       "engine/src/recombination.hpp": "fe3c5810ecb2d51875dfc749d1b22bad931c96d92a17e508d169dc1b134d1915",
       "engine/src/recombination_api.cpp": "c297b614d865e5c0aa39e12fdc2a8277c4018c04c87619bd3af7086ef59cca8a",
-      "engine/src/recombination_calculator.cpp": "013305b091aecaeadedf04e3acae380b62bc4a2a203da4f3b6adee22546a492f",
+      "engine/src/recombination_calculator.cpp": "43ca6e83293da8f690b6e3375578247231903a1ded2cc8f2aa537cadcfedc284",
       "engine/src/recombination_calculator.hpp": "4fbf8f3ee4a6a1b691e9cbd5152bc9f1232744570f1c91fc13eea82c55421ff8",
       "engine/src/session_builder.cpp": "d2ef35ff296eafc1b439f72026dff068ae0d21d0fad6dcd7dd5ddfe1e726e2ce",
       "engine/src/solver_api.cpp": "2e8aed5a52a30dd8a583f8f0ec7e4c6297b1bcd648995cd3b9681b1901630858",
@@ -213,20 +211,284 @@
       "sha256": "f239ec69f995504d555f34ebd3a2c105128aab54f6d5900fc61bb1b264676a9a",
       "bytes": 81133568,
       "read_only": true,
-      "refreshed": false
+      "refreshed": false,
+      "source_and_copy_unchanged_after_tests": true
     },
     "processes_active": [],
-    "heavy_commands_started_this_stage": false,
-    "artifact_warning": "Imported goal-only WASM and old native/DLL artifacts do not qualify the new pair dispatcher/exports/UI.",
+    "heavy_commands_started_this_stage": true,
+    "artifact_warning": "Matching pair WASM and native/DLL are qualified; no publication or normal checkout change.",
     "integration_sequence": [
-      "qualified main 0187f3d8",
-      "qualified shared Calculator goal owner through 31078439",
+      "qualified main 4b092b0b",
+      "qualified shared Calculator owner 31078439",
       "native kernel 791b9ba",
-      "native dispatcher 8a62f87d",
-      "pair adapter/UI e3325fdc plus donor-lifetime resolution from isolated merge",
-      "source-matched native/DLL/WASM and finite changed-layer checks",
-      "final receipt; local commits only"
+      "native dispatcher 8a62f87d with compile repairs",
+      "pair adapter/UI e3325fdc with combined frozen donor lifetimes",
+      "matching artifacts and retained qualification receipt; parent integrator owns publication"
     ],
-    "next_gate": "Explicit parent serial heavy-slot grant; max two compiler jobs; report release before documentation/commit work."
+    "next_gate": "Oliver rendered UI review when requested; integration/publication remains with parent integrator.",
+    "artifacts": {
+      "build/engine/poecraft_engine_tests.exe": {
+        "sha256": "4d29e2c5fe4f7f12d00b7db776681e69d261580e98043608e268fcb99bc38b09",
+        "bytes": 19836164
+      },
+      "build/engine/poecraft_header_smoke.exe": {
+        "sha256": "1cc8ff64cdab9af587eb7bbd1ade4d796489a823da7354438e025830e7dcfbef",
+        "bytes": 128656
+      },
+      "build/engine/poecraft_engine.dll": {
+        "sha256": "837b35754bc69b15c95ee716ada32ec1d097c870359d1e1bf77330087cf11fec",
+        "bytes": 14455239
+      },
+      "bindings/wasm/dist/poecraft_engine.mjs": {
+        "sha256": "23c405b984e19595b4007259d8d45fe713ea31a534c091c2ef9433ffbe2f1363",
+        "bytes": 21788
+      },
+      "bindings/wasm/dist/poecraft_engine.wasm": {
+        "sha256": "fb2fe16dbb30f3ae31b55737ffc8603805e696f0beb61a1e237fa345298c68a6",
+        "bytes": 8499626
+      }
+    },
+    "heavy_slot": {
+      "granted_utc": "2026-10-03T10:01:00Z",
+      "prelaunch_clock_utc": "2026-10-03T10:01:59Z",
+      "released_utc": "2026-10-03T10:31:21Z",
+      "max_compiler_jobs": 2,
+      "max_linker_jobs": 2,
+      "serial_commands": true,
+      "processes_remaining": [],
+      "outer_wait_contract": "exec_command yields a session; empty-input waits requested 300000ms; outer cell yields required occasional re-entry. No solver polling proxy."
+    },
+    "validation": [
+      {
+        "scope": "native build",
+        "result": "failed dispatcher variable scope/missing bitset include; repaired",
+        "log": "out/random-recombination/qualification/native-build.log",
+        "log_identity": {
+          "sha256": "25070526dbf7a8e960353d0ad7d1c597b692551c51d58e146676308364db117c",
+          "bytes": 10467
+        }
+      },
+      {
+        "scope": "native build two jobs",
+        "result": "passed",
+        "log": "out/random-recombination/qualification/native-build-retry.log",
+        "log_identity": {
+          "sha256": "677e03e4e018709993331dd3d3e496aece018d662eb49e94f68e7bbd53b9ee75",
+          "bytes": 7353
+        }
+      },
+      {
+        "scope": "native pair selector",
+        "result": "passed: 235 checks, 0 failures",
+        "log": "out/random-recombination/qualification/native-pair.log",
+        "log_identity": {
+          "sha256": "3a406cbd2fd51e041b91736126cd653bd9940eb9273ab1837df565d4c36ac18e",
+          "bytes": 52
+        }
+      },
+      {
+        "scope": "C header smoke",
+        "result": "passed",
+        "log": "out/random-recombination/qualification/native-header.log",
+        "log_identity": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      },
+      {
+        "scope": "currency contracts",
+        "result": "passed: 6484 checks, 0 failures",
+        "log": "out/random-recombination/qualification/native-currency.log",
+        "log_identity": {
+          "sha256": "c0d718831b4c859044ca34e9c0bb13588602f022b96a855cead8e890b4842a6b",
+          "bytes": 45
+        }
+      },
+      {
+        "scope": "Calculator incoming",
+        "result": "passed: 10681 checks, 0 failures",
+        "log": "out/random-recombination/qualification/native-calculator.log",
+        "log_identity": {
+          "sha256": "193b1c4915adb96b1e72d895f0565cebdc4fd0a65d9df2c735bc8d8c856bf828",
+          "bytes": 124
+        }
+      },
+      {
+        "scope": "observation layout",
+        "result": "passed: 839 checks, 0 failures",
+        "log": "out/random-recombination/qualification/native-observer.log",
+        "log_identity": {
+          "sha256": "5c7c05249702ba43f8a910b06bab5eff4d7d88cd987d37a82cdb4d2decb34cf9",
+          "bytes": 57
+        }
+      },
+      {
+        "scope": "matching shared DLL link two jobs",
+        "result": "passed",
+        "log": "out/random-recombination/qualification/native-dll.log",
+        "log_identity": {
+          "sha256": "29993a297ff49bc5657073e6f3b8d978fb0c90027da8b9bcbf4fd3c1401a3fec",
+          "bytes": 96
+        }
+      },
+      {
+        "scope": "finite Python pair/currency files",
+        "result": "passed: 25; all nine previous fixture failures resolved",
+        "log": "out/random-recombination/qualification/python-pair-currency.log",
+        "log_identity": {
+          "sha256": "b9735c2d71a6c84e99698a9d4dffbb2e7f7491b17d30902c14eae123e4687409",
+          "bytes": 102
+        }
+      },
+      {
+        "scope": "matching WASM build EMCC_CORES=2 BINARYEN_CORES=2 linker threads=2",
+        "result": "passed; existing compiler warnings retained in log",
+        "log": "out/random-recombination/qualification/wasm-build.log",
+        "log_identity": {
+          "sha256": "064d65d8fb656f0105bdaeb4e65be610e537bb22a4b67c720bee06d015af8754",
+          "bytes": 3474
+        }
+      },
+      {
+        "scope": "native test fixture build after qualified main alignment",
+        "result": "passed",
+        "log": "out/random-recombination/qualification/native-main-alignment-build.log",
+        "log_identity": {
+          "sha256": "c7b4bf04abbb629d64fb8c5fd9f216249acaaed4ea559921cb3379783fbe796a",
+          "bytes": 194
+        }
+      },
+      {
+        "scope": "pair selector on main-aligned executable",
+        "result": "passed: 235 checks, 0 failures",
+        "log": "out/random-recombination/qualification/native-pair-main-aligned.log",
+        "log_identity": {
+          "sha256": "3a406cbd2fd51e041b91736126cd653bd9940eb9273ab1837df565d4c36ac18e",
+          "bytes": 52
+        }
+      },
+      {
+        "scope": "real pair/goal/atomic Apply worker",
+        "result": "passed",
+        "log": "out/random-recombination/qualification/web-pair-worker.log",
+        "log_identity": {
+          "sha256": "d61ae33422f7e96483ec15bbf0bb662e673328b46e21b6ee77e72f2ec7ccf248",
+          "bytes": 76
+        }
+      },
+      {
+        "scope": "shared goal-set/donor real worker",
+        "result": "passed",
+        "log": "out/random-recombination/qualification/web-goal-set-worker.log",
+        "log_identity": {
+          "sha256": "a893f82627ce2982a5c4a46c0ebd2f70fcaed8ce0b3c477771f0e4d79c12099e",
+          "bytes": 54
+        }
+      },
+      {
+        "scope": "Calculator controls",
+        "result": "failed missing ignored generated build-info fixture",
+        "log": "out/random-recombination/qualification/web-calculator-controls.log",
+        "log_identity": {
+          "sha256": "9465244b7dee8104bf702bb43d3657d6a47972288c870135bdfddcde4437d657",
+          "bytes": 1357
+        }
+      },
+      {
+        "scope": "standard pinned web data setup",
+        "result": "passed; no data/price refresh",
+        "log": "out/random-recombination/qualification/web-data-setup.log",
+        "log_identity": {
+          "sha256": "da94a89387499dbdbd5cc2447c255b0a8106f57389fa8a18f0e8591b5475fb9b",
+          "bytes": 267
+        }
+      },
+      {
+        "scope": "Calculator controls after standard setup",
+        "result": "passed",
+        "log": "out/random-recombination/qualification/web-calculator-controls-retry.log",
+        "log_identity": {
+          "sha256": "4eda8eddc52d35d0f27b1f65fe8b84ce1321debe12ab9174a25794aa9f36ca49",
+          "bytes": 88
+        }
+      },
+      {
+        "scope": "unfiltered npm test",
+        "result": "failed missing isolated compiled/current fixture",
+        "log": "out/random-recombination/qualification/web-full.log",
+        "log_identity": {
+          "sha256": "f3883c394dfc032ad439dffaccb6eefc596cf71d3212c513937f566d03cd8335",
+          "bytes": 2224
+        }
+      },
+      {
+        "scope": "unfiltered npm test after frozen runtime copy",
+        "result": "passed all files; no filtered or weakened checks",
+        "log": "out/random-recombination/qualification/web-full-retry.log",
+        "log_identity": {
+          "sha256": "af9483024fe664f3b84bd5554ab5a96395988f34e37679a637812b5ea2a0a016",
+          "bytes": 16807
+        }
+      },
+      {
+        "scope": "tsc --noEmit",
+        "result": "failed test-only reused-array narrowing",
+        "log": "out/random-recombination/qualification/typescript.log",
+        "log_identity": {
+          "sha256": "6cb985a61c26bc65fb1a69ff9abaf8e9010774df4632b9a6bf9896dda93430ce",
+          "bytes": 1347
+        }
+      },
+      {
+        "scope": "independent typed capture fixture",
+        "result": "failed cleanup recorder still targeted previous capture array; corrected",
+        "log": "out/random-recombination/qualification/web-calculator-controls-typed.log",
+        "log_identity": {
+          "sha256": "87b0d01e593926f2c6973c51fe177fc56b4e607b75234e7163011b1b73176598",
+          "bytes": 533
+        }
+      },
+      {
+        "scope": "corrected capture fixture",
+        "result": "passed",
+        "log": "out/random-recombination/qualification/web-calculator-controls-typed-retry.log",
+        "log_identity": {
+          "sha256": "4eda8eddc52d35d0f27b1f65fe8b84ce1321debe12ab9174a25794aa9f36ca49",
+          "bytes": 88
+        }
+      },
+      {
+        "scope": "tsc --noEmit after fixture-only typing repair",
+        "result": "passed",
+        "log": "out/random-recombination/qualification/typescript-retry.log",
+        "log_identity": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      }
+    ],
+    "frozen_runtime_fixture": {
+      "manifest.json": {
+        "sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+        "bytes": 5983
+      },
+      "game-data.json": {
+        "sha256": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e",
+        "bytes": 16914460
+      },
+      "strings.json": {
+        "sha256": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6",
+        "bytes": 6740473
+      }
+    },
+    "post_suite_changes": "Test-only independent capture array/close recorder correction; focused controls and TypeScript rerun passed. Product/native/WASM code unchanged after full npm pass.",
+    "held_capabilities": [
+      "unsupported special/cross-side order/exceptional/fractured categories",
+      "rolled-stat-total/defence-percentile goals",
+      "priced budgets while gold/dust unknown",
+      "WASM Apply with saved Imprint compound resource",
+      "automatic recombination/dedicated solver",
+      "normal checkout integration/publication"
+    ]
   }
 }

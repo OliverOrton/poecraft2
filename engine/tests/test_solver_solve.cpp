@@ -2461,9 +2461,34 @@ void run_current_incumbent_continuity_tests() {
         std::string admission_graph;
         std::uint64_t admission_identity = 0;
         double admission_cost = kInfinity;
+        bool reported_prefix_mismatch = false;
+        struct PrefixStepBefore {
+            unsigned phase;
+            unsigned setup_stage;
+            std::uint64_t setup_ns;
+            bool setup_task;
+            bool retention_task;
+            bool initial_checker;
+        };
+        const auto before_step = [](const Impl& work) {
+            return PrefixStepBefore{
+                static_cast<unsigned>(work.phase),
+                static_cast<unsigned>(work.goal_cover_stage),
+                work.goal_cover_setup_ns, work.goal_cover_task.has_value(),
+                work.retention_setup_task.has_value(),
+                work.publication_pipeline.initial_candidate_task.has_value()};
+        };
         for (; steps < 20000 && !on.progress().done; ++steps) {
+            const auto off_before = before_step(off);
+            const auto on_before = before_step(on);
+            const auto off_started = std::chrono::steady_clock::now();
             off.step(1);
+            const auto off_step_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - off_started).count();
+            const auto on_started = std::chrono::steady_clock::now();
             on.step(1);
+            const auto on_step_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - on_started).count();
             const bool admitted = on.selective_service_phase !=
                 Impl::SelectiveServicePhase::NotStarted &&
                 on.selective_service_phase != Impl::SelectiveServicePhase::Done;
@@ -2481,6 +2506,71 @@ void run_current_incumbent_continuity_tests() {
                 }
             }
             if (!admitted && !saw_admission) {
+                // Observe the first failed prefix only. Every original exact
+                // comparison below remains an assertion; no clocks, budgets,
+                // solver state or production yield semantics are changed.
+                if (!reported_prefix_mismatch) {
+                    const std::array<bool, 14> equal{
+                        off.phase == on.phase,
+                        off.result.values == on.result.values,
+                        off.policy_rows == on.policy_rows,
+                        off.graph_identity() == on.graph_identity(),
+                        off.transition_cache->successors == on.transition_cache->successors,
+                        off.transition_cache->probabilities == on.transition_cache->probabilities,
+                        off.queue == on.queue,
+                        off.expansion_operator_cursor == on.expansion_operator_cursor,
+                        off.certified_global_lower_bound() == on.certified_global_lower_bound(),
+                        off.incumbent_portfolio.best_verified_identity == on.incumbent_portfolio.best_verified_identity,
+                        off.calc.telemetry().reforge_logical_work_v1 == on.calc.telemetry().reforge_logical_work_v1,
+                        !on.selective_service_calc, !on.selective_service_checker,
+                        !on.selective_service_validator};
+                    unsigned mismatch_mask = 0;
+                    for (unsigned bit = 0; bit < equal.size(); ++bit)
+                        if (!equal[bit]) mismatch_mask |= 1u << bit;
+                    if (mismatch_mask != 0) {
+                        reported_prefix_mismatch = true;
+                        // Bits follow the original assertion order. The
+                        // coroutine exposes no unit-versus-time yield reason;
+                        // report measured duration and task retention instead
+                        // of inferring a reason from the 20ms threshold.
+                        std::printf("IC_PARITY_FIRST fixture=%u step=%u budget=1 mask=0x%x "
+                                    "yield_reason=not_exposed_unit_or_wall_time\n",
+                                    fixture, steps, mismatch_mask);
+                        std::fflush(stdout);
+                        const auto report_side = [&](const char* side, const Impl& work,
+                                                     const PrefixStepBefore& before,
+                                                     std::int64_t step_ns) {
+                            const auto setup_delta_ns = work.goal_cover_setup_ns - before.setup_ns;
+                            std::printf("IC_PARITY_SIDE side=%s phase=%u/%u setup=%u/%u "
+                                "setup_task=%d/%d retention_task=%d/%d checker=%d/%d "
+                                "step_ns=%lld setup_ns_delta=%llu setup_elapsed_ge_20ms=%d "
+                                "states=%zu rows=%zu successors=%zu probabilities=%zu "
+                                "queue=%zu expanded=%u expansion_state=%u cursor=%u "
+                                "work=%llu graph=%llu verified=%llu service=%u\n",
+                                side, before.phase, static_cast<unsigned>(work.phase),
+                                before.setup_stage, static_cast<unsigned>(work.goal_cover_stage),
+                                before.setup_task, work.goal_cover_task.has_value(),
+                                before.retention_task, work.retention_setup_task.has_value(),
+                                before.initial_checker, work.publication_pipeline.initial_candidate_task.has_value(),
+                                static_cast<long long>(step_ns),
+                                static_cast<unsigned long long>(setup_delta_ns),
+                                setup_delta_ns >= 20000000,
+                                work.result.values.size(), work.policy_rows.size(),
+                                work.transition_cache->successors.size(), work.transition_cache->probabilities.size(),
+                                work.queue.size(), work.expanded_count, work.expansion_state,
+                                work.expansion_operator_cursor,
+                                static_cast<unsigned long long>(work.calc.telemetry().reforge_logical_work_v1),
+                                static_cast<unsigned long long>(work.graph_identity()),
+                                static_cast<unsigned long long>(work.incumbent_portfolio.best_verified_identity),
+                                static_cast<unsigned>(work.selective_service_phase));
+                            std::fflush(stdout);
+                            std::printf("IC_PARITY_TRACE side=%s trace=%s\n",
+                                        side, work.progress_trace_json(0).c_str());
+                        };
+                        report_side("off", off, off_before, off_step_ns);
+                        report_side("on", on, on_before, on_step_ns);
+                    }
+                }
                 PC_CHECK(off.phase == on.phase);
                 PC_CHECK(off.result.values == on.result.values);
                 PC_CHECK(off.policy_rows == on.policy_rows);

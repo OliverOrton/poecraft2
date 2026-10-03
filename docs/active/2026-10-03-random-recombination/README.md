@@ -1,4 +1,4 @@
-# Current Random recombination native pair checkpoint
+# Current Random recombination local qualification
 
 Oliver authorized this prepared programme at 04:00 UTC on October 3 2026, then
 explicitly approved preserving selected tiers and recorded rolls while omitting
@@ -165,3 +165,43 @@ shared-schema implementations. The current pair observer remains native-only;
 Builder consumes the independent output session/full atomic receipt. Its
 compound inventory handling must precede Apply of saved Imprint resources;
 the WASM Apply adapter refuses that unsupported compound request.
+
+## Final local qualification — 2026-10-03
+
+LOCAL was explicitly granted at 10:01 UTC and released at **10:31:21 UTC**,
+before receipt/commit work. All native/DLL/WASM and test commands ran serially;
+compiler, Binaryen and linker concurrency were capped at two. No owned process
+remains. Qualified main **4b092b0b** is integrated, with shared goal owner
+**31078439**; main's later delta changes transport/CI/tests, not production engine
+or WASM source. The source-matched release WASM is retained in this branch.
+
+Passed: native pair **235** checks, currency **6484**, Calculator incoming
+**10681**, observation layout **839**, C header smoke, matching DLL, Python
+pair/currency **25/25**, real pair/goal/atomic Apply worker, shared multi-goal/
+donor worker, Calculator controls, unfiltered **npm test**, and **tsc --noEmit**.
+The worker confirms two inputs consumed, one output created under the actual
+carrier/base/level, collision/replay refusal, unchanged RNG on refusal, native
+joint union and stored output replay. No native solver/Simulator experiment ran.
+
+Retained failures and repairs: dispatcher scope collision and missing bitset
+include; isolated generated build-info and compiled/current fixture omissions;
+test-only capture-array narrowing and its cleanup recorder. Existing owners
+created generated web fixtures. The expected runtime files and canonical SQLite
+were copied byte-for-byte from frozen inputs, marked read-only and hash-checked;
+no ingest, refresh or hand alteration occurred. All nine historical SQLite
+failures now pass. Full npm passed before the final test-only typing adjustment;
+the affected controls file and TypeScript passed after that adjustment. No test
+assertion was weakened, filtered or bypassed.
+
+The living qualification JSON pins final code, artifact and log hashes, frozen
+inputs, selected checks, failures, limitations and release time. Pair/game odds
+remain **estimated**, model/projection identities remain versioned, selected
+tiers/recorded rolls are preserved and unverified upgrades omitted. Gold/dust
+stay null/incomplete; there is no zero-cost authority or cost-aware budget
+admission. Uncertain mechanics, numeric total/defence goals and compound saved
+Imprint Apply remain explicitly unsupported. Calculator observes read-only
+resources; Builder consumes the native full output session/atomic receipt.
+
+Remaining review belongs to Oliver; combined Lock integration and publication
+belong to the parent integrator. No normal checkout, npm dev, protected root `0`,
+source data/prices, main merge, push or deployment was changed by this programme.
