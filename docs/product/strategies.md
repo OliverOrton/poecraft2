@@ -364,6 +364,8 @@ profit objective, resale price, salvage assumption or dedicated profit solver in
 this scope. Future profit remains highest matching goal sale value and expected
 net profit/investment, without guessed salvage.
 
-This extension is unqualified source. A matching native DLL, WASM, focused
-acceptance and TypeScript checks are pending the parent-controlled heavy slot;
-the prior feeder qualification does not qualify this new vocabulary or API.
+Matching native/header/DLL, focused Python, WASM, full web and final TypeScript
+acceptance now pass. Full rendered acceptance is incomplete after two fixture
+assumptions; it is paused for the parent-selected priority solver delivery. The
+living feeder record retains failures and scoped evidence. No exact inventory
+or broader pair-law authority is promoted.

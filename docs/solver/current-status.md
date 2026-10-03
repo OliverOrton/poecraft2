@@ -36,8 +36,9 @@ Builder assertions with zero page errors; full product-server rendering remains
 unrun. Current/Finder
 producers and exact closure are unchanged. Exact inventory/feeder evaluation
 stay held. A later typed-port Builder recombination source checkpoint delegates
-to the existing qualified pair Apply; matching native/DLL/WASM/web qualification
-is pending the parent-controlled slot. Ordinary rare kernel refusals remain;
+to the existing qualified pair Apply. Matching native/DLL/WASM/web and final
+TypeScript pass; full rendered acceptance remains incomplete at the priority
+solver-delivery pause. LOCAL is released. Ordinary rare kernel refusals remain;
 fancy blocking/exclusive admission is separate owner work. This row extends no
 exact authority.
 

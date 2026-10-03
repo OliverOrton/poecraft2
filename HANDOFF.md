@@ -1,17 +1,16 @@
-# Builder typed ports prepared; matching qualification held (2026-10-03)
+# Builder qualification paused for solver priority; LOCAL free (2026-10-03)
 
-Isolated dot/strategy-feeder-20261003 at06206b06 carries source6fe9e9d3/06206b06 on
-published main d29d0682. Two Recomb input dots/one output and output-only paid
-sources execute sequentially through the existing native atomic pair API;
-actual sessions, recycling, named child outputs, terminal inventory and unknown
-station costs are preserved. Native/model/worker/Python cases are prepared,
-UNRUN; inherited WASM0b800f57 does not match this new source. Parent granted LOCAL after release18:27:31UTC for serialized qualification
-(max2 jobs); latest published Lock/Calculator4ad40580 is reconciled. Checks
-below remain pending until the matching commands finish.
-Exact inventory and fancy blocking/exclusive admission remain refused/owned
-separately; no solver allowance, data refresh, dev restart, publication or normal
-checkout edit. The [living feeder record](docs/active/2026-10-03-strategy-feeder/README.md#resumed-typed-port-execution-2026-10-03-source-only)
-and item-flow receipt own exact source/artifact identities and next checks.
+Source d3889277 on published4ad40580 passes native/header105 pair+300 feeder,
+actual DLL226334d4, scoped Python, WASM816efea6/MJS23c405b9, full npm37/37/all
+suites, layout and final TypeScript. The browser's real Run N1000 summary passed,
+then a trace-field fixture assumption failed. Complete rendered acceptance and
+screen review remain pending; failures are retained, no full-server claim.
+LOCAL released19:14:35.8221843UTC, zero owned survivors/browser closed; do not
+resume heavy work until parent selects it after priority solver delivery.
+The [living feeder record](docs/active/2026-10-03-strategy-feeder/README.md#matching-qualification-priority-pause-2026-10-03)
+and qualification/pause receipt own evidence and remaining scope. Exact inventory,
+exclusive admission and selection law authority remain separate/refused. Local
+commits only for designated integration owner; no data refresh/dev restart/push.
 
 # Qualified Lock and influenced-target repair integration (2026-10-03)
 

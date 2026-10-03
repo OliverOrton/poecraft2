@@ -1,0 +1,33 @@
+{
+  "status": "paused_for_priority_solver_delivery",
+  "released_utc": "2026-10-03T19:14:35.8221843Z",
+  "slot_held": false,
+  "source_head": "d3889277112ff3335747b17d250343dfb1747915",
+  "native_pair": "105 checks, 0 failures",
+  "native_feeder": "300 checks, 0 failures",
+  "dll_sha256": "226334d4dd4a8c42e2718d16a357d12c0f3bdf3b0bb110deb548d7f3cd291007",
+  "python": "7 unchanged cases passed; corrected mixed-base case passed",
+  "wasm_sha256": "816efea6efc0bccebab775b5f562c576b2a18607f5ca7e566365bac530baa27e",
+  "mjs_sha256": "23c405b984e19595b4007259d8d45fe713ea31a534c091c2ef9433ffbe2f1363",
+  "web": "full npm 37/37 smoke and all suites passed",
+  "typescript": "final passed after two source type corrections; layout recheck passed",
+  "rendered": "INCOMPLETE: actual normal connections/reconnect/Undo and real Run N 1000 summary assertions reached; fixture expected terminal_node_id on trace instead of node_id; browser finally closed",
+  "browser_closed": true,
+  "owned_processes": [],
+  "remaining": [
+    "Correct rendered fixture trace node field and rerun only when parent selects/resumes it",
+    "Review rendered screenshots after successful fixture",
+    "Commit rebuilt WASM and terminal qualification/pause receipt locally; no push"
+  ],
+  "engine_tree": "8d8551d60ca4d71f20a496d85154a4de89a75161",
+  "web_tree": "493ad965020420c9f11bc63a6e1973fc02e358bc",
+  "baseline": "4ad4058086cbaa766a7178aad7ac5625eb8772a8",
+  "failed_checks_retained": [
+    "itemflow-python.log: item-level fixture assumption; failed case rechecked successfully",
+    "itemflow-typecheck.log: two source type errors; repaired, layout/final TS passed",
+    "itemflow-rendered-first-failure.json: add-condition fixture step omitted",
+    "itemflow-rendered-second-failure.json: trace node_id fixture assumption after 1000-run summary passed"
+  ],
+  "bulk_evidence_directory": "out/strategy-feeder",
+  "matching_wasm_bytes": 8612728
+}

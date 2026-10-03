@@ -232,3 +232,30 @@ model/worker acceptance and final web/TypeScript run. Rendered review remains
 Oliver's unless separately selected. All commits stay local for designated
 integration owner01a0fd2f-7f88-7588-a1ea-bfe1e6991036; no independent main merge,
 push or deployment is authorized here.
+
+## Matching qualification; priority pause (2026-10-03)
+
+Parent granted LOCAL after18:27:31 and selected published4ad40580. Merge
+b032faeb preserved Lock/Calculator and both HANDOFF entries. Source d3889277
+has engine8d8551d6 and web493ad965; native/header build,105 pair checks,300 feeder
+checks, actual DLL226334d4, focused Python, matching WASM816efea6/MJS23c405b9,
+unfiltered npm37/37 plus all suites, focused layout and final TypeScript pass.
+The Python item-body/session-envelope fixture was corrected in dfcadae3 and
+its failed case rechecked; seven unchanged passing cases are reused. Two final
+web type errors were repaired in d3889277; native/facade bytes are unchanged.
+
+Rendered normal mouse A/B connections, source-only ports, reconnect/Undo and
+condition authoring reached the actual Run N browser worker. Its1,000-run
+success/action/cost/completeness assertions passed; the fixture then incorrectly
+read terminal_node_id on a trace entry, whose field is node_id. The earlier
+fixture omitted adding a condition row. Both failures are retained; full rendered
+acceptance and screenshot review remain INCOMPLETE, with no product-server claim.
+
+At the parent's explicit solver-delivery priority pause, no new heavy command
+was launched. **LOCAL released2026-10-03T19:14:35.8221843Z**, all commands ended,
+browser finally closed, owned-process snapshot empty. The
+[qualification/pause receipt](itemflow-qualification-pause.json) owns exact
+artifacts, failed/reused checks and remaining work; bulk logs/fixtures/screenshots
+stay in out/strategy-feeder. Resume rendered correction/acceptance only if the
+parent selects it and grants the slot. Native/web evidence is preserved; no
+solver experiment, data/economy refresh, dev restart, push or deployment occurred.
