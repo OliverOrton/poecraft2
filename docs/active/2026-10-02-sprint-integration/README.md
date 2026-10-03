@@ -585,3 +585,27 @@ No command starts automatically, no broad CI retry is selected, and main0187
 stays unchanged. The cap/five-mod owner has priority. Exact design/status is in
 `out/local-native-repair/parity-instrumentation-ready.json` and the qualification
 receipt; CI cause remains open after the one non-reproducing run.
+
+
+### First-mismatch diagnostics locally qualified
+
+The parent released the heavy slot for exactly one two-job Tests build and one
+instrumented continuity selector, source `05064362`. The build passed in 30.035s;
+existing `run_isolated_process` bounded the one selector at 300 seconds. It passed
+**51,511 checks, zero failures** in **1.200s**, exit0, no timeout or survivor.
+Fixture10 again completed at196 steps; no first-mismatch record was emitted. The
+heavy slot was released immediately, before receipt/commit work. The executable is
+SHA256 `561db89f3dace0f4d09c6fc1a91fcb678483be7818c211c92ba19a653d3f4166`.
+
+All14 original prefix assertions are verified verbatim against delivered `0187f3d8`.
+Production native source/include and WASM have no diff from that baseline. The
+local pass leaves CI divergence unresolved and does not confirm the timing/setup
+hypothesis. No broad local suite or native/WASM rebuild is selected. Exact logs,
+command/hash and process evidence live in `out/local-native-repair/parity-instrumented-*`
+and `selective_service_parity_instrumentation_qualification` in
+[qualification.json](qualification.json).
+
+The approved bounded next step is normal publication of these test diagnostics
+and inspection of exactly one resulting exact-head CI, without blind reruns.
+Actual main/remote/CI evidence is recorded separately after delivery. No production
+fix, cap-case authority, other feature integration or deployment is claimed.

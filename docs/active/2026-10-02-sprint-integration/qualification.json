@@ -2171,5 +2171,78 @@
     "no_production_fix": true,
     "owned_heavy_processes_remaining": 0,
     "priority": "Cap/five-mod diagnostic owns slot; cases remain separate"
+  },
+  "selective_service_parity_instrumentation_qualification": {
+    "recorded_utc": "2026-10-03T06:00:57.857783+00:00",
+    "status": "test-only first-mismatch instrumentation qualified locally; CI divergence unresolved",
+    "source": "050643620bdd4c3cb71d5378f79c0b4e25257f36",
+    "baseline_delivered_main": "0187f3d8334c3b9deb9730a6fa89899c051e9931",
+    "build": {
+      "command": "powershell -NoProfile -File scripts/dev-engine.ps1 -Task Tests -Jobs 2",
+      "target": "Tests only",
+      "max_build_jobs": 2,
+      "exit_code": 0,
+      "wall_seconds": 30.0349999,
+      "log": "out/local-native-repair/parity-instrumented-build.log"
+    },
+    "run": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 43320,
+      "process_identity_token": "43320:134354805857741552",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 1200.2918999642134,
+      "completed_utc": "2026-10-03T05:56:26.755966+00:00",
+      "source": "050643620bdd4c3cb71d5378f79c0b4e25257f36",
+      "command": [
+        "C:\\Users\\Oliver\\Documents\\poecraft2-local-native-repair\\build\\engine\\poecraft_engine_tests.exe",
+        "--solver-integrity-only",
+        "continuity"
+      ],
+      "executable_sha256": "561db89f3dace0f4d09c6fc1a91fcb678483be7818c211c92ba19a653d3f4166",
+      "failure_lines": 0,
+      "summaries": [
+        "solver integrity tests: 51511 checks, 0 failures"
+      ],
+      "first_mismatch_records": [],
+      "fixture10_summary": [
+        "IC0 fixture=10 goals=4 steps=196 done=1 candidate=1 checked=1 admitted=1 checking=1 validating=1 entry_cost=31984.615384614921 status=censored_finish_or_cap"
+      ],
+      "full_output_log": "out/local-native-repair/parity-instrumented-run.log"
+    },
+    "preflight": {
+      "source": "050643620bdd4c3cb71d5378f79c0b4e25257f36",
+      "started_utc": "2026-10-03T05:56:25.554686+00:00",
+      "command": [
+        "C:\\Users\\Oliver\\Documents\\poecraft2-local-native-repair\\build\\engine\\poecraft_engine_tests.exe",
+        "--solver-integrity-only",
+        "continuity"
+      ],
+      "executable_sha256": "561db89f3dace0f4d09c6fc1a91fcb678483be7818c211c92ba19a653d3f4166",
+      "host_watchdog_seconds": 300.0,
+      "run_count": 1
+    },
+    "assertion_review": {
+      "original_PC_CHECK_count": 14,
+      "all_original_expressions_verbatim": true,
+      "production_native_and_wasm_diff_from_baseline": []
+    },
+    "bounds": {
+      "local_instrumented_invocations": 1,
+      "host_watchdog_seconds": 300.0,
+      "owned_heavy_processes_remaining": 0,
+      "slot_released_before_receipt_work": true
+    },
+    "interpretation": "No local divergence captured. The timing/setup hypothesis remains unproved. This pass does not explain or dismiss prior exact-head CI failures.",
+    "unrun": [
+      "New broad local suite",
+      "Native/WASM rebuild (unchanged production source)",
+      "One authorized exact-head post-push CI (pending normal delivery)"
+    ],
+    "delivery": "Normal main fast-forward/push is authorized for these test-only diagnostics. Actual remote and one post-push CI result will be recorded separately; no deployment."
   }
 }

@@ -1,14 +1,15 @@
-# Parity first-mismatch instrumentation prepared (2026-10-03)
+# Parity first-mismatch diagnostics qualified (2026-10-03)
 
-Test-only records in `test_solver_solve.cpp` capture first mismatch mask, step,
-paired setup/logical progress and timing plus bounded native traces. All14 original
-assertions and production semantics remain unchanged. Actual unit/time yield
-reason is not exposed and is labelled unknown. Unbuilt/unrun; no push/main change.
-Explicit slot needed for two-job test build then one instrumented finite selector;
-cap/five-mod diagnostic retains priority. The
+Test-only source `05064362` passed the approved two-job Tests build and one
+300-second-host-bounded continuity selector: 51,511 checks, zero failures, 1.200s,
+no timeout/survivor. Fixture10 took196 steps; no mismatch record was emitted. All14
+original assertions and production native/WASM semantics remain unchanged. Slot
+released before receipt work; no owned process. CI cause remains open. The
 [living integration record](docs/active/2026-10-02-sprint-integration/README.md)
-and `selective_service_parity_instrumentation_ready` own the ready handoff.
-CI parity remains open; prior one-run pass did not resolve it. No owned process.
+and `selective_service_parity_instrumentation_qualification` own exact evidence.
+Normal test-diagnostic publication and one exact-head CI inspection are approved;
+actual delivery/CI result is recorded separately. No blind repeat or production
+fix selected; five-mod allocation and other feature owners remain coordinated.
 
 # Selective-service prefix parity; source classification (2026-10-03)
 
