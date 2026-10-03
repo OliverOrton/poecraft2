@@ -1,3 +1,16 @@
+# Selective-service prefix parity; source classification (2026-10-03)
+
+Latest `0187f3d8` CI has28 native prefix parity failures in fixture10 before
+selective-service admission; this toggles service, not tracing. Native source and
+WASM match the prior all17-pass `3ab862fe`. Goal-cover20ms cooperative yields are
+a plausible mismatch with equal-step-count comparison, not confirmed harmlessness.
+No assertion/production change. Smallest pending request is one finite continuity
+selector run on preserved executable849ad1f3, with conditional bounded followup.
+The [living integration record](docs/active/2026-10-02-sprint-integration/README.md)
+and `selective_service_parity_classification` own exact evidence/commands. No new
+heavy run or push; actual five-mod bad_alloc diagnostic has priority and stays
+separate. No owned process remains.
+
 # Web solver scope adapter qualified (2026-10-03)
 
 Repair source `7f235bbf` recognizes only the native product v2 scope. Focused

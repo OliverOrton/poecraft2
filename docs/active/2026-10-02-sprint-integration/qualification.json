@@ -2024,5 +2024,67 @@
     "no_deployment": true,
     "no_price_data_refresh": true,
     "no_dev_server_restart": true
+  },
+  "selective_service_parity_classification": {
+    "recorded_utc": "2026-10-03T05:32:33.430614+00:00",
+    "status": "source/log classification only; reproduction pending slot; no assertion or production change",
+    "ci": {
+      "head": "0187f3d8334c3b9deb9730a6fa89899c051e9931",
+      "run": 37098423243,
+      "job": 111132987553,
+      "url": "https://github.com/OliverOrton/poecraft2/actions/runs/37098423243",
+      "solver_checks": 158188,
+      "solver_failures": 28,
+      "native_targets_passed": 16,
+      "native_targets_total": 17
+    },
+    "correct_case": "run_current_incumbent_continuity_tests IC0/IC2 fixture10 before selective service admission; off/on toggles selective_completion_service, not tracing",
+    "failure_projection": {
+      "2495 logical reforge work": 2,
+      "2490 queue": 5,
+      "2487 graph identity": 4,
+      "2488 successors": 4,
+      "2489 probabilities": 4,
+      "2491 expansion cursor": 5,
+      "2484 phase": 3,
+      "2493 verified identity": 1
+    },
+    "unchanged_source": {
+      "3ab862fe_engine_tree": "53c70f2226ee0274dd544ea5fdfa3821deec5c68",
+      "0187f3d8_engine_tree": "53c70f2226ee0274dd544ea5fdfa3821deec5c68",
+      "wasm_sha256_both": "472f644bed756caee538868b714e4d144989e9ec1990232f82562d2f80b7424f"
+    },
+    "prior_passed_evidence": [
+      "Windows run37096236872 on3ab862fe passed all17 native targets before web failure",
+      "out/local-native-repair/resumed-solver-solve-qualified.log:158188 checks,0 failures; IC0fixture10 steps196, admitted/checking/validating"
+    ],
+    "source_timing_candidate": {
+      "owner": "engine/src/solver_solve_bounds.cpp:729",
+      "rule": "Goal-cover setup yields at2048 work units OR20ms steady wall clock",
+      "test_rule": "Off/on are compared after equal counts of step(1), before service admission",
+      "classification": "Plausible wall-clock-dependent prefix misalignment, not established harmlessness or confirmed root cause. Existing intermittent native execution/fixture issue; web-only patch changes no native source."
+    },
+    "smallest_reproduction_request": {
+      "command": "build/engine/poecraft_engine_tests.exe --solver-integrity-only continuity",
+      "artifact": "build/engine/poecraft_engine_tests.exe",
+      "artifact_sha256": "849ad1f3c670a711b9ce30b163f118a2cc7a0924e3f0f873f723c12204a1072d",
+      "first_run": "single serial finite run with existing matching executable; no rebuild/data/pricing/benchmark",
+      "conditional_followup": "If first passes, at most two more serial finite repetitions to assess recurrence; if mismatch, diagnostic-only first mismatch record of fixture/step/setup stage/phase/logical work/queue/cursor, retaining every existing assertion",
+      "limits": "Existing bounded toy fixture limits; no long solve or five-mod invocation"
+    },
+    "unrun": [
+      "all new local reproductions",
+      "any timing perturbation or diagnostic rebuild",
+      "any proposed fix qualification"
+    ],
+    "bad_alloc_case": {
+      "task": "01a10034-1cbb-76ed-8c32-a692b16a701e",
+      "relation": "Separate actual Rare5modConquest native_construction_refused:std::bad_alloc case, no CI bad_alloc evidence or demonstrated connection. Do not mix/revert Bow or metamod paths."
+    },
+    "heavy_slot": "held by other task; user-prioritized actual bad_alloc diagnostic takes precedence",
+    "owned_heavy_processes_remaining": 0,
+    "main_unchanged": true,
+    "no_push": true,
+    "no_production_fix": true
   }
 }

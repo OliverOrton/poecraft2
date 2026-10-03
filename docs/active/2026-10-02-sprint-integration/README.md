@@ -517,3 +517,42 @@ qualify the current combined source and matching WASM, retaining the repair and
 scope adapter. Lock `e792c041` is based on `3ab862fe`; inspected shared protocol
 hunks are disjoint. Neither source-only feature has been merged or accepted by
 this review. Other native/model/WASM qualification remains with their owners.
+
+
+## Latest-head selective-service prefix parity classification
+
+Windows run **37098423243**, job **111132987553**, on delivered `0187f3d8`
+fails **28** checks in native `solver_solve` (158,188 checks total); 16/17 native
+targets pass. All failures lie in IC0/IC2 fixture **10**, before selective-service
+admission. The off/on control toggles `selective_completion_service`, not tracing.
+Assertions cover logical reforge work, graph/kernel/queue/cursor, phase and checked
+identity. No assertion is weakened or native production source changed.
+
+`3ab862fe` and `0187f3d8` have identical engine tree
+`53c70f2226ee0274dd544ea5fdfa3821deec5c68` and identical WASM `472f644b…`.
+The former CI passed all 17 native targets; the preserved matching local full
+solver run also passes all 158,188 checks and reports fixture10 at196 steps.
+The web scope patch therefore did not change this native algorithm. That evidence
+does not establish that the intermittent native failure is harmless.
+
+A concrete timing candidate exists: goal-cover setup's existing cooperative owner
+at `solver_solve_bounds.cpp:729` yields after 2,048 units **or20ms**. The test
+compares state after equal `step(1)` counts, which can differ in logical progress
+if only one setup coroutine crosses the wall-clock boundary. This is a source
+hypothesis, not a demonstrated root cause or proof that all final outputs match.
+
+Smallest requested reproduction: existing finite
+`build/engine/poecraft_engine_tests.exe --solver-integrity-only continuity`, with
+matching SHA256 `849ad1f3c670a711b9ce30b163f118a2cc7a0924e3f0f873f723c12204a1072d`.
+One serial run first; if it passes, at most two further finite repetitions. No
+rebuild or long solver benchmark is needed initially. If it diverges, first
+mismatch diagnostics should record fixture/step, setup stages, phase, logical
+work and queue/cursor without relaxing any assertion. All such runs/edits are
+pending the parent's slot; the actual five-mod allocation diagnostic has priority.
+
+`out/local-native-repair/parity-classification.json` and
+`selective_service_parity_classification` in [qualification.json](qualification.json)
+own the compact evidence/request. The actual Rare5modConquest construction
+`std::bad_alloc` task is separate: no CI allocation exception or demonstrated
+connection is present. No Bow/metamod path is reverted. No build/test/push starts
+from this source-only classification; no owned heavy process remains.
