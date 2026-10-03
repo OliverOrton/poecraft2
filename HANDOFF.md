@@ -1,22 +1,23 @@
 # Active handoff: random recombination inventory solver
 
-Oliver selected this programme October 3 2026 at 16:45 UTC. Fresh isolated branch
-`dot/recombs-solver-20261003` on `72448deaacca2797058de0559378685ba71a983f`;
-normal checkout/dev server and previous qualified worktree are unchanged.
+Oliver selected this programme October 3 2026 at 16:45 UTC. Isolated branch
+`dot/recombs-solver-20261003` is reconciled onto qualified `d29d0682`;
+normal checkout/dev server and previous qualified worktree are untouched.
 
 Read the [living receipt](docs/active/2026-10-03-recombination-solver/README.md)
 and [native contract/argument](docs/engine/recombination-solver.md).
-Native full-item/two-slot policy search, versioned C API, ordinary magic input
-admission and focused test sources are drafted. SOURCE ONLY: no new build/test/
-WASM/benchmark, no publication or merge. No subagents, processes or LOCAL lease.
+Full-item/two-slot policy search, versioned C API, magic admission, native tri-state
+exclusive classifier/constraints inspector and bounded v2 pair extension are source
+complete. SOURCE ONLY: no new build/test/WASM/benchmark, publication or merge.
+No subagents, active process or LOCAL lease. Multiple-exclusive blocking optimization
+still lacks a complete current count/order/zero-proxy-weight law; the receipt separates
+these decisions from implemented metadata/output constraints and ordinary work.
 
-Next gate: parent grants serialized LOCAL (maximum two compiler jobs) for native
-focused qualification, then matching ABI/binding/WASM consumers as actually changed.
-Exclusive ordering/count/weight classification remains unresolved and gated;
-parent has been asked whether a separate provisional model should be prepared.
-Builder owner handles paid fresh feeder invocation into A/B, typed ports and
-atomic two-consumed/one-created execution in the actual native output session.
-Solver catalogue costs are declared complete exact-spec costs, not feeder certificates.
+Next gate: parent grants serialized LOCAL (maximum two compiler jobs), queued after
+Builder/law, for native header/pair/inventory qualification, then matching WASM and
+affected exposed consumers. Builder owns paid fresh feeder invocation, typed A/B
+ports and atomic execution in the actual output session. Solver costs are declared
+complete exact-spec acquisition/attempt costs, not native feeder certificates.
 
 ---
 

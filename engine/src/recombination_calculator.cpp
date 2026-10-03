@@ -220,7 +220,7 @@ std::string calculate_random_recomb_goals_json(const RandomRecombPair& pair, con
     }
     if (std::abs(mass - 1) > 1e-10L) throw std::logic_error("Pair finalizer failed probability conservation");
     member(result, "pair_version") = number(pair.version);
-    member(result, "model_id") = string(kRandomRecombModel);
+    member(result, "model_id") = string(pair.model_id);
     member(result, "projection_id") = string(kRandomRecombProjection);
     member(result, "goal_projection_id") = string("calculator-structural-goals-carrier-session-v1");
     member(result, "game_odds_estimated") = boolean(true);

@@ -101,7 +101,8 @@ pc_result pc_recombination_solver_create(pc_session_handle session,
         const pc_recombination_solver_options* options, pc_recombination_solver_handle* out, pc_error_info* error) {
     if (!session || !options || !out || options->struct_size != sizeof(*options) ||
         options->abi_version != PC_ABI_VERSION || options->solver_version != PC_RECOMBINATION_SOLVER_VERSION ||
-        !options->model_id || std::strcmp(options->model_id, poecraft::kRandomRecombModel) ||
+        !options->model_id || (std::strcmp(options->model_id, poecraft::kRandomRecombModel) &&
+            std::strcmp(options->model_id, poecraft::kRandomRecombExtendedModel)) ||
         !options->price_identity || !options->goal_set_json ||
         !options->acquisitions || !options->acquisition_count || options->acquisition_count > 32 ||
         options->initial_item_count > 2 || (options->initial_item_count && (!options->initial_items || !options->initial_item_costs)) ||
@@ -109,7 +110,7 @@ pc_result pc_recombination_solver_create(pc_session_handle session,
         return fail(error, PC_RESULT_INVALID_ARGUMENT, "Invalid versioned recombination inventory request");
     try {
         poecraft::RecombSolverRequest request; request.session = session->impl;
-        request.price_identity = options->price_identity;
+        request.model_id = options->model_id; request.price_identity = options->price_identity;
         request.goal_set_json.assign(options->goal_set_json, options->goal_set_json_size);
         request.recombination_cost_chaos = options->recombination_cost_chaos;
         request.recombination_cost_complete = options->recombination_cost_complete != 0;

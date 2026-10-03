@@ -16,7 +16,7 @@ typedef struct pc_recombination_acquisition {
 } pc_recombination_acquisition;
 typedef struct pc_recombination_solver_options {
     uint32_t struct_size, abi_version, solver_version;
-    const char* model_id; /* must equal the native declared selection model */
+    const char* model_id; /* explicit native v1 ordinary or bounded v2 model ID */
     const char* price_identity;
     const char* goal_set_json;
     size_t goal_set_json_size;

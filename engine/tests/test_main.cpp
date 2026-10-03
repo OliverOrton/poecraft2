@@ -366,6 +366,7 @@ int main(int argc, char** argv) {
     run_action_tests(artifact_dir);
     run_two_input_result_tests();
     run_random_recombination_tests(artifact_dir);
+    run_recombination_solver_tests(artifact_dir);
     run_bestiary_tests();
     run_simulator_tests(artifact_dir);
     run_solver_abstract_tests(artifact_dir);

@@ -1,4 +1,5 @@
 #include "recombination_solver.hpp"
+#include "recombination_constraints.hpp"
 #include "calculator_currency.hpp"
 #include "recombination_calculator.hpp"
 #include "json.hpp"
@@ -205,6 +206,7 @@ Values evaluate_policy(const std::vector<State>& states, const std::vector<bool>
 }
 RecombSolverResult solve_random_recomb_inventory(const RecombSolverRequest& request) {
     require(request.session != nullptr && !request.price_identity.empty(), "Inventory solver session/prices are missing");
+    validate_random_recomb_carrier_session(*request.session);
     require(request.recombination_cost_complete && request.recombination_cost_chaos &&
             finite_cost(*request.recombination_cost_chaos), "Recombination gold/dust/attempt cost is incomplete");
     require(!request.acquisitions.empty() && request.acquisitions.size() <= 32, "Inventory solver requires a bounded acquisition catalogue");
@@ -214,9 +216,11 @@ RecombSolverResult solve_random_recomb_inventory(const RecombSolverRequest& requ
             request.max_states <= 256 && request.max_policy_iterations >= 1 &&
             request.max_policy_iterations <= 64, "Inventory solver resource caps are invalid");
     require(request.max_work >= 1 && request.max_work <= 500000000, "Inventory numerical work cap is invalid");
+    require(request.model_id == kRandomRecombModel || request.model_id == kRandomRecombExtendedModel,
+            "Unsupported declared recombination inventory model");
     WorkGuard work{request}; work.tick();
     validate_random_recomb_goal_projection(request.goal_set_json.data(), request.goal_set_json.size());
-    RecombSolverResult result; result.price_identity = request.price_identity; result.cost_complete = true;
+    RecombSolverResult result; result.model_id = request.model_id; result.price_identity = request.price_identity; result.cost_complete = true;
     const auto goals = solver::bind_calculator_goal_set(request.session, request.goal_set_json.data(), request.goal_set_json.size());
     std::vector<std::uint64_t> reachable(request.session->words, 0);
     for (unsigned mod = 0; mod < request.session->mod_count; ++mod)
@@ -228,7 +232,7 @@ RecombSolverResult solve_random_recomb_inventory(const RecombSolverRequest& requ
     std::vector<bool> item_goals;
     const auto intern_item = [&](const pc_item_state& item) {
         work.tick();
-        validate_craft_resource({"validation", "item", request.session, item});
+        validate_recombination_item_structure({"validation", "item", request.session, item});
         const auto key = item_key(item);
         if (const auto found = item_ids.find(key); found != item_ids.end()) return found->second;
         if (result.items.size() >= request.max_items) throw std::length_error("Inventory item discovery cap reached; no outcomes dropped");
@@ -288,6 +292,9 @@ RecombSolverResult solve_random_recomb_inventory(const RecombSolverRequest& requ
                 pair = prepare_random_recomb_pair(
                     {"solver-input-a", "a", request.session, result.items[inventory[0]]},
                     {"solver-input-b", "b", request.session, result.items[inventory[1]]});
+                if (pair->model_id == kRandomRecombExtendedModel && request.model_id != kRandomRecombExtendedModel) {
+                    exclusions.insert("Pair requires explicitly selected native-constraints model v2"); pair.reset();
+                }
             } catch (const std::invalid_argument& error) { exclusions.insert(error.what()); }
             if (pair) {
                 std::map<unsigned, double> mass; double total = 0;

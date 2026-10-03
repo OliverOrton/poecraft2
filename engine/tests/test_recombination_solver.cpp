@@ -1,5 +1,6 @@
 #include "tests.hpp"
 #include "../src/recombination_solver.hpp"
+#include "../src/recombination_constraints.hpp"
 #include "../src/handles_internal.hpp"
 #include "../src/json.hpp"
 #include "poecraft/recombination_solver.h"
@@ -7,6 +8,185 @@
 #include <cstring>
 #include <limits>
 
+namespace {
+void run_constraint_witnesses(pc_data_handle data, pc_session_handle ring) {
+    using namespace poecraft;
+    const std::pair<const char*,RecombOrigin> fixtures[] = {
+        {"AddedColdDamageEssence7",RecombOrigin::EssenceOnly},
+        {"DexMasterItemGenerationCannotChangeSuffixes",RecombOrigin::Metamod},
+        {"DelveAmuletBeltManaRecoveryRate1",RecombOrigin::Delve},
+        {"JunMasterVeiledAddedColdAndLightningDamage",RecombOrigin::Unveiled},
+        {"AislinVeiledSuffix__",RecombOrigin::VeilTemplate},
+        {"GrantsCatAspectCrafted",RecombOrigin::BeastAspect},
+        {"AccuracyRatingPerFrenzyChargeUber1",RecombOrigin::InfluencedNatural},
+        {"ArmourAndEnergyShieldPercentCrafted_",RecombOrigin::CraftedUnresolved},
+        {"BreachBodyAddedColdDamagePerPowerCharge1",RecombOrigin::NonNaturalUnresolved}};
+    const auto& d = *ring->impl->data;
+    auto fixture = std::make_shared<SessionImpl>(); fixture->data = ring->impl->data;
+    fixture->base_index = ring->impl->base_index; fixture->item_level = 80;
+    std::vector<uint32_t> retained;
+    for (const auto& [key,origin] : fixtures) {
+        const auto found = d.mod_pos_by_key.find(key); PC_CHECK(found != d.mod_pos_by_key.end());
+        if (found == d.mod_pos_by_key.end()) return;
+        retained.push_back(d.mod_global_ids.at(found->second));
+    }
+    PC_CHECK(!d.influence_elevations.empty());
+    if (!d.influence_elevations.empty()) retained.push_back(d.influence_elevations.begin()->second);
+    build_session(*fixture,retained);
+    for (unsigned i = 0; i < sizeof(fixtures)/sizeof(fixtures[0]); ++i) {
+        const auto category = classify_recombination_mod(*fixture,fixture->session_id_by_global_id.at(retained[i]));
+        PC_CHECK(category.origin == fixtures[i].second);
+        const auto expected = i < 6 ? RecombExclusivity::Exclusive :
+            i == 6 ? RecombExclusivity::NonExclusive : RecombExclusivity::Unresolved;
+        PC_CHECK(category.exclusivity == expected);
+    }
+    if (!d.influence_elevations.empty()) {
+        const auto elevated = classify_recombination_mod(*fixture,fixture->session_id_by_global_id.at(retained.back()));
+        PC_CHECK(elevated.origin == RecombOrigin::Elevated && elevated.exclusivity == RecombExclusivity::Exclusive);
+    }
+    RecombOccurrence first{0,0,100,0,1,{1}}, second{1,0,101,1,1,{2}};
+    PC_CHECK(!recombination_mods_can_coexist(first,RecombExclusivity::Exclusive,second,RecombExclusivity::Exclusive));
+    PC_CHECK(recombination_mods_can_coexist(first,RecombExclusivity::NonExclusive,second,RecombExclusivity::Exclusive));
+    second.groups.push_back(1);
+    PC_CHECK(!recombination_mods_can_coexist(first,RecombExclusivity::NonExclusive,second,RecombExclusivity::NonExclusive));
+
+    const auto special = fixture->session_id_by_global_id.at(retained[3]);
+    PC_CHECK(fixture->base_spawn_weight.at(special) > 0 && fixture->gen_type.at(special) == 0);
+    unsigned ordinary = PC_MOD_NONE;
+    for (unsigned m = 0; m < fixture->mod_count; ++m) {
+        if (fixture->gen_type[m] != 0 || classify_recombination_mod(*fixture,m).origin != RecombOrigin::Natural ||
+            !fixture->base_spawn_weight[m]) continue;
+        RecombOccurrence a{0,0,retained[3],special,1,{}}, b{1,0,d.mod_global_ids[fixture->global_index[m]],m,1,{}};
+        a.groups.assign(fixture->group_ids.begin()+fixture->group_offsets[special],fixture->group_ids.begin()+fixture->group_offsets[special+1]);
+        b.groups.assign(fixture->group_ids.begin()+fixture->group_offsets[m],fixture->group_ids.begin()+fixture->group_offsets[m+1]);
+        if (recombination_mods_can_coexist(a,RecombExclusivity::Exclusive,b,RecombExclusivity::NonExclusive)) { ordinary=m; break; }
+    }
+    PC_CHECK(ordinary != PC_MOD_NONE); if (ordinary == PC_MOD_NONE) return;
+    pc_item_state a{}, b{}; pc_item_clear(&a); pc_item_clear(&b); a.rarity=b.rarity=PC_RARITY_MAGIC;
+    PC_CHECK(pc_item_add_mod(&a,PC_SIDE_PREFIX,special,uint16_t(fixture->primary_group[special]),0,nullptr)==PC_RESULT_OK);
+    PC_CHECK(pc_item_add_mod(&b,PC_SIDE_PREFIX,ordinary,uint16_t(fixture->primary_group[ordinary]),0,nullptr)==PC_RESULT_OK);
+    a.prefixes[0].roll_count=1; a.prefixes[0].rolls[0]=73;
+    const auto pair = prepare_random_recomb_pair({"a","a",fixture,a},{"b","b",fixture,b});
+    PC_CHECK(pair.model_id == kRandomRecombExtendedModel);
+    double mass=0, special_mass=0;
+    for (const auto& outcome : enumerate_random_recomb_pair(pair)) {
+        mass += outcome.probability;
+        const auto item=materialize_random_recomb_outcome(pair,outcome);
+        const auto& mapping=*pair.carriers[outcome.carrier].output_session;
+        for (unsigned i=0;i<item.prefix_count;++i)
+            if (mapping.data->mod_global_ids[mapping.global_index[item.prefixes[i].mod_id]]==retained[3]) {
+                special_mass+=outcome.probability; PC_CHECK(item.prefixes[i].rolls[0]==73);
+            }
+    }
+    const double expected=.333+.667*fixture->base_spawn_weight[special]/
+        double(uint64_t(fixture->base_spawn_weight[special])+fixture->base_spawn_weight[ordinary]);
+    PC_CHECK(std::abs(mass-1)<1e-10 && std::abs(special_mass-expected)<1e-10);
+    auto finished_spec=a; finished_spec.rarity=PC_RARITY_RARE;
+    PC_CHECK(pc_item_add_mod(&finished_spec,PC_SIDE_PREFIX,ordinary,uint16_t(fixture->primary_group[ordinary]),0,nullptr)==PC_RESULT_OK);
+    const auto key = [&](unsigned m) { return d.string_at(d.mod_key_sid.at(fixture->global_index.at(m))); };
+    const auto goals = std::string(R"({"version":"calculator_goal_set_v1","actions":[],"goals":[{"id":"special-pair","goal":{"version":"v1","rarity":"rare","slots":[{"family_mod_key":")")+
+        key(special)+R"(","min_tier":)"+std::to_string(fixture->family_tier_index[special])+R"(},{"family_mod_key":")"+
+        key(ordinary)+R"(","min_tier":)"+std::to_string(fixture->family_tier_index[ordinary])+R"(}]}}]})";
+    RecombSolverRequest request; request.session=fixture; request.goal_set_json=goals;
+    request.price_identity="special-fixture"; request.recombination_cost_chaos=1; request.recombination_cost_complete=true;
+    request.acquisitions={{"special","purchase","quote-special",a,1,true},
+        {"normal","completed_feeder","quote-normal",b,1,true},
+        {"finished","completed_feeder","quote-finished",finished_spec,20,true}};
+    const auto held=solve_random_recomb_inventory(request);
+    PC_CHECK(held.model_id==kRandomRecombModel && std::abs(held.expected_cost_chaos-20)<1e-8);
+    bool explicit_exclusion=false;
+    for (const auto& exclusion : held.exclusions) explicit_exclusion |= exclusion.find("explicitly selected")!=std::string::npos;
+    PC_CHECK(explicit_exclusion);
+    request.model_id=kRandomRecombExtendedModel;
+    const auto extended=solve_random_recomb_inventory(request);
+    PC_CHECK(extended.model_id==kRandomRecombExtendedModel && extended.search_converged && !extended.global_optimality_claim);
+    PC_CHECK(std::abs(extended.expected_cost_chaos-(1+2/.333))<1e-7 && extended.expected_acquisitions[2]==0);
+    pc_item_state zero_special{}; pc_item_clear(&zero_special); zero_special.rarity=PC_RARITY_MAGIC;
+    const auto zero_id=fixture->session_id_by_global_id.at(retained[0]);
+    PC_CHECK(fixture->base_spawn_weight[zero_id]==0);
+    PC_CHECK(pc_item_add_mod(&zero_special,PC_SIDE_PREFIX,zero_id,uint16_t(fixture->primary_group[zero_id]),0,nullptr)==PC_RESULT_OK);
+    bool weight_refused=false;
+    try { (void)prepare_random_recomb_pair({"zero","a",fixture,zero_special},{"normal","b",fixture,b}); }
+    catch (const std::invalid_argument&) { weight_refused=true; }
+    PC_CHECK(weight_refused && zero_special.lifecycle==PC_ITEM_LIVE && b.lifecycle==PC_ITEM_LIVE);
+    auto duplicate=a;
+    bool refused=false;
+    try { (void)prepare_random_recomb_pair({"a","a",fixture,a},{"b","b",fixture,duplicate}); }
+    catch (const std::invalid_argument&) { refused=true; }
+    PC_CHECK(refused); // two physical exclusives do not borrow an ordinary count row
+    pc_session mapped; mapped.impl=fixture;
+    pc_craft_resource ra{"a","a",&mapped,&a}, rb{"b","b",&mapped,&duplicate};
+    const auto before_a=a, before_b=duplicate;
+    pc_error_info error{}; size_t length=0;
+    PC_CHECK(pc_recombination_constraints_json(&ra,&rb,1,nullptr,0,&length,&error)==PC_RESULT_BUFFER_TOO_SMALL);
+    std::vector<char> buffer(length+1);
+    PC_CHECK(pc_recombination_constraints_json(&ra,&rb,1,buffer.data(),buffer.size(),&length,&error)==PC_RESULT_OK);
+    const auto inspected=json::Parser(buffer.data(),length).parse();
+    PC_CHECK(!inspected.at("probability_law_complete").as_bool() && inspected.at("side_order_model").is_null());
+    PC_CHECK(inspected.at("sides").array[0].at("physical_count").as_number()==2 &&
+        inspected.at("sides").array[0].at("known_exclusive_occurrences").as_number()==2);
+    PC_CHECK(inspected.at("sides").array[0].at("effective_count").is_null() && inspected.at("known_conflicts").array.size()==1);
+    PC_CHECK(inspected.at("occurrences").array[0].at("carrier_spawn_proxies").array[0].as_number()>0);
+    PC_CHECK(std::memcmp(&a,&before_a,sizeof(a))==0 && std::memcmp(&duplicate,&before_b,sizeof(duplicate))==0);
+    PC_CHECK(pc_recombination_constraints_json(&ra,&rb,2,nullptr,0,&length,&error)==PC_RESULT_INVALID_ARGUMENT);
+
+    pc_session_options options{}; options.struct_size=sizeof(options); options.abi_version=PC_ABI_VERSION;
+    options.base_metadata_path="Metadata/Items/Armours/BodyArmours/BodyInt1"; options.item_level=80;
+    pc_session_handle es=nullptr;
+    PC_CHECK(pc_session_create(data,&options,&es,&error)==PC_RESULT_OK); if (!es) return;
+    unsigned nnn=PC_MOD_NONE, normal=PC_MOD_NONE;
+    for (unsigned m=0;m<es->impl->mod_count;++m) {
+        const auto category=classify_recombination_mod(*es->impl,m);
+        if (es->impl->gen_type[m]==0 && category.origin==RecombOrigin::Natural) {
+            if (!category.natural_on_source && category.guaranteed_natural_essence_source) nnn=m;
+            if (category.natural_on_source) normal=m;
+        }
+    }
+    PC_CHECK(nnn!=PC_MOD_NONE && normal!=PC_MOD_NONE);
+    if (nnn!=PC_MOD_NONE && normal!=PC_MOD_NONE) {
+        pc_item_state donor{}, receiver{}; pc_item_clear(&donor); pc_item_clear(&receiver);
+        donor.rarity=receiver.rarity=PC_RARITY_MAGIC;
+        PC_CHECK(pc_item_add_mod(&donor,PC_SIDE_PREFIX,nnn,uint16_t(es->impl->primary_group[nnn]),0,nullptr)==PC_RESULT_OK);
+        PC_CHECK(pc_item_add_mod(&receiver,PC_SIDE_PREFIX,normal,uint16_t(es->impl->primary_group[normal]),0,nullptr)==PC_RESULT_OK);
+        const auto nnn_pair=prepare_random_recomb_pair({"n","a",es->impl,donor},{"r","b",es->impl,receiver});
+        PC_CHECK(nnn_pair.model_id==kRandomRecombExtendedModel && nnn_pair.carriers[0].sides[0].size()==2);
+        double nnn_mass=0;
+        for (const auto& output : enumerate_random_recomb_pair(nnn_pair)) {
+            nnn_mass+=output.probability;
+            const auto item=materialize_random_recomb_outcome(nnn_pair,output);
+            PC_CHECK(item.prefix_count==1); // count first, ineligible natural occurrence exhausted on both carriers
+        }
+        PC_CHECK(std::abs(nnn_mass-1)<1e-10);
+    }
+    pc_session_destroy(es);
+    // The public pair keeps its model and atomic receipt on the bounded special path.
+    pc_craft_resource special_inputs[2]{{"special-a","a",&mapped,&a},{"normal-b","b",&mapped,&b}};
+    pc_recombination_pair_handle handle=nullptr;
+    PC_CHECK(pc_recombination_pair_create(&special_inputs[0],&special_inputs[1],1,&handle,&error)==PC_RESULT_OK);
+    if (handle) {
+        size_t required=0;
+        PC_CHECK(pc_recombination_pair_calculate_json(handle,nullptr,0,&required,&error)==PC_RESULT_BUFFER_TOO_SMALL);
+        std::vector<char> text(required+1);
+        PC_CHECK(pc_recombination_pair_calculate_json(handle,text.data(),text.size(),&required,&error)==PC_RESULT_OK);
+        PC_CHECK(json::Parser(text.data(),required).parse().at("model_id").as_string()==kRandomRecombExtendedModel);
+        pc_action_context_options context_options{}; context_options.struct_size=sizeof(context_options);
+        context_options.abi_version=PC_ABI_VERSION; context_options.seed=87;
+        pc_action_context_handle context=nullptr;
+        PC_CHECK(pc_action_context_create(&mapped,&context_options,&context,&error)==PC_RESULT_OK);
+        if (context) {
+            pc_recombination_result applied{};
+            PC_CHECK(pc_recombination_pair_apply(handle,context,special_inputs,2,"special-output",&applied,&error)==PC_RESULT_OK);
+            PC_CHECK(applied.model_id && std::strcmp(applied.model_id,kRandomRecombExtendedModel)==0 &&
+                a.lifecycle==PC_ITEM_CONSUMED && b.lifecycle==PC_ITEM_CONSUMED);
+            PC_CHECK(!applied.gold_cost_complete && !applied.dust_cost_complete && applied.transaction.resource_count==3);
+            pc_recombination_pair_destroy(handle); handle=nullptr;
+            PC_CHECK(applied.model_id && std::strcmp(applied.model_id,kRandomRecombExtendedModel)==0);
+            pc_session_destroy(applied.output_session); pc_action_context_destroy(context);
+        }
+    }
+    pc_recombination_pair_destroy(handle);
+}
+}
 void run_recombination_solver_tests(const char* artifact_dir) {
     using namespace poecraft;
     // Physical duplicates affect the count row; selecting removes full groups.
@@ -40,6 +220,7 @@ void run_recombination_solver_tests(const char* artifact_dir) {
     pc_session_handle session = nullptr;
     PC_CHECK(pc_session_create(data, &options, &session, &error) == PC_RESULT_OK);
     if (!session) { pc_data_destroy(data); return; }
+    run_constraint_witnesses(data,session);
     std::vector<unsigned> mods;
     const auto& s = *session->impl;
     for (unsigned m = 0; m < s.mod_count && mods.size() < 2; ++m)
@@ -104,6 +285,9 @@ void run_recombination_solver_tests(const char* artifact_dir) {
     auto invalid = request; invalid.recombination_cost_complete = false; refusal(invalid);
     invalid = request; invalid.acquisitions[0].cost_complete = false; refusal(invalid);
     invalid = request; invalid.acquisitions[0].total_cost_chaos = std::numeric_limits<double>::quiet_NaN(); refusal(invalid);
+    invalid = request; invalid.acquisitions[2].item.rarity = PC_RARITY_MAGIC; refusal(invalid);
+    invalid = request; invalid.acquisitions[2].item.prefixes[1] = invalid.acquisitions[2].item.prefixes[0]; refusal(invalid);
+    invalid = request; invalid.model_id = "unknown-model"; refusal(invalid);
     invalid = request; invalid.max_items = 1; refusal(invalid);
     invalid = request; invalid.max_states = 1; refusal(invalid);
     invalid = request; invalid.max_work = 1; refusal(invalid);

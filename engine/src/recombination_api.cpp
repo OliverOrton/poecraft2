@@ -1,5 +1,6 @@
 #include "recombination.hpp"
 #include "recombination_calculator.hpp"
+#include "recombination_constraints.hpp"
 #include "handles_internal.hpp"
 #include "poecraft/recombination.h"
 #include <cstdio>
@@ -56,7 +57,7 @@ void write_item(std::ostream& out, const pc_item_state& item, const poecraft::Se
 }
 std::string calculate_json(const poecraft::RandomRecombPair& pair) {
     std::ostringstream out; out << std::setprecision(17);
-    out << "{\"pair_version\":1,\"model_id\":" << quote(poecraft::kRandomRecombModel)
+    out << "{\"pair_version\":1,\"model_id\":" << quote(pair.model_id)
         << ",\"projection_id\":" << quote(poecraft::kRandomRecombProjection)
         << ",\"game_odds_estimated\":true,\"apply_supported\":true,"
            "\"gold_cost\":null,\"dust_cost\":null,\"cost_complete\":false,\"data_identity\":[";
@@ -95,6 +96,23 @@ namespace poecraft {
 std::string random_recomb_item_json(const pc_item_state& item, const SessionImpl& session) {
     std::ostringstream out; write_item(out, item, session); return out.str();
 }
+}
+pc_result pc_recombination_constraints_json(const pc_craft_resource* a, const pc_craft_resource* b,
+        uint32_t version, char* buffer, size_t size, size_t* length, pc_error_info* error) {
+    if (!a || !b || !length || version != PC_RECOMBINATION_CONSTRAINT_VERSION ||
+        !a->identity || !b->identity || !a->role || !b->role || !a->session || !b->session ||
+        !a->item || !b->item || a->item == b->item)
+        return fail(error, PC_RESULT_INVALID_ARGUMENT, "Invalid or aliased recombination constraint request");
+    try {
+        const auto text = poecraft::inspect_random_recombination_constraints(
+            {a->identity, a->role, a->session->impl, *a->item},
+            {b->identity, b->role, b->session->impl, *b->item});
+        *length = text.size();
+        if (!buffer || size < text.size() + 1)
+            return fail(error, PC_RESULT_BUFFER_TOO_SMALL, "Recombination constraint buffer required");
+        std::memcpy(buffer, text.c_str(), text.size() + 1);
+        if (error) pc_error_info_init(error); return PC_RESULT_OK;
+    } catch (const std::exception& ex) { return fail(error, PC_RESULT_INVALID_ARGUMENT, ex.what()); }
 }
 pc_result pc_recombination_pair_create(const pc_craft_resource* a, const pc_craft_resource* b,
         uint32_t version, pc_recombination_pair_handle* out, pc_error_info* error) {
@@ -170,7 +188,9 @@ pc_result pc_recombination_pair_apply(pc_recombination_pair_handle pair,
         output_session->impl = std::const_pointer_cast<poecraft::SessionImpl>(output.session);
         pc_recombination_result next{};
         next.struct_size = sizeof(next); next.abi_version = PC_ABI_VERSION;
-        next.pair_version = PC_RECOMBINATION_PAIR_VERSION; next.model_id = poecraft::kRandomRecombModel;
+        next.pair_version = PC_RECOMBINATION_PAIR_VERSION;
+        next.model_id = pair->impl.model_id == poecraft::kRandomRecombExtendedModel
+            ? poecraft::kRandomRecombExtendedModel : poecraft::kRandomRecombModel;
         next.carrier = output.session == pair->impl.carriers[0].output_session ? 0 : 1;
         next.output_session = output_session.get(); next.output_item = output.item;
         next.transaction.struct_size = sizeof(next.transaction); next.transaction.abi_version = PC_ABI_VERSION;

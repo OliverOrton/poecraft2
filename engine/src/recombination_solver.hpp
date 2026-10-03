@@ -15,7 +15,7 @@ struct RecombAcquisition {
 };
 struct RecombSolverRequest {
     std::shared_ptr<const SessionImpl> session;
-    std::string goal_set_json, price_identity;
+    std::string goal_set_json, price_identity, model_id = kRandomRecombModel;
     std::vector<RecombAcquisition> acquisitions;
     std::vector<pc_item_state> initial_items;
     std::vector<double> initial_item_costs;

@@ -20,7 +20,7 @@ into the pinned session; output base and level must still equal the selected sco
 The inventory has at most two physical items. Duplicate spec IDs represent two
 distinct occurrences, not one aliased resource. Acquiring adds an item, recombining
 consumes both and creates one complete native outcome, and discarding removes one.
-Native pair enumeration supplies every positive outcome. A retained failure is
+Native rarity capacity and full-group structural validation also apply to acquisitions, including terminal finished items. Native pair enumeration supplies every positive outcome. A retained failure is
 available for the next attempt; no market salvage credit or free fresh input is
 invented. Discovery caps reject the request rather than discard branches.
 
@@ -73,10 +73,30 @@ cancellation callback; its C API uses the bounded synchronous work envelope.
 ## Held semantics and activation
 
 The v1 ordinary count/weight/tier/roll approximation remains pinned. Magic and
-normal ordinary inputs are admitted; output remains rare. Exclusive categories,
-uncertain crafted classes, fractures, generic influence and the exceptional
-1p0s + 0p1s joint law remain explicit pair exclusions. Do not apply the old 3.25
-multimod padding law to current exclusive pools.
+normal ordinary inputs are admitted; output remains rare. A separate model ID,
+`poe1-random-spawn-proxy-native-constraints-preserve-tier-roll-no-upgrade-v2`,
+admits a bounded extension: at most one known exclusive physical occurrence,
+with a positive proxy on both possible carriers, and ordinary natural tiers
+available through a native guaranteed Essence source even when non-native to
+their input base. The adopted physical-count-before-filter coefficients remain
+unchanged. With no second exclusive and no cross-side group overlap, neither
+case needs an exclusive-dependent side-order assumption. Their game probabilities
+remain estimated. Solver callers must select v2 explicitly; v1 excludes v2 pairs.
+
+The [constraint inspector](../../engine/src/recombination_constraints.cpp) reports
+metadata-backed origins, tri-state exclusivity, physical counts, full-group/output
+conflicts and carrier-specific native spawn proxies. It does not supply a probability
+law. Essence-only, metamod, Delve, unveiled/veil template, canonical elevated relations
+and the four beast Aspect mod types identify known exclusive origins. Generic crafted
+rows are unresolved, not automatically exclusive. Incursion/Breach have no authoritative
+origin tag in the frozen runtime metadata and remain unresolved. A zero special proxy
+means missing selection weight authority, not certain ineligibility. A positive proxy
+is separate from ordinary natural eligibility.
+
+Multiple exclusive occurrences, uncertain crafted classes, fractures, generic influence
+and the exceptional 1p0s + 0p1s joint law remain explicit pair exclusions. The known
+at-most-one-exclusive output constraint cannot determine current padding counts or
+which side selects first. Do not apply the old 3.25 multimod padding law to these pools.
 
 The source is unqualified until the programme receipt says otherwise. No Builder
 adapter, WASM export or public product activation is implied by this native API.
