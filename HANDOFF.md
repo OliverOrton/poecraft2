@@ -13,6 +13,9 @@ No subagents, active process or LOCAL lease. Multiple-exclusive blocking optimiz
 still lacks a complete current count/order/zero-proxy-weight law; the receipt separates
 these decisions from implemented metadata/output constraints and ordinary work.
 
+An explicit advanced-law proposal and numeric alternatives are in the living receipt;
+none is activated. Parent owns the approval discussion before changing the joint law.
+
 Next gate: parent grants serialized LOCAL (maximum two compiler jobs), queued after
 Builder/law, for native header/pair/inventory qualification, then matching WASM and
 affected exposed consumers. Builder owns paid fresh feeder invocation, typed A/B

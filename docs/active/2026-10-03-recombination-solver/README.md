@@ -205,6 +205,106 @@ constraints version/buffer/input preservation, analytic v1 exclusion/v2 recyclin
 identity after pair destruction. The inventory suite is registered in native CTest.
 ALL ARE UNRUN. Only source whitespace checking has passed.
 
+## Pending advanced-blocking proposal (not activated)
+
+This is a concrete approval proposal, not a claim of verified current game rules.
+Implementation source remains `0211d7a8604ac064c80d40ffd20beb915ef2297f`; no native,
+API, model activation or heavy qualification changed during this research continuation.
+
+**Recommended provisional bundle**, with a new model/configuration identity:
+
+| Decision | Proposed value | Evidence and alternative |
+| --- | --- | --- |
+| Exclusive padding count | On each pooled side, effective count = all non-exclusive physical occurrences + one if any exclusives occur. Duplicates and NNN natural occurrences still count physically. | Best-supported current candidate from the original 3.26 tests and guide. Alternative per-input collapse or old full physical padding gives substantially higher counts; do not silently restore it. |
+| Count and removal order | Draw both requested counts from Oliver's unchanged adopted table before selection. Select one side, removing canonical duplicates, full groups and all remaining exclusives after the first exclusive; then fill the other side using its already drawn count. Pools can exhaust. | Current calculator author describes counts preceding cross-exclusive removal. Recounting the second side after removal is a materially different candidate. Counts are independent under this proposed estimated law except the named bare split exception. |
+| First side | If exactly one nonempty side is entirely exclusive and the other has non-exclusive physical mods, give the pure-exclusive side first chance q=0.10. Otherwise 50/50 for two nonempty sides. | 3.26 first-hand tests suggest strong bias against an all-exclusive side. **0.10 is a modelling scenario, not a fitted/verified frequency.** Exclusive survival is not itself first-side frequency. Alternative q=0.50 is the historical uniform rule; q=0 is the stronger normal-first scenario. Mixed/mixed 50/50 remains an explicit assumption. |
+| Zero proxy | Keep approved positive carrier roll/spawn proxies. Give classified transferable exclusive or allow-listed bench mods lacking such a proxy weight 1,000. Ordinary NNN zero weights remain ineligible. | Original tester tentatively suggested uniform crafted weight around 1,000; no current universal special-weight measurement exists. Alternatives: explicit per-key weights, or retain unsupported-zero exclusions. This fallback needs approval beyond existing positive roll-weight approval. |
+| Bare split 1p0s + 0p1s | Adopt probabilities 1/3 for both, 1/3 prefix only, 1/3 suffix only; no empty branch. Scope only this explicit input shape. | Current primary calculator implements those three rows. Existing v1/v2 refuse this shape. Independent .59 draws instead give 34.81% both and an empty branch. This is another explicit estimated-law choice, not an existing activated rule. |
+
+Only identified categories enter the optimizer. Native origin facts (essence_only,
+metamod, Delve/unveiled/veil special kinds, elevation relations, beast Aspect types)
+identify canonical sources; **the recombination-exclusive mapping comes from primary
+mechanics evidence, not a game-data exclusive bit**. Native groups and origin identity
+are separate from count/order/weight probabilities. Non-elevated influence and fracture
+are non-exclusive in that evidence but their output/eligibility semantics remain held.
+Incursion/Breach and general bench exclusivity still need closed canonical registries;
+zero weight and a natural stat counterpart are not proofs of exclusivity or NNN status.
+
+A newly resolved primary source is the original tester's
+[non-exclusive bench diary tab](https://docs.google.com/spreadsheets/d/10slavP-n-rCjnu5sVFi9DQTUybI2ZDoBbZsZ2UxM7Xg/edit#gid=1986319032).
+It lists simple life on helmet/body/gloves/boots/ring/amulet, shield spell block,
+and belt resistance/Dex/Int. Combined with the current 3.26 confirmation of regular
+life/resistance crafts, this supports a **closed candidate allow-list**, not a rule
+that every crafted modifier or every natural-stat counterpart is non-exclusive:
+
+- Life keys: `HelenaMasterIncreasedLife1`, `EinharMasterIncreasedLife2`,
+  `EinharMasterIncreasedLife3`, `EinharMasterIncreasedLife4`,
+  `EinharMasterIncreasedLife5_`; restrict to diary-covered classes and actual
+  frozen native bench class links, with sole stat `base_maximum_life`.
+- Shield spell block: active keys `EinharMasterSpellBlockPercentage1` and
+  `EinharMasterSpellBlockPercentage2`, sole stat `base_spell_block_%`.
+- Belt elemental resists: `HelenaMasterFireResist1`, `HelenaMasterColdResist1_`,
+  `HelenaMasterLightningResist1`, `EinharMasterFireResist2`,
+  `EinharMasterColdResist2`, `EinharMasterLightningResist2`,
+  `EinharMasterFireResist3_`, `EinharMasterColdResist3__`,
+  `EinharMasterLightningResist3_`. Native bench class links include Belt.
+- Diary belt Dex/Int do not have active Belt bench links in this frozen dataset;
+  do not fabricate their feeder availability. Hybrid and other Jun recipes stay
+  unresolved. The same spell-block stat also occurs in a distinct Jun Body Armour
+  recipe, so matching stats alone cannot classify every recipe.
+
+These mappings are reviewable provisional registry entries, not activated classifier
+changes. Registered bench eligibility should use the existing native bench class
+relationships, rather than interpreting their ordinary zero spawn weight as NNN.
+The bench `master` field is not reliable origin authority here: 747 active options,
+including ordinary life and Jun-key recipes, say Niko. Do not classify them all as
+Delve or derive Betrayal exclusivity from that vendor field.
+
+### Concrete per-attempt differences under candidate laws
+
+All following values are exact rational arithmetic of toy hypotheses, **not observed
+game odds, engine tests or experiments**. All modifiers have distinct groups and equal
+positive weights unless the last row specifies otherwise. Both carriers are compatible.
+
+| Inputs / goal | Candidate A | Candidate B |
+| --- | --- | --- |
+| Four exclusive prefixes only, two on each input; no suffixes | Pooled collapse: 41% empty, 59% one exclusive | Per-input collapse or full physical count: 0% empty when first/only side selects |
+| Prefix pool P+exclusive, suffix pool S+exclusive; keep P and S | Counts before blocker removal: 55.527775% | Recount second side after removal: 41.874775% |
+| Prefix pool P+exclusive, suffix pool one exclusive; keep P | Pure-exclusive-side first q=.10: 68.61765% | q=.50: 76.48825% (q=0: 66.65%) |
+| Prefix pool three desired + three exclusives; suffix pool two exclusives only; keep all desired prefixes | Collapsed counts, q=.10: 3.1815% | Same counts, q=.50: 9.9075% (q=0: 1.5%) |
+| Desired weight 100 + exclusive with no proxy, one side; keep desired | Exclusive fallback 100: 66.65% | Fallback 1,000: 39.363636%; 10,000: 33.960396% |
+
+Derivations: write r=.667, t=.333. Symmetric both-desired odds with counts first are
+`t + (r/2)*(t+r/2)`; recounting changes the first term to `t*.59`. The asymmetric
+one-desired odds are `(1-q)*(t+r/2) + q*(.59 + .41*(t+r/2))`. For triple prefixes,
+first filling prefixes succeeds with `.30*(3/6)*(2/5)*(1/4)=.015`; first filling
+suffixes succeeds with `.59*.30+.41*.015=.18315`, giving `.015+.16815*q`.
+The fallback-weight example is `.333+.667*100/(100+w)`. These formulas show why
+side priority and weights can alter whether paid blockers are worth considering;
+actual costs still require complete acquisition/attempt quotes and all failure
+recycling. The triple-prefix example is deliberately an abstract feasible affix
+layout (A: two desired+one exclusive / one exclusive; B: one desired+two exclusive /
+one exclusive), not a claim that every required craft is presently available.
+
+Optimize the declared point model, and label sensitivity to q=0/.50 and alternative
+fallback weights when comparing the **same policy**. Never call separately optimized
+scenario costs a certified bound on one policy or the game. No q choice is globally
+conservative for all goals. Preserve full output specs, losing mass, prices, inventory
+and proper-policy obligations; no new supervisor or game experiments are required.
+Keep the approved carrier/rarity/level/tier/roll approximation unchanged. Known bench
+flags need explicit represented output treatment; the original guide describes the
+selected crafted blocker as still crafted/removable. Fracture, generic influence and
+other uncertain output categories can remain outside this first advanced subset.
+
+Source receipts: `Temp/recomb-primary-nonexclusive-bench.html` SHA256
+`4af3550198a89278aab8ede78ecbb6bd899f1db28bc825ac36f5dfabce656260`;
+current calculator JS SHA256
+`4e236651fbd3a8d910a1bbb62b96a84876722c1e8595dbec8e57b24d14fa6890`.
+Public Google HTML transport worked after web extraction failed. Sparse primary
+observations do not determine q; no MLE was claimed. Read-only SQL matched active
+canonical bench keys/classes; lightweight Fraction arithmetic evaluated the listed
+formulas only. No native build/test, WASM, benchmark or model activation occurred.
+
 ## Qualification request and remaining model gate
 
 Request parent LOCAL after Builder/law qualification. Use existing owners serially:
