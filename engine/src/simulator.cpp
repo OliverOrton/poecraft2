@@ -2891,6 +2891,10 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace,
                 }
 
                 applied = true;
+                if (node.action_type == kStrategyAcquireResourceOperation || node.action_type == kStrategyDiscardResourceOperation)
+                    active_output = node.resource_id == "current" ? "" : node.resource_id;
+                else if (node.action_type != kStrategyRecombinationOperation && node.action_type != kStrategyMoveResourceOperation)
+                    active_output.clear(); // Ordinary crafting observes the fixed root item.
                 ++simulator.applied_action_counts[node_index];
                 if (price_known && simulator.economy != nullptr) {
                     result.known_cost += price;
