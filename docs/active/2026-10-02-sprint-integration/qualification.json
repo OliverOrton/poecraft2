@@ -3153,14 +3153,14 @@
   },
   "actual_source_integration": {
     "schema": "poecraft2.feature-source-integration.v1",
-    "recorded_utc": "2026-10-03T10:40:40.867970+00:00",
-    "status": "Lock and Calculator source merged; Recomb terminal receipt pending; combined runtime/rendered qualification unrun",
+    "recorded_utc": "2026-10-03T10:53:16.275470+00:00",
+    "status": "All three qualified feature checkpoints source-integrated; exact combined source/inputs prepared; native/WASM/worker/web/rendered tests await parent slot",
     "base": "4b092b0bf73b26a006c81859029ce34147a07e21",
     "receipt_parent": "db1d8404478ad97f9e62b7bdd3941e5d892edc16",
     "worktree": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
     "branch": "dot/features-integration-20261003",
-    "source_commit": "d4c854f80c293d64a6f2a7e3451985ad7ad9da38",
-    "engine_tree": "01cb1abf05895c1af556dc160df166e43fd08707",
+    "source_commit": "db96aae275f8692f0aa89878cf584dafe6d89071",
+    "engine_tree": "4f3741ae7b20095575125efe710f5ba89d97c989",
     "merges": [
       {
         "feature": "Lock",
@@ -3178,9 +3178,20 @@
         "conflicts": [
           "bindings/wasm/dist/poecraft_engine.wasm"
         ]
+      },
+      {
+        "feature": "Random recombination",
+        "checkpoint": "e830a3a54ad3fd2c71660d113c5e5f3f6f72d043",
+        "qualified_source_before_receipt": "6617e9f5c07515f8df0f4eebe8d234c9f81b1470",
+        "merge_commit": "84467e4d208985d2759a535fd273268b1534c2f9",
+        "shared_goal_ancestor": "3107843931b7b066c6ab90466dc3bb3b1551b58b",
+        "conflicts": [
+          "HANDOFF.md",
+          "bindings/wasm/dist/poecraft_engine.wasm"
+        ]
       }
     ],
-    "source_conflict_resolution": "Lock HANDOFF keeps the current main handoff and owner records. No production source conflict. Calculator WASM deliberately restored to main placeholder; it cannot run combined features.",
+    "source_conflict_resolution": "Only handoff/binary conflicts; production sources/adapters merged automatically. Shared31078439 goal/donor ancestry retained once. WASM and MJS restored as matching main placeholders, both explicitly unqualified for combined features.",
     "wasm_placeholder": {
       "path": "bindings/wasm/dist/poecraft_engine.wasm",
       "sha256": "472f644bed756caee538868b714e4d144989e9ec1990232f82562d2f80b7424f",
@@ -3195,7 +3206,13 @@
       "Combined Lock methods and CalculatorGoalSet client signature coexist",
       "Ordinary merge ancestry contains both qualified feature checkpoints",
       "Frozen runtime manifest matches runtime.lock; price inputs equal main",
-      "git diff --check"
+      "git diff --check",
+      "Async-aware uniqueness checks for combined Lock/goal/pair client methods",
+      "Lock controls preserve qualified callback occurrences alongside single Recomb panel",
+      "Recomb critical native/UI source hash checks against terminal qualification",
+      "Exact shared Calculator files match b269a564; no duplicated parser or donor fix",
+      "Qualified Recomb and current main ancestor checks pass",
+      "Frozen read-only SQLite copied byte-for-byte and source/target hashes rechecked"
     ],
     "static_initial_failure": {
       "check": "Environment-setting literal occurrence count wrongly expected1; actual main prefix contains setting and explanatory error text",
@@ -3258,7 +3275,16 @@
         }
       ],
       "compiled_link": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\data\\compiled\\current",
-      "canonical_sqlite_modified": false
+      "canonical_sqlite_modified": false,
+      "sqlite_fixture": {
+        "path": "data/sqlite/poecraft.db",
+        "sha256": "f239ec69f995504d555f34ebd3a2c105128aab54f6d5900fc61bb1b264676a9a",
+        "bytes": 81133568,
+        "read_only": true,
+        "source": "C:/Users/Oliver/Documents/poecraft2-recombs-random/data/sqlite/poecraft.db",
+        "refreshed": false,
+        "qualified_hash": "f239ec69f995504d555f34ebd3a2c105128aab54f6d5900fc61bb1b264676a9a"
+      }
     },
     "prices": {
       "mode": "unchanged bundled tracked snapshots",
@@ -3365,16 +3391,16 @@
       },
       "package": {
         "path": "apps/web/package.json",
-        "sha256": "ae3a1c389ba1060ebd5252c4e3dbbee883123126de9fa934b3a7cb89da975e4c",
-        "bytes": 2761
+        "sha256": "730964ee6cf1752330b5dbc4a028de84980995a316d821f1c6abd885aff03424",
+        "bytes": 2800
       },
       "existing_target": "C:/Users/Oliver/Documents/poecraft2/apps/web/node_modules"
     },
     "batch_preconditions": [
-      "Parent selects/reviews terminal qualified Recomb checkpoint before final source freeze",
-      "Explicit parent serial LOCAL grant",
-      "Resolve exact tool/runtime/data/price identities and commands in deterministic existing supervisor before timing",
-      "No feature push until combined qualification"
+      "Explicit parent serial LOCAL grant; Diagnostic currently owns LOCAL",
+      "Before timing, recheck exact source/engine/file hashes and resolved tools/commands against this freeze",
+      "Recheck frozen runtime/SQLite/economy/package identities; use existing deterministic supervision with compiler/Binaryen/linker concurrency at most2",
+      "No feature push until combined native/WASM/worker/web and requested rendered qualification"
     ],
     "next_batch": [
       {
@@ -3390,6 +3416,14 @@
         "cwd": "integration root"
       },
       {
+        "command": "build/engine/poecraft_engine_tests.exe --random-recombination-only data/compiled/current",
+        "cwd": "integration root"
+      },
+      {
+        "command": "build/engine/poecraft_engine_tests.exe --currency-contracts-only data/compiled/current",
+        "cwd": "integration root"
+      },
+      {
         "command": "build/engine/poecraft_engine_tests.exe --calculator-incoming-only data/compiled/current",
         "cwd": "integration root"
       },
@@ -3402,18 +3436,20 @@
         "cwd": "integration root"
       },
       {
-        "command": "py -3 -B -m pytest bindings/python/tests/test_hinekora_lock.py bindings/python/tests/test_hinekora_multi_preview.py -q -p no:cacheprovider --basetemp out/feature-integration/pytest-tmp",
+        "command": "py -3 -B -m pytest bindings/python/tests/test_hinekora_lock.py bindings/python/tests/test_hinekora_multi_preview.py bindings/python/tests/test_random_recombination.py bindings/python/tests/test_currency_calculator.py -q -p no:cacheprovider --basetemp out/feature-integration/pytest-tmp",
         "cwd": "integration root",
         "env": {
           "PYTHONPATH": "tools/ingest;bindings/python",
-          "POECRAFT_ENGINE_LIBRARY": "Resolved combined build/engine/poecraft_engine.dll"
+          "POECRAFT_ENGINE_LIBRARY": "Resolved combined build/engine/poecraft_engine.dll",
+          "POECRAFT_TEST_ARTIFACT": "Resolved integration data/compiled/current"
         }
       },
       {
         "command": "powershell -NoProfile -File scripts/build-wasm.ps1",
         "cwd": "integration root",
         "env": {
-          "EMCC_CORES": "2"
+          "EMCC_CORES": "2",
+          "BINARYEN_CORES": "2"
         }
       },
       {
@@ -3431,15 +3467,16 @@
         "env": {
           "POECRAFT_TEST_BROWSER_CHANNEL": "chrome",
           "POECRAFT_SMOKE_TEST": null
-        }
+        },
+        "covers": "Full unfiltered chain includes Lock, goal-set model, real Recomb worker/Apply and Calculator controls; do not repeat those separate files routinely."
       },
       {
         "command": "npx tsc --noEmit",
         "cwd": "apps/web"
       }
     ],
-    "pending_recomb_batch": "Append owner-selected finite controls after qualified terminal receipt and integration review; do not guess a selector or weaken mixed-frame obligations.",
-    "rendered_coverage": "Existing combined_source_review.rendered_plan: goal-list persistence/scope/union, independent Lock lifecycle/full previews/spend, incoming carrier and donor/mixed-frame staleness. Actual rendered execution unrun.",
+    "pending_recomb_batch": "Resolved: --random-recombination-only and --currency-contracts-only; four combined Python files; real Recomb worker/Apply and Calculator controls included in full npm. Explicit shared goal-set worker remains separate because package test omits it.",
+    "rendered_coverage": "Prepared combined_source_review.rendered_plan, extended with estimated Random carrier/base/averaged-level rows, per-goal/union probability, readonly original inputs, donor same-ID/full-payload/data staleness, two-input atomic Apply/native full output/stored Undo/Redo and gold/dust unknown. Saved Imprint compound Apply remains unsupported.",
     "combined_runtime_qualified": false,
     "rendered_qualified": false,
     "solver_authority_promoted": false,
@@ -3451,6 +3488,89 @@
       "Price/data refresh",
       "Dependency installation",
       "Feature publication"
-    ]
+    ],
+    "mjs_placeholder": {
+      "path": "bindings/wasm/dist/poecraft_engine.mjs",
+      "sha256": "c3f63141397c06cf966487c0ad5787a338000401dc46f707bba522c959296e9c",
+      "bytes": 21307,
+      "qualified_for_combined": false,
+      "source": "4b092b0bf73b26a006c81859029ce34147a07e21"
+    },
+    "native_bridge_review": [
+      "Recomb parser reuses bounded shared Calculator schema; each output carrier gets a native observation session with original family/tier identities",
+      "Carrier laws are normalized within carrier, finalized at0.5 each and checked for mass1; any-goal union is observed once in each law",
+      "game_odds_estimated/model/projection identities and null/incomplete gold/dust preserved; terminal projection has no solver/continuation authority",
+      "Pair ordinary-category guard and generic resource validator reject PC_ITEM_FORESEEN; full output Apply preserves real carrier properties",
+      "Critical dispatcher/API/kernel/session-builder and pc-calculator source hashes match qualified Recomb receipt; shared goal model/persistence/worker tests match b269a564"
+    ],
+    "finite_safety_regressions": {
+      "source": "db96aae275f8692f0aa89878cf584dafe6d89071",
+      "file": {
+        "path": "engine/tests/test_recombination.cpp",
+        "sha256": "e351940fad2a449c3adf13beeeeb2b3a3fa941bd1d1f5aeb142fc8f5839ce862",
+        "bytes": 28043
+      },
+      "cases": [
+        "Foreseen second input refused before native pair construction",
+        "Foreseen first input refused before native pair construction"
+      ],
+      "production_fix": false,
+      "runtime_status": "unrun until parent LOCAL grant; covered by --random-recombination-only"
+    },
+    "source_files_sha256": {
+      "apps/web/package.json": "730964ee6cf1752330b5dbc4a028de84980995a316d821f1c6abd885aff03424",
+      "apps/web/src/app/calculator-goal-set.ts": "a9efdea0655a689523b3c1dbb30eadd1b99d6dea617cf14cb437c2dac6495f84",
+      "apps/web/src/app/components/document-shells.tsx": "0727ea37c0b1935215672f2144a89906273ccce9054fb21aa99adea859689d6a",
+      "apps/web/src/app/components/pc-calculator.tsx": "b831a00024851e6c569eb65854da5ef2111573e7614e16a55d68d0484dbed20c",
+      "apps/web/src/app/components/pc-craft-controls.tsx": "6752e24408f508d3b09a81c758335ad9c2baa65bb44b39616a6eddac3b4d0298",
+      "apps/web/src/app/components/pc-emulator.tsx": "064efd9cac414653e0f8dbff49f51fbe762d8d193792e30e984bad041a829528",
+      "apps/web/src/app/components/pc-workspace.ts": "269c580f8a6a75597650a2b3fa1be6c82aec69ecdba038687367e4f41e352bac",
+      "apps/web/src/app/engine-client.ts": "d3022505b45796a8e377c3cff24c9d88a9e75dbfdcae8e08f8d940c51d4fbe31",
+      "apps/web/src/app/engine-protocol.ts": "ccf6c054636678db239b219365baca92cd0deed2115526fa520897b6856337cf",
+      "apps/web/src/app/engine-wasm.ts": "daa056a19a8a3de87e1d483c7bc3078ae10cfd052607a60a193f1b49f45974b2",
+      "apps/web/src/app/engine-worker.ts": "affaa2346f2e733c0f3f6d0646ac2f4032f2bba89f9056b6a3d4cb5666c10371",
+      "apps/web/src/app/workspace/persistence.ts": "db8d4b01fabe7108eff38c0e1ee35de12dd40c88d75bcaab434bf4efb2979e87",
+      "apps/web/src/styles/continuity.css": "c4a1621387147c9bffa21ed41c88441f843ac40317f86eefe2b281bb887d93e7",
+      "apps/web/test/calculator-currency-controls.test.ts": "ed107e21428b54f1c0d986f9d53ebf53f84a580fa6639c89460ce7c38b7e7dfc",
+      "apps/web/test/calculator-goal-set-wasm.test.ts": "8321c9d26c0516c3a2595d691eb561d2a1be8a8449d95ae871bf3768b4069d40",
+      "apps/web/test/calculator-goal-set.test.ts": "403150252e5552d04f7ad0dbf4cd497361f2ee864ed480ad8762b78dddde99ce",
+      "apps/web/test/hinekora-bindings.test.ts": "cb4c0b2660ac7d7eee35fbd68e903fafe35cb70d7d087954b91fd421a4938af3",
+      "apps/web/test/hinekora-controls.test.ts": "70862d3e1d1b7e95a7d367932bd9e3fa36b893df6bb49a310ef25470d894e576",
+      "apps/web/test/recombination-wasm.test.ts": "d76c5ed20ace928f0c0b0523eadd1b8bb4c15a1172335bb3909ae68d9b039725",
+      "apps/web/test/workspace-resources.test.ts": "4a1f624a8dd2cc2b00d2115972061994af04586eebd7cd65d53504261d9820f3",
+      "bindings/python/poecraft_engine/__init__.py": "c334ae8bbeea4ff81a821ed3fb2f4114a7768d6b6f7f22789f7701916d3875d1",
+      "bindings/python/poecraft_engine/_binding.py": "ef2699baceecd29329e6903a23f23031cfc41a7f6885902cbd3357711cbb2871",
+      "bindings/python/tests/test_hinekora_multi_preview.py": "4d3770a04b6c44556d74b66697a5ef7b9657cbb03cfda403e4864130505175ac",
+      "bindings/python/tests/test_random_recombination.py": "c18939b59ae441a7fc60c820e8f7d4cf52c3954bd27325f004d93ef305ed118f",
+      "bindings/wasm/wasm-exports.txt": "a63d266fc38e059e778aead1160a11e3bda94c43b4c43698ce1251c5e1a671a3",
+      "bindings/wasm/wasm_api.cpp": "43346cc6b683f1a75854422a361dc545aa053d043db453829dcef48ccc11c1a6",
+      "engine/CMakeLists.txt": "51ba59e4cfd80f273e6f6e7280bb98c98f53b721ef485cdca298fb36cb12b614",
+      "engine/engine-sources.txt": "2c331a0aefcb52cba78f60ff33695ba1cca231334ad53d110d9c8a0ff0f6e224",
+      "engine/include/poecraft/hinekora.h": "ae517ce783ed3a302aedf0d37978ea9b07fc8443d3d741786211287aeabcbb68",
+      "engine/include/poecraft/recombination.h": "78386b54a414eac8ea9577f196dff983b4886623b1d046e9f257aa3ebd456f5b",
+      "engine/include/poecraft/session.h": "99bf99f94df60f32e90ab89592924331d2d87e0d348abc0bfa82ad7d54333f98",
+      "engine/include/poecraft/solver.h": "aa77b3ef76c36fb7ff378532208a11fcd18569a5fe1699f91de3f9248f34f3d4",
+      "engine/src/calculator_currency.cpp": "69c31691f392ee8d519adc02714eafcb25f88355aec21ae9e9bc035877c765b0",
+      "engine/src/calculator_currency.hpp": "a6c7e0e95c378bb98ca006b5c4cc11060e5ef94ff9906a9be3c904bdb278fd01",
+      "engine/src/engine_internal.hpp": "b544dd12effee98a43390e25c487e63dd109e38d1a685540a1285fd10b3a9953",
+      "engine/src/hinekora.cpp": "bb50299b6ff57c7c95b72b1f05e1f960a3392340540fb3e026c1349ffbd012e0",
+      "engine/src/hinekora_internal.hpp": "777ff7a6beb364ffe373641ef2b7284bb367fa07b22c778e700cd09010e48b30",
+      "engine/src/multi_item.cpp": "0c54d284ed1810a427335ecf7016f53791b367fd2de06878160f0625b520f453",
+      "engine/src/multi_item.hpp": "1619bf5398a53d6571fc9e7ac0b3d1d10125a5f8e8421816fea4390df9404fe3",
+      "engine/src/recombination.cpp": "904d9b0d32e3d72b5399eb95a832509b145d191be9870addf4f24292292e6236",
+      "engine/src/recombination.hpp": "fe3c5810ecb2d51875dfc749d1b22bad931c96d92a17e508d169dc1b134d1915",
+      "engine/src/recombination_api.cpp": "c297b614d865e5c0aa39e12fdc2a8277c4018c04c87619bd3af7086ef59cca8a",
+      "engine/src/recombination_calculator.cpp": "43ca6e83293da8f690b6e3375578247231903a1ded2cc8f2aa537cadcfedc284",
+      "engine/src/recombination_calculator.hpp": "4fbf8f3ee4a6a1b691e9cbd5152bc9f1232744570f1c91fc13eea82c55421ff8",
+      "engine/src/session_builder.cpp": "d2ef35ff296eafc1b439f72026dff068ae0d21d0fad6dcd7dd5ddfe1e726e2ce",
+      "engine/src/solver_api.cpp": "2e8aed5a52a30dd8a583f8f0ec7e4c6297b1bcd648995cd3b9681b1901630858",
+      "engine/src/solver_calc.cpp": "b9a9b7884fab20ba632807e9e93f5dc732b085c4732d67baa684dcbd3b202338",
+      "engine/src/solver_calc_types.hpp": "64abf3e3cd8e88fa98ef284445d22efe0d60e8b248c0a3c4ba2dd164e29c889c",
+      "engine/tests/header_smoke.cpp": "d45e6e3e430438041e27d751dbc852feef8b488d40910e08656d616bd3a428c4",
+      "engine/tests/test_main.cpp": "bf3538a1b2bebf2bba78eee64b76d3152e59b5aa9cc3b7f9bf18af34b8c9241e",
+      "engine/tests/test_recombination.cpp": "e351940fad2a449c3adf13beeeeb2b3a3fa941bd1d1f5aeb142fc8f5839ce862",
+      "engine/tests/test_solver_calc.cpp": "d38773aed3916484c78964973656bd76ae2bdbe0b22725279a90c174ac81ba28",
+      "engine/tests/tests.hpp": "7a9ff83828b5920666975209b999518bc069b5ab42c719c2c43b1523db335c76"
+    }
   }
 }

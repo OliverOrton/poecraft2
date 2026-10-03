@@ -889,3 +889,44 @@ serial native/Lock-Python/WASM/worker/full-npm/TypeScript batch, with two compil
 jobs and retained checks. No LOCAL heavy command, browser session or feature push
 has occurred. Rendered coverage remains prepared and unrun; combined source and
 runtime qualification are separate obligations.
+
+
+## All three qualified checkpoints source-integrated (2026-10-03)
+
+Qualified Recomb **e830a3a5** is now ordinarily merged at **84467e4d**. Its shared
+Calculator ancestor **31078439** leaves one goal parser/observer and frozen donor
+implementation. Only HANDOFF and WASM conflict; no production source conflicts.
+The qualified Calculator model/persistence/worker fixtures are retained exactly,
+and critical Recomb dispatcher/kernel/API/session builder/Calculator hashes match
+its terminal qualification. Main's cancellation method, smoke/client tests and
+hosted CI setup remain exact. WASM and MJS are paired old-main placeholders; both
+are unqualified for this combined source.
+
+Bounded source review confirms carrier-specific native observation and half-weight
+finalization with conservation, estimated model/projection identities, unknown
+costs and separate terminal/solver authority. Native pair admission already rejects
+foresight. Test-only checkpoint **db96aae2** adds explicit foreseen-first and
+foreseen-second safety regressions; those runtime checks are unrun. No production
+fix or new game-law decision was needed.
+
+The final prepared source is **db96aae2**, engine tree
+**4f3741ae7b20095575125efe710f5ba89d97c989**. Read-only SQLite fixture
+f239ec69 is copied byte-for-byte from the qualified owner and rechecked, with no
+canonical/source modification. All eighteen bundled economy inputs, runtime files,
+package inputs and affected source hashes are pinned in actual_source_integration.
+Generated web fixtures will be created by the existing build:data owner only after
+matching combined WASM is built.
+
+The pending serial batch now includes native pair/currency/incoming/observation/
+Calculator checks and header smoke; all four finite Lock/pair/currency Python files
+against the combined DLL and frozen fixtures; matching WASM; standard build:data;
+explicit goal-set worker; full unfiltered npm; TypeScript. Full npm already includes
+the real Recomb worker/atomic Apply and Calculator controls, so no routine duplicate
+runs are added. Compiler/Binaryen/linker concurrency stays at most two.
+
+Diagnostic owns LOCAL. No combined build/test/browser command, feature push or
+owned process has begun. Rendered coverage includes goal persistence/scope/union,
+Lock lifecycle/full cached numeric previews/spend, Random estimated carrier rows,
+unknown gold/dust, full frozen donor staleness, readonly calculation inputs and
+atomic output/Undo/Redo. Rendered execution remains unrun; feeder and incomplete
+solver recovery remain excluded.
