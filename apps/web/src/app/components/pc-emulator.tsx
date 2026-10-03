@@ -28,6 +28,7 @@ import {
     BestiaryActionInfo,
     Catalog,
     CraftAction,
+    EngineError,
     ModInfo,
 } from "../engine-protocol";
 import {
@@ -391,7 +392,16 @@ export class PcEmulator extends HTMLElement {
 
     private async applyConfiguredAction(action: CraftAction, commit = false): Promise<void> {
         if (this.lockInfo?.active && !commit && action.type !== "remove_crafted_modifiers") {
-            await this.client.observeHinekoraLock(this.context, this.item, this.session, action);
+            try {
+                await this.client.observeHinekoraLock(this.context, this.item, this.session, action);
+            } catch (error) {
+                if (error instanceof EngineError && error.code === 4 &&
+                    error.detail === "Unsupported or inapplicable Lock observation; no currency was consumed") {
+                    this.setStatus(`${craftActionLabel(action.type)} cannot be previewed on this item. The paid Lock and its previous previews are unchanged.`);
+                    return;
+                }
+                throw error;
+            }
             this.pendingHistoryEntry = {action: `Preview ${action.type}`, applied: false, added: 0, removed: 0,
                 costKeys: [], detail: "Free observation; paid Lock remains active"};
             await this.markChanged();
@@ -873,6 +883,12 @@ export class PcEmulator extends HTMLElement {
                 delete button.dataset.disabledBeforeBusy;
             }
         });
+        // React can reuse these buttons while a native action changes Lock
+        // state. Restore the current state after releasing the busy override.
+        const lockApply = this.querySelector<HTMLButtonElement>('[data-simple-action="hinekora_lock"]');
+        if (lockApply) lockApply.disabled = busy || this.awaitingUnveilChoice || Boolean(this.lockInfo?.active);
+        const lockCommit = this.querySelector<HTMLButtonElement>("[data-lock-commit]");
+        if (lockCommit) lockCommit.disabled = busy || this.awaitingUnveilChoice || !this.lockInfo?.currency;
         this.syncHistoryButtons();
     }
 
@@ -971,11 +987,11 @@ export class PcEmulator extends HTMLElement {
             memoryStrands: this.memoryStrands,
             onMemoryStrands: count => { void this.guard(() => this.setMemoryStrands(count)); },
             lockActive: this.lockInfo?.active,
+            lockApproximate: this.lockInfo?.approximate,
             lockCurrency: this.lockInfo?.currency && [craftActionLabel(this.lockInfo.currency.type),
                 this.lockInfo.currency.essence && (this.catalog.essences.find(entry => entry.key === this.lockInfo?.currency?.essence)?.name ?? this.lockInfo.currency.essence),
                 this.lockInfo.currency.influence, this.lockInfo.currency.tier && `Tier ${this.lockInfo.currency.tier}`].filter(Boolean).join(" / "),
             lockPreview: this.lockPreview,
-            onLockApply: () => { void this.guard(() => this.applyLock()); },
             onLockCommit: () => {
                 const currency = this.lockInfo?.currency;
                 if (currency) void this.guard(() => this.applyConfiguredAction(currency, true));
@@ -1002,7 +1018,7 @@ export class PcEmulator extends HTMLElement {
                 if (name === "essence-type") this.mechanicValues.delete("essence-key");
                 this.renderMechanicControls();
             },
-            onSimple: id => { void this.guard(() => this.applyAction(id as CraftAction["type"])); },
+            onSimple: id => { void this.guard(() => id === "hinekora_lock" ? this.applyLock() : this.applyAction(id as CraftAction["type"])); },
             onBestiary: id => {
                 const action = this.bestiaryActions.find(entry => entry.id === id);
                 if (action) void this.guard(() => this.applyBestiaryAction(action));

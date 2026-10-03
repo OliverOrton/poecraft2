@@ -1,0 +1,174 @@
+{
+  "status": "qualified; LOCAL released; integration/publication pending",
+  "recorded_utc": "2026-10-03T17:30:21.5459288Z",
+  "baseline": "72448deaacca2797058de0559378685ba71a983f",
+  "branch": "dot/lock-currency-ui-20261003",
+  "worktree": "C:\\Users\\Oliver\\Documents\\poecraft2-lock-currency-ui",
+  "source_checkpoint": "72e4922e2dafcf411ea6a30c104573b47231a082",
+  "native_source_checkpoint": "d2ee8c27c87ad1494233cb37d22e85395ea39bc4",
+  "native_source_tree": "a4009cb21897971974037bd4a50fd81937a56d69",
+  "native_binding_diff_since_build": "empty; checked with git diff --exit-code d2ee8c27..HEAD -- engine bindings/wasm/wasm_api.cpp bindings/python/poecraft_engine",
+  "source_sha256": {
+    "engine/include/poecraft/hinekora.h": "74eca3a79115382459f1e59e2fbaa0918e431a84600ff4d7c678a5eb681c21d3",
+    "engine/src/hinekora.cpp": "1652ad924835c71c093315c1ed46e7f2dcfb5f277758d26007d2b2057f826b01",
+    "bindings/python/tests/test_hinekora_lock.py": "3c75cc97bcbb10ca41deef02aa3ef2d2273dfb70d9c0d1a74917fcd7e4415941",
+    "apps/web/src/app/components/pc-craft-controls.tsx": "02ee8f67251ffd6eb2f8c3243a8200ba10e8a5e2844c5a045137fb300435aa86",
+    "apps/web/src/app/components/pc-emulator.tsx": "2a31a416cbdbf945c420b366ade6998f9c422d51d4e2a259d740d86a9dc2e978",
+    "apps/web/test/hinekora-bindings.test.ts": "cfe4765e49d0564065f3b6a39d8a3b05d861e715f3372793c818581b196347e3",
+    "apps/web/test/hinekora-controls.test.ts": "ae9bbb1403122da0e02dd1064dfcfdd25bb727682fdfe68d7ee1478935818cac"
+  },
+  "model": "independent-cached-lock-v1, approximate/simulation-only; legacy fixed-request model preserved; no exact adaptive solver authority",
+  "runtime": {
+    "schema_version": 1,
+    "runtime_directory": "data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "source_lock": "fixtures/repoe/production-source-manifest.json",
+    "economy": {
+      "mode": "bundled",
+      "index": "economy/league-index.json"
+    }
+  },
+  "native": {
+    "source": "d2ee8c27c87ad1494233cb37d22e85395ea39bc4",
+    "started_utc": "2026-10-03T17:08:31.8026424Z",
+    "completed_utc": "2026-10-03T17:11:46.5633598Z",
+    "engine_exit": 0,
+    "shared_header_exit": 0,
+    "header_exit": 0,
+    "python_exit": 0,
+    "max_compiler_jobs": 2,
+    "dll_sha256": "1e5d4d8c53db29ac9288e3a75b0da49e6129970ef4c2c07e95681906dd31829c"
+  },
+  "python_tests_passed": 65,
+  "wasm": {
+    "source": "d2ee8c27c87ad1494233cb37d22e85395ea39bc4",
+    "started_utc": "2026-10-03T17:15:11.079423Z",
+    "completed_utc": "2026-10-03T17:22:02.455129Z",
+    "build_exit_code": 0,
+    "receipt_collection_initial_exit": 1,
+    "receipt_collection_error": "Initial receipt used the wrong artifact path after the successful build; corrected to bindings/wasm/dist without rebuilding.",
+    "max_compiler_jobs": 2,
+    "wasm_sha256": "b175b6d1f246eee75c381b6b4f96dbf7819a185b4b2d1a520552e684ca6a3bc8",
+    "mjs_sha256": "23c405b984e19595b4007259d8d45fe713ea31a534c091c2ef9433ffbe2f1363"
+  },
+  "web": {
+    "source": "72e4922e2dafcf411ea6a30c104573b47231a082",
+    "completed_utc": "2026-10-03T17:26:57.2373207Z",
+    "web_lock_exit": 0,
+    "typecheck_exit": 0,
+    "runtime_frozen": true,
+    "wasm_sha256": "b175b6d1f246eee75c381b6b4f96dbf7819a185b4b2d1a520552e684ca6a3bc8"
+  },
+  "rendered": {
+    "status": "passed",
+    "checks": [
+      "Lock appears in ordinary Basic currency grid",
+      "Apply charges one Lock and starts paid independent previews",
+      "Cross-currency observation is free and repeated preview is stable",
+      "Inapplicable preview preserves paid Lock, history and cached results with friendly status",
+      "Commit applies the selected cached outcome and charges its actual currency once",
+      "Undo restores paid preview and spending without a refresh",
+      "Redo restores the consumed exact selected outcome",
+      "Reload restores the paid Lock, selected preview, cache and spend",
+      "Previously seen other request stays fixed after Undo and reload",
+      "A second paid Lock can be acquired after consumption",
+      "Eligible item modification invalidates every preview",
+      "Saved fixed-request Lock is identified without model migration",
+      "Legacy original request now observes successfully without refresh or spending",
+      "Other legacy requests remain refused with stable paid foresight",
+      "Legacy commit keeps its original cached outcome",
+      "No unhandled browser errors during real worker/WASM flow"
+    ],
+    "unhandled_errors": [],
+    "failed_requests": [],
+    "started_utc": "2026-10-03T17:27:56.897Z",
+    "completed_utc": "2026-10-03T17:28:01.135Z",
+    "owned_browser_and_server_closed": true,
+    "screenshots_inspected": true,
+    "build_info": {
+      "schema_version": 1,
+      "repository_commit": "72e4922e2dafcf411ea6a30c104573b47231a082",
+      "working_tree_dirty": false,
+      "source_tree_sha256": "b2cc786ff760a34ca9f89b425ca9599e960ef47b608af1c59448251375f52891",
+      "game_assets": {
+        "catalog_sha256": "dd5affbe6a73f208bcdbb54074f9ad983536ffcaddcb689089a350c2d2eaffb0",
+        "image_count": 637
+      },
+      "base": "/",
+      "engine": {
+        "abi_version": 3,
+        "source_commit": null,
+        "loader_sha256": "23c405b984e19595b4007259d8d45fe713ea31a534c091c2ef9433ffbe2f1363",
+        "wasm_sha256": "b175b6d1f246eee75c381b6b4f96dbf7819a185b4b2d1a520552e684ca6a3bc8"
+      },
+      "runtime": {
+        "manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+        "source": {
+          "data_hash": "d511e23d1289674c4ac869d20ccd62a979af65f58d4aac83a01ac9bbb02c853e",
+          "database_schema_version": "3",
+          "source_hash": "b458174874efbe64cf830d603f9e3effddd2042d0f3faa548b40c0e69a68ca7a",
+          "source_version": "repoe-b458174874efbe64"
+        },
+        "artifact_schema_version": 4,
+        "files": {
+          "game-data.json": {
+            "byte_size": 16914460,
+            "sha256": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e"
+          },
+          "strings.json": {
+            "byte_size": 6740473,
+            "sha256": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6"
+          }
+        },
+        "bundle_sha256": "6688e9e36d458d629554ca969a9c46901c362c4b919e41eebb0460bf3a3338ec",
+        "bundle_bytes": 23660953,
+        "url": "poecraft-data.6688e9e36d458d629554ca969a9c46901c362c4b919e41eebb0460bf3a3338ec.json"
+      },
+      "economy": {
+        "mode": "bundled",
+        "index_url": "economy/league-index.json",
+        "bundled_index_sha256": "2d71a5a96a669ac835b6e5bc06750c12ef8e5af3d7d9966c43fec0c62e86a2cd"
+      },
+      "build_id": "15c54522630aec5d293f22549c5c82248890c0d9db5abdffb92655d6db3e7197"
+    }
+  },
+  "local_released_utc": "2026-10-03T17:28:01.135Z",
+  "owned_processes_remaining": 0,
+  "baseline_reproduction": {
+    "saved_fixed_request_exalt_observe_code": 4,
+    "message": "Unsupported or inapplicable Lock observation; no currency was consumed",
+    "full_evidence": "out/lock-currency-ui/baseline-errors.json",
+    "modern_independent_baseline": "supported apply/cross-request Observe passed",
+    "corrupt_input_scratch_case": "excluded: unsupported edit field",
+    "users_specific_error": "unknown pending exact message and phase"
+  },
+  "recovered_failures": [
+    "Real browser reproduced stale busy-state restoration, repaired and regression qualified. Retained rendered-busy-state-regression.json/.log.",
+    "Initial WASM receipt lookup used wrong artifact path after successful compiler exit; corrected without rebuilding.",
+    "Browser harness Windows ESM URL and Vite CJS export imports corrected before product execution; retained initial harness logs.",
+    "Legacy optional approximate field assertion corrected from strict false to Boolean; product legacy field contract unchanged, retained harness receipt."
+  ],
+  "unrun": [
+    "full repository acceptance suite",
+    "long solver benchmarks",
+    "authored Simulator trials",
+    "combined-feature integration qualification",
+    "user-specific error reproduction without exact message/phase"
+  ],
+  "artifacts": [
+    "out/lock-currency-ui/native-build.log",
+    "out/lock-currency-ui/native-shared-header.log",
+    "out/lock-currency-ui/header-smoke.log",
+    "out/lock-currency-ui/python-lock-tests.log",
+    "out/lock-currency-ui/wasm-build.log",
+    "out/lock-currency-ui/web-lock-tests-final.log",
+    "out/lock-currency-ui/typecheck-final.log",
+    "out/lock-currency-ui/rendered-result.json",
+    "out/lock-currency-ui/rendered-browser.log",
+    "out/lock-currency-ui/render-lock.mjs",
+    "out/lock-currency-ui/render-normal-currency.png",
+    "out/lock-currency-ui/render-paid-preview.png",
+    "out/lock-currency-ui/render-committed.png",
+    "out/lock-currency-ui/render-legacy-fixed.png"
+  ]
+}

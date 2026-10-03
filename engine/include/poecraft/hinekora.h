@@ -23,6 +23,8 @@ pc_result pc_hinekora_lock_observe(pc_hinekora_lock_handle lock,
     const pc_item_state* item, const pc_action_request* currency,
     pc_item_state* out_preview, pc_action_result* out_result,
     pc_error_info* out_error);
+/* Observe also accepts the same normalized request of a legacy fixed Lock,
+ * returning its existing preview without drawing. Other legacy requests refuse. */
 /* Legacy fixed-request creation/checkpoints remain supported below. */
 /* Fixed-currency foresight for the existing native item projection. One live
  * foresight per action context; it is bound to this caller-owned item address,
