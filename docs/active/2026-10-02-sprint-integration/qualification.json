@@ -2860,7 +2860,7 @@
   },
   "hosted_pinned_browser_setup": {
     "recorded_utc": "2026-10-03T09:50:40.605156+00:00",
-    "status": "CI-only pinned headless-shell setup syntax/order qualified; hosted runtime execution pending",
+    "status": "Hosted exact-head Windows scope All and Solver knowledge completed successfully",
     "baseline": "75270c83c7d14c17a4de231d5cc3af1810d2d7ff",
     "failure_receipt": "out/local-native-repair/evaluation-cancel-hosted-browser-failure.json",
     "change": {
@@ -2887,8 +2887,7 @@
       "git diff --check"
     ],
     "runtime_unrun": [
-      "Browser download locally (explicitly excluded)",
-      "New hosted pinned-browser execution pending publication"
+      "Local browser download (excluded; no local installation)"
     ],
     "preserves": [
       "Pinned default Chromium",
@@ -2902,6 +2901,254 @@
     "file_hashes": {
       "scripts/test.ps1": "da0b5ff084046f6bbd00784cc57b748ba08b345f3031dc78d16ad496da0e044e",
       ".github/workflows/windows.yml": "8ec1bba0f7b78a5dd35a76c96f2bb7640570a9ec00f7ce5e9a28805996450415"
-    }
+    },
+    "terminal_receipt": "out/local-native-repair/ci-pinned-browser-terminal-success.json"
+  },
+  "hosted_ci_terminal": {
+    "schema": "poecraft2.hosted-ci-terminal.v1",
+    "inspected_utc": "2026-10-03T10:23:11Z",
+    "head_sha": "4b092b0bf73b26a006c81859029ce34147a07e21",
+    "windows": {
+      "run_id": 37114415245,
+      "job_id": 111178311856,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/OliverOrton/poecraft2/actions/runs/37114415245",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Classify required validation",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Native validation not applicable",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 5
+        },
+        {
+          "name": "Bind project Python and install test dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Run msys2/setup-msys2@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "Configure UCRT64 tool paths",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9
+        },
+        {
+          "name": "Build",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10
+        },
+        {
+          "name": "Test",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11
+        },
+        {
+          "name": "Preserve frozen runtime identity failure",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 12
+        },
+        {
+          "name": "Preserve native test failure",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 13
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 24
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 25
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 26
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 27
+        }
+      ]
+    },
+    "solver_knowledge": {
+      "run_id": 37114415162,
+      "head_sha": "4b092b0bf73b26a006c81859029ce34147a07e21",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/OliverOrton/poecraft2/actions/runs/37114415162"
+    },
+    "passed": {
+      "native_ctest_targets": 17,
+      "python_tests": 275,
+      "engine_smoke": 37,
+      "full_unfiltered_web_chain": true,
+      "finite_evaluation_cancellation_controls": true,
+      "workspace_resource_browser_test": true,
+      "typescript": true
+    },
+    "browser": {
+      "channel": "project-pinned default chromium headless shell",
+      "version": "145.0.7632.6",
+      "revision": 1208,
+      "hosted_destination": "C:\\Users\\runneradmin\\AppData\\Local\\ms-playwright\\chromium_headless_shell-1208",
+      "local_installations": 0
+    },
+    "log_projection": [
+      "2026-10-03T10:01:56.5608023Z 275 passed in 128.68s (0:02:08)",
+      "2026-10-03T10:05:29.0333023Z 100% tests passed out of 17",
+      "2026-10-03T10:05:36.8762424Z Downloading Chrome Headless Shell 145.0.7632.6 (playwright chromium-headless-shell v1208) from https://cdn.playwright.dev/builds/cft/145.0.7632.6/win64/chrome-headless-shell-win64.zip",
+      "2026-10-03T10:05:40.5827193Z Chrome Headless Shell 145.0.7632.6 (playwright chromium-headless-shell v1208) downloaded to C:\\Users\\runneradmin\\AppData\\Local\\ms-playwright\\chromium_headless_shell-1208",
+      "2026-10-03T10:06:22.2837567Z 37/37 passed",
+      "2026-10-03T10:06:22.6621913Z   ok - evaluation cancellation ordering, native errors and terminal callback cleanup remain intact",
+      "2026-10-03T10:06:35.6636239Z Workspace resources: atomic apply, Undo/Redo, memory, spend and stale/alias rejection passed",
+      "2026-10-03T10:06:43.4775837Z > tsc --noEmit",
+      "2026-10-03T10:06:49.1949369Z Validation completed for scope All. Other scopes were not selected. Optional GUI coverage is reported by pytest."
+    ],
+    "scope": "Hosted scope All on current main only; feature branches were not integrated",
+    "rerun_requested": false,
+    "solver_parity_limit": "The passing run does not prove the historical intermittent prefix parity mismatch fixed.",
+    "local_heavy_processes": 0
+  },
+  "combined_source_review": {
+    "schema": "poecraft2.combined-source-review.v1",
+    "recorded_utc": "2026-10-03T10:23:11Z",
+    "status": "source-only integration review complete; combined build, acceptance and rendered review unrun",
+    "integration_base": "4b092b0bf73b26a006c81859029ce34147a07e21",
+    "common_feature_ancestor": "0187f3d8334c3b9deb9730a6fa89899c051e9931",
+    "qualified_inputs": [
+      {
+        "name": "Lock",
+        "checkpoint": "e2b6ff700f452e91b6b8d4067762e4b765eb239f",
+        "native_source": "3a7b80b9d275b7d8b0517969723e94aeeabbe395",
+        "engine_tree": "38f7455bd83fd912beeae2ad607599bcd5c4f308",
+        "wasm_sha256": "ce4a8bc6c744fd16a0c792cee8728a4f25be95896037e8e4fac8678c85e1995b",
+        "passed": [
+          "Native Engine/shared/header builds, header smoke, maximum two compiler jobs",
+          "64 focused Python lifecycle tests",
+          "Full nine-file Lock web chain and TypeScript"
+        ],
+        "authority": "Owner-approved independent-cached-lock-v1 approximate emulator previews; no solver/exact adaptive authority",
+        "receipt": "../2026-10-03-lock-multi-preview/qualification.json"
+      },
+      {
+        "name": "Calculator multi-goal",
+        "checkpoint": "b269a564867f061f089ac117aed566d2a98a9767",
+        "tested_source": "53be4ce80d2c54b17f964f0371673f6b3bcc2bc7",
+        "native_source": "ac67c8ebfdec81de52db7308de8406d78e2069a3",
+        "engine_tree": "71d7f655086e3816b9366c715a6c891fd12eafc2",
+        "wasm_sha256": "143f21f387dce691753d3bf68a36967f3667a2ea569d950bee42232ef9324518",
+        "passed": [
+          "Calculator incoming 10681; observation layout839; solver-calc1775297; zero failures",
+          "Explicit real-WASM goal-set worker transport and nonvisual controller/model",
+          "Full unfiltered npm including37/37 smoke and all30 owners, installed Chrome; TypeScript"
+        ],
+        "qualification_limit": "53be4ce8..b269a564 changes only three documentation files; rendered/pinned/combined feature checks unrun",
+        "authority": "Read-only Calculator per-goal and any-goal union; Strategy finder freezes the active individual SolverGoal",
+        "receipt": "C:/Users/Oliver/Documents/poecraft2-calculator-goal-set/out/calculator-goal-set-qualification/qualification.json"
+      }
+    ],
+    "source_review": [
+      "Lock request reservations use native apply_action, preserve full runtime/item/request identity, serialize seen and unseen outcomes, and validate the complete ordered domain before replacement. No new game-law decision found.",
+      "Goal-set parser is bounded to one through eight unique IDs and inspection_only handles. Both strategy solve entry points refuse those handles. startSolve freezes only activeGoal and opens a SolverGoal.",
+      "New goal-set finite oracle iterates native weighted physical pools and constructs concrete item outcomes with a local family/group/tier predicate. Renewal uses an independent ordered physical recursion, not the production compiled Calculator recurrence. Shared primitive is the native weighted-pool law. Cases cover overlap, nested tiers, disjoint goals, fractured incoming exclusion, extras policy, one/eight goals, conservation and choice refusal.",
+      "Recombination observer test supplies three hand-written terminal outcomes in one output session; it is not qualification of mixed-frame dispatch or finalizer integration.",
+      "Shared EngineClient, EngineBindings and worker changes affect separate Lock methods and openCalcGoal signatures; protocol additions affect separate type blocks. No production fix proposed from this bounded review; actual merge/conflict review remains pending."
+    ],
+    "integration_order": [
+      "Create a new sibling integration worktree/branch from current main4b092b0b, incorporating this docs-only receipt commit if useful. Leave all feature-owner branches unchanged.",
+      "Ordinary merge qualified Lock e2b6ff70, then qualified Calculator b269a564. Preserve ancestry; do not cherry-pick their copied main test-only changes again.",
+      "Retain main evaluation cancellation gate and finite terminal-order controls, pre-cancelled real-WASM handle test and original six time/handle checks, exact unsupported guard assertions, optional Chrome test channel, and hosted pinned-browser provisioning.",
+      "Reconcile shared adapter hunks and short current HANDOFF; audit exact path diff. Individual WASM binaries remain historical feature evidence and are not a combined runtime.",
+      "Wait for parent selection of Recomb's terminal qualified source; review only its owned delta before inclusion. Exclude pending solver recovery/Bow5 economic and product authority.",
+      "Freeze combined source/engine tree, exact build/test commands and frozen runtime/data/prices before slot grant. Build matching native and WASM once after final source selection, then qualify combined behavior."
+    ],
+    "runtime_manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "test_plan": {
+      "slot": "Parent serial LOCAL grant required; Recomb currently owns LOCAL. All commands unrun on combined source.",
+      "native": "Reuse owned CMake setup and explicit --parallel2 for Engine/shared/header/test targets; do not call the unbounded build.ps1 --parallel path as-is. Use existing deterministic supervision, no new wrapper.",
+      "focused": [
+        "Combined native --calculator-incoming-only with frozen artifact",
+        "--solver-observation-layout-only",
+        "--solver-calc-only",
+        "64 Lock Python tests against combined DLL",
+        "Recomb owner-selected finite controls after terminal receipt"
+      ],
+      "wasm": "scripts/build-wasm.ps1 self-activates existing C:/emsdk; record source and SHA256 before worker checks",
+      "web": [
+        "Explicit npx tsx test/calculator-goal-set-wasm.test.ts against rebuilt module",
+        "Full unfiltered npm test in apps/web with approved installed Chrome temporary profile; it already covers Lock web owners",
+        "npx tsc --noEmit"
+      ],
+      "final_scope": "Select final native/Python checks from actual Recomb+Lock+Calculator ABI delta; run full acceptance only once if justified after preflighting immutable source/runtime inputs. Do not repeat unchanged solver experiments or Simulator qualification.",
+      "processes": "Stop and report actionable failure; release LOCAL immediately when commands end, before docs/commits. No existing user dev-server restart or dependency installation."
+    },
+    "rendered_plan": [
+      "Calculator: add/rename/reorder/select/delete goals; reopen persisted document; verify All/coverage fields and selected goal; overlapping native goals report per-goal odds and any-goal union once; edits invalidate stale odds.",
+      "Strategy finder: selected individual goal is visible and frozen across an asynchronous run; list names/order/active UI selection do not enter native probability identity or broaden strategy objective.",
+      "Lock: apply with no selected currency; observe different configured requests and repeat full numerical cached previews; disclose approximate independent model; readonly previews and separate Lock/currency spend; successful consumption, decline/no-op, incomplete import, unseen reservation Undo/Redo and missing quotes remain correct.",
+      "Combined carrier: Emulator-to-Calculator incoming state retains foresight/memory/cluster identity. Unsupported solver carriers still refuse. No UI probability law, pooled approximation or frame substitution.",
+      "Donor/resources: displayed donor snapshot freezes before await; changed full payload or data becomes stale even under the same ID. Review distinct resources and mixed-frame selected output only after qualified Recomb integration.",
+      "Run on a new isolated preview or a separately approved existing server with a fresh browser test profile; capture feature checklist and screenshots. Rendered review remains Oliver-owned unless parent explicitly delegates execution."
+    ],
+    "authority_promoted": false,
+    "main_modified": false,
+    "feature_branches_modified": false,
+    "merge_simulation_run": false,
+    "local_builds_tests_browser_launches": 0,
+    "owned_processes": 0,
+    "exclusions": [
+      "Pending solver recovery and source-only Bow5/product economic checks",
+      "Data/price refresh, dependency installation, deployment",
+      "Individual feature artifacts as combined qualification"
+    ]
   }
 }

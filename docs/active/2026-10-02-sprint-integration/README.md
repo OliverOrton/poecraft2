@@ -809,3 +809,55 @@ supports the minimal only-shell choice. `hosted_pinned_browser_setup` and
 `out/local-native-repair/ci-pinned-browser-qualified.json` own evidence/exclusions.
 Actual remote/run/terminal outcome is recorded separately in
 `out/local-native-repair/ci-pinned-browser-delivery.json`. No local slot is held.
+
+
+## Current main CI and prepared feature integration (2026-10-03)
+
+Exact main **4b092b0b** passes [Windows37114415245](https://github.com/OliverOrton/poecraft2/actions/runs/37114415245)
+(job111178311856):17 native targets,275 Python tests,37/37 engine smoke,
+finite cancellation-order controls, the complete unfiltered web chain and
+TypeScript. Hosted setup downloads pinned Chromium headless-shell1208
+(version145.0.7632.6). [Solver knowledge37114415162](https://github.com/OliverOrton/poecraft2/actions/runs/37114415162)
+also passes. No local installation or heavy command was needed. A successful CI
+run does not establish that the historical intermittent prefix-parity issue is
+fixed. hosted_ci_terminal records terminal steps and the exact log projection;
+prior failures remain preserved.
+
+Lock **e2b6ff70** and Calculator multi-goal **b269a564**, tested at **53be4ce8**,
+remain individually qualified. The latter's final delta is documentation only.
+Source review confirms separate adapter/type additions, inspection-only native
+goal-set handles, and active individual-goal Strategy finder dispatch. The new
+goal-set oracle enumerates concrete native weighted-pool draws with a separate
+family/group/tier predicate; its renewal recursion differs from the compiled
+Calculator recurrence. It covers overlap, nested tiers, disjoint outcomes,
+fractured incoming blockers, extras, conservation and bounded goal/choice cases.
+The three hand-written Recombination terminal outcomes qualify a single-output
+observer only. Mixed-frame dispatch/finalization remains outstanding.
+
+The prepared order is current main4b092b0b, ordinary merge of Lock, then
+Calculator, on a new isolated sibling integration branch. Retain main's
+evaluation cancellation gate and controls, original six cancellation/time/handle
+checks, unsupported-carrier guard, optional Chrome fixture and hosted browser
+setup. Calculator's copied c00bb449 test hunks must appear once. Both feature
+branches change WASM: neither individual binary qualifies combined source.
+Review Recomb's terminal qualified delta when selected by the parent, then freeze
+source/runtime/data/prices and exact commands before rebuilding native and WASM.
+
+Recomb currently owns LOCAL. After a parent serial slot grant, use the existing
+build/supervision owners with at most two compiler jobs, combined Calculator
+incoming/observation/calc checks, Lock Python lifecycle checks, the explicit
+real-WASM goal-set transport test, full unfiltered npm and TypeScript. The npm
+chain already covers Lock web owners. Select final checks from the actual merged
+ABI delta; preflight immutable inputs before any full acceptance. Release LOCAL
+immediately after commands, before receipt/publication work.
+
+Rendered review is still unrun. The prepared checklist covers persisted goal
+editing/selection and union odds; selected-goal Strategy finder scope; selection-free
+Lock application, full cached numerical previews, approximate-model disclosure,
+payment/consumption/import/Undo/Redo; incoming foresight/memory/cluster carrier
+identity; and donor staleness/distinct resources after qualified Recomb integration.
+Use an isolated preview and fresh browser profile without restarting Oliver's
+existing server. combined_source_review owns exact source/artifact identities,
+integration order, test and rendered plans. No merge, build, browser launch,
+combined qualification or feature publication occurred in this source-only pass.
+Pending solver recovery/Bow5 economic and product checks are excluded.

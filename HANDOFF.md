@@ -1,14 +1,17 @@
-# Hosted pinned-browser setup syntax/order qualified (2026-10-03)
+# Current main CI green; combined features source-reviewed (2026-10-03)
 
-75270c83 CI passes17 native/275 bindings/37 smoke, then cannot launch missing
-pinned headless-shell1208. CI-only opt-in setup now uses project Playwright CLI
-after one npm ci; local default is off. Assertions/default pinned browser and
-native/WASM unchanged. PowerShell/YAML/order/diff checks pass; no local install
-or heavy process. Authorized normal publication will let hosted CI execute setup.
-The [living integration record](docs/active/2026-10-02-sprint-integration/README.md)
-and hosted_pinned_browser_setup own evidence; actual remote/CI receipt is
-`out/local-native-repair/ci-pinned-browser-delivery.json`. Failure retained; no
-solver recovery or pending feature integrated.
+Main 4b092b0b passes Windows37114415245/job111178311856:17 native targets,
+275 Python tests,37/37 smoke/full web chain/TypeScript with pinned headless-shell1208.
+Solver knowledge37114415162 passes. No local install/heavy process. Lock e2b6ff70
+and Calculator b269a564 (tested53be4ce8) are individually qualified; combined and
+rendered checks remain unrun. Prepared order: fresh isolated branch from main,
+ordinary Lock then Calculator merges, retain main cancellation/guard/CI changes,
+review Recomb's terminal qualified delta, rebuild matching combined native/WASM.
+Recomb owns LOCAL; wait for parent slot before heavy commands. No feature merged
+or published. Pending solver recovery/Bow5 is excluded. The
+[living integration record](docs/active/2026-10-02-sprint-integration/README.md)
+and qualification's hosted_ci_terminal/combined_source_review own exact evidence
+and integration/test/rendered plans. Prior failures and parity uncertainty remain.
 
 # Evaluation cancellation reply ordering qualified (2026-10-03)
 
