@@ -1,0 +1,112 @@
+{
+  "status": "remaining_acceptance_prepared_unrun",
+  "source_checkpoint": "e429e69fafd38bc3040bb3f5fb6636afd2e370e0",
+  "worktree": "C:\\Users\\Oliver\\Documents\\poecraft2-feeder-integration",
+  "branch": "dot/feeder-integration-20261003",
+  "base_published_main": "1ffba88eb03ba065345f6d51a0c517f5dbe5385b",
+  "accepted_delivery_receipt": "ed79b16d24a0493689d70d4f1acbcdf8417f3b2e",
+  "feeder_owner": "d76e3369820c7582d2793c9e23cd6caf8d04ace3",
+  "source_merge": "1fff2b6192c1a3fec576f525a04995a3b2448cc8",
+  "engine_tree": "1ec6f4c10c010590c7284add865b5ed56c81fe0a",
+  "web_source_tree": "024a8d62020ef09edf372e1389e373615cc5ccb1",
+  "wasm_sha256": "0b800f57410841ebf7efe7ab658ff1c93cfcdb67467ae3ea001c9d6730198f32",
+  "mjs_sha256": "23c405b984e19595b4007259d8d45fe713ea31a534c091c2ef9433ffbe2f1363",
+  "dll_sha256": "c88e0549be252f030e99d3d39053cc28a94d832ea073f12fdca49d331a4f5fe6",
+  "sqlite_sha256": "f239ec69f995504d555f34ebd3a2c105128aab54f6d5900fc61bb1b264676a9a",
+  "runtime_sha256": {
+    "manifest.json": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "strings.json": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6",
+    "game-data.json": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e"
+  },
+  "review": {
+    "production_files_byte_equal_to_qualified_feeder": true,
+    "merge_conflicts": [
+      "HANDOFF.md only"
+    ],
+    "native_session_move_checks_retained": true,
+    "output_acceptance_uses_actual_item_and_session": true,
+    "paid_child_failed_output_retained": true,
+    "parent_absolute_limits_shared": true,
+    "exact_inventory_refusal_retained": true,
+    "builder_recombination_execution_held": true,
+    "abi_export_layout_unchanged": true,
+    "proposed_production_fixes": []
+  },
+  "reused_owner_checks": [
+    "native300/300 incl 1000 paid-child trials",
+    "matching WASM0b800f57",
+    "full npm37/37 plus all owners including 1000-run feeder worker",
+    "final TypeScript pass"
+  ],
+  "new_checks": {
+    "shared_dll_and_benchmark_build": "passed; max two jobs",
+    "c_header_smoke": "passed",
+    "python_first_full": "258 passed, 40 failed, 5 subtests passed; all six Feeder tests passed",
+    "python_failure_root": "All40 sqlite3.OperationalError no such table: base_item; missing fixture produced an empty local database",
+    "frozen_sqlite_restoration": "passed; original empty database preserved; verified byte copy only",
+    "full_python_after_restoration": "UNRUN",
+    "rendered_builder": "UNRUN"
+  },
+  "remaining_commands": [
+    {
+      "id": "python-bindings-final",
+      "argv": [
+        "py",
+        "-3",
+        "-m",
+        "pytest",
+        "bindings/python/tests",
+        "--import-mode=importlib",
+        "-q"
+      ],
+      "watchdog_seconds": 1200
+    },
+    {
+      "id": "native-trace-capture",
+      "argv": [
+        "py",
+        "-3",
+        "out/feeder-integration/capture-native-traces.py"
+      ],
+      "watchdog_seconds": 120
+    },
+    {
+      "id": "web-data-bundle",
+      "argv": [
+        "node",
+        "scripts/build-data-bundle.mjs"
+      ],
+      "watchdog_seconds": 120
+    },
+    {
+      "id": "rendered-builder",
+      "argv": [
+        "node",
+        "out/feeder-integration/render-builder.mjs"
+      ],
+      "watchdog_seconds": 120
+    }
+  ],
+  "prepared_fixture_hashes": {
+    "capture-native-traces.py": "d2112a93c3bd2fb2f2f7f751f2ea40222d5433ff48c2e9027d77c9ed031931b1",
+    "builder-rendered-fixture.ts": "9d792823719847254eb276473bf5a131e078ea7a2ee373d00f87a3145e71433e",
+    "render-builder.mjs": "8ea35734b581d88623f05d63ce4f4a47cd2c69f9a36b501f98f94be586f6e337"
+  },
+  "bulk_evidence_directory": "out/feeder-integration",
+  "first_results": "out/feeder-integration/acceptance-results.json",
+  "failure_log": "out/feeder-integration/python-bindings-full.log",
+  "sqlite_preflight": "out/feeder-integration/sqlite-preflight.json",
+  "remaining_plan": "out/feeder-integration/remaining-plan.json",
+  "local_release": {
+    "released_utc": "2026-10-03T12:39:12.343409+00:00",
+    "reason": "Full Python command ended; Builder fixture preparation remains source-only. Diagnostic may use LOCAL.",
+    "owned_processes": [],
+    "acceptance_status": "failed",
+    "pytest_summary": "40 failed, 258 passed, 5 subtests passed in 153.67s (0:02:33)",
+    "supervised_session": 8383,
+    "survivors": false
+  },
+  "publication": "held until remaining acceptance passes; verified overnight authorization retained",
+  "preservation": "Main and feature-owner branches unchanged; no push, dependency install, price/data refresh, deployment or dev restart; protected root0 excluded",
+  "updated_utc": "2026-10-03T12:52:53.484587+00:00"
+}

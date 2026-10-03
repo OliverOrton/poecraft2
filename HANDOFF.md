@@ -1,15 +1,16 @@
-# Feeder integration acceptance in progress (2026-10-03)
+# Feeder integration remaining acceptance ready (2026-10-03)
 
-Isolated `dot/feeder-integration-20261003` merges Feeder `d76e3369` over the
-accepted combined-feature receipt `ed79b16d`, preserving published main
-`1ffba88e`. Production source matches the [qualified Feeder owner](docs/active/2026-10-03-strategy-feeder/README.md),
-engine `1ec6f4c1`, WASM `0b800f57`/MJS `23c405b9`; ABI/export unchanged.
-Native300/300, matching WASM, full npm37/37 and final TS evidence are retained.
-Shared DLL/Python child accounting and rendered Builder acceptance are pending.
-LOCAL granted after diagnostic release; compiler jobs capped at two and heavy
-commands serial. Publication is held until required acceptance completes.
-Builder recombination execution and exact inventory evaluation remain held.
-No dependency install, data refresh, deployment or dev-server restart.
+Isolated `dot/feeder-integration-20261003` source/test checkpoint `e429e69f`
+retains qualified Feeder `d76e3369` production bytes, engine `1ec6f4c1`, web
+`024a8d62`, WASM `0b800f57`/MJS `23c405b9`, ABI/export/layout unchanged. Shared
+DLL/header pass; initial full Python258pass/40missing-SQLite failures includes
+six Feeder passes. Verified frozen SQLite restored; failure evidence retained.
+The [living integration record](docs/active/2026-10-03-feeder-integration/README.md)
+owns the ready full-Python/native-trace/rendered Builder batch and remaining
+UNRUN acceptance. LOCAL released12:39:12UTC, no survivor; diagnostic owns it
+during source preparation. Await a new grant before heavy commands. Publication
+held pending acceptance; Builder recombination/exact inventory remain held.
+No main change, push, deployment, dependency install, data refresh or dev restart.
 
 # Combined features published; exact-head CI green (2026-10-03)
 
