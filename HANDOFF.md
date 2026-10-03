@@ -1,20 +1,19 @@
-# Combined Lock, Calculator and Recomb qualified; publication authorized (2026-10-03)
+# Combined features published; exact-head CI green (2026-10-03)
 
-Source5cc2e185 retains qualified e2b6ff70/b269a564/e830a3a5 ancestry and main
-cancellation/tests/CI. Frozen serial native/header/shared, pair237/currency6484/
-incoming10681/layout839/Calculator1775297, Python89, matching WASM, real worker,
-unfiltered npm37/37 plus all owners, and TypeScript pass. WASM10da55d0/MJS23c405b9
-match combined source; no source change after checks. Rendered fresh Chrome
-DOM/React controlled-transport flows pass136 assertions; three screenshots reviewed,
-no material issue. Separate real-worker checks own native behavior. Full workspace
-layout/product-server end-to-end and local pinned-browser parity remain unrun.
-LOCAL released11:26:51UTC, no survivor/server restart. Verified user04:12approval
-and parent instruction authorize normal qualified merge/push, followed by exact
-remote/CI inspection; no deployment. The
-[living integration record](docs/active/2026-10-02-sprint-integration/README.md)
-and combined_feature_qualification own evidence/limits. Feeder/recovery excluded;
-approximate models, unknown costs, unsupported categories and parity uncertainty
-retain their limits. Actual publication receipt follows separately.
+Main/remote1ffba88e delivers qualified Lock/Calculator/Recomb, engine4f3741ae,
+WASM10da55d0/MJS23c405b9, unchanged runtime82fb60a2. Windows37120110338 passes
+17 native targets,292 bindings,37/37 smoke/full web/TypeScript/pinned browser;
+Solver knowledge37120110285 passes. Local focused89 Python and rendered136
+controlled-transport assertions remain separately scoped; screenshots reviewed.
+Normal source/artifacts are aligned; ignored generated web receipt still0187f3d8.
+User-owned npm run dev invokes predev/build:data, then refresh for current receipt
+and fresh worker; alternatively build:data plus refresh retains the Vite server.
+No restart/regeneration performed here. Feeder owns LOCAL; no heavy repeat or
+process is held. The [living integration record](docs/active/2026-10-02-sprint-integration/README.md)
+and combined_feature_ci_terminal own exact terminal/readiness evidence. This
+receipt checkpoint stays local; published1ffba88e remains exact-head accepted.
+Disclosed model/cost/unsupported/full-app-review/parity limits remain; feeder and
+incomplete recovery excluded. No deployment, dependency install or data refresh.
 
 # Current main CI green; combined features source-reviewed (2026-10-03)
 
