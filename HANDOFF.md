@@ -1,3 +1,13 @@
+# Qualified combined law3 solver recovery (2026-10-03)
+
+Source `c24bf167` and rebuilt WASM `0dc3b53d` retain published Calculator/Lock fixes.
+Native focused checks, five original-root native/product policy parities, full npm
+and TypeScript pass; LOCAL released, no survivors. Approved provisional count
+odds remain disclosed. [The living recovery record](docs/active/2026-10-03-sol61-recovery/README.md)
+owns identities, failures and limits. Approved push/exact-head CI and safe normal
+fast-forward delivery are selected; armour expansion follows release.
+No deployment, data/price refresh, dependency install or dev restart.
+
 # Qualified Lock and influenced-target repair integration (2026-10-03)
 
 Combined source55a1fd49 retains Calculator d29d0682 and Lock3eb0860b. Complete

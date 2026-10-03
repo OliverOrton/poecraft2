@@ -1,0 +1,819 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-03T19:48:40.870858+00:00",
+  "qualified_source_commit": "c24bf1674576e53322ec8fcc2ade5079cc6e4825",
+  "qualified_artifact_commit": "ecb5534c9c30127b8ef0e44b1a4b8ea7b8a280f4",
+  "base_main": "4ad4058086cbaa766a7178aad7ac5625eb8772a8",
+  "component_source": "b11f4c58f0a7c979f2c66b71892295795944e045",
+  "engine_tree": "273de6c6a6d934dbea9ce93b0905ecfee6f45196",
+  "source_review": "All 33 component production/test code files match b11f4c58. Of two mechanic documents, the decisions file matches b11 and the Eldritch document retains the later qualification annotation from992eefaa. Published Calculator/Lock production fixes are preserved; approved notice, law-identity test correction and matching combined module are the only new overlays.",
+  "original_component_patch_sha256": "67cbb00444f0e61c05fbf88a368218f7b4a32f004144dda6f4f59d8240d223ce",
+  "model": {
+    "rare_reforge_count_law_version": 3,
+    "action_refinement_contract_version": 5,
+    "evaluator_certificate_version": 3,
+    "assumption": "Oliver-approved 8:3:1 working model; provisional game probabilities"
+  },
+  "runtime_manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+  "economy_content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+  "evaluation_options": {
+    "max_states": 800000,
+    "max_pairs": 1215000,
+    "max_transitions": 10000000,
+    "max_owned_bytes": 1073741824,
+    "max_output_json_bytes": 16777216
+  },
+  "binary_identity": {
+    "source_commit": "c24bf1674576e53322ec8fcc2ade5079cc6e4825",
+    "engine_tree": "273de6c6a6d934dbea9ce93b0905ecfee6f45196",
+    "native": {
+      "build/engine/poecraft_engine.dll": {
+        "sha256": "f92e8c19fb2daec2f8d277afc612b4b3d2730a033678e8ca7853994887a57ce4",
+        "bytes": 14532516
+      },
+      "build/engine/poecraft_engine_tests.exe": {
+        "sha256": "8e42f45040506fcc401599570e698538f5fb19a04eadffc92e8906c294fb4952",
+        "bytes": 20033410
+      },
+      "build/engine/poecraft_solver_benchmark.exe": {
+        "sha256": "1cfdd4548bbb153c134dfd28dd74bf74e93dd2a2edc7dbbdfc403daddb7d1e1d",
+        "bytes": 14986666
+      }
+    },
+    "wasm": {
+      "bindings/wasm/dist/poecraft_engine.wasm": {
+        "sha256": "0dc3b53debd5daa811fd99de2a45a45056bdf4be66a2bc4610150027bf6b9d09",
+        "bytes": 8608805
+      },
+      "bindings/wasm/dist/poecraft_engine.mjs": {
+        "sha256": "23c405b984e19595b4007259d8d45fe713ea31a534c091c2ef9433ffbe2f1363",
+        "bytes": 21788
+      }
+    }
+  },
+  "serial": true,
+  "compiler_jobs": 2,
+  "binaryen_jobs": 2,
+  "phases": [
+    {
+      "tag": "combined-native",
+      "source_commit": "d38eeaff5f382cf14a0b24b9a232bb574cd8e067",
+      "request_sha256": "ba3cb58351df8543c892c3fb4845162f7d89293dba7766ceb8debc15764d75bd",
+      "commands": [
+        {
+          "phase": "native-build",
+          "argv": [
+            "powershell",
+            "-NoProfile",
+            "-File",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\build-combined-native.ps1"
+          ],
+          "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration",
+          "watchdog_seconds": 900
+        },
+        {
+          "phase": "header-smoke",
+          "argv": [
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\build\\engine\\poecraft_header_smoke.exe"
+          ],
+          "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration",
+          "watchdog_seconds": 30
+        },
+        {
+          "phase": "count-law",
+          "argv": [
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\build\\engine\\poecraft_engine_tests.exe",
+            "--reforge-count-law-only"
+          ],
+          "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration",
+          "watchdog_seconds": 180
+        },
+        {
+          "phase": "checkpoint",
+          "argv": [
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\build\\engine\\poecraft_engine_tests.exe",
+            "--solver-checkpoint-only",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\data\\runtime-snapshots\\82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d"
+          ],
+          "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration",
+          "watchdog_seconds": 180
+        },
+        {
+          "phase": "eldritch-growth",
+          "argv": [
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\build\\engine\\poecraft_engine_tests.exe",
+            "--solver-growth-only"
+          ],
+          "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration",
+          "watchdog_seconds": 180
+        },
+        {
+          "phase": "lock-python",
+          "argv": [
+            "C:\\Users\\Oliver\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "-m",
+            "pytest",
+            "bindings/python/tests/test_hinekora_lock.py",
+            "bindings/python/tests/test_hinekora_multi_preview.py",
+            "-q",
+            "--basetemp",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\pytest-lock"
+          ],
+          "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration",
+          "watchdog_seconds": 240
+        },
+        {
+          "phase": "reporter",
+          "argv": [
+            "C:\\Users\\Oliver\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "-m",
+            "pytest",
+            "tools/ingest/tests/test_solver_reports.py",
+            "-q",
+            "--basetemp",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\pytest-reporter"
+          ],
+          "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration",
+          "watchdog_seconds": 180
+        }
+      ],
+      "results": [
+        {
+          "phase": "native-build",
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 59720,
+          "process_identity_token": "59720:134355288587729615",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 262418.4047000017,
+          "log": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-native-native-build.log"
+        },
+        {
+          "phase": "header-smoke",
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 73280,
+          "process_identity_token": "73280:134355291212055816",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 34.070400055497885,
+          "log": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-native-header-smoke.log"
+        },
+        {
+          "phase": "count-law",
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 47556,
+          "process_identity_token": "47556:134355291217332338",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 855.1610999274999,
+          "log": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-native-count-law.log"
+        },
+        {
+          "phase": "checkpoint",
+          "exit_code": 3221226505,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 24408,
+          "process_identity_token": "24408:134355291220836765",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 34307.10990005173,
+          "log": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-native-checkpoint.log"
+        },
+        {
+          "phase": "eldritch-growth",
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 44572,
+          "process_identity_token": "44572:134355291563916622",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 53.724899888038635,
+          "log": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-native-eldritch-growth.log"
+        },
+        {
+          "phase": "lock-python",
+          "exit_code": 1,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 55880,
+          "process_identity_token": "55880:134355291564471844",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 18700.35480009392,
+          "log": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-native-lock-python.log"
+        },
+        {
+          "phase": "reporter",
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 87104,
+          "process_identity_token": "87104:134355291751484747",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 2258.8921999558806,
+          "log": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-native-reporter.log"
+        }
+      ]
+    },
+    {
+      "tag": "combined-native-r2",
+      "source_commit": "c24bf1674576e53322ec8fcc2ade5079cc6e4825",
+      "request_sha256": "df34db80ef18273f75590178d1332fed9f2cd6c1425599782534bea0f1fa2640",
+      "commands": [
+        {
+          "phase": "checkpoint-r2",
+          "argv": [
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\build\\engine\\poecraft_engine_tests.exe",
+            "--solver-checkpoint-only",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\data\\runtime-snapshots\\82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d"
+          ],
+          "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration",
+          "watchdog_seconds": 180
+        },
+        {
+          "phase": "lock-python-r2",
+          "argv": [
+            "C:\\Users\\Oliver\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "-m",
+            "pytest",
+            "bindings/python/tests/test_hinekora_lock.py",
+            "bindings/python/tests/test_hinekora_multi_preview.py",
+            "-q",
+            "--basetemp",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\pytest-lock"
+          ],
+          "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration",
+          "watchdog_seconds": 240
+        }
+      ],
+      "results": [
+        {
+          "phase": "checkpoint-r2",
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 40008,
+          "process_identity_token": "40008:134355292904601146",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 381.3214998226613,
+          "log": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-native-r2-checkpoint-r2.log"
+        },
+        {
+          "phase": "lock-python-r2",
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 57028,
+          "process_identity_token": "57028:134355292908422511",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 18658.90029980801,
+          "log": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-native-r2-lock-python-r2.log"
+        }
+      ]
+    },
+    {
+      "tag": "combined-wasm",
+      "source_commit": "c24bf1674576e53322ec8fcc2ade5079cc6e4825",
+      "request_sha256": "37db5831d880987639278077d4dd8a358ce0f08c4fe095dae370f17532b154c8",
+      "commands": [
+        {
+          "phase": "build-wasm",
+          "argv": [
+            "powershell",
+            "-NoProfile",
+            "-File",
+            "scripts/build-wasm.ps1"
+          ],
+          "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration",
+          "watchdog_seconds": 1200
+        }
+      ],
+      "results": [
+        {
+          "phase": "build-wasm",
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 77380,
+          "process_identity_token": "77380:134355293097363076",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 376792.87929995917,
+          "log": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-wasm-build-wasm.log"
+        }
+      ]
+    },
+    {
+      "tag": "combined-product",
+      "source_commit": "c24bf1674576e53322ec8fcc2ade5079cc6e4825",
+      "request_sha256": "b4759811c7a3c10b2880babc82773a5d61db85b512b45e6cb99543479a5def90",
+      "commands": [
+        {
+          "phase": "native-conquest5-historical",
+          "argv": [
+            "C:\\Users\\Oliver\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\evaluate-law3-native.py",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-native-evaluation-request.json",
+            "conquest5-historical"
+          ],
+          "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration",
+          "watchdog_seconds": 120
+        },
+        {
+          "phase": "native-conquest5-current",
+          "argv": [
+            "C:\\Users\\Oliver\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\evaluate-law3-native.py",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-native-evaluation-request.json",
+            "conquest5-current"
+          ],
+          "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration",
+          "watchdog_seconds": 120
+        },
+        {
+          "phase": "native-bow4-dirty",
+          "argv": [
+            "C:\\Users\\Oliver\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\evaluate-law3-native.py",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-native-evaluation-request.json",
+            "bow4-dirty"
+          ],
+          "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration",
+          "watchdog_seconds": 120
+        },
+        {
+          "phase": "native-amulet3",
+          "argv": [
+            "C:\\Users\\Oliver\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\evaluate-law3-native.py",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-native-evaluation-request.json",
+            "amulet3"
+          ],
+          "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration",
+          "watchdog_seconds": 120
+        },
+        {
+          "phase": "native-bow5",
+          "argv": [
+            "C:\\Users\\Oliver\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\evaluate-law3-native.py",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-native-evaluation-request.json",
+            "bow5"
+          ],
+          "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration",
+          "watchdog_seconds": 120
+        },
+        {
+          "phase": "data-bundle",
+          "argv": [
+            "C:\\Windows\\System32\\cmd.exe",
+            "/d",
+            "/c",
+            "npm.cmd",
+            "run",
+            "build:data"
+          ],
+          "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\apps\\web",
+          "watchdog_seconds": 180
+        },
+        {
+          "phase": "product-conquest5-historical",
+          "argv": [
+            "C:\\Program Files\\nodejs\\node.exe",
+            "--import",
+            "tsx",
+            "test/sol61-policy-qualification.ts",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\docs\\active\\2026-10-03-sol61-recovery\\qualification\\law3\\policies\\conquest5-historical.strategy.json",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\docs\\active\\2026-10-03-sol61-recovery\\qualification\\law3\\cases\\conquest5.json",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\data\\runtime-snapshots\\82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-product-conquest5-historical.json",
+            "0",
+            "85970.67347138176"
+          ],
+          "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\apps\\web",
+          "watchdog_seconds": 120
+        },
+        {
+          "phase": "product-conquest5-current",
+          "argv": [
+            "C:\\Program Files\\nodejs\\node.exe",
+            "--import",
+            "tsx",
+            "test/sol61-policy-qualification.ts",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\docs\\active\\2026-10-03-sol61-recovery\\qualification\\law3\\policies\\conquest5-current.strategy.json",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\docs\\active\\2026-10-03-sol61-recovery\\qualification\\law3\\cases\\conquest5.json",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\data\\runtime-snapshots\\82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-product-conquest5-current.json",
+            "0",
+            "101311.35474896732"
+          ],
+          "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\apps\\web",
+          "watchdog_seconds": 120
+        },
+        {
+          "phase": "product-bow4-dirty",
+          "argv": [
+            "C:\\Program Files\\nodejs\\node.exe",
+            "--import",
+            "tsx",
+            "test/sol61-policy-qualification.ts",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\docs\\active\\2026-10-03-sol61-recovery\\qualification\\law3\\policies\\bow4-dirty.strategy.json",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\docs\\active\\2026-10-03-sol61-recovery\\qualification\\law3\\cases\\bow4-dirty.json",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\data\\runtime-snapshots\\82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-product-bow4-dirty.json",
+            "0",
+            "38497.785744000365"
+          ],
+          "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\apps\\web",
+          "watchdog_seconds": 120
+        },
+        {
+          "phase": "product-amulet3",
+          "argv": [
+            "C:\\Program Files\\nodejs\\node.exe",
+            "--import",
+            "tsx",
+            "test/sol61-policy-qualification.ts",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\docs\\active\\2026-10-03-sol61-recovery\\qualification\\law3\\policies\\amulet3.strategy.json",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\docs\\active\\2026-10-03-sol61-recovery\\qualification\\law3\\cases\\amulet3.json",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\data\\runtime-snapshots\\82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-product-amulet3.json",
+            "0",
+            "18996.576948551738"
+          ],
+          "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\apps\\web",
+          "watchdog_seconds": 120
+        },
+        {
+          "phase": "product-bow5",
+          "argv": [
+            "C:\\Program Files\\nodejs\\node.exe",
+            "--import",
+            "tsx",
+            "test/sol61-policy-qualification.ts",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\docs\\active\\2026-10-03-sol61-recovery\\qualification\\law3\\policies\\bow5.strategy.json",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\docs\\active\\2026-10-03-sol61-recovery\\qualification\\law3\\cases\\bow5.json",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\data\\runtime-snapshots\\82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration",
+            "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-product-bow5.json",
+            "0",
+            "4071502.8714904664"
+          ],
+          "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\apps\\web",
+          "watchdog_seconds": 120
+        },
+        {
+          "phase": "full-web",
+          "argv": [
+            "C:\\Windows\\System32\\cmd.exe",
+            "/d",
+            "/c",
+            "npm.cmd",
+            "test"
+          ],
+          "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\apps\\web",
+          "watchdog_seconds": 900
+        },
+        {
+          "phase": "typescript",
+          "argv": [
+            "C:\\Windows\\System32\\cmd.exe",
+            "/d",
+            "/c",
+            "npx.cmd",
+            "--no-install",
+            "tsc",
+            "--noEmit"
+          ],
+          "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\apps\\web",
+          "watchdog_seconds": 300
+        }
+      ],
+      "results": [
+        {
+          "phase": "native-conquest5-historical",
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 30032,
+          "process_identity_token": "30032:134355297933247139",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 5709.682299988344,
+          "log": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-product-native-conquest5-historical.log"
+        },
+        {
+          "phase": "native-conquest5-current",
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 81268,
+          "process_identity_token": "81268:134355297990353246",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 1918.4449000749737,
+          "log": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-product-native-conquest5-current.log"
+        },
+        {
+          "phase": "native-bow4-dirty",
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 7632,
+          "process_identity_token": "7632:134355298009546609",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 500.58180000633,
+          "log": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-product-native-bow4-dirty.log"
+        },
+        {
+          "phase": "native-amulet3",
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 41196,
+          "process_identity_token": "41196:134355298014561909",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 9021.648699883372,
+          "log": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-product-native-amulet3.log"
+        },
+        {
+          "phase": "native-bow5",
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 22800,
+          "process_identity_token": "22800:134355298104790500",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 13531.785200117156,
+          "log": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-product-native-bow5.log"
+        },
+        {
+          "phase": "data-bundle",
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 85532,
+          "process_identity_token": "85532:134355298240115839",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 1352.61690011248,
+          "log": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-product-data-bundle.log"
+        },
+        {
+          "phase": "product-conquest5-historical",
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 40724,
+          "process_identity_token": "40724:134355298253658282",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 3427.167900139466,
+          "log": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-product-product-conquest5-historical.log"
+        },
+        {
+          "phase": "product-conquest5-current",
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 34892,
+          "process_identity_token": "34892:134355298287938219",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 1701.894999947399,
+          "log": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-product-product-conquest5-current.log"
+        },
+        {
+          "phase": "product-bow4-dirty",
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 65280,
+          "process_identity_token": "65280:134355298304984976",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 941.2470001261681,
+          "log": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-product-product-bow4-dirty.log"
+        },
+        {
+          "phase": "product-amulet3",
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 86612,
+          "process_identity_token": "86612:134355298314415224",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 5493.744099978358,
+          "log": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-product-product-amulet3.log"
+        },
+        {
+          "phase": "product-bow5",
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 33312,
+          "process_identity_token": "33312:134355298369353128",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 8437.650199979544,
+          "log": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-product-product-bow5.log"
+        },
+        {
+          "phase": "full-web",
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 92760,
+          "process_identity_token": "92760:134355298453764164",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 97599.44449993782,
+          "log": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-product-full-web.log"
+        },
+        {
+          "phase": "typescript",
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 23024,
+          "process_identity_token": "23024:134355299429775078",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 3679.9586000852287,
+          "log": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\combined-product-typescript.log"
+        }
+      ]
+    }
+  ],
+  "policies": [
+    {
+      "arm": "conquest5-historical",
+      "policy_sha256": "725fcf645903621ec123961846c82143632bcee9d3a0da30302fc002d167720a",
+      "case_sha256": "b19c588b2f004fac7db6dae7fddb3f384693a18d722245f96f4a7c27d0dcd299",
+      "native_cost": 85970.67347138176,
+      "product_cost": 85970.67347138171,
+      "expected_actions": 8193.695927203276,
+      "success_probability": 1,
+      "native_cost_parity": {
+        "expected_cost": 85970.67347138176,
+        "tolerance_relative": 1e-09,
+        "status": "passed"
+      },
+      "scope": "ordinary_strategy_execution_diagnostic; no imported native programme provenance or solver incumbent admission"
+    },
+    {
+      "arm": "conquest5-current",
+      "policy_sha256": "d65787d11ad895d5925ce9dd4d0aefde483e53bc25df3a80a6a9dfe7a0d7e053",
+      "case_sha256": "b19c588b2f004fac7db6dae7fddb3f384693a18d722245f96f4a7c27d0dcd299",
+      "native_cost": 101311.35474896732,
+      "product_cost": 101311.35474896732,
+      "expected_actions": 23321.649759118343,
+      "success_probability": 1,
+      "native_cost_parity": {
+        "expected_cost": 101311.35474896732,
+        "tolerance_relative": 1e-09,
+        "status": "passed"
+      },
+      "scope": "ordinary_strategy_execution_diagnostic; no imported native programme provenance or solver incumbent admission"
+    },
+    {
+      "arm": "bow4-dirty",
+      "policy_sha256": "e32b550faf63157812628d5bea6a6d5d900848ff7c8944e0bfba25b503a6d347",
+      "case_sha256": "e54d87308c2aca8b5e508b40eb0868419f80c1ddcea765827466f010fad5406b",
+      "native_cost": 38497.785744000365,
+      "product_cost": 38497.785744000365,
+      "expected_actions": 451.00000000000443,
+      "success_probability": 1,
+      "native_cost_parity": {
+        "expected_cost": 38497.785744000365,
+        "tolerance_relative": 1e-09,
+        "status": "passed"
+      },
+      "scope": "ordinary_strategy_execution_diagnostic; no imported native programme provenance or solver incumbent admission"
+    },
+    {
+      "arm": "amulet3",
+      "policy_sha256": "713403e86ba47e362aac1dc6eb56f970e4544dd8a6b353e9d18fd0c7965ab26f",
+      "case_sha256": "9e2eb59392c8934dd6e15b115ec066fee53efe092154f2b0343a93dec70be95b",
+      "native_cost": 18996.576948551738,
+      "product_cost": 18996.576948551738,
+      "expected_actions": 47055.97225374125,
+      "success_probability": 1,
+      "native_cost_parity": {
+        "expected_cost": 18996.576948551738,
+        "tolerance_relative": 1e-09,
+        "status": "passed"
+      },
+      "scope": "ordinary_strategy_execution_diagnostic; no imported native programme provenance or solver incumbent admission"
+    },
+    {
+      "arm": "bow5",
+      "policy_sha256": "b6114194af1611cb68dc86994cbcc086f01e9804ecb3ffbca863593f5fb9f38c",
+      "case_sha256": "9257aec8f005c5a5869240f8629cd80234fee9ff5c8cf02d3d44250770b9522c",
+      "native_cost": 4071502.8714904664,
+      "product_cost": 4071502.8714904664,
+      "expected_actions": 2643099.363149086,
+      "success_probability": 1,
+      "native_cost_parity": {
+        "expected_cost": 4071502.8714904664,
+        "tolerance_relative": 1e-09,
+        "status": "passed"
+      },
+      "scope": "ordinary_strategy_execution_diagnostic; no imported native programme provenance or solver incumbent admission"
+    }
+  ],
+  "initial_failures": {
+    "checkpoint": "shared TEMP collision; isolated rerun passed64",
+    "lock": "seven stale law-2 assertions; corrected test-only identity expectations and added old-law rejection, passed66",
+    "product_preflight": "Windows receipt-key separator mismatch before evaluation; canonical keys corrected"
+  },
+  "passed_summary": {
+    "count_law": 363236,
+    "checkpoint": 64,
+    "growth": 84,
+    "Lock_python": 66,
+    "reporter": 29,
+    "parity_cases": 5,
+    "full_web_seconds": 97.5994445,
+    "typescript_seconds": 3.6799586
+  },
+  "LOCAL_released_utc": "2026-10-03T19:42:43.117850+00:00",
+  "owned_processes": 0,
+  "reused_evidence": "Component native/default Chrome solves and Simulator evidence remain b11f4c58-attributed; combined policy kernels are identical. No fresh timed-solve or Simulator claim.",
+  "unrun_or_excluded": [
+    "redundant full local native/Python suites",
+    "new timed solves/Simulator",
+    "armour expansion",
+    "cross-model or cross-budget financial gate",
+    "optimal closure",
+    "deployment",
+    "dev restart"
+  ],
+  "publication": "approved; exact-head push/CI pending",
+  "local_bulk_receipts": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration"
+}
