@@ -169,3 +169,66 @@ held. Broad failed-child recovery routing, configured cluster feeders, a concurr
 multitrack scheduler and profit solving are excluded. The future profit objective
 remains highest matching goal sale value and expected net profit/investment, with
 unknown costs incomplete and no assumed salvage/resale values.
+
+## Resumed typed-port execution (2026-10-03; SOURCE ONLY)
+
+Oliver selected functional two-input/one-output Recombination and output-only
+donor/feeder blocks. This continuation preserves the same programme, earlier
+qualification, process handles and spent budgets. The optional Item source
+umbrella remains a proposal; existing Donor item/Saved feeder names are retained.
+No new research programme, supervisor or experiment allowance was introduced.
+
+Local source `6fe9e9d3` adds the typed board connections, native sequential paid
+dependency execution, actual-session atomic pair outputs, explicit recycling,
+actual-base conditions and selected named child outputs described in the
+[product contract](../../product/strategies.md#typed-builder-item-flow-source-checkpoint-qualification-pending).
+Receipts retain nested child inventories and actual failure outputs. The new
+additive C query exposes terminal resource JSON to Python/WASM examples; public
+struct layouts and existing facade exports are unchanged. Matching artifacts
+are nevertheless required. Unknown station costs stay incomplete and capped
+requests refuse before dependency purchase, even with arbitrary supplied quotes.
+
+The branch first aligned published feeder main72448dea in e252515c. Final
+read-only remote recheck found published Calculator fix
+`d29d0682648ecc24cf83aa4284f4b3791fb05793`; AGENTS is unchanged. Merge
+`6939fa8bc24c969fbb6316adf9a1d945ea6988f3` imports that qualified baseline
+into the isolated branch without conflicts or normal-checkout edits. Final
+source `06206b06380990e3c5f6fec28645cda0ad4cb862` aligns active snapshots with
+successful ordinary/current actions and rejects missing focused-selector
+artifact arguments explicitly. The
+[item-flow source receipt](itemflow-source-checkpoint.json) owns exact source
+trees, inherited artifact identities, prepared cases and held checks.
+
+Only whitespace review and Python AST syntax parsing ran. Native tests/builds,
+shared DLL/Python execution, web suites, TypeScript, matching WASM and rendered
+review are **UNRUN** for this continuation. The native focused selector
+`--strategy-recombination-only` prepares the approved 1,000-run paid-child pair
+witness plus finite cap/failure/recycling/port-refusal cases. Existing model and
+real-worker feeder suites now prepare connector/reconnect/history, 1,000 pairs,
+mixed-base routing/examples, failure, limits and recycling. Python prepares
+named child pair outputs and mixed-base resource examples against a fresh DLL.
+These are prepared acceptance, not passing evidence.
+
+The parent has not granted this continuation the LOCAL heavy slot. No compiler,
+test runner, WASM builder, browser or dev server was launched, no slot was held,
+and there are no owned heavy survivors to release. Later qualification must be
+serialized by the parent, with at most two compiler jobs, the unchanged frozen
+runtime and no solver/economic runs or allowance expansion. The retained WASM
+0b800f57/MJS23c405b9 belong to the earlier qualification and **do not match this
+new source**.
+
+The existing qualified ordinary-rare pair API owns selection and full Apply.
+Recombination owner's newer source-only normal/magic admission and bounded
+solver are not imported. Fancy blocking/category/exclusive/joint-law work stays
+with that owner; this Builder scope retains current kernel refusals and makes no
+game-exact odds claim. Exact inventory evaluation, generic arbitrary-session
+currency crafting, concurrent scheduling, profit solving and broad failed-child
+recovery routing remain outside this continuation. No canonical data, economy,
+protected root0, normal checkout, npm dev process or published state was changed.
+
+Next step: parent grants the serialized qualification slot for this exact source,
+then native/header/DLL and affected Python checks, source-matched WASM, focused
+model/worker acceptance and final web/TypeScript run. Rendered review remains
+Oliver's unless separately selected. All commits stay local for designated
+integration owner01a0fd2f-7f88-7588-a1ea-bfe1e6991036; no independent main merge,
+push or deployment is authorized here.

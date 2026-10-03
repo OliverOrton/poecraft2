@@ -35,8 +35,11 @@ adds shared DLL/header, unfiltered298 Python bindings and52 controlled rendered
 Builder assertions with zero page errors; full product-server rendering remains
 unrun. Current/Finder
 producers and exact closure are unchanged. Exact inventory/feeder evaluation
-and Builder recombination execution stay held; native pair Apply is qualified
-separately. This row extends no exact authority.
+stay held. A later typed-port Builder recombination source checkpoint delegates
+to the existing qualified pair Apply; matching native/DLL/WASM/web qualification
+is pending the parent-controlled slot. Ordinary rare kernel refusals remain;
+fancy blocking/exclusive admission is separate owner work. This row extends no
+exact authority.
 
 ## Approved reforge count-law correction (2026-10-02)
 

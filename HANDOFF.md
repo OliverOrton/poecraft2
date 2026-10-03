@@ -1,3 +1,17 @@
+# Builder typed ports prepared; matching qualification held (2026-10-03)
+
+Isolated dot/strategy-feeder-20261003 at06206b06 carries source6fe9e9d3/06206b06 on
+published main d29d0682. Two Recomb input dots/one output and output-only paid
+sources execute sequentially through the existing native atomic pair API;
+actual sessions, recycling, named child outputs, terminal inventory and unknown
+station costs are preserved. Native/model/worker/Python cases are prepared,
+UNRUN; inherited WASM0b800f57 does not match this new source. No heavy process
+or LOCAL slot is held. Parent must grant serialized qualification (max2 jobs).
+Exact inventory and fancy blocking/exclusive admission remain refused/owned
+separately; no solver allowance, data refresh, dev restart, publication or normal
+checkout edit. The [living feeder record](docs/active/2026-10-03-strategy-feeder/README.md#resumed-typed-port-execution-2026-10-03-source-only)
+and item-flow receipt own exact source/artifact identities and next checks.
+
 # Feeder integration qualified; publication selected (2026-10-03)
 
 Isolated `dot/feeder-integration-20261003` starts qualification at `bba7574a`,
