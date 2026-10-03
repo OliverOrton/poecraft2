@@ -13424,12 +13424,18 @@ void run_automatic_eldritch_side_tests(
     const std::uint64_t cancelled_reforge_count_before =
         cancelled_calc.cached_reforge_count();
     StateLocalAutomaticBatch abandoned_batch;
-    PC_CHECK(
-        !cancelled_calc.advance_state_local_automatic_candidates(
-            cancelled_state, limits, abandoned_batch, 1));
-    PC_CHECK(
-        !cancelled_calc.advance_state_local_automatic_candidates(
-            cancelled_state, limits, abandoned_batch, 1));
+    // Cooperative startup may take more than two yields. Cancel at the
+    // semantic boundary with an actually staged operator, not a yield count.
+    bool abandoned_complete = false;
+    for (unsigned steps = 0;
+         steps < 256 && !abandoned_complete &&
+             cancelled_calc.operators().size() == cancelled_operator_count_before;
+         ++steps) {
+        abandoned_complete =
+            cancelled_calc.advance_state_local_automatic_candidates(
+                cancelled_state, limits, abandoned_batch, 1);
+    }
+    PC_CHECK(!abandoned_complete);
     PC_CHECK(
         cancelled_calc.operators().size() >
         cancelled_operator_count_before);

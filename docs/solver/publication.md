@@ -34,6 +34,12 @@ not reappear on return. Failed replacement preserves the previous valid witness.
 This boundary grants no statewise authority to a private root-only assertion and
 does not move final normalization, classification or sealing out of publication.
 
+Optional strict refinement failure also preserves an already checked feasible
+graph owned by that same immutable root, law, price and observation context.
+The transfer retains the failure diagnosis and creates a fresh feasible
+certificate; it supplies no statewise, reconciliation or global closure claim.
+A historical finite cost without its eligible graph remains a publication error.
+
 Primary owners are `solver_solve_finish.cpp`, `solver_policy_assertion_work.cpp`,
 `solver_compile.cpp`, `solver_compile_conditions.hpp`,
 `solver_compile_serialization.hpp`, `solver_policy_assertion.cpp`,
