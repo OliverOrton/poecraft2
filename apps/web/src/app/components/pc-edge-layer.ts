@@ -1,5 +1,6 @@
 import {
     StrategyEdge,
+    StrategyEdgeCardPresentation,
     StrategyNode,
     strategyEdgeCardPresentation,
     strategyEdgeLabel,
@@ -109,7 +110,7 @@ function edgeCardLayout(
     edge: StrategyEdge,
     annotation: StrategyEdgeAnnotation | undefined,
 ): EdgeCardLayout {
-    const presentation = edge.kind === "item" ? {header: "", compact: true, manual: Boolean(edge.label), rows: [{kind: "leaf" as const, label: strategyEdgeLabel(edge), depth: 0}]} : strategyEdgeCardPresentation(edge);
+    const presentation: StrategyEdgeCardPresentation = edge.kind === "item" ? {title: strategyEdgeLabel(edge), header: "", compact: true, manual: Boolean(edge.label), rows: [{kind: "leaf" as const, label: strategyEdgeLabel(edge), depth: 0}]} : strategyEdgeCardPresentation(edge);
     const annotationHeight = annotation ? CARD_ANNOTATION_HEIGHT : 0;
     const headerHeight = presentation.header ? CARD_HEADER_HEIGHT : 0;
     const widestText = Math.max(

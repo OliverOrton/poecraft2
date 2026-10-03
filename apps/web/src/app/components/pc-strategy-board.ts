@@ -435,7 +435,7 @@ export class PcStrategyBoard extends HTMLElement {
                 ) as PcStrategyNode;
                 element.setView({
                     node,
-                    document: this.strategy,
+                    document: this.strategy ?? undefined,
                     selected:
                         this.selection?.kind === "node" &&
                         this.selection.id === node.id,
