@@ -1395,13 +1395,13 @@ RefinementOutcomeObservation calc_outcome_observation(
     }
 }
 
-GoalAssessment CalcContext::assess_goal_state(
-        const AbstractState& state) const {
+GoalAssessment assess_terminal_goal(
+        const GoalSpec& goal, const AbstractState& state) {
     GoalAssessment assessment;
-    assessment.rarity_matches = state.rarity == goal_.rarity;
+    assessment.rarity_matches = state.rarity == goal.rarity;
     assessment.prefix_count = state.prefix_count;
     assessment.suffix_count = state.suffix_count;
-    for (std::size_t i = 0; i < layout_.slots.size(); ++i) {
+    for (std::size_t i = 0; i < goal.slots.size(); ++i) {
         if (state.slot_status[i] ==
             static_cast<std::uint8_t>(GoalSlotStatus::Satisfied)) {
             assessment.satisfied_mask |= 1u << i;
@@ -1409,7 +1409,7 @@ GoalAssessment CalcContext::assess_goal_state(
         }
     }
     assessment.requested_coverage = assessment.rarity_matches &&
-        assessment.satisfied_count >= goal_.required_satisfied_slots();
+        assessment.satisfied_count >= goal.required_satisfied_slots();
     assessment.legacy_clean_occupancy =
         static_cast<std::size_t>(state.prefix_count) + state.suffix_count ==
         assessment.satisfied_count;
@@ -1419,13 +1419,17 @@ GoalAssessment CalcContext::assess_goal_state(
             (count >= range->minimum && count <= range->maximum);
     };
     assessment.explicit_occupancy =
-        inside(state.prefix_count, goal_.terminal.prefixes) &&
-        inside(state.suffix_count, goal_.terminal.suffixes);
+        inside(state.prefix_count, goal.terminal.prefixes) &&
+        inside(state.suffix_count, goal.terminal.suffixes);
     assessment.final_success = assessment.requested_coverage &&
         assessment.explicit_occupancy &&
-        (goal_.terminal.extras == ExtraExplicitPolicy::Allow ||
+        (goal.terminal.extras == ExtraExplicitPolicy::Allow ||
          assessment.legacy_clean_occupancy);
     return assessment;
+}
+
+GoalAssessment CalcContext::assess_goal_state(const AbstractState& state) const {
+    return assess_terminal_goal(goal_, state);
 }
 
 bool CalcContext::is_goal_state(const AbstractState& state) const {

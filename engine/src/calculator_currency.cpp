@@ -13,7 +13,10 @@
 
 namespace poecraft::solver {
 CalculatorItemGoal parse_calculator_item_goal(const SessionImpl& session, const char* text, std::size_t size) {
-    const auto root = json::Parser(text, size).parse();
+    return parse_calculator_item_goal(session, json::Parser(text, size).parse());
+}
+
+CalculatorItemGoal parse_calculator_item_goal(const SessionImpl& session, const json::Value& root) {
     CalculatorItemGoal goal;
     if (const auto* mods = root.find("implicit_mod_keys")) {
         if (mods->type != json::Type::Array || mods->array.size() > PC_MAX_IMPLICITS)
@@ -48,15 +51,40 @@ CalculatorItemGoal parse_calculator_item_goal(const SessionImpl& session, const 
 std::string calculate_currency_json(CalcContext& source,
         const pc_item_state& receiver, const std::string& action,
         const SessionImpl* donor_session, const pc_item_state* donor,
-        const CalculatorItemGoal& item_goal) {
+        const CalculatorItemGoal& item_goal,
+        const std::vector<CalculatorGoal>& requested_goals,
+        const CalculatorTerminalLaw* terminal_law) {
+    const bool multi = requested_goals.size() > 1;
+    if (requested_goals.size() > kMaxCalculatorGoals)
+        throw std::invalid_argument("Calculator supports at most eight goal items");
+    const auto goals = requested_goals.empty()
+        ? std::vector<CalculatorGoal>{{"", source.goal(), item_goal}} : requested_goals;
+    std::set<std::string> ids;
+    std::size_t aggregate_slots = 0;
+    for (const auto& goal : goals) {
+        if (!requested_goals.empty() && (goal.id.empty() || goal.id.size() > 64 ||
+                goal.id.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-.") != std::string::npos ||
+                !ids.insert(goal.id).second))
+            throw std::invalid_argument("Calculator goal IDs must be unique bounded ASCII identifiers");
+        aggregate_slots += goal.explicit_goal.slots.size();
+        if (goal.explicit_goal.slots.size() > kMaxGoalSlots || aggregate_slots > 64)
+            throw std::invalid_argument("Calculator goal-set slot resource cap exceeded");
+    }
     const bool double_corruption = action == "double_corruption";
     const bool expanded = action == "awakener" || action == "dominance" || action == "vaal" || double_corruption || action == "observe";
     const auto found_action = source.registry().index_by_id.find(action);
     if (!expanded && found_action == source.registry().index_by_id.end()) throw std::invalid_argument("Unknown Calculator action");
+    if (multi && !expanded) {
+        const auto& descriptor = source.registry().actions.at(found_action->second);
+        if ((descriptor.synthetic && descriptor.id != "restart") || refinement_contract_observes_modifier_offer(descriptor.refinement))
+            throw std::invalid_argument("Multi-goal observed choice requires an explicit common policy; this action is unavailable");
+    }
     const bool renewal = !expanded && !source.registry().actions[found_action->second].synthetic &&
         action_transition_facts(source.registry().actions[found_action->second].params.type).renewal;
-    const bool omit_affixes = (renewal || action == "awakener" || action == "vaal") && source.goal().slots.empty() &&
-        source.goal().terminal.extras == ExtraExplicitPolicy::Allow && !source.goal().terminal.prefixes && !source.goal().terminal.suffixes;
+    const bool omit_affixes = (renewal || action == "awakener" || action == "vaal") && std::all_of(goals.begin(), goals.end(), [](const auto& goal) {
+            return goal.explicit_goal.slots.empty() && goal.explicit_goal.terminal.extras == ExtraExplicitPolicy::Allow &&
+                !goal.explicit_goal.terminal.prefixes && !goal.explicit_goal.terminal.suffixes;
+        });
     if ((receiver.item_flags & PC_ITEM_FORESEEN) || (donor && (donor->item_flags & PC_ITEM_FORESEEN)))
         throw std::invalid_argument("Hinekora's Lock information-state calculation is unavailable; foresight cannot be dropped");
     if (receiver.memory_strands || receiver.lifecycle != PC_ITEM_LIVE)
@@ -87,27 +115,103 @@ std::string calculate_currency_json(CalcContext& source,
     auto observation_registry = source.registry();
     observation_registry.index_by_id.erase("dominance");
     observation_registry.automatic_dominance = false;
-    CalcContext terminal(source.shared_session(), source.goal(), observation_registry,
-        {}, true, false, false, std::nullopt, {}, false, reachable,
+    // Validate each original eight-slot layout separately. Cross-goal overlap
+    // becomes count membership on one carrier, never additional solver slots.
+    std::vector<CountObservation> observations;
+    std::vector<std::vector<std::array<std::size_t, 3>>> slot_queries(goals.size());
+    const auto query = [&](const std::vector<std::uint64_t>& mask) {
+        CountObservation observation;
+        for (std::uint32_t mod = 0; mod < session.mod_count; ++mod)
+            if (pc_bitset_test(mask.data(), mod)) observation.ids.push_back(mod);
+        const auto found = std::find_if(observations.begin(), observations.end(),
+            [&](const auto& old) { return old.ids == observation.ids; });
+        if (found != observations.end()) return std::size_t(found - observations.begin());
+        observations.push_back(std::move(observation));
+        return observations.size() - 1;
+    };
+    std::vector<std::uint32_t> implicit_mods;
+    std::vector<std::uint64_t> implicit_requirements(goals.size());
+    for (std::size_t g = 0; g < goals.size(); ++g) {
+        const auto layout = build_abstract_layout(session, goals[g].explicit_goal,
+            observation_registry, {}, true, false);
+        if (multi) for (const auto& slot : layout.slots) {
+            std::vector<std::uint64_t> blockers(session.words,0);
+            for (std::uint32_t mod = 0; mod < session.mod_count; ++mod) {
+                if (session.gen_type[mod] > 1 || pc_bitset_test(slot.member_mask.data(),mod)) continue;
+                for (auto i = session.group_offsets[mod]; i < session.group_offsets[mod+1]; ++i)
+                    if (std::binary_search(slot.blocking_group_ids.begin(),slot.blocking_group_ids.end(),session.group_ids[i])) {
+                        pc_bitset_set(blockers.data(),mod); break;
+                    }
+            }
+            slot_queries[g].push_back({query(slot.member_mask), query(slot.satisfying_mask), query(blockers)});
+        }
+        for (auto mod : goals[g].item_goal.implicit_mods) {
+            auto found = std::find(implicit_mods.begin(), implicit_mods.end(), mod);
+            const auto index = std::size_t(found - implicit_mods.begin());
+            if (index >= 64) throw std::invalid_argument("Calculator implicit observation resource cap exceeded");
+            if (found == implicit_mods.end()) implicit_mods.push_back(mod);
+            implicit_requirements[g] |= std::uint64_t{1} << index;
+        }
+    }
+    auto terminal_goal = goals[0].explicit_goal;
+    if (multi) {
+        terminal_goal.slots.clear(); terminal_goal.min_satisfied_slots = 0;
+        terminal_goal.terminal = {}; terminal_goal.terminal.extras = ExtraExplicitPolicy::Allow;
+        terminal_goal.fixed_options.clear(); terminal_goal.automatic_candidates = false;
+    }
+    CalcContext terminal(source.shared_session(), terminal_goal, observation_registry,
+        {}, true, false, false, std::nullopt, observations, false, reachable,
         false, false, true, false, true, nullptr, false, false, true);
     auto& calc = terminal;
     // Oversized requests fail explicitly; never publish truncated mass.
-    calc.set_solve_resource_caps(250000, 100000000, false, 512ull * 1024 * 1024);
+    calc.set_solve_resource_caps(multi ? 125000 : 250000, multi ? 50000000 : 100000000, false, (multi ? 256ull : 512ull) * 1024 * 1024);
     // Preserve implicit-goal observations until the final joint predicate;
     // states with equal affixes but different implicits must not merge early.
-    using Observation = std::pair<std::uint32_t, std::uint32_t>;
+    using Observation = std::pair<std::uint32_t, std::uint64_t>;
     std::map<Observation, long double> mass;
+    const auto record = [&](Observation observation, long double probability) {
+        if (!std::isfinite(probability) || probability < 0)
+            throw std::logic_error("Calculator outcome has invalid probability");
+        if (!probability) return;
+        mass[observation] += probability;
+        if (mass.size() > 250000)
+            throw std::length_error("Calculator terminal observation resource cap exceeded");
+    };
     const auto implicit_mask = [&](const pc_item_state& item) {
-        std::uint32_t mask = 0;
-        for (std::size_t goal = 0; goal < item_goal.implicit_mods.size(); ++goal)
+        std::uint64_t mask = 0;
+        for (std::size_t goal = 0; goal < implicit_mods.size(); ++goal)
             for (unsigned i = 0; i < item.implicit_count; ++i)
-                if (item.implicits[i].mod_id == item_goal.implicit_mods[goal]) mask |= 1u << goal;
+                if (item.implicits[i].mod_id == implicit_mods[goal]) mask |= std::uint64_t{1} << goal;
         return mask;
     };
-    const auto properties_match = [&](const AbstractState& state, std::uint32_t mask) {
-        return mask == ((1u << item_goal.implicit_mods.size()) - 1) &&
-            (!item_goal.influence_bits || state.influence_bits == *item_goal.influence_bits) &&
-            (!item_goal.corrupted || bool(state.flags & kFlagCorrupted) == *item_goal.corrupted);
+    const auto properties_match = [&](std::size_t g, const AbstractState& state, std::uint64_t mask) {
+        const auto& item = goals[g].item_goal;
+        return (mask & implicit_requirements[g]) == implicit_requirements[g] &&
+            (!item.influence_bits || state.influence_bits == *item.influence_bits) &&
+            (!item.corrupted || bool(state.flags & kFlagCorrupted) == *item.corrupted);
+    };
+    const auto goal_state = [&](std::size_t g, const AbstractState& state) {
+        auto projected = state;
+        if (multi) {
+            projected.slot_status.fill(0);
+            projected.blocked_mask = 0;
+            const auto count = [&](std::size_t observation) {
+                unsigned n = 0;
+                for (auto c : calc.layout().count_observations.at(observation).junk_class_indices)
+                    n += state.junk_counts[c];
+                return n;
+            };
+            for (std::size_t i = 0; i < slot_queries[g].size(); ++i) {
+                const auto [member, satisfying, blockers] = slot_queries[g][i];
+                projected.slot_status[i] = count(satisfying) ? 2 : (count(member) ? 1 : 0);
+                if (count(blockers)) projected.blocked_mask |= 1u << i;
+            }
+        }
+        return projected;
+    };
+    const auto matches = [&](std::size_t g, const AbstractState& state, std::uint64_t mask) {
+        return assess_terminal_goal(goals[g].explicit_goal, goal_state(g, state)).final_success &&
+            properties_match(g, state, mask);
     };
     std::map<std::uint32_t, long double> implicit_present;
     std::map<std::uint32_t, std::uint64_t> implicit_weights;
@@ -127,7 +231,7 @@ std::string calculate_currency_json(CalcContext& source,
         return calc.intern_item(item);
     };
     const auto add = [&](const pc_item_state& item, long double p) {
-        mass[{project(item), implicit_mask(item)}] += p;
+        record({project(item), implicit_mask(item)}, p);
     };
     const auto refill = [&](pc_item_state base, long double p,
                             std::uint8_t target, bool blocks, bool clear) {
@@ -136,12 +240,19 @@ std::string calculate_currency_json(CalcContext& source,
         if (!distribution->supported || !distribution->applicable)
             throw std::invalid_argument("Exact currency refill is unavailable for this input");
         for (const auto& entry : distribution->entries)
-            mass[{entry.state, implicit_mask(base)}] += p * entry.probability;
+            record({entry.state, implicit_mask(base)}, p * entry.probability);
     };
     bool legal = !(receiver.item_flags & (PC_ITEM_CORRUPTED | PC_ITEM_MIRRORED));
     if (action == "observe") {
         legal = true;
-        add(receiver, 1);
+        if (terminal_law) {
+            (*terminal_law)([&](const pc_item_state& item, long double probability) {
+                if (item.lifecycle != PC_ITEM_LIVE || item.memory_strands || (item.item_flags & PC_ITEM_FORESEEN))
+                    throw std::invalid_argument("Shared Calculator observer requires qualified live output carriers without foresight/strands");
+                observe_implicits(item, probability);
+                add(item, probability);
+            });
+        } else add(receiver, 1);
     } else if (session.is_cluster()) {
         if (expanded || found_action == calc.registry().index_by_id.end())
             throw std::invalid_argument("This cluster action law is not yet approved and qualified");
@@ -176,15 +287,15 @@ std::string calculate_currency_json(CalcContext& source,
         std::unique_ptr<CalcContext> incoming;
         if (!renewal && descriptor.params.type != ActionType::EldritchEmber &&
                 descriptor.params.type != ActionType::EldritchIchor) {
-            auto action_goal = source.goal();
+            auto action_goal = terminal_goal;
             action_goal.fixed_options.clear();
             action_goal.automatic_candidates = false;
             incoming = std::make_unique<CalcContext>(source.shared_session(),
                 action_goal, observation_registry, std::vector<std::uint32_t>{index},
                 true, false, true, std::nullopt,
-                std::vector<CountObservation>{}, false, reachable);
-            incoming->set_solve_resource_caps(250000, 100000000, false,
-                512ull * 1024 * 1024);
+                observations, false, reachable, false, false, false, false, false, nullptr, false, false, true);
+            incoming->set_solve_resource_caps(multi ? 125000 : 250000, multi ? 50000000 : 100000000, false,
+                (multi ? 256ull : 512ull) * 1024 * 1024);
         }
         auto& execution = incoming ? *incoming : calc;
         const auto start = execution.intern_item(receiver);
@@ -233,7 +344,7 @@ std::string calculate_currency_json(CalcContext& source,
                     if (implicit_item.item_flags & PC_ITEM_MIRRORED) state.flags |= kFlagMirrored;
                     id = calc.intern_state(state);
                 }
-                mass[{id, implicit_mask(implicit_item)}] += entry.probability * p;
+                record({id, implicit_mask(implicit_item)}, entry.probability * p);
             }
             if (!legal && mass.empty()) add(receiver, 1);
         }
@@ -320,19 +431,31 @@ std::string calculate_currency_json(CalcContext& source,
         }
     }
     long double total = failed_mass, success = 0;
-    std::array<long double, kMaxGoalSlots> slots{};
-    std::vector<long double> implicit_slots(item_goal.implicit_mods.size());
+    std::vector<long double> successes(goals.size());
+    std::vector<std::array<long double, kMaxGoalSlots>> goal_slots(goals.size());
+    std::vector<std::vector<long double>> goal_implicits(goals.size());
+    for (std::size_t g = 0; g < goals.size(); ++g) goal_implicits[g].resize(goals[g].item_goal.implicit_mods.size());
     for (const auto& [observation, p] : mass) {
         const auto [id, mask] = observation;
         total += p;
         const auto& state = calc.state(id);
-        if (legal && calc.is_goal_state(state) && properties_match(state, mask)) success += p;
-        for (std::size_t i = 0; i < implicit_slots.size(); ++i) if (mask & (1u << i)) implicit_slots[i] += p;
-        for (std::size_t i = 0; i < slots.size(); ++i)
-            if (state.slot_status[i] == 2) slots[i] += p;
+        bool any = false;
+        for (std::size_t g = 0; g < goals.size(); ++g) {
+            if (legal && matches(g, state, mask)) { successes[g] += p; any = true; }
+            const auto projected = goal_state(g, state);
+            for (std::size_t i = 0; i < kMaxGoalSlots; ++i) if (projected.slot_status[i] == 2) goal_slots[g][i] += p;
+            for (std::size_t i = 0; i < goal_implicits[g].size(); ++i) {
+                const auto bit = std::find(implicit_mods.begin(), implicit_mods.end(), goals[g].item_goal.implicit_mods[i]) - implicit_mods.begin();
+                if (mask & (std::uint64_t{1} << bit)) goal_implicits[g][i] += p;
+            }
+        }
+        if (any) success += p;
     }
+    const auto& slots = goal_slots[0];
+    const auto& implicit_slots = goal_implicits[0];
     if (std::abs(total - 1.0L) > 1e-10L)
         throw std::logic_error("Currency calculation failed probability conservation");
+    if (mass.size() > 250000) throw std::length_error("Calculator terminal observation resource cap exceeded");
     std::ostringstream out;
     out << std::setprecision(17) << "{\"ok\":true,\"supported\":true,\"legal\":"
         << (legal ? "true" : "false") << ",\"success_probability\":" << double(success)
@@ -346,30 +469,64 @@ std::string calculate_currency_json(CalcContext& source,
     for (const auto& [observation, p] : mass) {
         const auto [id, mask] = observation;
         const auto& state = calc.state(id);
+        const auto projected = goal_state(0, state);
+        bool any = false;
+        for (std::size_t g = 0; g < goals.size(); ++g) any |= legal && matches(g, state, mask);
         out << (comma ? "," : "") << "{\"state\":" << row_id++
             << ",\"affixes_unobserved\":" << (omit_affixes ? "true" : "false")
             << ",\"probability\":" << double(p) << ",\"rarity\":" << unsigned(state.rarity)
             << ",\"prefixes\":" << unsigned(state.prefix_count)
             << ",\"suffixes\":" << unsigned(state.suffix_count)
-            << ",\"flags\":" << state.flags << ",\"blocked\":" << state.blocked_mask
-            << ",\"goal_properties_satisfied\":" << (properties_match(state, mask) ? "true" : "false")
+            << ",\"flags\":" << state.flags << ",\"blocked\":" << projected.blocked_mask
+            << ",\"goal_properties_satisfied\":" << (properties_match(0, state, mask) ? "true" : "false")
             << ",\"influence_bits\":" << unsigned(state.influence_bits)
-            << ",\"is_goal\":" << (legal && calc.is_goal_state(state) && properties_match(state, mask) ? "true" : "false") << ",\"slots\":[";
-        for (std::size_t i = 0; i < slots.size(); ++i) out << (i ? "," : "") << unsigned(state.slot_status[i]);
-        out << "]}";
+            << ",\"is_goal\":" << (any ? "true" : "false") << ",\"slots\":[";
+        for (std::size_t i = 0; i < slots.size(); ++i) out << (i ? "," : "") << unsigned(projected.slot_status[i]);
+        out << "]";
+        if (!requested_goals.empty()) {
+            out << ",\"matched_goal_ids\":[";
+            bool matched_comma = false;
+            for (std::size_t g = 0; g < goals.size(); ++g) if (legal && matches(g, state, mask)) {
+                out << (matched_comma ? "," : "") << "\"" << goals[g].id << "\""; matched_comma = true;
+            }
+            out << "],\"goal_observations\":[";
+            for (std::size_t g = 0; g < goals.size(); ++g) {
+                const auto value = goal_state(g, state);
+                out << (g ? "," : "") << "{\"id\":\"" << goals[g].id << "\",\"is_goal\":"
+                    << (legal && matches(g, state, mask) ? "true" : "false")
+                    << ",\"blocked\":" << value.blocked_mask
+                    << ",\"goal_properties_satisfied\":" << (properties_match(g, state, mask) ? "true" : "false") << ",\"slots\":[";
+                for (std::size_t i = 0; i < kMaxGoalSlots; ++i) out << (i ? "," : "") << unsigned(value.slot_status[i]);
+                out << "]}";
+            }
+            out << "]";
+        }
+        out << "}";
         comma = true;
+        if (out.tellp() > 64ll * 1024 * 1024) throw std::length_error("Calculator result byte cap exceeded");
     }
     if (failed_mass) {
         int terminal_id = -1;
         for (const auto* terminal : {"bricked", "destroyed"}) {
             out << (comma ? "," : "") << "{\"state\":" << terminal_id--
-                << ",\"terminal\":\"" << terminal << "\",\"probability\":0.25,\"rarity\":-1,\"prefixes\":0,\"suffixes\":0,\"flags\":0,\"blocked\":0,\"is_goal\":false,\"slots\":[";
+                << ",\"terminal\":\"" << terminal << "\",\"probability\":0.25,\"rarity\":-1,\"prefixes\":0,\"suffixes\":0,\"flags\":0,\"blocked\":0,\"is_goal\":false,\"matched_goal_ids\":[],\"slots\":[";
             for (std::size_t i = 0; i < slots.size(); ++i) out << (i ? "," : "") << 0;
             out << "]}";
             comma = true;
         }
     }
     out << "]";
+    if (!requested_goals.empty()) {
+        out << ",\"any_goal_probability\":" << double(success) << ",\"goal_results\":[";
+        for (std::size_t g = 0; g < goals.size(); ++g) {
+            out << (g ? "," : "") << "{\"id\":\"" << goals[g].id << "\",\"success_probability\":" << double(successes[g]) << ",\"slot_satisfied\":[";
+            for (std::size_t i = 0; i < kMaxGoalSlots; ++i) out << (i ? "," : "") << double(goal_slots[g][i]);
+            out << "],\"implicit_satisfied\":[";
+            for (std::size_t i = 0; i < goal_implicits[g].size(); ++i) out << (i ? "," : "") << double(goal_implicits[g][i]);
+            out << "]}";
+        }
+        out << "]";
+    }
     if ((action == "vaal" || double_corruption) && legal) {
         out << (double_corruption
             ? ",\"double_corruption_branches\":{\"implicit\":0.25,\"sockets\":0.25,\"reforge\":0.25,\"destroyed\":0.25}"
@@ -396,6 +553,15 @@ std::string calculate_currency_json(CalcContext& source,
         }
     }
     out << "}";
-    return out.str();
+    auto result = out.str();
+    if (result.size() > 64ull * 1024 * 1024) throw std::length_error("Calculator result byte cap exceeded");
+    return result;
+}
+
+std::string observe_calculator_terminal_law_json(CalcContext& output,
+        const std::vector<CalculatorGoal>& goals, const CalculatorTerminalLaw& law) {
+    if (goals.empty() || !law) throw std::invalid_argument("Shared Calculator observation requires goals and a terminal law");
+    pc_item_state carrier; pc_item_clear(&carrier);
+    return calculate_currency_json(output, carrier, "observe", nullptr, nullptr, {}, goals, &law);
 }
 }

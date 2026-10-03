@@ -565,7 +565,7 @@ export class EngineClient {
         return this.call<{solver: number}>("openCalcInspector", {session}).then(result => result.solver);
     }
 
-    openCalcGoal(session: number, goal: import("./engine-protocol").CalculatorItemGoal): Promise<number> {
+    openCalcGoal(session: number, goal: import("./engine-protocol").CalculatorItemGoal | import("./engine-protocol").CalculatorGoalSet): Promise<number> {
         return this.call<{solver: number}>("openCalcGoal", {session, goal}).then(result => result.solver);
     }
     bestiaryGoalCalc(data: number, solver: number, item: number, action: string): Promise<CalcResult> {

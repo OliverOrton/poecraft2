@@ -575,6 +575,20 @@ export interface CalculatorItemGoal extends SolverGoal {
     corrupted?: boolean;
 }
 
+/** Calculator terminal goals, never a SolverGoal or strategy objective. */
+export interface CalculatorGoalSet {
+    version: "calculator_goal_set_v1";
+    goals: Array<{id: string; goal: CalculatorItemGoal}>;
+    /** Shared requested primitive materializes a selected fossil loadout. */
+    actions: string[];
+}
+export interface CalculatorGoalResult {
+    id: string;
+    success_probability: number;
+    slot_satisfied: number[];
+    implicit_satisfied: number[];
+}
+
 export interface ItemEdit {
     memory_strands?: number;
     add_explicit?: string;
@@ -686,6 +700,8 @@ export type CarrierProperty =
 
 /** One abstract successor class from the calculation engine. */
 export interface CalcOutcome {
+    matched_goal_ids?: string[];
+    goal_observations?: Array<{id: string; slots: number[]; blocked?: number; is_goal: boolean; goal_properties_satisfied: boolean}>;
     /** Property-only refills need no explicit enumeration; counts/affix flags are omitted. */
     affixes_unobserved?: boolean;
     goal_properties_satisfied?: boolean;
@@ -706,6 +722,9 @@ export interface CalcOutcome {
 }
 
 export interface CalcResult {
+    /** Native union probability, counted once per shared terminal outcome. */
+    any_goal_probability?: number;
+    goal_results?: CalculatorGoalResult[];
     implicit_satisfied?: number[];
     /** Vaal probabilities over final implicit identities, calculated natively. */
     implicit_outcomes?: Array<{mod: number; weight: number; added_probability: number; present_probability: number}>;
