@@ -90,7 +90,7 @@
   "prepared_fixture_hashes": {
     "capture-native-traces.py": "d2112a93c3bd2fb2f2f7f751f2ea40222d5433ff48c2e9027d77c9ed031931b1",
     "builder-rendered-fixture.ts": "9d792823719847254eb276473bf5a131e078ea7a2ee373d00f87a3145e71433e",
-    "render-builder.mjs": "8ea35734b581d88623f05d63ce4f4a47cd2c69f9a36b501f98f94be586f6e337"
+    "render-builder.mjs": "58e54cf46ed2f3668d229673f531b235d17e259539bf6046f21567318614b59d"
   },
   "bulk_evidence_directory": "out/feeder-integration",
   "first_results": "out/feeder-integration/acceptance-results.json",
