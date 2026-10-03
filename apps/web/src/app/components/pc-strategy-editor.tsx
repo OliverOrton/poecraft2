@@ -44,6 +44,10 @@ import {
     StrategyViewport,
     cloneStrategy,
     pinStrategyFeeder,
+    strategyConnection,
+    strategyOutputSlot,
+    strategyRecombinationBindings,
+    strategySourceEntryEdge,
     createBlankStrategy,
     createStrategyFromItemSnapshot,
     isStrategyDocument,
@@ -140,11 +144,11 @@ const OPERATIONS = [
 
 const PALETTE: Array<[string, string]> = [
     ["start", "Start state"],
-    ["operation:invoke_feeder", "Run saved feeder"],
+    ["source:invoke_feeder", "Saved feeder"],
     ["operation:move_resource", "Move / recycle item"],
     ["operation:discard_resource", "Discard item"],
-    ["operation:recombination", "Recombine pair (held)"],
-    ["operation:acquire_resource", "Acquire donor"],
+    ["operation:recombination", "Recombine pair"],
+    ["source:acquire_resource", "Donor item"],
     ["operation:awakener", "Awakener's Orb"],
     ["operation:foulborn_augment", "Foulborn Augmentation"],
     ["operation:foulborn_regal", "Foulborn Regal"],
@@ -551,12 +555,18 @@ export class PcStrategyEditor extends HTMLElement {
             this.markChanged(false);
         });
         this.board.addEventListener("strategy-edge-reconnect", event => {
-            const {id, endpoint, nodeId} = (event as CustomEvent<{id: string; endpoint: "from" | "to"; nodeId: string}>).detail;
+            const {id, endpoint, nodeId, port} = (event as CustomEvent<{id: string; endpoint: "from" | "to"; nodeId: string; port?: string}>).detail;
             const edge = this.strategy.edges.find(edge => edge.id === id);
-            if (!edge || edge[endpoint] === nodeId || !this.strategy.nodes.some(node => node.id === nodeId)) return;
-            edge[endpoint] = nodeId;
-            this.selection = {kind: "edge", id};
-            this.markChanged();
+            if (!edge || !this.strategy.nodes.some(node => node.id === nodeId)) return;
+            try {
+                const from = endpoint === "from" ? nodeId : edge.from, to = endpoint === "to" ? nodeId : edge.to;
+                const connection = strategyConnection(this.strategy, from, to, endpoint === "to" ? port : edge.to_port);
+                Object.assign(edge, {from, to}, connection);
+                if (edge.kind === "item") { edge.condition = {type: "always"}; edge.is_default = false; }
+                this.bindCarriedMove(edge);
+                this.ensureSourceEntry(edge);
+                this.selection = {kind: "edge", id}; this.markChanged();
+            } catch (error) { this.setStatus(error instanceof Error ? error.message : String(error)); }
         });
         this.board.addEventListener("strategy-node-move", (event) => {
             const detail = (
@@ -572,9 +582,9 @@ export class PcStrategyEditor extends HTMLElement {
         });
         this.board.addEventListener("strategy-edge-create", (event) => {
             const detail = (
-                event as CustomEvent<{ from: string; to: string }>
+                event as CustomEvent<{ from: string; to: string; toPort?: string }>
             ).detail;
-            this.addEdge(detail.from, detail.to);
+            this.addEdge(detail.from, detail.to, detail.toPort);
         });
         this.board.addEventListener("strategy-delete-selection", () =>
             this.deleteSelection(),
@@ -770,7 +780,7 @@ export class PcStrategyEditor extends HTMLElement {
                     <div class="pc-inspector-id">${escapeHtml(edge.from)} → ${escapeHtml(edge.to)}</div>
                 </div>
             </div>
-            <pc-condition-editor></pc-condition-editor>
+            ${edge.kind === "item" ? `<p class="pc-help">Item supply to ${edge.to_port === "input_b" ? "B" : "A"}. The consumer requests this paid source under the parent limits. Add conditions to the consumer's output edges.</p>` : `<pc-condition-editor></pc-condition-editor>`}
             <details class="pc-edge-routing">
                 <summary>Routing order and board label</summary>
                 <div class="pc-edge-routing-fields">
@@ -802,8 +812,10 @@ export class PcStrategyEditor extends HTMLElement {
         const editor = host.querySelector<PcConditionEditor>(
             "pc-condition-editor",
         )!;
+        if (!editor) return;
         editor.setEdge(edge);
         editor.setModifierFamilies(this.modifierOptions);
+        editor.setBases(this.bases);
         editor.addEventListener("condition-change", (event) => {
             const changed = (event as CustomEvent<StrategyEdge>).detail;
             edge.condition = changed.condition;
@@ -878,14 +890,14 @@ export class PcStrategyEditor extends HTMLElement {
                 <p class="pc-help">Strand-bearing random crafts and solving are unavailable while their laws remain unresolved.</p>
                 <label class="pc-field"><span>Donor template from Stash</span><select data-donor-template>${this.resourceOptions.map(record => `<option value="${escapeAttribute(record.id)}">${escapeHtml(record.name)}</option>`).join("")}</select></label>
                 <button data-add-donor ${this.resourceOptions.length ? "" : "disabled"}>Add donor template</button>
-                <p class="pc-help">Templates do not consume Stash items. Add Acquire donor before Awakener; every acquisition has a separate price key. Missing prices remain unknown.</p>
+                <p class="pc-help">Templates do not consume Stash items. An output-only donor source can supply a Recombination input; legacy Acquire donor nodes still work before Awakener; every acquisition has a separate price key. Missing prices remain unknown.</p>
                 ${(this.strategy.resources ?? []).map(resource => `<label class="pc-field"><span>${escapeHtml(resource.id)} · ${escapeHtml(resource.name ?? "Donor")} acquisition price key</span><input data-resource-price="${escapeAttribute(resource.id)}" value="${escapeAttribute(resource.acquisition_price_key)}"></label>`).join("")}
                 <label class="pc-field"><span>Saved feeder and output contract</span><select data-feeder-template>${this.feederOptions.flatMap(record => (record.strategy as StrategyDocument).output_contracts?.map(contract => `<option value="${escapeAttribute(JSON.stringify([record.id, contract.id]))}">${escapeHtml(record.name)} · ${escapeHtml(contract.name ?? contract.id)}</option>`) ?? []).join("")}</select></label>
                 <button data-add-feeder>Add paid feeder slot</button>
                 <p class="pc-help">Each invocation buys a fresh starting item and runs the pinned child. Failure, cost limits and output mismatches remain visible. Move or discard an occupied output before invoking again.</p>
                 ${(this.strategy.resources ?? []).filter(resource => resource.feeder).map(resource => `<p class="pc-help">${escapeHtml(resource.id)}: ${escapeHtml(resource.feeder!.strategy_id)} · revision ${escapeHtml(resource.feeder!.revision)} · ${escapeHtml(resource.feeder!.output_contract_id)}</p>`).join("")}
                 <button data-add-output-contract>Add output contract</button>
-                ${(this.strategy.output_contracts ?? []).map(contract => `<details><summary>${escapeHtml(contract.name ?? contract.id)} · ${escapeHtml(contract.base_key)}</summary><pc-condition-editor data-output-contract="${escapeAttribute(contract.id)}"></pc-condition-editor></details>`).join("")}
+                ${(this.strategy.output_contracts ?? []).map(contract => `<details><summary>${escapeHtml(contract.name ?? contract.id)} · ${escapeHtml(contract.base_key)}</summary><label class="pc-field"><span>Returned item slot</span><select data-output-resource="${escapeAttribute(contract.id)}">${["current", ...(this.strategy.resources ?? []).map(resource => resource.id)].map(id => `<option value="${escapeAttribute(id)}" ${(contract.resource_id ?? "current") === id ? "selected" : ""}>${escapeHtml(id)}</option>`).join("")}</select></label><label class="pc-field"><span>Required actual base</span><select data-output-base="${escapeAttribute(contract.id)}">${this.bases.map(base => `<option value="${escapeAttribute(base.path)}" ${contract.base_key === base.path ? "selected" : ""}>${escapeHtml(base.name)}</option>`).join("")}</select></label><pc-condition-editor data-output-contract="${escapeAttribute(contract.id)}"></pc-condition-editor></details>`).join("")}
                 <div class="pc-start-mod-summary">
                     ${(this.strategy.base_state.prefixes?.length ?? 0)} prefixes ·
                     ${(this.strategy.base_state.suffixes?.length ?? 0)} suffixes
@@ -909,7 +921,7 @@ export class PcStrategyEditor extends HTMLElement {
                     </select>
                 </label>
                 ${type === "awakener" || type === "acquire_resource" || type === "invoke_feeder" || type === "discard_resource" ? `<label class="pc-field"><span>${type === "awakener" ? "Donor resource" : "Resource slot"}</span><select data-field="resource-id"><option value="">Choose slot</option>${type === "discard_resource" ? `<option value="current" ${params.resource_id === "current" ? "selected" : ""}>current</option>` : ""}${(this.strategy.resources ?? []).map(resource => `<option value="${escapeAttribute(resource.id)}" ${resource.id === (type === "awakener" ? (params.roles as {donor?: string} | undefined)?.donor : params.resource_id) ? "selected" : ""}>${escapeHtml(resource.id)} · ${escapeHtml(resource.name ?? "Donor")}</option>`).join("")}</select></label><p class="pc-help">${type === "awakener" ? "Consumes an acquired donor; receiver is the current item." : type === "invoke_feeder" ? "Buys a fresh start, runs the pinned child under the parent limits and checks its actual output. The slot must be empty." : type === "discard_resource" ? "Destroys this live item without resale credit or replacement." : "Acquires one replacement donor and charges its acquisition price. It does not replace an available donor."}</p>` : ""}
-                ${type === "move_resource" || type === "recombination" ? (type === "move_resource" ? ["from", "to"] : ["input_a", "input_b", "output"]).map(field => `<label class="pc-field"><span>${escapeHtml(field.replaceAll("_", " "))}</span><select data-slot-field="${field}"><option value="">Choose slot</option>${["current", ...(this.strategy.resources ?? []).map(resource => resource.id)].map(id => `<option value="${escapeAttribute(id)}" ${params[field] === id ? "selected" : ""}>${escapeHtml(id)}</option>`).join("")}</select></label>`).join("") + `<p class="pc-help">${type === "move_resource" ? "Moves the real item without acquiring a replacement. Source must be live and destination empty; moving to current requires the current base and item level." : "Consumes both inputs and creates one output. Builder execution is held until the qualified pair output item and session are integrated into resource slots."}</p>` : ""}
+                ${type === "move_resource" || type === "recombination" ? (type === "move_resource" ? ["from", "to"] : ["input_a", "input_b", "output"]).map(field => `<label class="pc-field"><span>${escapeHtml(field.replaceAll("_", " "))}${this.strategy.edges.some(edge => edge.kind === "item" && edge.to === node.id && edge.to_port === field) ? " (connected)" : ""}</span><select data-slot-field="${field}" ${this.strategy.edges.some(edge => edge.kind === "item" && edge.to === node.id && edge.to_port === field) ? "disabled" : ""}><option value="">Choose slot</option>${[...(type === "recombination" && field === "output" ? [] : ["current"]), ...(this.strategy.resources ?? []).map(resource => resource.id)].map(id => `<option value="${escapeAttribute(id)}" ${(type === "recombination" ? strategyRecombinationBindings(this.strategy, node)[field as "input_a" | "input_b" | "output"] : params[field]) === id ? "selected" : ""}>${escapeHtml(id)}</option>`).join("")}</select></label>`).join("") + `<p class="pc-help">${type === "move_resource" ? "Moves the real item without acquiring a replacement. Source must be live and destination empty; moving to current requires the current base and item level." : "Uses the native pair model to consume both live inputs and create one real output. The execution path enters A; connected source dots request fresh paid items when this node is reached. Station gold/dust costs remain unknown; cost-capped runs refuse. Output routes inspect this slot's actual base and item."}</p>` : ""}
                 ${
                     type === "essence"
                         ? `<label class="pc-field">
@@ -1085,11 +1097,16 @@ export class PcStrategyEditor extends HTMLElement {
             this.strategy.output_contracts.push({id, base_key: this.strategy.base_state.base_key, predicate: {type: "rarity_is", rarity: this.strategy.base_state.rarity}});
             this.markChanged();
         });
+        host.querySelectorAll<HTMLSelectElement>("[data-output-resource], [data-output-base]").forEach(select => select.addEventListener("change", () => {
+            const contract = this.strategy.output_contracts?.find(contract => contract.id === (select.dataset.outputResource ?? select.dataset.outputBase));
+            if (contract) { if (select.dataset.outputResource) contract.resource_id = select.value; else contract.base_key = select.value; this.markChanged(); }
+        }));
         host.querySelectorAll<PcConditionEditor>("[data-output-contract]").forEach(editor => {
             const contract = this.strategy.output_contracts?.find(contract => contract.id === editor.dataset.outputContract);
             if (!contract) return;
             editor.setEdge({id: contract.id, from: "", to: "", priority: 0, condition: contract.predicate});
             editor.setModifierFamilies(this.modifierOptions);
+            editor.setBases(this.bases);
             editor.addEventListener("condition-change", event => {
                 contract.predicate = (event as CustomEvent<StrategyEdge>).detail.condition ?? {type: "always"};
                 this.markChanged(false);
@@ -1145,6 +1162,7 @@ export class PcStrategyEditor extends HTMLElement {
         host.querySelector<HTMLSelectElement>('[data-field="operation"]')
             ?.addEventListener("change", (event) => {
                 const type = (event.currentTarget as HTMLSelectElement).value;
+                if (node.source_only && !["acquire_resource", "invoke_feeder"].includes(type)) node.source_only = false;
                 node.operation = {
                     type,
                     params:
@@ -1369,7 +1387,8 @@ export class PcStrategyEditor extends HTMLElement {
                 position,
             };
         } else {
-            const type = paletteType.slice("operation:".length) || "chaos";
+            const sourceOnly = paletteType.startsWith("source:");
+            const type = paletteType.slice(sourceOnly ? "source:".length : "operation:".length) || "chaos";
             const operation = {
                 type,
                 params:
@@ -1384,26 +1403,50 @@ export class PcStrategyEditor extends HTMLElement {
                 kind: "operation",
                 name: "",
                 operation,
+                source_only: sourceOnly || undefined,
                 position,
             };
+            if (type === "recombination") {
+                this.strategy.resources ??= [];
+                if (this.strategy.resources.length >= 7) { this.setStatus("Recombination needs a named output slot; the seven resource slots are already used."); return; }
+                const output = nextGraphId("recomb_output", this.strategy.resources.map(resource => resource.id));
+                this.strategy.resources.push({id: output, name: "Recombination output", base_state: structuredClone(this.strategy.base_state), acquisition_price_key: `resource:${output}`});
+                node.operation!.params = {input_a: "current", input_b: "", output};
+            }
         }
         this.strategy.nodes.push(node);
         this.selection = { kind: "node", id: node.id };
         this.markChanged();
     }
 
-    private addEdge(from: string, to: string): void {
+    private bindCarriedMove(edge: StrategyEdge): void {
+        const source = this.strategy.nodes.find(node => node.id === edge.from), target = this.strategy.nodes.find(node => node.id === edge.to);
+        if (source && target?.operation?.type === "move_resource") target.operation.params.from = strategyOutputSlot(source);
+    }
+
+    private ensureSourceEntry(edge: StrategyEdge): void {
+        const entry = strategySourceEntryEdge(this.strategy, edge);
+        if (entry) this.strategy.edges.push(entry);
+    }
+
+    private addEdge(from: string, to: string, toPort?: string): void {
+        let connection: Pick<StrategyEdge, "kind" | "from_port" | "to_port">;
+        try { connection = strategyConnection(this.strategy, from, to, toPort); }
+        catch (error) { this.setStatus(error instanceof Error ? error.message : String(error)); return; }
         const ids = this.strategy.edges.map((edge) => edge.id);
         const outgoing = this.strategy.edges.filter((edge) => edge.from === from);
         const edge: StrategyEdge = {
             id: nextGraphId("edge", ids),
+            ...connection,
             from,
             to,
             priority: outgoing.length,
             condition: { type: "always" },
             label: "",
         };
+        this.bindCarriedMove(edge);
         this.strategy.edges.push(edge);
+        this.ensureSourceEntry(edge);
         this.selection = { kind: "edge", id: edge.id };
         this.markChanged();
     }

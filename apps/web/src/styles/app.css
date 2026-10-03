@@ -4617,3 +4617,5 @@ pc-run-trace {
 /* The testing toolbar remains usable at narrower desktop widths. */
 .pc-titlebar { flex-wrap: wrap; }
 .pc-titlebar a { color: inherit; }
+
+.pc-edge-path.is-item-supply { stroke-dasharray: 5 4; }

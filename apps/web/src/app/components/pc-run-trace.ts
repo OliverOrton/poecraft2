@@ -1,7 +1,7 @@
 import { StrategyResult, StrategyTrace } from "../engine-protocol";
 const RESOURCE_ACTION_NAMES: Record<number, string> = {
     1003: "Acquire resource", 1004: "Awakener", 1100: "Run feeder",
-    1101: "Move / recycle item", 1102: "Discard item",
+    1101: "Move / recycle item", 1102: "Discard item", 1103: "Recombine pair",
 };
 
 type ResultMode = "distribution" | "trace";
@@ -159,6 +159,7 @@ export class PcRunTrace extends HTMLElement {
             Math.max(0, trace.entries.length - 1),
         );
         const entry = trace.entries[this.stepIndex];
+        const actualOutput = entry.resources?.find(resource => resource.active_output);
         return `
             <div class="pc-trace-toolbar">
                 <label>
@@ -198,8 +199,8 @@ export class PcRunTrace extends HTMLElement {
                         <div><dt>Known cost</dt><dd>${entry.known_cumulative_cost.toFixed(2)}${entry.cost_complete ? "" : " +"}</dd></div>
                     </dl>
                     <details>
-                        <summary>Item snapshot</summary>
-                        <pre>${escapeHtml(JSON.stringify(entry.item, null, 2))}</pre>
+                        <summary>${actualOutput ? "Actual output item — " + escapeHtml(actualOutput.base_key ?? actualOutput.resource_id) : "Current item snapshot"}</summary>
+                        <pre>${escapeHtml(JSON.stringify(actualOutput ?? entry.item, null, 2))}</pre>
                     </details>
                     ${entry.resources?.length ? `<details><summary>Resource inventory</summary><pre>${escapeHtml(JSON.stringify(entry.resources, null, 2))}</pre></details>` : ""}
                 </div>

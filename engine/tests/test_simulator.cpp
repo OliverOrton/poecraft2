@@ -236,6 +236,7 @@ pc_simulation_options options(std::uint64_t runs) {
 void run_simulator_tests(const char* artifact_dir) {
     if (artifact_dir == nullptr) return;
     run_feeder_tests(artifact_dir);
+    run_builder_recombination_tests(artifact_dir);
 
     const std::string manifest =
         std::string(artifact_dir) + "/manifest.json";
@@ -850,7 +851,7 @@ void run_feeder_tests(const char* artifact_dir) {
     pc_economy_destroy(missing);
 
     // Compilation authority rejects unknown contracts, conflicting revision copies,
-    // nested reference cycles and unqualified recombination before any paid run.
+    // nested reference cycles and malformed recombination before any paid run.
     const auto refuses = [&](const std::string& document) {
         pc_strategy_handle graph = nullptr;
         PC_CHECK(pc_strategy_compile_json(session, document.data(), document.size(), &graph, &error) != PC_RESULT_OK);
@@ -903,5 +904,107 @@ void run_feeder_tests(const char* artifact_dir) {
     try { (void)poecraft::solver::evaluate_strategy(*compiled); }
     catch (const std::exception& e) { exact_refused = std::string(e.what()).find("inventory/control identity") != std::string::npos; }
     PC_CHECK(exact_refused);
+    pc_economy_destroy(economy); pc_session_destroy(session); pc_data_destroy(data);
+}
+
+
+namespace {
+std::string builder_pair_graph(bool recycle = false, const std::string& child_override = "") {
+    auto child = child_override.empty() ? feeder_child("success", "rare") : child_override;
+    const auto transmute = child.find("\"type\":\"transmute\"");
+    if (transmute != std::string::npos) child.replace(transmute, std::string("\"type\":\"transmute\"").size(), "\"type\":\"alchemy\"");
+    const std::string state = R"({"base_key":"Metadata/Items/Armours/BodyArmours/BodyInt17","item_level":86,"rarity":"normal"})";
+    return std::string(R"({"version":"v1","start_node_id":"start","base_state":{"base_key":"Metadata/Items/Armours/BodyArmours/BodyInt17","item_level":86,"rarity":"rare"},"resources":[{"id":"feeder","base_state":)") + state +
+        R"(,"acquisition_price_key":"resource:feeder","feeder":{"strategy_id":"paid-child","revision":"r1","output_contract_id":"magic","document_json":)" + feeder_json_quote(child) +
+        R"(}},{"id":"out","base_state":)" + state + R"(,"acquisition_price_key":"resource:out"}],"nodes":[{"id":"start","kind":"start"},{"id":"source","kind":"operation","source_only":true,"operation":{"type":"invoke_feeder","params":{"resource_id":"feeder"}}},{"id":"pair","kind":"operation","operation":{"type":"recombination","params":{"input_a":"current","input_b":"","output":"out"}}},{"id":"end","kind":"terminal","terminal":"success"}],"edges":[{"id":"entry","from":"start","to":"pair","kind":"control","to_port":"input_a","condition":{"type":"always"}},{"id":"supply","from":"source","to":"pair","kind":"item","to_port":"input_b","condition":{"type":"always"}},{"id":"after","from":"pair","to":")" +
+        (recycle ? "pair" : "end") + R"(","kind":"control","to_port":")" + (recycle ? "input_a" : "input") + R"(","condition":{"type":"rarity_is","rarity":"rare"}}]})";
+}
+}
+
+void run_builder_recombination_tests(const char* artifact_dir) {
+    pc_error_info error{}; pc_error_info_init(&error);
+    pc_data_handle data = nullptr;
+    const auto manifest = std::string(artifact_dir) + "/manifest.json";
+    PC_CHECK(pc_data_load_file(manifest.c_str(), &data, &error) == PC_RESULT_OK);
+    if (!data) return;
+    pc_session_options so{}; so.struct_size = sizeof(so); so.abi_version = PC_ABI_VERSION;
+    so.base_metadata_path = kBase; so.item_level = 86;
+    pc_session_handle session = nullptr;
+    PC_CHECK(pc_session_create(data, &so, &session, &error) == PC_RESULT_OK);
+    if (!session) { pc_data_destroy(data); return; }
+    const std::string quotes = R"({"version":"v1","prices":{"resource:feeder":7,"alchemy":2,"recombination:gold":999,"recombination:dust":999}})";
+    pc_economy_handle economy = nullptr;
+    PC_CHECK(pc_economy_load_json(quotes.data(), quotes.size(), &economy, &error) == PC_RESULT_OK);
+    const auto run = [&](const std::string& document, pc_simulation_options opts,
+                         std::uint64_t actions, double cost, bool success, int reason, unsigned created = 1) {
+        pc_strategy_handle graph = nullptr;
+        PC_CHECK(pc_strategy_compile_json(session, document.data(), document.size(), &graph, &error) == PC_RESULT_OK);
+        if (!graph) return;
+        pc_simulator_handle simulator = nullptr;
+        PC_CHECK(pc_simulator_create(session, graph, economy, &simulator, &error) == PC_RESULT_OK);
+        pc_simulation_progress progress{};
+        PC_CHECK(pc_simulator_run_chunk(simulator, &opts, static_cast<uint32_t>(opts.target_runs), &progress, &error) == PC_RESULT_OK);
+        pc_simulation_summary summary{};
+        PC_CHECK(pc_simulator_get_summary(simulator, &summary, &error) == PC_RESULT_OK);
+        PC_CHECK(summary.completed_runs == opts.target_runs);
+        PC_CHECK(summary.total_actions == actions * opts.target_runs);
+        PC_CHECK(summary.known_total_cost == cost * opts.target_runs);
+        PC_CHECK(summary.success_count == (success ? opts.target_runs : 0));
+        uint32_t count = 0;
+        PC_CHECK(pc_simulator_trace_query(simulator, 0, nullptr, 0, &count, &error) == PC_RESULT_BUFFER_TOO_SMALL);
+        std::vector<pc_trace_entry> trace(count);
+        PC_CHECK(pc_simulator_trace_query(simulator, 0, trace.data(), count, &count, &error) == PC_RESULT_OK);
+        PC_CHECK(trace.back().failure_reason == reason);
+        const auto resource_text = std::string(trace.back().resources_json);
+        const auto resources = poecraft::json::Parser(resource_text.data(), resource_text.size()).parse();
+        if (created) {
+            PC_CHECK(summary.cost_status == PC_COST_INCOMPLETE);
+            PC_CHECK(trace.back().item.lifecycle == PC_ITEM_CONSUMED);
+            PC_CHECK(resources.array.at(0).at("lifecycle").number == PC_ITEM_CONSUMED);
+            const auto& output = resources.array.at(1);
+            PC_CHECK(output.at("lifecycle").number == PC_ITEM_LIVE);
+            PC_CHECK(output.at("active_output").boolean);
+            PC_CHECK(output.at("identity").string == "recomb/pair/" + std::to_string(created));
+            PC_CHECK(output.at("item").at("rarity").number == PC_RARITY_RARE);
+            const auto& receipt = output.at("recombination");
+            PC_CHECK(!receipt.at("gold_cost_complete").boolean && !receipt.at("dust_cost_complete").boolean);
+            PC_CHECK(receipt.at("game_odds_estimated").boolean);
+        }
+        if (success) {
+            const char* example_json = nullptr;
+            PC_CHECK(pc_simulator_example_resources_json(simulator, PC_TERMINAL_SUCCESS, 0, &example_json, &error) == PC_RESULT_OK);
+            PC_CHECK(example_json != nullptr && std::string(example_json).find("recomb/pair/1") != std::string::npos);
+        }
+        pc_simulator_destroy(simulator); pc_strategy_destroy(graph);
+    };
+    run(builder_pair_graph(), options(1000), 3, 9, true, PC_SIM_FAILURE_NONE);
+    auto capped = options(1); capped.max_cost_per_run = 10000;
+    run(builder_pair_graph(), capped, 0, 0, false, PC_SIM_FAILURE_MISSING_PRICE, 0);
+    capped = options(1); capped.max_actions_per_run = 2;
+    run(builder_pair_graph(), capped, 2, 9, false, PC_SIM_FAILURE_ACTION_LIMIT, 0);
+    capped = options(1); capped.max_graph_steps_per_run = 1;
+    run(builder_pair_graph(), capped, 0, 0, false, PC_SIM_FAILURE_STEP_LIMIT, 0);
+    run(builder_pair_graph(false, feeder_child("failure", "rare")), options(1), 2, 9, false, PC_SIM_FAILURE_TERMINAL, 0);
+    capped = options(1); capped.max_actions_per_run = 6;
+    run(builder_pair_graph(true), capped, 6, 18, false, PC_SIM_FAILURE_ACTION_LIMIT, 2);
+    const auto document = builder_pair_graph();
+    const auto rejects = [&](std::string bad, const std::string& before, const std::string& after) {
+        const auto pos = bad.find(before); PC_CHECK(pos != std::string::npos);
+        if (pos == std::string::npos) return;
+        bad.replace(pos, before.size(), after);
+        pc_strategy_handle graph = nullptr;
+        PC_CHECK(pc_strategy_compile_json(session, bad.data(), bad.size(), &graph, &error) != PC_RESULT_OK);
+        PC_CHECK(graph == nullptr); if (graph) pc_strategy_destroy(graph);
+    };
+    rejects(document, "\"to_port\":\"input_b\"", "\"to_port\":\"unknown\"");
+    rejects(document, "\"kind\":\"item\"", "\"kind\":\"control\"");
+    rejects(document, "\"output\":\"out\"", "\"output\":\"current\"");
+    rejects(document, "\"input_a\":\"current\"", "\"input_a\":\"feeder\"");
+    rejects(document, "\"from\":\"source\",\"to\":\"pair\"", "\"from\":\"source\",\"to\":\"end\"");
+    auto compiled = poecraft::compile_strategy_json(session->impl, document.data(), document.size());
+    bool refused = false;
+    try { (void)poecraft::solver::evaluate_strategy(*compiled); }
+    catch (const std::exception& e) { refused = std::string(e.what()).find("inventory/control identity") != std::string::npos; }
+    PC_CHECK(refused);
     pc_economy_destroy(economy); pc_session_destroy(session); pc_data_destroy(data);
 }

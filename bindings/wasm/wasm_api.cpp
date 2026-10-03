@@ -3077,6 +3077,11 @@ const char* pcw_simulator_result(uint32_t simulator_id) {
             out += example.cost_complete ? "true" : "false";
             out += ",\"item\":";
             append_item_state(out, example.item);
+            const char* example_resources = nullptr;
+            rc = pc_simulator_example_resources_json(*simulator, kind, i, &example_resources, &error);
+            if (rc != PC_RESULT_OK) return fail(error);
+            out += ",\"resources\":";
+            out += example_resources ? example_resources : "[]";
             out.push_back('}');
         }
         out.push_back(']');
