@@ -105,3 +105,66 @@ frame mass must retain the original global probabilities and conservation owner;
 ordinary per-frame normalization cannot be silently merged as unconditional odds.
 Mixed-frame finalization is **not implemented or qualified** by this checkpoint.
 No pair Apply controls or mechanic law were edited here.
+
+
+## Lightweight qualification preparation after source checkpoint
+
+Continued from `e45b92b8` without a heavy grant. Parent reports native pair
+checkpoint `791b9ba66ab0dbe54f9eea8426e796ba79ac1512`; recombination owns its
+mixed-session dispatcher/finalizer and pair adapter. This lane has not changed
+its native observer headers, implementation or shared protocol since `e45b92b8`.
+The only follow-up code is finite test preparation in this lane's test files.
+
+The checked-in runtime snapshot and normal checkout's compiled manifest both
+hash to `82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d`.
+Use that already frozen snapshot directly for the native batch. No fixture
+regeneration or SQLite read is required by these selectors. The existing
+`--calculator-incoming-only` selector now includes the new goal-set fixtures,
+so the first batch avoids the full Solver/API selectors and their sampled
+strategy work. Added independent ordered physical renewal controls cover
+ordinary Alchemy and fractured-input Chaos under the approved 8:3:1 law;
+expanded Vaal/Temple controls assert corruption-property and terminal-failure
+mass. Deferred worker controls additionally cover nested implicit/property
+requirements, deterministic Bestiary and configured-cluster preservation.
+All added controls remain **unrun**.
+
+### Exact finite commands, gated on explicit parent release
+
+Run from this isolated worktree. Build once with at most two compiler jobs;
+then run the already selected finite checks serially:
+
+```powershell
+powershell -NoProfile -File scripts/dev-engine.ps1 -Task Tests -Jobs 2
+$calculatorArtifact = Join-Path (Get-Location) 'data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d'
+& ./build/engine/poecraft_engine_tests.exe --calculator-incoming-only $calculatorArtifact
+& ./build/engine/poecraft_engine_tests.exe --solver-observation-layout-only
+```
+
+The native build includes existing C header smoke. No benchmark or strategy
+Simulator command is selected. Inspect terminal results and failed identities
+before broadening the finite batch. Wider ordinary currency/cluster selectors
+remain integration-owner checks when needed; do not routinely rerun a suite.
+
+After the parent-owned matching WASM rebuild and ordinary web prerequisites,
+run in `apps/web`:
+
+```powershell
+npx tsx test/calculator-goal-set.test.ts
+npx tsx test/calculator-goal-set-wasm.test.ts
+npm test
+npx tsc --noEmit
+```
+
+The focused nonvisual file is the first UI check; `npm test` already includes it
+and need not repeat it after a compatible completed focused pass unless other
+changes/failures justify the normal final chain. The WASM worker file is separate
+and must use the combined source-matched module receipt; the old release bundle
+cannot qualify the new envelope. `npm test`'s existing pretest hook owns generated
+web data/build-info from the pinned runtime, without data/economy refresh.
+
+This worktree currently lacks local `apps/web/node_modules` and generated
+build-info. The normal checkout has the compatible dependency directory. Reuse
+that installed dependency directory through an isolated junction if needed;
+do not install or restart npm dev. Record actual combined source/module hashes,
+selector results and inherited failures in this living record after the grant.
+CI owns the current short validation gate; wait for explicit parent release.
