@@ -266,7 +266,8 @@ output_contract_id}`. The exact embedded saved revision is immutable during a
 run; changing a Stash record cannot change it. New saves receive distinct revision
 labels; older saved records pin their existing timestamp label and exact JSON.
 Native compilation rejects missing contracts, conflicting documents under one
-reference/revision, logical reference cycles and nesting beyond 16 invocations.
+reference/revision, cycles over `(strategy_id, revision)` and nesting beyond 16 invocations.
+Referencing an immutable older revision of the same saved strategy is permitted.
 Seven resource slots remain the native capacity. Configured cluster feeder
 templates remain outside this ordinary resource-session scope.
 
@@ -292,7 +293,8 @@ accounting retain all runs.
 `current`. Source must be live and destination absent. The move copies the actual
 item/session and identity, then marks its source consumed. It never acquires a
 replacement. Mixed-base slot-to-slot moves preserve their session; a move into
-`current` requires the existing compiled base, item level and cluster identity.
+`current` requires the existing compiled base, item level, cluster identity, data
+and session modifier mapping.
 An incompatible move refuses. `discard_resource` explicitly destroys a live
 item without resale credit. Restart remains a separate paid fresh-base action.
 Moving/discarding current invalidates its Imprint checkpoint; consumed resources

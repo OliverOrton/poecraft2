@@ -1073,7 +1073,6 @@ export class PcStrategyEditor extends HTMLElement {
                 if (!record || !selected) return;
                 const id = nextGraphId("feeder", (this.strategy.resources ?? []).map(resource => resource.id));
                 this.strategy.resources ??= [];
-                if (record.id === this.savedRef) throw new Error("A saved strategy cannot be its own feeder.");
                 if (this.strategy.resources.length >= 7) throw new Error("The native runner supports seven resource slots.");
                 this.strategy.resources.push(pinStrategyFeeder(id, record, selected[1]));
                 this.markChanged();

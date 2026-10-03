@@ -360,8 +360,8 @@ function validateStrategyResources(strategy: StrategyDocument, issues: StrategyV
             if (!feeder) continue;
             try {
                 if (!feeder.strategy_id || !feeder.revision || !feeder.output_contract_id) throw new Error("Feeder requires a pinned revision and selected output contract.");
-                if (ancestors.has(feeder.strategy_id)) throw new Error("Feeder strategy reference cycle.");
                 const identity = JSON.stringify([feeder.strategy_id, feeder.revision]);
+                if (ancestors.has(identity)) throw new Error("Feeder strategy reference cycle.");
                 const previous = seenRevisions.get(identity);
                 if (previous !== undefined && previous !== feeder.document_json) throw new Error("One pinned revision contains conflicting documents.");
                 seenRevisions.set(identity, feeder.document_json);
@@ -370,7 +370,7 @@ function validateStrategyResources(strategy: StrategyDocument, issues: StrategyV
                 if (!child.output_contracts?.some(contract => contract.id === feeder.output_contract_id)) throw new Error("Selected feeder output contract is missing from its pinned revision.");
                 if (child.base_state.base_key !== resource.base_state.base_key || child.base_state.item_level !== resource.base_state.item_level)
                     throw new Error("Feeder starting session differs from its paid resource template.");
-                visit(child, new Set([...ancestors, feeder.strategy_id]), depth + 1);
+                visit(child, new Set([...ancestors, identity]), depth + 1);
             } catch (error) { fail(`Resource ${resource.id}: ${error instanceof Error ? error.message : String(error)}`); }
         }
         const contracts = document.output_contracts ?? [];

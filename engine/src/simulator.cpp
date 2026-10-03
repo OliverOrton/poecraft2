@@ -2592,7 +2592,8 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace,
                         (target || (input_session->base_index == session.base_index && input_session->item_level == session.item_level &&
                                     input_session->cluster_index == session.cluster_index &&
                                     input_session->cluster_passive_index == session.cluster_passive_index &&
-                                    input_session->cluster_passive_count == session.cluster_passive_count))) {
+                                    input_session->cluster_passive_count == session.cluster_passive_count &&
+                                    input_session->data == session.data && input_session->global_index == session.global_index))) {
                         output = input;
                         if (target) { target->session = input_session; target->identity = source ? source->identity : current_identity; }
                         else current_identity = source->identity;
@@ -2931,15 +2932,14 @@ std::shared_ptr<StrategyImpl> compile_strategy_json(
                     invalid("Feeder requires pinned strategy_id, revision, document_json and output_contract_id");
                 // Bounded synchronous compilation detects logical cycles even when imports
                 // nest separate JSON copies of the same saved reference.
-                const auto identity = resource.feeder_strategy_id;
-                if (references.active.size() >= 16 || std::find(references.active.begin(), references.active.end(), identity) != references.active.end())
+                const auto revision_identity = quote_json(resource.feeder_strategy_id) + ":" + quote_json(resource.feeder_revision);
+                if (references.active.size() >= 16 || std::find(references.active.begin(), references.active.end(), revision_identity) != references.active.end())
                     invalid("Feeder reference cycle or nesting limit");
-                const auto revision_identity = quote_json(identity) + ":" + quote_json(resource.feeder_revision);
                 const auto previous = references.revisions.find(revision_identity);
                 if (previous != references.revisions.end() && previous->second != document)
                     invalid("One pinned feeder revision contains conflicting documents");
                 references.revisions.emplace(revision_identity, document);
-                references.active.push_back(identity);
+                references.active.push_back(revision_identity);
                 try { resource.feeder = compile_strategy_json(resource.session, document.data(), document.size()); }
                 catch (...) { references.active.pop_back(); throw; }
                 references.active.pop_back();
