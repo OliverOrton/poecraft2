@@ -147,3 +147,21 @@ snapshot. The imported goal-only WASM remains insufficient for this branch's
 new pair exports; a matching rebuild is mandatory before product qualification.
 The merge keeps one shared observer, parser and goal schema, with the small
 native binding bridge added by this programme.
+
+The source-ready checkpoint has no active heavy process. Final qualification
+must rebuild native/DLL and matching WASM (maximum two compiler jobs), run the
+focused pair/shared Calculator contracts, rerun the finite Python pair/currency
+files against the restored frozen SQLite fixture, and run web tests/TypeScript.
+Historical `791b9ba` native receipts are retained; they do not qualify this new
+dispatcher/adapter/UI. No Simulator, timed solver run, new experiment or data
+refresh is requested. Release the parent's slot immediately when the last
+command exits, before writing final documentation or commits.
+
+For parent integration: qualified main, qualified shared goal owner, native
+kernel `791b9ba`, dispatcher `8a62f87d`, pair adapter/UI `e3325fdc`, and the
+combined donor-lifetime resolution are the ordered dependencies. The isolated
+dependency cherry-pick and main/goal merges are alignment receipts, not separate
+shared-schema implementations. The current pair observer remains native-only;
+Builder consumes the independent output session/full atomic receipt. Its
+compound inventory handling must precede Apply of saved Imprint resources;
+the WASM Apply adapter refuses that unsupported compound request.

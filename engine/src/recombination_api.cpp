@@ -31,7 +31,9 @@ void write_slot(std::ostream& out, const pc_mod_slot& slot, const poecraft::Sess
         << ",\"group_id\":" << slot.group_id << ",\"flags\":" << unsigned(slot.flags)
         << ",\"rolls\":[";
     for (unsigned i = 0; i < slot.roll_count; ++i) { if (i) out << ','; out << slot.rolls[i]; }
-    out << "]}";
+    out << "],\"veiled_option_mod_ids\":[";
+    for (unsigned i = 0; i < slot.veiled_option_count; ++i) { if (i) out << ','; out << slot.veiled_option_mod_ids[i]; }
+    out << "],\"veiled_chosen_mod_id\":" << slot.veiled_chosen_mod_id << '}';
 }
 void write_item(std::ostream& out, const pc_item_state& item, const poecraft::SessionImpl& session) {
     out << "{\"rarity\":" << unsigned(item.rarity) << ",\"quality\":" << unsigned(item.quality)

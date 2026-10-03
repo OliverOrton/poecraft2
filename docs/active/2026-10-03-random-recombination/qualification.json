@@ -138,12 +138,11 @@
   "shared_goal_source_inspected_unqualified": "e45b92b8bd28d6fd0902468d9095ce8c2580e5b7",
   "main_repair_delta_inspected_not_imported": "3ab862fece9d52ca733ad01a0869fd06cec84810",
   "unrun": [
-    "shared multi-goal native dispatcher/finalizer",
-    "Calculator UI consumer",
-    "matching WASM facade and rebuild",
-    "web transport",
-    "TypeScript",
-    "broader Calculator SQLite-qualified binding recheck"
+    "current dispatcher native build and focused pair/shared goal observer checks",
+    "current matching shared DLL and finite Python rerun (nine original failures remain unqualified)",
+    "matching pair WASM rebuild and real-worker pair/goal/Apply checks",
+    "web tests and TypeScript for current product integration",
+    "Oliver rendered UI review"
   ],
   "gold_cost_complete": false,
   "dust_cost_complete": false,
@@ -163,5 +162,71 @@
     "bindings/python/poecraft_engine/__init__.py": {
       "kind": "added existing successfully imported RandomRecombination to __all__"
     }
+  },
+  "initial_validation_applies_to": "791b9ba66ab0dbe54f9eea8426e796ba79ac1512",
+  "current_product_integration": {
+    "status": "source_ready_unbuilt_unrun_heavy_slot_required",
+    "checkpoint_before_receipt": "6617e9f5c07515f8df0f4eebe8d234c9f81b1470",
+    "qualified_main_integrated": "0187f3d8",
+    "shared_goal_qualified_source": "31078439",
+    "native_dispatch_commit": "8a62f87d",
+    "wasm_worker_ui_commit": "e3325fdc",
+    "shared_interface": "calculator_goal_set_v1 / observe_calculator_terminal_law_json",
+    "goal_projection_id": "calculator-structural-goals-carrier-session-v1",
+    "source_files_sha256": {
+      "apps/web/package.json": "730964ee6cf1752330b5dbc4a028de84980995a316d821f1c6abd885aff03424",
+      "apps/web/src/app/components/pc-calculator.tsx": "b831a00024851e6c569eb65854da5ef2111573e7614e16a55d68d0484dbed20c",
+      "apps/web/src/app/components/pc-craft-controls.tsx": "135f52bc538bd62a36b427f06013dacab82703d58e92596e318fad582d326b9f",
+      "apps/web/src/app/engine-client.ts": "acf652b86fd4c61a7083f315260c998754a59f8b9ce637b7811b9ca09a4899ca",
+      "apps/web/src/app/engine-protocol.ts": "17f5deb290fa8cbe2a58f4b63e1ad14f41a87dbc611208019f6e39f6324d4416",
+      "apps/web/src/app/engine-wasm.ts": "2dc6247782ab247217736d1fc95a17b5e9aeded16b619aea1a71f049b909ebc2",
+      "apps/web/src/app/engine-worker.ts": "accbda628816677d89f8d4df8df7aba2c6290ee96e324a00c065bd788a427b7a",
+      "apps/web/test/calculator-currency-controls.test.ts": "eed6bd7eba8c5f19537cd3fefc3609ce5cb215574a5daa8d8b8057d1706768bd",
+      "apps/web/test/recombination-wasm.test.ts": "d76c5ed20ace928f0c0b0523eadd1b8bb4c15a1172335bb3909ae68d9b039725",
+      "bindings/python/poecraft_engine/__init__.py": "c334ae8bbeea4ff81a821ed3fb2f4114a7768d6b6f7f22789f7701916d3875d1",
+      "bindings/python/poecraft_engine/_binding.py": "b9636f56926e3621087ea442dc663186b27f01c4103f778a249cb337f5b2d923",
+      "bindings/python/tests/test_random_recombination.py": "c18939b59ae441a7fc60c820e8f7d4cf52c3954bd27325f004d93ef305ed118f",
+      "bindings/wasm/wasm-exports.txt": "a63d266fc38e059e778aead1160a11e3bda94c43b4c43698ce1251c5e1a671a3",
+      "bindings/wasm/wasm_api.cpp": "dabe3351ca96839fd325894ba3f26908f4f268531c4c417279d106cf3cc53c2f",
+      "engine/CMakeLists.txt": "51ba59e4cfd80f273e6f6e7280bb98c98f53b721ef485cdca298fb36cb12b614",
+      "engine/engine-sources.txt": "2c331a0aefcb52cba78f60ff33695ba1cca231334ad53d110d9c8a0ff0f6e224",
+      "engine/include/poecraft/recombination.h": "78386b54a414eac8ea9577f196dff983b4886623b1d046e9f257aa3ebd456f5b",
+      "engine/include/poecraft/session.h": "99bf99f94df60f32e90ab89592924331d2d87e0d348abc0bfa82ad7d54333f98",
+      "engine/src/calculator_currency.cpp": "69c31691f392ee8d519adc02714eafcb25f88355aec21ae9e9bc035877c765b0",
+      "engine/src/calculator_currency.hpp": "a6c7e0e95c378bb98ca006b5c4cc11060e5ef94ff9906a9be3c904bdb278fd01",
+      "engine/src/engine_internal.hpp": "b544dd12effee98a43390e25c487e63dd109e38d1a685540a1285fd10b3a9953",
+      "engine/src/multi_item.cpp": "0c54d284ed1810a427335ecf7016f53791b367fd2de06878160f0625b520f453",
+      "engine/src/multi_item.hpp": "1619bf5398a53d6571fc9e7ac0b3d1d10125a5f8e8421816fea4390df9404fe3",
+      "engine/src/recombination.cpp": "904d9b0d32e3d72b5399eb95a832509b145d191be9870addf4f24292292e6236",
+      "engine/src/recombination.hpp": "fe3c5810ecb2d51875dfc749d1b22bad931c96d92a17e508d169dc1b134d1915",
+      "engine/src/recombination_api.cpp": "c297b614d865e5c0aa39e12fdc2a8277c4018c04c87619bd3af7086ef59cca8a",
+      "engine/src/recombination_calculator.cpp": "013305b091aecaeadedf04e3acae380b62bc4a2a203da4f3b6adee22546a492f",
+      "engine/src/recombination_calculator.hpp": "4fbf8f3ee4a6a1b691e9cbd5152bc9f1232744570f1c91fc13eea82c55421ff8",
+      "engine/src/session_builder.cpp": "d2ef35ff296eafc1b439f72026dff068ae0d21d0fad6dcd7dd5ddfe1e726e2ce",
+      "engine/src/solver_api.cpp": "2e8aed5a52a30dd8a583f8f0ec7e4c6297b1bcd648995cd3b9681b1901630858",
+      "engine/tests/header_smoke.cpp": "d45e6e3e430438041e27d751dbc852feef8b488d40910e08656d616bd3a428c4",
+      "engine/tests/test_main.cpp": "bf3538a1b2bebf2bba78eee64b76d3152e59b5aa9cc3b7f9bf18af34b8c9241e",
+      "engine/tests/test_recombination.cpp": "a17d1648a85e17ae61b0c622fe2891ce725395eb0aac786f2b2aabf1f3739b19",
+      "engine/tests/tests.hpp": "7a9ff83828b5920666975209b999518bc069b5ab42c719c2c43b1523db335c76"
+    },
+    "frozen_sqlite_fixture": {
+      "sha256": "f239ec69f995504d555f34ebd3a2c105128aab54f6d5900fc61bb1b264676a9a",
+      "bytes": 81133568,
+      "read_only": true,
+      "refreshed": false
+    },
+    "processes_active": [],
+    "heavy_commands_started_this_stage": false,
+    "artifact_warning": "Imported goal-only WASM and old native/DLL artifacts do not qualify the new pair dispatcher/exports/UI.",
+    "integration_sequence": [
+      "qualified main 0187f3d8",
+      "qualified shared Calculator goal owner through 31078439",
+      "native kernel 791b9ba",
+      "native dispatcher 8a62f87d",
+      "pair adapter/UI e3325fdc plus donor-lifetime resolution from isolated merge",
+      "source-matched native/DLL/WASM and finite changed-layer checks",
+      "final receipt; local commits only"
+    ],
+    "next_gate": "Explicit parent serial heavy-slot grant; max two compiler jobs; report release before documentation/commit work."
   }
 }

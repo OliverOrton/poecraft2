@@ -2111,6 +2111,8 @@ const char* pcw_recombination_pair_apply(uint32_t id, uint32_t context_id, const
             const auto* session = find(g_sessions, sid); auto* item = find(g_items, iid);
             if (!session || !item || g_item_sessions.at(iid) != sid)
                 throw std::invalid_argument("Inventory item must belong to its interpreting session");
+            if (const auto* compound = find(g_bestiary_states, iid); compound && compound->checkpoint_present)
+                throw std::invalid_argument("Random Apply of a saved Imprint resource requires compound inventory integration");
             resources.push_back({value.at("identity").as_string().c_str(), value.at("role").as_string().c_str(), *session, item});
             saved_items.emplace_back(item, *item);
         }
