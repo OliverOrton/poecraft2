@@ -125,18 +125,22 @@ const editAccess = calculator as unknown as {
 };
 Object.assign(access, {modCache: [
     {key: "vaal-implicit", reach_kind: 8},
-    {key: "shaper-mod", reach_kind: 1, reach_influence: 6, family_tier_index: 2},
+    {key: "warlord-mod", reach_kind: 1, reach_influence: 6, family_tier_index: 2},
 ]});
 Object.assign(copyAccess, {slots: [], goalImplicitKeys: [], goalInfluenceBits: undefined, goalCorrupted: false,
-    modKeyToFamily: new Map([["shaper-mod", "shaper-family"]])});
+    modKeyToFamily: new Map([["warlord-mod", "warlord-family"]])});
 editAccess.addGoalFromPool("vaal-implicit");
 await access.currentWork;
 assert.equal(copyAccess.goalCorrupted, true);
 assert.deepEqual(copyAccess.goalImplicitKeys, ["vaal-implicit"]);
-editAccess.addGoalFromPool("shaper-mod");
+editAccess.addGoalFromPool("warlord-mod");
 await access.currentWork;
-assert.equal(copyAccess.goalInfluenceBits, 32);
-assert.deepEqual(copyAccess.slots, [{familyModKey: "shaper-family", minTier: 2}]);
+assert.equal(copyAccess.goalInfluenceBits, undefined, "Selecting an influenced explicit target does not author a property");
+copyAccess.goalInfluenceBits = 32;
+editAccess.addGoalFromPool("warlord-mod");
+await access.currentWork;
+assert.equal(copyAccess.goalInfluenceBits, 32, "A deliberately selected exact influence requirement is preserved");
+assert.deepEqual(copyAccess.slots, [{familyModKey: "warlord-family", minTier: 2}]);
 editAccess.addGoalFromPool("vaal-implicit");
 await access.currentWork;
 assert.deepEqual(copyAccess.goalImplicitKeys, []);
@@ -145,8 +149,8 @@ calls.length = 0;
 access.client.editItem = async (...args) => { calls.push(args); };
 editAccess.inputChanged = async () => {};
 await editAccess.addInputMod("vaal-implicit", "implicit");
-await editAccess.addInputMod("shaper-mod", "prefix");
-assert.deepEqual(calls, [[1, 2, {add_implicit: "vaal-implicit"}], [1, 2, {add_explicit: "shaper-mod", fractured: false}]]);
+await editAccess.addInputMod("warlord-mod", "prefix");
+assert.deepEqual(calls, [[1, 2, {add_implicit: "vaal-implicit"}], [1, 2, {add_explicit: "warlord-mod", fractured: false}]]);
 // The dedicated pair route carries the shared goal set without creating a
 // receiver-only currency inspector or adding a registry strategy action.
 const pairCalls: unknown[][] = [];

@@ -249,3 +249,76 @@ Slot released before documentation/commit work; no owned heavy process remains.
 Local commits only. Parent owns mixed-frame pair integration, any combined
 source-matched release regeneration and publication; no main merge, push or
 deployment occurred here.
+
+## Influenced explicit target bugfix (qualified local)
+
+Oliver reported strategy finder refusal on a Shaper Titanium Spirit Shield.
+Fresh isolated `dot/calculator-influence-fix-20261003` starts at published,
+remote-verified `72448deaacca2797058de0559378685ba71a983f`. No native/WASM change.
+`addGoalFromPool` automatically ORed the clicked explicit modifier's
+`reach_influence` into an exact goal influence-set requirement. `hasItemRequirements`
+then refused finder and export because the authored property was unsupported.
+This is a generic picker conversion bug, independent of base or influence.
+
+Remove automatic property authoring; keep native explicit family/tier targets.
+Real implicit, exact influence-set (including no influence), and corruption
+(including uncorrupted) requirements remain refused and serialize unchanged.
+Do not migrate away saved properties because origin is not recorded. Existing
+Goal item → Item properties → Any influence clears only that property; the
+refusal now explains this path. No entailment/action-preservation authority is
+invented in the UI. Copy input to goal continues copying the complete item goal.
+
+Prepared controlled metadata regressions use runtime-known
+`GainRandomChargeOnBlockInfluence1` on the reported Shaper Titanium Spirit Shield,
+Elder `AreaOfEffectInfluence1` on the same base, and Crusader
+`EnergyShieldRecoveryRateBodyInfluence2` on Vaal Regalia. These are known fixture
+mods, not a reconstruction of the unread screenshot. Tests cover explicit-only
+finder eligibility and serializer shape, genuine unsupported property/implicit
+refusal, preservation of explicitly authored properties and retained targets
+when only the property is cleared. Reused the parent's rendered fixture owner
+with actual React Any influence click and Calculator property event binding;
+no server or solver experiment is selected.
+
+Screenshot Library `libfile_70a0bbd7cfe8819183502418ac5c73d8` preparation succeeded,
+but the current Windows materialization helper failed at `os.setxattr` (not
+available in this runtime), before installing the final file. Native Library
+image read returned an asset pointer and extracted text, not callable pixel
+content. No actual screenshot pixel inspection or inferred screenshot mods are
+claimed. Helper/session artifacts are scoped to ignored `out/calculator-influence-fix`.
+
+Lock owns LOCAL. Source-only: no tests, browser, native build, WASM build or
+benchmark started. `git diff --check` passes. Pending slot: focused nonvisual
+fixture, actual worker fixture validation for the known influenced families,
+rendered property-clear flow, applicable npm chain and TypeScript. Main checkout
+and npm dev remain unchanged; local commit only, integrator owns publication.
+
+
+Qualification completed under the later explicit LOCAL grant. Focused controller
+cases, real-worker native admission/read-only Scour for the reported Shaper
+Titanium Spirit Shield plus Elder/cross-base Crusader cases, full npm chain
+(**37/37 smoke, all 33 test owners**) and TypeScript pass. Current main's WASM
+SHA-256 `0b800f57410841ebf7efe7ab658ff1c93cfcdb67467ae3ea001c9d6730198f32` remains unchanged;
+no native/WASM rebuild was needed.
+
+Reused the existing rendered fixture owner with fresh-profile Chrome: **91
+assertions**, no page errors, browser closed. The actual React Any influence
+control/Calculator property-event flow clears the exact property, retains the
+explicit slots and restores finder eligibility. Generated screenshot reviewed;
+this is controlled DOM/React evidence plus separate real-worker native
+admission, not a full production-app walkthrough or timed finder experiment.
+
+The initial controlled fixture was incorrectly busy. The first worker cross
+fixture used a global mod absent from the shield session; corrected to native
+eligible Elder `AreaOfEffectInfluence1`. The first full npm run retained an old
+assertion expecting automatic influence bits; corrected that expectation and
+added explicit authored-property preservation. Final complete checks pass.
+Prior failed logs remain. No screenshot-derived mods were invented.
+
+LOCAL released immediately after final rendered command at 17:01:29 UTC;
+no owned heavy process remains. Structured receipt/raw logs and rendered
+snapshot are under `out/calculator-influence-fix/`. The user can clear only
+Goal item → Item properties → Any influence on an old draft without deleting
+targets. Remaining genuinely authored implicit/corruption constraints remain
+unsupported. No automatic migration or unproved entailment waiver. All/coverage/
+any-goal semantics and native solver proof/action authorities remain unchanged.
+Integrator owns publication; local commits only.
