@@ -10,7 +10,7 @@ import { HarvestCost } from "./craft-cost";
 import type { ConcreteModListModel, PcModList } from "./pc-mod-list";
 import { UnveilPanel, type UnveilOption } from "./unveil-panel";
 
-export type CraftPanel = "basic" | "foulborn" | "essence" | "harvest" | "fossil" | "eldritch" | "influenced" | "veiled" | "unveil" | "bestiary" | "memory" | "awakener" | "enchantment" | "temple";
+export type CraftPanel = "basic" | "foulborn" | "essence" | "harvest" | "fossil" | "eldritch" | "influenced" | "veiled" | "unveil" | "bestiary" | "memory" | "awakener" | "enchantment" | "temple" | "recombination";
 const PANELS: Array<[CraftPanel, string, string]> = [
     ["basic", "Basic currency", "chaos"], ["foulborn", "Foulborn", "foulborn_exalt"],
     ["essence", "Essences", "essence"], ["harvest", "Harvest", "harvest_reforge"],
@@ -18,6 +18,7 @@ const PANELS: Array<[CraftPanel, string, string]> = [
     ["veiled", "Veiled currency", "veiled_exalt"], ["unveil", "Unveil", "unveil"], ["bestiary", "Bestiary", "bestiary:imprint"],
     ["memory", "Memory", "remembrance"],
     ["awakener", "Awakener", "awakener"],
+    ["recombination", "Recombination", "recombination"],
     ["enchantment", "Enchantments", "tempering"], ["temple", "Temple", "double_corruption"],
 ];
 const BASIC = ["transmute", "augment", "alteration", "regal", "alchemy", "chaos", "exalt", "annul", "scour", "remove_crafted_modifiers", "fracture", "vaal"];
@@ -82,6 +83,12 @@ export function CraftControls({model: m}: {model: CraftControlsModel}) {
         </div>;
     let panel: ReactNode;
     switch (m.panel) {
+        case "recombination": panel = <div className="pc-material-panel">
+            {select("awakener-donor", m.donors ?? [], undefined, "Second input from Stash")}
+            {m.donorModel && createElement("pc-mod-list", {ref: (element: PcModList | null) => { element?.setModel({...m.donorModel!, readOnly: true}); }})}
+            {action("random_recombination", "Calculate Random recombination", false, !calculator || !m.donors?.length)}
+            <span className="pc-help">Estimated odds: select by spawn-weight proxy, preserve selected tiers and recorded rolls, and omit unverified upgrades. Each input can supply the output base. Gold and dust cost is unknown.</span>
+        </div>; break;
         case "awakener": panel = <div className="pc-material-panel">
             {select("awakener-donor", m.donors ?? [], undefined, "Donor from Stash")}
             {m.donorModel && createElement("pc-mod-list", {ref: (element: PcModList | null) => { if (element && m.donorModel) element.setModel(m.donorModel); }})}
@@ -188,7 +195,7 @@ export function CraftControls({model: m}: {model: CraftControlsModel}) {
             <button data-lock-commit disabled={!m.lockCurrency} onClick={m.onLockCommit}>Apply foreseen currency</button>
             <span className="pc-help">Repeated previews stay fixed through Undo and reload. Applying one currency or modifying the item ends every preview. Refused actions preserve the Lock. This model supplies no exact adaptive strategy odds.</span>
         </>}
-    </section>}<div className="pc-craft-panel-tabs">{PANELS.map(([key, label, icon]) => <button key={key} data-craft-panel={key}
+    </section>}<div className="pc-craft-panel-tabs">{PANELS.filter(([key]) => key !== "recombination" || calculator).map(([key, label, icon]) => <button key={key} data-craft-panel={key}
         className={key === m.panel ? "is-active" : ""} onClick={() => m.onPanel(key)}><GameIcon assetKey={"action:" + icon} />{label}</button>)}
         {calculator && <span className="pc-calc-selected">{m.selectedAction ? "Selected: " + m.selectedLabel : "No action selected"}</span>}
     </div><div className="pc-craft-panel-body">{panel}</div></>;

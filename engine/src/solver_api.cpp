@@ -3270,3 +3270,19 @@ pc_result pc_strategy_eval_memory_stats(
     clear_error(out_error);
     return PC_RESULT_OK;
 }
+
+namespace poecraft::solver {
+std::vector<CalculatorGoal> bind_calculator_goal_set(
+        std::shared_ptr<const SessionImpl> session, const char* text, std::size_t size) {
+    pc_session wrapper;
+    wrapper.impl = std::const_pointer_cast<SessionImpl>(std::move(session));
+    pc_solver_handle handle = nullptr;
+    pc_error_info error{};
+    const auto code = pc_calc_create_goal(&wrapper, text, size, &handle, &error);
+    if (code != PC_RESULT_OK) throw std::invalid_argument(error.message);
+    std::unique_ptr<pc_solver, decltype(&pc_solver_destroy)> owned(handle, pc_solver_destroy);
+    if (handle->calculator_goals.empty())
+        throw std::invalid_argument("Pair Calculator requires calculator_goal_set_v1");
+    return handle->calculator_goals;
+}
+}

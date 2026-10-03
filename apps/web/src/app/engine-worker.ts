@@ -915,6 +915,14 @@ async function dispatch(
             );
         case "exportItem":
             return { state: bindings.exportItem(params.item as number, params.session as number ?? 0) };
+        case "openRecombinationPair":
+            return {pair: bindings.openRecombinationPair(params.request as import("./engine-protocol").RecombinationPairRequest)};
+        case "closeRecombinationPair":
+            bindings.closeRecombinationPair(params.pair as number); return {};
+        case "recombinationCalculate":
+            return bindings.recombinationCalculate(params.pair as number, params.goals as import("./engine-protocol").CalculatorGoalSet);
+        case "recombinationApply":
+            return bindings.recombinationApply(params.pair as number, params.context as number, params.request as import("./engine-protocol").RecombinationApplyRequest);
         case "multiItemApply":
             return bindings.multiItemApply(params.context as number, params.request);
         case "importItem":

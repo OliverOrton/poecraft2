@@ -22,6 +22,10 @@ using CalculatorTerminalSink = std::function<void(const pc_item_state&, long dou
 using CalculatorTerminalLaw = std::function<void(const CalculatorTerminalSink&)>;
 std::string observe_calculator_terminal_law_json(CalcContext& output,
     const std::vector<CalculatorGoal>& goals, const CalculatorTerminalLaw& law);
+// Reuses the public bounded goal-set parser; IDs/tier ranks remain bound to
+// this reference session until a pair owner explicitly maps each carrier.
+std::vector<CalculatorGoal> bind_calculator_goal_set(
+    std::shared_ptr<const SessionImpl>, const char*, std::size_t);
 CalculatorItemGoal parse_calculator_item_goal(const SessionImpl&, const json::Value&);
 CalculatorItemGoal parse_calculator_item_goal(const SessionImpl&, const char*, std::size_t);
 // Exact terminal, structural one-action odds. Resources are read only and

@@ -509,6 +509,11 @@ bool RefillPoolCacheEqual::operator()(
 }
 
 void build_session(SessionImpl& session) {
+    build_session(session, {});
+}
+
+void build_session(SessionImpl& session,
+        const std::vector<std::uint32_t>& retained_global_mod_ids) {
     const DataImpl& d = *session.data;
     const std::uint32_t base_index = session.base_index;
     const std::uint32_t item_class_id = d.base_item_class_id[base_index];
@@ -898,6 +903,28 @@ void build_session(SessionImpl& session) {
         add_mod(p, ReachKind::RetainedEnchantment, via);
         session.flags[session.session_id_by_global_id.at(d.mod_global_ids[p])] &= ~kFlagImplicit;
     }
+    // Transfer mapping preserves identity below normal required level, and
+    // where a different compatible carrier cannot naturally spawn this row.
+    // No retained-only row enters the ordinary random-roll universe.
+    for (const auto global : retained_global_mod_ids) {
+        const auto it = d.mod_pos_by_global_id.find(global);
+        if (it == d.mod_pos_by_global_id.end())
+            throw std::invalid_argument("Retained modifier has no canonical identity");
+        add_mod(it->second, ReachKind::RetainedTransfer, "retained:transfer");
+        // Some ordinary tiers already enter the catalogue as guaranteed
+        // Essence rows. Above output roll level they still need the transfer
+        // reach/family identity, without becoming ordinary random candidates.
+        const auto p = it->second;
+        const auto id = session.session_id_by_global_id.at(global);
+        if (d.mod_required_level[p] > session.item_level && d.mod_flags[p] == 0 &&
+            d.mod_special_kind_code[p] < 0 && d.mod_influence_code[p] <= 0 &&
+            (d.mod_gen_type_code[p] == d.gen_prefix_code ||
+             d.mod_gen_type_code[p] == d.gen_suffix_code)) {
+            session.reach_kind[id] = static_cast<std::uint8_t>(ReachKind::RetainedTransfer);
+            session.reach_influence[id] = -1;
+            session.reach_via[id] = "retained:transfer";
+        }
+    }
     session.mod_count = static_cast<std::uint32_t>(session.global_index.size());
     session.words = pc_bitset_words(session.mod_count);
     if (!d.mod_group_ids_flat.empty()) {
@@ -1090,7 +1117,11 @@ void build_session(SessionImpl& session) {
         signature.push_back(
             static_cast<std::uint32_t>(session.gen_type[s] + 2));
         signature.push_back(
-            static_cast<std::uint32_t>(session.reach_kind[s] + 1));
+            static_cast<std::uint32_t>(
+                static_cast<ReachKind>(session.reach_kind[s]) == ReachKind::RetainedTransfer &&
+                session.gen_type[s] >= 0 && session.flags[s] == 0
+                    ? static_cast<unsigned>(ReachKind::Base) + 1
+                    : session.reach_kind[s] + 1));
         signature.push_back(
             static_cast<std::uint32_t>(session.reach_influence[s] + 2));
         for (std::uint32_t i = d.stat_offsets[p]; i < d.stat_offsets[p + 1];
