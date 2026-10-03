@@ -8,6 +8,7 @@ inline constexpr char kRandomRecombModel[] = "poe1-random-spawn-proxy-preserve-t
 inline constexpr char kRandomRecombProjection[] = "structural-output-preserve-tier-roll-v1";
 
 // Exact thousandths of the adopted estimated coefficients, never game-exact.
+std::string random_recomb_item_json(const pc_item_state&, const SessionImpl&);
 const std::array<unsigned, 4>& random_recomb_count_row(unsigned physical_count);
 std::uint32_t random_recomb_item_level(std::uint32_t a, std::uint32_t b);
 

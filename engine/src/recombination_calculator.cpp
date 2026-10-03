@@ -148,6 +148,10 @@ void validate_goal_projection(const Value& root) {
     }
 }
 }
+void validate_random_recomb_goal_projection(const char* text, std::size_t size) {
+    if (!text || size > 256 * 1024) throw std::invalid_argument("Pair goal request byte cap exceeded");
+    validate_goal_projection(json::Parser(text, size).parse());
+}
 std::string calculate_random_recomb_goals_json(const RandomRecombPair& pair, const char* text, std::size_t size) {
     if (!text || size > 256 * 1024) throw std::invalid_argument("Pair goal request byte cap exceeded");
     validate_goal_projection(json::Parser(text, size).parse());

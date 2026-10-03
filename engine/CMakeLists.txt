@@ -225,6 +225,7 @@ if(BUILD_TESTING)
         tests/test_session_builder.cpp
         tests/test_actions.cpp
         tests/test_recombination.cpp
+        tests/test_recombination_solver.cpp
         tests/test_bestiary.cpp
         tests/test_simulator.cpp
         tests/test_solver_abstract.cpp

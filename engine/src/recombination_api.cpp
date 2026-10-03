@@ -91,6 +91,11 @@ std::string calculate_json(const poecraft::RandomRecombPair& pair) {
     return out.str() + "]}";
 }
 }
+namespace poecraft {
+std::string random_recomb_item_json(const pc_item_state& item, const SessionImpl& session) {
+    std::ostringstream out; write_item(out, item, session); return out.str();
+}
+}
 pc_result pc_recombination_pair_create(const pc_craft_resource* a, const pc_craft_resource* b,
         uint32_t version, pc_recombination_pair_handle* out, pc_error_info* error) {
     if (!a || !b || !out || version != PC_RECOMBINATION_PAIR_VERSION || !a->identity || !b->identity ||

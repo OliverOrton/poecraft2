@@ -69,8 +69,10 @@ void validate_ordinary_input(const CraftResource& resource) {
     require(!s.is_cluster() && s.base_index < d.base_count && s.rare_affix_cap == 3 &&
             d.base_session_support.at(s.base_index) == PC_SESSION_SUPPORT_ORDINARY,
             "Random recombination currently supports ordinary equipment carriers");
-    require(s.item_level >= 1 && s.item_level <= 100 && item.rarity == PC_RARITY_RARE,
-            "Random recombination currently requires rare inputs at represented levels");
+    require(s.item_level >= 1 && s.item_level <= 100 && item.rarity <= PC_RARITY_RARE,
+            "Random recombination requires non-unique inputs at represented levels");
+    require(item.prefix_count <= pc_item_max_prefix(&item) && item.suffix_count <= pc_item_max_suffix(&item),
+            "Random recombination input affix count exceeds its rarity capacity");
     require(!(item.item_flags & ~(PC_ITEM_SPLIT | PC_ITEM_SYNTHESISED)) &&
             item.generic_influence_bits == 0,
             "Random recombination input category is unsupported");
