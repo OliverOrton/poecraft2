@@ -65,6 +65,13 @@ contract; no owner acknowledgement is assumed.
 
 ## Qualification and budget
 
+Local source commits: `56245ed0fd3e9a52a051b6a5766db0b8f3793089` (feeder runtime,
+Builder, contracts and prepared tests) plus `1654f69473ded54b61335123e6996b1ee6d81215` (full revision/session-map
+identity review), and `68a5c622a80325e55a235218ec7d7d2910b12a5e` (frozen
+qualification-input selection). The [source checkpoint receipt](source-checkpoint.json)
+pins exact engine/web/data trees, inherited WASM hashes, unrun checks and zero
+spent execution budgets. Inherited WASM is explicitly not feeder-qualified.
+
 Source checkpoint is **UNTESTED**. `git diff --check` passes. Native build/test,
 web test/typecheck and matching WASM/worker execution remain **unrun and held**
 pending explicit parent release of the globally serialized heavy slot. The
