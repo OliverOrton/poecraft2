@@ -879,7 +879,12 @@ bool SolveWork::Impl::begin_focused_upper_solve() {
             focused_frontier_upper_operator.assign(
                 calc.state_count(), restart_operator_index);
         }
+        // An incremental incumbent can start an upper pass before lower
+        // preparation has ever populated this bitmap, or after discovery has
+        // enlarged its state domain. Derive every bit from the native goal.
+        result.goal_states.resize(result.values.size(), 0);
         for (std::uint32_t state = 0; state < result.values.size(); ++state) {
+            result.goal_states[state] = calc.is_goal_state(calc.state(state));
             if (result.goal_states[state]) {
                 result.values[state] = 0.0;
                 focused_frontier_upper_operator[state] = kNoId;

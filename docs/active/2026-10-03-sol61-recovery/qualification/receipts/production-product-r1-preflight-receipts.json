@@ -1,0 +1,77 @@
+[
+  {
+    "arm": "data-bundle",
+    "receipt": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 56172,
+      "process_identity_token": "56172:134355164127935161",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 1340.070700040087
+    }
+  },
+  {
+    "arm": "bow4-dirty",
+    "receipt": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 67756,
+      "process_identity_token": "67756:134355164141362783",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 1006.709499983117
+    }
+  },
+  {
+    "arm": "conquest5",
+    "receipt": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 83668,
+      "process_identity_token": "83668:134355164151453065",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 1674.1176000796258
+    }
+  },
+  {
+    "arm": "amulet3",
+    "receipt": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 20708,
+      "process_identity_token": "20708:134355164168203301",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 5203.7276001647115
+    }
+  },
+  {
+    "arm": "bow5",
+    "receipt": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 39372,
+      "process_identity_token": "39372:134355164220252134",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 7688.470299821347
+    }
+  }
+]

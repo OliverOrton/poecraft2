@@ -1,0 +1,7 @@
+{
+  "arm": "amulet3",
+  "pid": 26080,
+  "identity_token": "26080:134355233666114746",
+  "started_utc": "2026-10-03T17:49:26.617348+00:00",
+  "watchdog_seconds": 60
+}

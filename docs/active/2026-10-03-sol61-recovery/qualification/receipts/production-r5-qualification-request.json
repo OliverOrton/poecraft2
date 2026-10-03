@@ -1,0 +1,108 @@
+{
+  "created_utc": "2026-10-03T15:35:56.089892+00:00",
+  "head": "1e7a50b272f7e09b2a67443398a34ec7fdef5a6c",
+  "patch_sha256": "be7a2e2e0ecdd68cd3296eb91a36023d85ad3c1370a3073721838f2d6987fb68",
+  "patch_bytes": 1844,
+  "source_files": {
+    "engine/src/solver_solve_incremental.cpp": "779bace087645cf6a3e8fedc44d64b12bd9339ea4c4c9fce5cb754857c22f0b0",
+    "engine/tests/test_solver_compile.cpp": "563fa4da66817611e2da180a6f7659e0529329a6280ac5c07238b56f0628835d"
+  },
+  "commands": [
+    {
+      "argv": [
+        "powershell",
+        "-NoProfile",
+        "-File",
+        "scripts/dev-engine.ps1",
+        "-Task",
+        "Tests",
+        "-Jobs",
+        "2"
+      ],
+      "cwd": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree",
+      "host_watchdog_seconds": 900,
+      "host_reservation": {},
+      "identity_sha256": "a6c859ad139a63484d07ffdf7702d76a14889122edc5a9ec7cb872146c00c16c"
+    },
+    {
+      "argv": [
+        "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\build\\engine\\poecraft_engine_tests.exe",
+        "--solver-growth-only"
+      ],
+      "cwd": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree",
+      "host_watchdog_seconds": 180,
+      "host_reservation": {},
+      "identity_sha256": "0845ce4fa00c2eeb0f634a3e9621749e90f2d51e75ccba9bd278ccdece843f21"
+    },
+    {
+      "argv": [
+        "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\build\\engine\\poecraft_engine_tests.exe",
+        "--solver-protected-fill-only"
+      ],
+      "cwd": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree",
+      "host_watchdog_seconds": 180,
+      "host_reservation": {},
+      "identity_sha256": "db01dc6db033d84a915deaebf908a390060055d7e91be1bbb02dc2ef2ac58d8f"
+    },
+    {
+      "argv": [
+        "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\build\\engine\\poecraft_engine_tests.exe",
+        "--solver-protected-finder-only"
+      ],
+      "cwd": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree",
+      "host_watchdog_seconds": 180,
+      "host_reservation": {},
+      "identity_sha256": "f2e70ca610a43a67b20b248e090f08aca3ab4e28077f177b2b1010f7f6f57f7f"
+    },
+    {
+      "argv": [
+        "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\build\\engine\\poecraft_engine_tests.exe",
+        "--solver-integrity-only",
+        "selective-cap-diagnosis"
+      ],
+      "cwd": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree",
+      "host_watchdog_seconds": 180,
+      "host_reservation": {},
+      "identity_sha256": "7a9063c6483b51611175b2a0cb43963b198455ee1292be56a03b5fcf3709a17e"
+    },
+    {
+      "argv": [
+        "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\build\\engine\\poecraft_engine_tests.exe",
+        "--solver-integrity-only",
+        "continuity"
+      ],
+      "cwd": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree",
+      "host_watchdog_seconds": 180,
+      "host_reservation": {},
+      "identity_sha256": "045498ff28b66199d9d88570f6c0518e28d55853c9f822089e30c676c4fb81bb"
+    },
+    {
+      "argv": [
+        "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\build\\engine\\poecraft_engine_tests.exe",
+        "--solver-blocker-growth-only"
+      ],
+      "cwd": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree",
+      "host_watchdog_seconds": 180,
+      "host_reservation": {},
+      "identity_sha256": "e99810725084638e84a462ff730130c2e6019b5458d1377749ffb9eaccbe347c"
+    },
+    {
+      "argv": [
+        "powershell",
+        "-NoProfile",
+        "-File",
+        "scripts/dev-engine.ps1",
+        "-Task",
+        "Benchmark",
+        "-Jobs",
+        "2"
+      ],
+      "cwd": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree",
+      "host_watchdog_seconds": 900,
+      "host_reservation": {},
+      "identity_sha256": "6775ca17bec9bee3534d12c98e7c9a849c4079c649de81873543d6a248f68003"
+    }
+  ],
+  "LOCAL_owner": "Sol6.1 repair",
+  "serial": true
+}

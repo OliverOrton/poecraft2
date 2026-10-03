@@ -1,0 +1,30 @@
+{
+  "baseline": "protected-fill-conquest5-candidate",
+  "candidate": "law3-conquest-solve-r1",
+  "shared_case_ids": 1,
+  "paired_cases": 0,
+  "missing_from_baseline": [],
+  "missing_from_candidate": [],
+  "excluded": [
+    {
+      "id": "sol61-trace-conquest5-currentmodel-120",
+      "reason": "input_mismatch",
+      "fields": [
+        "input.caps",
+        "input.rare_reforge_count_law_version",
+        "input.resolved_checker_caps",
+        "input.verification"
+      ]
+    }
+  ],
+  "delta_distributions": {},
+  "status_transitions": {},
+  "regressions": [],
+  "economic_gate": {
+    "passed": false,
+    "cost_regressions": [],
+    "missing_independent_cost": [],
+    "requires_complete_matched_cohort": true
+  },
+  "pairs": []
+}

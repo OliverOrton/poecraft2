@@ -1,0 +1,9 @@
+{
+  "phase": "preflight",
+  "arm": "bow4-dirty",
+  "pid": 55804,
+  "identity_token": "55804:134355249675088447",
+  "started_utc": "2026-10-03T18:16:07.513452+00:00",
+  "watchdog_seconds": 120,
+  "LOCAL_owner": "Sol6.1 serial product qualification"
+}

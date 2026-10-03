@@ -1,0 +1,99 @@
+{
+  "arm": "bow5",
+  "source_commit": "b11f4c58f0a7c979f2c66b71892295795944e045",
+  "model": {
+    "rare_reforge_count_law_version": 3,
+    "assumption": "owner-approved single-side ordinary-total 8:3:1; provisional game model"
+  },
+  "policy_sha256": "b6114194af1611cb68dc86994cbcc086f01e9804ecb3ffbca863593f5fb9f38c",
+  "input_case_sha256": "9257aec8f005c5a5869240f8629cd80234fee9ff5c8cf02d3d44250770b9522c",
+  "root": {
+    "base_key": "Metadata/Items/Weapons/TwoHandWeapons/Bows/Bow20",
+    "item_level": 86,
+    "rarity": "rare",
+    "with_implicits": false,
+    "quality": 0,
+    "item_flags": 0,
+    "generic_influence_bits": 0,
+    "searing_exarch_tier": 0,
+    "eater_of_worlds_tier": 0,
+    "prefixes": [],
+    "suffixes": [],
+    "implicits": []
+  },
+  "economy": {
+    "version": "v1",
+    "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+    "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+    "league_key": "allflame",
+    "league_name": "Allflame",
+    "manual_overrides": {
+      "base": 1.0
+    },
+    "fallback_price": null,
+    "missing_price_decisions": {
+      "base": "quality_ladder_fixture_input_1_chaos"
+    }
+  },
+  "evaluation_options": {
+    "max_states": 800000,
+    "max_pairs": 1215000,
+    "max_transitions": 10000000,
+    "max_owned_bytes": 1073741824,
+    "max_output_json_bytes": 16777216
+  },
+  "native_library_sha256": "7b8fba3dbf363a750f2f141874be973b5cd2e6dd3a52d39189fef8c13c32c7c7",
+  "started_utc": "2026-10-03T17:49:35.544003+00:00",
+  "scope": "ordinary strategy execution; no imported native incumbent provenance",
+  "status": "proper",
+  "converged": true,
+  "terminals": {
+    "success": 1,
+    "failure": 0,
+    "stop": 0,
+    "action_not_applied": 0,
+    "no_matching_edge": 0,
+    "unresolved": 0,
+    "by_node": [
+      {
+        "node_id": "c2",
+        "kind": "success",
+        "p": 1
+      }
+    ]
+  },
+  "cost_complete": true,
+  "total_expected_cost": 4071502.8714904664,
+  "comparable_expected_cost": 4071502.8714904664,
+  "expected_actions": 2643099.363149086,
+  "consumption": [
+    {
+      "key": "bench:StrMasterItemGenerationCannotChangePrefixes",
+      "quantity": 3369.5577613388377
+    },
+    {
+      "key": "chaos",
+      "quantity": 2629620.531395418
+    },
+    {
+      "key": "exalt",
+      "quantity": 6739.716230996815
+    },
+    {
+      "key": "scour",
+      "quantity": 3369.5577613388377
+    }
+  ],
+  "memory": {
+    "owned_bytes_estimate": 208500462,
+    "peak_owned_bytes_estimate": 276738640,
+    "retained_output_owned_bytes_estimate": 0,
+    "max_owned_bytes": 1073741824,
+    "max_output_json_bytes": 16777216
+  },
+  "raw_result_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-bow5.raw.json",
+  "raw_result_sha256": "c14fb123b910e03889549dea8de76599dac5efcf4fc931d92ac25c5f3d2a81c1",
+  "elapsed_seconds": 12.985789200058207
+}

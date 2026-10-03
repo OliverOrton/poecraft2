@@ -1,0 +1,78 @@
+{
+  "graph_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\law3-conquest-solve-r1-conquest5.strategies\\sol61-trace-conquest5-currentmodel-120.strategy.json",
+  "graph_sha256": "d65787d11ad895d5925ce9dd4d0aefde483e53bc25df3a80a6a9dfe7a0d7e053",
+  "case_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\conquest5.json",
+  "artifact_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\data\\runtime-snapshots\\82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+  "economy_identity": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+  "scope": "ordinary_strategy_execution_diagnostic; no imported native programme provenance or solver incumbent admission",
+  "trials": 0,
+  "status": "passed",
+  "product_board_import": "passed",
+  "exact": {
+    "converged": true,
+    "terminals": {
+      "success": 1,
+      "failure": 0,
+      "stop": 0,
+      "action_not_applied": 0,
+      "no_matching_edge": 0,
+      "unresolved": 0,
+      "by_node": [
+        {
+          "node_id": "c6",
+          "kind": "success",
+          "p": 1
+        }
+      ]
+    },
+    "expected_actions": 23321.649759118343,
+    "cost_complete": true,
+    "total_expected_cost": 101311.35474896732,
+    "memory": {
+      "owned_bytes_estimate": 33273891,
+      "peak_owned_bytes_estimate": 41717700,
+      "retained_output_owned_bytes_estimate": 0,
+      "max_owned_bytes": 1073741824,
+      "max_output_json_bytes": 16777216
+    },
+    "consumption": [
+      {
+        "key": "chaos",
+        "quantity": 19867.453763869078
+      },
+      {
+        "key": "eldritch_annul",
+        "quantity": 816.3308045663857
+      },
+      {
+        "key": "eldritch_chaos",
+        "quantity": 1091.8447791331726
+      },
+      {
+        "key": "eldritch_ember:1",
+        "quantity": 0.9999683293112982
+      },
+      {
+        "key": "eldritch_exalt",
+        "quantity": 1545.0204432203498
+      }
+    ]
+  },
+  "native_cost_parity": {
+    "expected_cost": 101311.35474896732,
+    "tolerance_relative": 1e-9,
+    "status": "passed"
+  },
+  "wasm_memory": {
+    "initial_linear_memory_bytes": 134217728,
+    "current_linear_memory_bytes": 278396928,
+    "peak_observed_linear_memory_bytes": 278396928,
+    "linear_memory_growth_only": true,
+    "configured_maximum_linear_memory_bytes": 4294967296,
+    "process_rss_bytes": 456364032,
+    "process_rss_peak_observed_bytes": 456364032,
+    "process_lifetime_max_rss_bytes": 470220800,
+    "rss_scope": "fresh Node process, including worker; observations at product response boundaries"
+  },
+  "wall_ms": 1371.4789
+}

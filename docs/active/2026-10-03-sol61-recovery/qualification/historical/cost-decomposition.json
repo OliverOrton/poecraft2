@@ -1,0 +1,131 @@
+{
+  "old_total": 85558.70618560437,
+  "price_only_repricing_total": 85558.70618560437,
+  "current_law_total": 85310.83838933005,
+  "change": -247.86779627432406,
+  "rows": [
+    {
+      "key": "annul",
+      "old_quantity": 4.550699243748757,
+      "current_quantity": 3.994498960988564,
+      "price": 9.69,
+      "cost_delta": -5.389580739946271,
+      "current_cost": 38.706694931979186
+    },
+    {
+      "key": "bench:HelenaMasterFireResist1",
+      "old_quantity": 247.32290069184734,
+      "current_quantity": 247.38089573733282,
+      "price": 0.01165,
+      "cost_delta": 0.0006756422799058868,
+      "current_cost": 2.8819874353399277
+    },
+    {
+      "key": "bench:JunMaster2StrengthAndDexterity2",
+      "old_quantity": 0.2823678644181755,
+      "current_quantity": 0.5049967174452052,
+      "price": 0.14326,
+      "cost_delta": 0.03189380948465228,
+      "current_cost": 0.0723458297412001
+    },
+    {
+      "key": "chaos",
+      "old_quantity": 5114.567148807499,
+      "current_quantity": 4791.855327090741,
+      "price": 1.0,
+      "cost_delta": -322.7118217167572,
+      "current_cost": 4791.855327090741
+    },
+    {
+      "key": "eldritch_annul",
+      "old_quantity": 753.3333381799832,
+      "current_quantity": 753.3312843732666,
+      "price": 40.53,
+      "cost_delta": -0.08324078622449292,
+      "current_cost": 30532.516955648498
+    },
+    {
+      "key": "eldritch_chaos",
+      "old_quantity": 1206.2084153587014,
+      "current_quantity": 1205.8329682372969,
+      "price": 39.21,
+      "cost_delta": -14.721281630269544,
+      "current_cost": 47280.71068458441
+    },
+    {
+      "key": "eldritch_ember:1",
+      "old_quantity": 0.9999999215348678,
+      "current_quantity": 0.9999999469297075,
+      "price": 0.1563,
+      "cost_delta": 3.969213441290531e-09,
+      "current_cost": 0.15629999170511327
+    },
+    {
+      "key": "eldritch_exalt",
+      "old_quantity": 523.863785781158,
+      "current_quantity": 524.2812432899921,
+      "price": 3.59,
+      "cost_delta": 1.4986724567144347,
+      "current_cost": 1882.1696634110715
+    },
+    {
+      "key": "exalt",
+      "old_quantity": 308.4035560550811,
+      "current_quantity": 338.5818666933841,
+      "price": 1.77,
+      "cost_delta": 53.41560982979632,
+      "current_cost": 599.2899040472898
+    },
+    {
+      "key": "harvest_augment:defences",
+      "old_quantity": 0.0113730713236002,
+      "current_quantity": 0.020512624899428726,
+      "price": 649.3649999999999,
+      "cost_delta": 5.93490620776789,
+      "current_cost": 13.320180667817533
+    },
+    {
+      "key": "harvest_augment:physical",
+      "old_quantity": 0.053461239828525624,
+      "current_quantity": 0.09642341352290063,
+      "price": 792.59,
+      "cost_delta": 34.051389248424684,
+      "current_cost": 76.4242333241158
+    },
+    {
+      "key": "scour",
+      "old_quantity": 247.60526855626543,
+      "current_quantity": 247.8858924547776,
+      "price": 0.3741,
+      "cost_delta": 0.10498140043340473,
+      "current_cost": 92.7341123673323
+    }
+  ],
+  "old_expected_actions": 8407.202314771383,
+  "current_expected_actions": 8114.765909540534,
+  "historical_current_law_modules": {
+    "source": "0c76f9c459f181dbf1c72fd98e6cf93f0b3c3973",
+    "modules": {
+      "bindings\\wasm\\dist\\poecraft_engine.mjs": {
+        "bytes": 21307,
+        "sha256": "c3f63141397c06cf966487c0ad5787a338000401dc46f707bba522c959296e9c"
+      },
+      "bindings\\wasm\\dist\\poecraft_engine.wasm": {
+        "bytes": 8377305,
+        "sha256": "4f338ebe29df4ecbac6b701cbf979a1ee1c81b9c87f994a2f198d423ce7f1344"
+      }
+    }
+  },
+  "kernel_source_pins_same_as_final_build": {
+    "engine/src/reforge_count_law.hpp": "fb6b8a378f5d6cfa112d4f041e472e74c8026b63800ee4a9f746fdbbf6b0dca1",
+    "engine/src/solver_reforge.cpp": "f439f920000d9f70b3d44346e9ab6c76071f0d9463eae0fb6ca367221897064e",
+    "engine/src/actions_basic.cpp": "dad1d256a2a93b5a8ad455388cc6465afdb685087581b563a9793fc86d01d0e4"
+  },
+  "law_participation": "Ordinary equipment rare reforge target counts use 4/5/6 with weights8/3/1. Dominant Eldritch Chaos uses separate new-side2/3 counts at1/2 each, as native solver_reforge.cpp1998-2003. Dominance-absent Eldritch Chaos falls back to ordinary rare law. This is source scope, not new mechanics research.",
+  "fresh_recurrence_evidence": "The historical r3 ordinary product evaluator compiled the graph and called strategyEvaluate with a fresh immutable economy document; old consumption is absent from that invocation. Current quantities differ. This receipt is separate from preserved linear price-only repricing.",
+  "limitations": [
+    "The native request does not admit caller JSON as trusted programme provenance.",
+    "No action-node counterfactual law ablation was run; weighted consumption differences reconcile cost, not a causal decomposition of each transition.",
+    "Historical diagnostic source0c76/WASM4f338e retains its own identity; it is not silently relabeled finalafa/WASMa438. Kernels above are byte-identical."
+  ]
+}

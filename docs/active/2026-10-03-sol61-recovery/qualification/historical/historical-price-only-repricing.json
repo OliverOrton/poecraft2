@@ -1,0 +1,35 @@
+{
+  "historical_report": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dual-lane-target-support\\U4\\current-ordinary-L\\cases\\cb01-cross-base-product8-long240.json",
+  "historical_report_sha256": "e35e6310fb0bdd32c18be541c26d31a4ed931bb94ee92dfac26acfca54fc25d6",
+  "old_evaluation": {
+    "status": "matched",
+    "converged": true,
+    "cost_complete": true,
+    "zero_off_policy_mass": true,
+    "cost_reconciled": true,
+    "success_probability": 1,
+    "total_expected_cost": 85558.70618560436
+  },
+  "historical_prices": {
+    "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+    "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+    "manual_overrides": {
+      "base": 1
+    }
+  },
+  "trace_prices": {
+    "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+    "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+    "manual_overrides": {
+      "base": 5
+    }
+  },
+  "old_expected_consumption_repriced_with_trace_prices": 85558.70618560437,
+  "repricing_semantics": "linear price-only repricing of preserved old-law policy consumption; NOT current-law re-evaluation",
+  "base_consumption": 0,
+  "consumption_keys": 12
+}

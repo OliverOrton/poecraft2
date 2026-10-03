@@ -1,0 +1,179 @@
+{
+  "allowed_mechanic_families": [
+    "calculator_goal_relevant_product_envelope"
+  ],
+  "approval_status": "owner_approved_recovery_qualification_2026-10-03",
+  "benchmark_enabled": true,
+  "bounded_best_policy_contract": {
+    "allow_exact": true,
+    "bounded_requires_named_stop": true,
+    "bounded_requires_open_obligations": true,
+    "bounded_requires_strict_gap": true,
+    "require_cheapest_independently_evaluated_incumbent": true,
+    "require_evaluated_upper": true
+  },
+  "caps": {
+    "cancel_ack_ms": 250,
+    "full_evidence": true,
+    "max_compiled_edges": 400000,
+    "max_compiled_nodes": 100000,
+    "max_diagnostic_samples": 64,
+    "max_reforge_work": 50000000,
+    "max_solver_owned_bytes": 1073741824,
+    "max_state_action_rows": 1215000,
+    "max_strategy_json_bytes": 67108864,
+    "max_sweeps": 100000,
+    "max_telemetry_json_bytes": 2097152,
+    "max_transitions": 10000000,
+    "solve_profile": "calculator_product_v1",
+    "solve_step_work_items": 8,
+    "worker_step_ms": 250
+  },
+  "category": "solver_quality_ladder",
+  "comparison_profile": "sol61-cap-repair-preserved-fixture-draft-v1",
+  "corpus": {
+    "goal_modifier_count": 4,
+    "product_worker_profile": "calculator_default_adaptive_max_8",
+    "start_goal_modifier_count": 3,
+    "stratum": "spine-bow_clean_zero_to_4",
+    "tier": "clean-four"
+  },
+  "description": "Preserved fixture, current model, original frozen prices; not claimed identical to Oliver's improved Bow4.",
+  "economy": {
+    "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "fallback_price": null,
+    "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "league_key": "allflame",
+    "league_name": "Allflame",
+    "manual_overrides": {
+      "base": 1.0
+    },
+    "missing_price_decisions": {
+      "base": "quality_ladder_fixture_input_1_chaos"
+    },
+    "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+    "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+    "version": "v1"
+  },
+  "expected": {
+    "compile_status": "compiled",
+    "optimality_status": "classified",
+    "solve_status": "reliability_classified",
+    "verification_status": "not_required"
+  },
+  "goal": {
+    "action_mode": "goal_relevant",
+    "actions": [
+      "transmute",
+      "augment",
+      "alteration",
+      "regal",
+      "alchemy",
+      "chaos",
+      "exalt",
+      "annul",
+      "scour",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingGemLevel",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCold",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingMana",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingMana",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingPhysical+Metadata/Items/Currency/CurrencyDelveCraftingQuality",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingMana",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel+Metadata/Items/Currency/CurrencyDelveCraftingMana+Metadata/Items/Currency/CurrencyDelveCraftingSpeed",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingPhysical+Metadata/Items/Currency/CurrencyDelveCraftingQuality+Metadata/Items/Currency/CurrencyDelveCraftingRandom",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingMana+Metadata/Items/Currency/CurrencyDelveCraftingMinionsAuras",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel+Metadata/Items/Currency/CurrencyDelveCraftingMana+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "harvest_reforge:attack",
+      "harvest_reforge:cold",
+      "harvest_reforge:elemental",
+      "harvest_reforge:mana",
+      "harvest_reforge:physical",
+      "harvest_augment:attack",
+      "harvest_augment:cold",
+      "harvest_augment:physical",
+      "fracture",
+      "restart"
+    ],
+    "disabled_action_families": [
+      "foulborn"
+    ],
+    "min_satisfied_slots": 4,
+    "rarity": "rare",
+    "slots": [
+      {
+        "family_mod_key": "LocalIncreaseSocketedGemLevel1",
+        "min_tier": 1
+      },
+      {
+        "family_mod_key": "LocalAddedPhysicalDamageTwoHand9",
+        "min_tier": 1
+      },
+      {
+        "family_mod_key": "LocalAddedColdDamageTwoHand10",
+        "min_tier": 1
+      },
+      {
+        "family_mod_key": "ManaGainedFromEnemyDeath6",
+        "min_tier": 1
+      }
+    ],
+    "version": "v1"
+  },
+  "id": "sol61-preserved-bow4-currentmodel-120",
+  "requested_bounded_finish_seconds": 120,
+  "schema_version": "solver_benchmark_case_v1",
+  "session": {
+    "base_metadata_path": "Metadata/Items/Weapons/TwoHandWeapons/Bows/Bow20",
+    "base_name": "Spine Bow",
+    "item_class_key": "Bow",
+    "item_level": 86,
+    "minimum_item_level": 86
+  },
+  "start": {
+    "mods": [
+      {
+        "flags": [],
+        "key": "LocalIncreaseSocketedGemLevel1"
+      },
+      {
+        "flags": [],
+        "key": "LocalAddedPhysicalDamageTwoHand9"
+      },
+      {
+        "flags": [],
+        "key": "LocalAddedColdDamageTwoHand10"
+      },
+      {
+        "flags": [],
+        "key": "Dexterity7"
+      },
+      {
+        "flags": [],
+        "key": "LocalIncreasedAttackSpeed3"
+      }
+    ],
+    "rarity": "rare",
+    "with_implicits": false
+  },
+  "verification": {
+    "exact_cost_absolute_tolerance": 1e-07,
+    "exact_cost_relative_tolerance": 1e-09,
+    "exact_evaluation": true,
+    "exact_max_owned_bytes": 1073741824,
+    "exact_max_pairs": 5000000,
+    "exact_max_states": 800000,
+    "exact_max_transitions": 20000000,
+    "max_actions_per_run": 100000,
+    "max_graph_steps_per_run": 4000000,
+    "runs": 0,
+    "seed": 20260826
+  },
+  "watchdog_seconds": 150
+}

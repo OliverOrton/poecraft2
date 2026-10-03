@@ -784,6 +784,10 @@ def _comparison_identity(case: dict[str, Any]) -> dict[str, Any]:
         "economy",
         "product_action_envelope",
         "allowed_mechanic_families",
+        "verification",
+        "run_overrides",
+        "resolved_checker_caps",
+        "rare_reforge_count_law_version",
         "generation",
         "corpus",
     )
@@ -797,6 +801,22 @@ def _comparison_identity(case: dict[str, Any]) -> dict[str, Any]:
         for field in ("corpus", "artifact", "machine", "configuration"):
             identity[f"runtime.{field}"] = run_identity.get(field)
     return identity
+
+
+def _independently_evaluated_cost(case: dict[str, Any]) -> float | None:
+    evaluation = case.get("exact_strategy_evaluation")
+    if not isinstance(evaluation, dict) or evaluation.get("completed") is not True:
+        return None
+    if evaluation.get("status") != "matched" or not all(
+        evaluation.get(field) is True
+        for field in ("converged", "cost_complete", "zero_off_policy_mass", "cost_reconciled")
+    ):
+        return None
+    success = _finite_number(evaluation.get("success_probability"))
+    if success is None or success < 1.0 - 1e-9:
+        return None
+    cost = _finite_number(evaluation.get("total_expected_cost"))
+    return cost if cost is not None and cost >= 0 else None
 
 
 def compare_runs(
@@ -830,6 +850,18 @@ def compare_runs(
         after_policy = str(_nested(right, "solve_summary", "policy_status", default="none"))
         before = _case_measurements(left)
         after = _case_measurements(right)
+        before_cost = _independently_evaluated_cost(left)
+        after_cost = _independently_evaluated_cost(right)
+        absolute_tolerance = _finite_number(_nested(left, "input", "verification", "exact_cost_absolute_tolerance"))
+        relative_tolerance = _finite_number(_nested(left, "input", "verification", "exact_cost_relative_tolerance"))
+        if absolute_tolerance is None or absolute_tolerance < 0:
+            absolute_tolerance = 1e-7
+        if relative_tolerance is None or relative_tolerance < 0:
+            relative_tolerance = 1e-9
+        deltas["independently_evaluated_policy_cost"] = (
+            after_cost - before_cost
+            if before_cost is not None and after_cost is not None else None
+        )
         pair = {
             "id": case_id,
             "dimensions": _case_dimensions(right),
@@ -852,6 +884,12 @@ def compare_runs(
                 "termination": _nested(right, "solve_summary", "termination"),
             },
             "deltas": deltas,
+            "economics": {
+                "baseline_independently_evaluated_cost": before_cost,
+                "candidate_independently_evaluated_cost": after_cost,
+                "absolute_tolerance": absolute_tolerance,
+                "relative_tolerance": relative_tolerance,
+            },
         }
         pairs.append(pair)
         reasons: list[str] = []
@@ -872,9 +910,22 @@ def compare_runs(
             reasons.append("policy_quality_decreased")
         if before["target_met"] and not after["target_met"]:
             reasons.append("target_no_longer_reached")
+        if before_cost is not None:
+            if after_cost is None:
+                reasons.append("independently_evaluated_policy_cost_lost")
+            elif after_cost - before_cost > max(absolute_tolerance, abs(before_cost) * relative_tolerance):
+                reasons.append("independently_evaluated_policy_cost_increased")
         if reasons:
             regressions.append({"id": case_id, "reasons": reasons, "deltas": deltas})
     delta_fields = tuple(pairs[0]["deltas"]) if pairs else ()
+    economic_failures = [entry["id"] for entry in regressions if any(
+        reason.startswith("independently_evaluated_policy_cost_") for reason in entry["reasons"]
+    )]
+    missing_economic_evidence = [pair["id"] for pair in pairs if any(
+        pair["economics"][field] is None for field in (
+            "baseline_independently_evaluated_cost", "candidate_independently_evaluated_cost"
+        )
+    )]
     return {
         "baseline": baseline_label,
         "candidate": candidate_label,
@@ -904,6 +955,13 @@ def compare_runs(
             )
         ),
         "regressions": regressions,
+        "economic_gate": {
+            "passed": bool(pairs) and not excluded and not economic_failures
+                and not missing_economic_evidence and set(baseline) == set(candidate),
+            "cost_regressions": economic_failures,
+            "missing_independent_cost": missing_economic_evidence,
+            "requires_complete_matched_cohort": True,
+        },
         "pairs": pairs,
     }
 
@@ -1289,6 +1347,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run", action="append", type=_parse_run, default=[])
     parser.add_argument("--pair", action="append", type=_parse_pair, default=[])
+    parser.add_argument("--economic-gate", action="store_true",
+        help="Exit1 unless every paired case has matched complete independent cost evidence and no cost increase")
     parser.add_argument("--outcome-profile", type=Path)
     parser.add_argument("--research-series", type=Path)
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[3])
@@ -1296,7 +1356,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
     if args.research_series:
-        if args.run or args.pair or args.outcome_profile:
+        if args.run or args.pair or args.outcome_profile or args.economic_gate:
             parser.error("research series and legacy run reports are separate views")
         report = build_research_report(args.root, args.research_series)
         args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -1308,6 +1368,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if not args.run or args.markdown:
         parser.error("legacy reports require --run; --markdown requires --research-series")
+    if args.economic_gate and not args.pair:
+        parser.error("--economic-gate requires at least one --pair")
     runs: dict[str, tuple[dict[str, Any], list[dict[str, Any]]]] = {}
     for label, path in args.run:
         if label in runs:
@@ -1324,7 +1386,9 @@ def main(argv: list[str] | None = None) -> int:
         f"wrote {len(report['runs'])} run summaries and "
         f"{len(report['comparisons'])} paired comparisons to {args.output}"
     )
-    return 0
+    return int(args.economic_gate and any(
+        not comparison["economic_gate"]["passed"] for comparison in report["comparisons"]
+    ))
 
 
 if __name__ == "__main__":

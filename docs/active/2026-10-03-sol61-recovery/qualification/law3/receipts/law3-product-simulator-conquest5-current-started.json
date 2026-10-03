@@ -1,0 +1,9 @@
+{
+  "phase": "simulator",
+  "arm": "conquest5-current",
+  "pid": 71896,
+  "identity_token": "71896:134355249945639183",
+  "started_utc": "2026-10-03T18:16:34.568982+00:00",
+  "watchdog_seconds": 1800,
+  "LOCAL_owner": "Sol6.1 serial product qualification"
+}

@@ -63,6 +63,21 @@ int main(int argc, char** argv) {
         std::printf("solver protected Finder tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
         return pctest::g_failures == 0 ? 0 : 1;
     }
+    if (argc > 1 && std::string(argv[1]) == "--solver-protected-fill-only") {
+        run_solver_protected_fill_tests();
+        std::printf("solver protected fill tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
+    if (argc > 1 && std::string(argv[1]) == "--solver-growth-only") {
+        run_solver_growth_tests();
+        std::printf("solver growth tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
+    if (argc > 1 && std::string(argv[1]) == "--solver-blocker-growth-only") {
+        run_solver_growth_tests(true);
+        std::printf("solver blocker growth tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     if (argc > 1 && std::string(argv[1]) == "--solver-metamod-recovery-only") {
         run_solver_metamod_recovery_tests(argc > 2 ? argv[2] : nullptr);
         std::printf("solver metamod recovery tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <stdexcept>
@@ -7,7 +8,7 @@
 namespace poecraft {
 
 // Version the mechanic independently of compiled game data and evaluator shape.
-inline constexpr std::uint64_t kRareReforgeCountLawVersion = 2;
+inline constexpr std::uint64_t kRareReforgeCountLawVersion = 3;
 
 enum class RareReforgeCountKind : std::uint8_t {
     Equipment = 0,
@@ -40,6 +41,18 @@ inline constexpr RareReforgeCountLaw rare_reforge_count_law(
         return {{{{3, 65}, {4, 35}, {0, 0}}}, 100};
     }
     throw std::invalid_argument("unknown rare reforge count kind");
+}
+
+// Owner-approved working model for a single-side rare reforge: the draw is
+// the ordinary total, preserved modifiers count toward it, and only the
+// selected side can fill. Capacity/existing fractures coalesce draw mass;
+// they never condition or redraw the count. This is not a verified game rate.
+inline constexpr int single_side_rare_reforge_target_total(
+        const int drawn_total, const int opposite_count,
+        const int preserved_side_count, const int side_capacity) {
+    const int preserved_total = opposite_count + preserved_side_count;
+    return std::max(preserved_total,
+                    std::min(drawn_total, opposite_count + side_capacity));
 }
 
 } // namespace poecraft

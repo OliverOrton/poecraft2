@@ -1,0 +1,20 @@
+count frequencies action=4: 7953/3038/1009 of 12000
+count frequencies action=5: 7992/2996/1012 of 12000
+count frequencies action=9: 8057/2958/985 of 12000
+count frequencies action=10: 8074/2930/996 of 12000
+count frequencies action=15: 7990/3020/990 of 12000
+count frequencies action=21: 8070/2918/1012 of 12000
+retained occupancy held=2 forced=0 pool=0: total3=0 total4=0.666666666667 total5=0.25 total6=0.0833333333333; suffix-full old=0.44126984127 new=0.164285714286
+retained occupancy held=2 forced=0 pool=1: total3=0 total4=1 total5=0 total6=0; suffix-full old=0 new=0
+retained occupancy held=2 forced=0 pool=2: total3=1 total4=0 total5=0 total6=0; suffix-full old=0 new=0
+retained occupancy held=2 forced=1 pool=0: total3=0 total4=0.666666666667 total5=0.25 total6=0.0833333333333; suffix-full old=0.488888888889 new=0.2
+retained occupancy held=2 forced=1 pool=1: total3=0 total4=1 total5=0 total6=0; suffix-full old=0 new=0
+retained occupancy held=2 forced=1 pool=2: total3=1 total4=0 total5=0 total6=0; suffix-full old=0 new=0
+retained occupancy held=3 forced=0 pool=0: total3=0 total4=0.666666666667 total5=0.25 total6=0.0833333333333; suffix-full old=0.333333333333 new=0.0833333333333
+retained occupancy held=3 forced=0 pool=1: total3=0 total4=0.666666666667 total5=0.333333333333 total6=0; suffix-full old=0 new=0
+retained occupancy held=3 forced=0 pool=2: total3=0 total4=1 total5=0 total6=0; suffix-full old=0 new=0
+retained occupancy held=3 forced=1 pool=0: total3=0 total4=0.666666666667 total5=0.25 total6=0.0833333333333; suffix-full old=0.333333333333 new=0.0833333333333
+retained occupancy held=3 forced=1 pool=1: total3=0 total4=0.666666666667 total5=0.333333333333 total6=0; suffix-full old=0 new=0
+retained occupancy held=3 forced=1 pool=2: total3=0 total4=1 total5=0 total6=0; suffix-full old=0 new=0
+Saved graph freshly evaluated: historical uniform 3c; approved 8:3:1 12c
+reforge count-law tests: 363236 checks, 0 failures

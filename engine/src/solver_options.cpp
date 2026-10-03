@@ -3,6 +3,13 @@
 namespace poecraft {
 namespace solver {
 
+const OptionKernel* CalcContext::cached_option_kernel(
+        const std::uint32_t state_id, const std::uint32_t operator_index) const {
+    const auto found = option_kernel_cache_.find(
+        (static_cast<std::uint64_t>(state_id) << 32) | operator_index);
+    return found == option_kernel_cache_.end() ? nullptr : found->second.get();
+}
+
 const OptionKernel& CalcContext::option_kernel(
     const std::uint32_t state_id,
     const std::uint32_t operator_index) {

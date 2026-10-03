@@ -7,11 +7,42 @@
 #include <cmath>
 #include <limits>
 #include <stdexcept>
+#include <string_view>
 
 namespace poecraft::solver {
 
 void SolveWork::Impl::abandon_selective_completion_service(
         const char* status, const bool try_next_orientation) {
+    const std::string_view disposition(status);
+    if (disposition.starts_with("censored_") || disposition.starts_with("refused") ||
+        disposition.starts_with("native_construction")) {
+        auto& diagnostic = result.diagnostics;
+        switch (selective_service_phase) {
+        case SelectiveServicePhase::NotStarted: diagnostic.selective_completion_failure_phase = "not_started"; break;
+        case SelectiveServicePhase::Generating: diagnostic.selective_completion_failure_phase = "generating"; break;
+        case SelectiveServicePhase::Checking: diagnostic.selective_completion_failure_phase = "checking"; break;
+        case SelectiveServicePhase::Validating: diagnostic.selective_completion_failure_phase = "validating"; break;
+        case SelectiveServicePhase::Done: diagnostic.selective_completion_failure_phase = "done"; break;
+        }
+        diagnostic.selective_completion_failure_subphase.clear();
+        diagnostic.selective_completion_failure_source_states =
+            selective_service_calc ? selective_service_calc->state_count() : 0;
+        diagnostic.selective_completion_failure_exact_states = 0;
+        diagnostic.selective_completion_failure_pairs = 0;
+        diagnostic.selective_completion_failure_transitions = 0;
+        diagnostic.selective_completion_failure_owned_bytes = 0;
+        diagnostic.selective_completion_failure_peak_owned_bytes = 0;
+        diagnostic.selective_completion_failure_proposal = selective_service_orientation;
+        if (selective_service_checker) {
+            const auto progress = selective_service_checker->progress();
+            diagnostic.selective_completion_failure_subphase = strategy_eval_subphase_name(progress.subphase);
+            diagnostic.selective_completion_failure_exact_states = progress.exact_states;
+            diagnostic.selective_completion_failure_pairs = progress.discovered_pairs;
+            diagnostic.selective_completion_failure_transitions = progress.stored_transitions;
+            diagnostic.selective_completion_failure_owned_bytes = selective_service_checker->live_owned_bytes();
+            diagnostic.selective_completion_failure_peak_owned_bytes = selective_service_checker->peak_owned_bytes();
+        }
+    }
     result.diagnostics.selective_completion_service_status = status;
     selective_service_validator.reset();
     selective_service_checker.reset();
@@ -23,10 +54,21 @@ void SolveWork::Impl::abandon_selective_completion_service(
     std::string{}.swap(selective_service_graph);
     selective_service_phase = SelectiveServicePhase::Done;
     if (try_next_orientation && options.product_original_root_continuations &&
-        product_completion_has_two_orientations(calc) && selective_service_orientation == 0) {
+        selective_service_orientation + 1 < product_completion_proposal_count(calc)) {
         ++selective_service_orientation;
         selective_service_phase = SelectiveServicePhase::NotStarted;
     }
+}
+
+void SolveWork::Impl::refresh_selective_generation_caps() {
+    const auto live = fast_estimated_owned_bytes();
+    if (live >= options.max_solver_owned_bytes)
+        throw SolverResourceLimit("max_solver_owned_bytes", options.max_solver_owned_bytes);
+    const auto context_bytes = selective_service_calc->fast_estimated_owned_bytes();
+    // Include the private context once and subtract every other live service
+    // owner. In particular, numeric zero in automatic admission means unlimited.
+    selective_service_calc->refresh_solve_owned_bytes_cap(
+        context_bytes + (options.max_solver_owned_bytes - live));
 }
 
 bool SolveWork::Impl::advance_selective_completion_service() {
@@ -70,32 +112,40 @@ bool SolveWork::Impl::advance_selective_completion_service() {
             // Post-hoc transfer could perform an over-budget row, then lose
             // its debit when optional-service refusal swallowed the cap.
             selective_service_calc->set_reforge_work_budget_owner(&calc);
+            selective_service_calc->set_solve_owned_bytes_budget_owner(
+                selective_service_calc.get());
+            selective_service_calc->set_solve_resource_caps(
+                options.max_discovered_states, options.max_reforge_work,
+                false, std::uint64_t{0});
             check_memory();
             selective_service_checker_charged_active = 0;
             selective_service_checker_charged_work = 0;
             SolveOptions allowance = options;
             allowance.max_solver_owned_bytes =
                 options.max_solver_owned_bytes - live;
+            const auto held_side = options.product_original_root_continuations &&
+                    product_completion_has_two_orientations(*selective_service_calc)
+                ? product_completion_held_side(*selective_service_calc,
+                    selective_service_orientation) : kNoId;
             selective_service_producer =
                 std::make_unique<SelectiveCompletionProducer>(
                     *selective_service_calc, exact_start_item,
                     prices, allowance,
                     options.product_original_root_continuations
-                        ? product_completion_variant(*selective_service_calc)
+                        ? product_completion_proposal_variant(*selective_service_calc, selective_service_orientation)
                         : SelectiveCompletionVariant::RerollVersusRepair, kNoId,
-                    options.product_original_root_continuations &&
-                        product_completion_has_two_orientations(*selective_service_calc)
-                        ? selective_service_orientation : kNoId);
+                    held_side);
             selective_service_phase =
                 SelectiveServicePhase::Generating;
             result.diagnostics.selective_completion_service_status =
                 "generation_started";
             record_progress_event("selective_completion_started");
-            check_memory();
+            refresh_selective_generation_caps();
             return false;
         }
         if (selective_service_phase ==
                 SelectiveServicePhase::Generating) {
+            refresh_selective_generation_caps();
             if (!selective_service_producer->advance(1)) {
                 check_memory();
                 return false;
@@ -193,9 +243,7 @@ bool SolveWork::Impl::advance_selective_completion_service() {
                 const FinderProgramBinding& binding =
                     selective_service_candidate->control.programs.at(
                         control_node.binding);
-                const auto key = planner_operator_semantic_key(
-                    selective_service_calc->operators().at(
-                        binding.operator_index));
+                const auto key = finder_program_occurrence_key(*selective_service_calc, binding);
                 const std::string id = "c" + std::to_string(node);
                 eval.graph_local_provenance.decisions.push_back(
                     {id, key, false, false});
@@ -281,6 +329,13 @@ bool SolveWork::Impl::advance_selective_completion_service() {
                 std::move(selective_service_graph);
             assertion.certification_strategy_json =
                 assertion.strategy_json;
+            // This root-only artifact bypasses the statewise compiler's census.
+            // Preserve the actual already-parsed graph size for export caps and
+            // diagnostics instead of retaining zero-initialized metadata.
+            assertion.compilation.nodes = selective_service_strategy->nodes.size();
+            for (const auto& node : selective_service_strategy->nodes)
+                assertion.compilation.edges += node.edges.size();
+            assertion.compilation.strategy_json_bytes = assertion.strategy_json.size();
             assertion.evaluation =
                 selective_service_checker->take_result();
             selective_service_checker.reset();

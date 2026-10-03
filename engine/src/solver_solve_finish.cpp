@@ -1,6 +1,7 @@
 #include "solver_solve_types.hpp"
 #include "solver_policy_refinement.hpp"
 #include "solver_sparse_policy.hpp"
+#include "solver_finder.hpp"
 
 #include <cstring>
 
@@ -18,6 +19,7 @@ using namespace solve_detail;
  * batch. */
 constexpr std::uint32_t kCooperativePolicyLiftBatch = 32;
 constexpr std::uint32_t kCooperativeAlternativeProofBatch = 128;
+constexpr double kProductSimulatorActionLimit = 100000.0;
 
 struct ScopedVerifiedArtifactVisibility {
     bool& available;
@@ -374,6 +376,33 @@ void solve_detail::normalize_publication_result(SolveResult& result) {
         result.lower_bound > 0.0
             ? result.upper_bound / result.lower_bound - 1.0
             : kInfinity;
+}
+
+void solve_detail::refresh_published_policy_compatibility(SolveResult& result) {
+    const auto& artifact = result.refined_policy_artifact;
+    if (!result.policy_available || artifact.strategy_json.empty() ||
+        !std::isfinite(artifact.checked_expected_actions) ||
+        artifact.checked_expected_actions < 0.0) return;
+    auto& diagnostics = result.diagnostics;
+    const bool simulator_work_warning =
+        diagnostics.policy_compatibility_reason ==
+            "primitive_renewal_expected_actions_exceed_simulator_cap" ||
+        diagnostics.policy_compatibility_reason ==
+            "retained_policy_expected_actions_exceed_simulator_cap";
+    if (!diagnostics.policy_compatibility_supported && !simulator_work_warning)
+        return;
+    if (artifact.checked_expected_actions > kProductSimulatorActionLimit) {
+        diagnostics.policy_compatibility_supported = false;
+        diagnostics.policy_compatibility_state = result.start_state;
+        diagnostics.policy_compatibility_action.clear();
+        diagnostics.policy_compatibility_reason =
+            "retained_policy_expected_actions_exceed_simulator_cap";
+    } else if (simulator_work_warning) {
+        diagnostics.policy_compatibility_supported = true;
+        diagnostics.policy_compatibility_state = kNoId;
+        diagnostics.policy_compatibility_action.clear();
+        diagnostics.policy_compatibility_reason.clear();
+    }
 }
 
 void SolveWork::Impl::count_policy_actions(
@@ -1750,7 +1779,6 @@ SolveWork::Impl::run_publication_pipeline() {
                             coarse_state;
                     }
                 };
-            constexpr double kProductSimulatorActionLimit = 100000.0;
             if (restore_output_incumbent &&
                 result.primitive_renewal_witness.valid &&
                 result.primitive_renewal_witness.success_probability >
@@ -1780,13 +1808,8 @@ SolveWork::Impl::run_publication_pipeline() {
                     action_id;
                 result.diagnostics.policy_compatibility_reason =
                     reason;
-                if (!action_id.empty()) {
-                    record_skipped_unsupported(action_id);
-                    add_action_reason(
-                        "unsupported", action_id,
-                        reason + "_at_state_" +
-                            std::to_string(result.start_state));
-                }
+                // A simulator work warning does not make the primitive action
+                // unsupported by the evaluator. Keep those authorities separate.
             }
             if (restore_output_incumbent &&
                 result.diagnostics.resource_cap_hit &&
@@ -2448,6 +2471,8 @@ SolveWork::Impl::run_publication_pipeline() {
                     candidate.independently_evaluated = true;
                     candidate.proper = true;
                     candidate.executable = true;
+                    candidate.compiled_artifact.checked_expected_actions =
+                        assertion.evaluation.expected_actions;
                     candidate.final_graph_verification_failure.clear();
                     candidate.compilation_provenance +=
                         "+independent_final_graph_evaluation_v1";
@@ -5547,6 +5572,7 @@ SolveWork::Impl::run_publication_pipeline() {
             result.upper_bound = kInfinity;
             result.evaluated_policy_cost = kInfinity;
         }
+        solve_detail::refresh_published_policy_compatibility(result);
         solve_detail::normalize_publication_result(result);
         if (result.policy_available) {
             result.diagnostics.focused_lower_bound = result.lower_bound;
@@ -5957,6 +5983,8 @@ RetainedCompiledPolicyArtifact SolveWork::Impl::retained_artifact_from_assertion
     artifact.strategy_json = std::move(assertion.strategy_json);
     artifact.certification_strategy_json =
         std::move(assertion.certification_strategy_json);
+    if (finder_evaluation_accepted(assertion.evaluation))
+        artifact.checked_expected_actions = assertion.evaluation.expected_actions;
     artifact.continuation_upper.authority =
         executable_continuation_authority_context();
     artifact.continuation_upper.evaluation =

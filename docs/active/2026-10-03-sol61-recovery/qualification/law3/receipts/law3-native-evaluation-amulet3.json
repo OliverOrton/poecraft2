@@ -1,0 +1,95 @@
+{
+  "arm": "amulet3",
+  "source_commit": "b11f4c58f0a7c979f2c66b71892295795944e045",
+  "model": {
+    "rare_reforge_count_law_version": 3,
+    "assumption": "owner-approved single-side ordinary-total 8:3:1; provisional game model"
+  },
+  "policy_sha256": "713403e86ba47e362aac1dc6eb56f970e4544dd8a6b353e9d18fd0c7965ab26f",
+  "input_case_sha256": "9e2eb59392c8934dd6e15b115ec066fee53efe092154f2b0343a93dec70be95b",
+  "root": {
+    "base_key": "Metadata/Items/Amulets/Amulet7",
+    "item_level": 86,
+    "rarity": "rare",
+    "with_implicits": false,
+    "quality": 0,
+    "item_flags": 0,
+    "generic_influence_bits": 0,
+    "searing_exarch_tier": 0,
+    "eater_of_worlds_tier": 0,
+    "prefixes": [],
+    "suffixes": [],
+    "implicits": []
+  },
+  "economy": {
+    "version": "v1",
+    "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+    "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+    "league_key": "allflame",
+    "league_name": "Allflame",
+    "manual_overrides": {
+      "base": 1.0
+    },
+    "fallback_price": null,
+    "missing_price_decisions": {
+      "base": "quality_ladder_fixture_input_1_chaos"
+    }
+  },
+  "evaluation_options": {
+    "max_states": 800000,
+    "max_pairs": 1215000,
+    "max_transitions": 10000000,
+    "max_owned_bytes": 1073741824,
+    "max_output_json_bytes": 16777216
+  },
+  "native_library_sha256": "7b8fba3dbf363a750f2f141874be973b5cd2e6dd3a52d39189fef8c13c32c7c7",
+  "started_utc": "2026-10-03T17:49:26.743558+00:00",
+  "scope": "ordinary strategy execution; no imported native incumbent provenance",
+  "status": "proper",
+  "converged": true,
+  "terminals": {
+    "success": 1,
+    "failure": 0,
+    "stop": 0,
+    "action_not_applied": 0,
+    "no_matching_edge": 0,
+    "unresolved": 0,
+    "by_node": [
+      {
+        "node_id": "c2",
+        "kind": "success",
+        "p": 1
+      }
+    ]
+  },
+  "cost_complete": true,
+  "total_expected_cost": 18996.576948551738,
+  "comparable_expected_cost": 18996.576948551738,
+  "expected_actions": 47055.97225374125,
+  "consumption": [
+    {
+      "key": "bench:DexMasterItemGenerationCannotChangeSuffixes",
+      "quantity": 1.0000000000001288
+    },
+    {
+      "key": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+      "quantity": 47053.972253741274
+    },
+    {
+      "key": "scour",
+      "quantity": 1.0000000000001288
+    }
+  ],
+  "memory": {
+    "owned_bytes_estimate": 175491657,
+    "peak_owned_bytes_estimate": 236173125,
+    "retained_output_owned_bytes_estimate": 0,
+    "max_owned_bytes": 1073741824,
+    "max_output_json_bytes": 16777216
+  },
+  "raw_result_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-amulet3.raw.json",
+  "raw_result_sha256": "8a81d0f6ee5ffd8c57bab9c95b12a2fc5df9e9a3910cc209c7859147814b492c",
+  "elapsed_seconds": 8.653924999991432
+}

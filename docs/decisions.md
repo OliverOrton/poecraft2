@@ -612,3 +612,23 @@ One small optional development-only independent reference method is permitted. I
 **Status:** Oliver selected the [F0–F4 programme](active/2026-09-24-strategy-finder/README.md). F0's narrow compiler and candidate-preparation boundary is implemented and tested; the peer runtime, search, product mode and qualification remain in progress.
 
 **Consequences:** Exact source context, allowed native operations and the external clean-terminal goal bind every accepted candidate. Heuristic role features only order proposals. A cost or success annotation supplied by the proposer has no authority. The new lane's activation and resource limits are separate run identity; default behavior and existing proof owners remain unchanged.
+
+
+## 2026-10-03 - Working Eldritch Chaos Count Model
+
+**Decision:** Oliver approves assuming the single-side equivalent of the
+ordinary 8:3:1 total-count rule. Draw total four/five/six, count all preserved
+modifiers, and fill only the rerolled side up to its capacity. Fractures occupy
+the drawn target. Never alter the opposite side or redraw after pool exhaustion.
+
+**Status:** Approved working assumption; not an independently verified game
+rate. Source and finite fixtures are being prepared while the existing LOCAL
+owners retain heavy execution. Matching native, WASM and affected-policy
+qualification must precede publication.
+
+**Consequences:** The [native mechanic owner](mechanics/eldritch-and-influence.md#approved-single-side-count-model-2026-10-03)
+records the formula, conditional distributions and boundaries. Historical
+equal-two/three Eldritch costs retain their original model identities. Current
+checked costs mean exact evaluation under the approved model and do not prove
+that model's game probabilities. Preserve the qualified Sol6.1 recovery and
+unrelated feature gains while requalifying the affected Eldritch policies.

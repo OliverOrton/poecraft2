@@ -1,0 +1,9 @@
+{
+  "phase": "preflight",
+  "arm": "bow5",
+  "pid": 39372,
+  "identity_token": "39372:134355164220252134",
+  "started_utc": "2026-10-03T15:53:42.030254+00:00",
+  "watchdog_seconds": 120,
+  "LOCAL_owner": "Sol6.1 serial product qualification"
+}

@@ -1,0 +1,7 @@
+protected fill fixture=0 cost=1335.59739642 chaos=95586.2068966 positive_entries=2
+protected fill fixture=1 cost=60.28 chaos=95586.2068966 positive_entries=2
+protected fill fixture=2 cost=1335.59739642 chaos=95586.2068966 positive_entries=2
+protected fill fixture=3 cost=29894.4985195 chaos=49500 positive_entries=2
+protected fill fixture=4 cost=1287.74897187 chaos=31984.6153846 positive_entries=5
+protected fill fixture=5 cost=37521.741791 chaos=49500 positive_entries=2
+solver protected fill tests: 150 checks, 0 failures

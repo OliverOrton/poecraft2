@@ -1,0 +1,110 @@
+{
+  "graph_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\production-fixed-bow4-r2-bow4-dirty.strategies\\sol61-preserved-bow4-currentmodel-120.strategy.json",
+  "graph_sha256": "e32b550faf63157812628d5bea6a6d5d900848ff7c8944e0bfba25b503a6d347",
+  "case_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\bow4-dirty.json",
+  "artifact_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\data\\runtime-snapshots\\82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+  "economy_identity": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+  "scope": "ordinary_strategy_execution_diagnostic; no imported native programme provenance or solver incumbent admission",
+  "trials": 1000,
+  "status": "passed",
+  "product_board_import": "passed",
+  "exact": {
+    "converged": true,
+    "terminals": {
+      "success": 1,
+      "failure": 0,
+      "stop": 0,
+      "action_not_applied": 0,
+      "no_matching_edge": 0,
+      "unresolved": 0,
+      "by_node": [
+        {
+          "node_id": "goal",
+          "kind": "success",
+          "p": 1
+        },
+        {
+          "node_id": "offpolicy",
+          "kind": "failure",
+          "p": 0
+        }
+      ]
+    },
+    "expected_actions": 451.00000000000443,
+    "cost_complete": true,
+    "total_expected_cost": 38497.785744000365,
+    "memory": {
+      "owned_bytes_estimate": 842644,
+      "peak_owned_bytes_estimate": 1660276,
+      "retained_output_owned_bytes_estimate": 0,
+      "max_owned_bytes": 1073741824,
+      "max_output_json_bytes": 16777216
+    },
+    "consumption": [
+      {
+        "key": "bench:JunMaster2LocalAccuracyRatingStrengthDexterity2",
+        "quantity": 90.20000000000086
+      },
+      {
+        "key": "bench:StrMasterItemGenerationCannotChangePrefixes",
+        "quantity": 90.20000000000086
+      },
+      {
+        "key": "exalt",
+        "quantity": 90.20000000000086
+      },
+      {
+        "key": "scour",
+        "quantity": 180.4000000000017
+      }
+    ]
+  },
+  "native_cost_parity": {
+    "expected_cost": 38497.785744000365,
+    "tolerance_relative": 1e-9,
+    "status": "passed"
+  },
+  "simulator": {
+    "summary": {
+      "completed_runs": 1000,
+      "success_count": 1000,
+      "failure_count": 0,
+      "stop_count": 0,
+      "total_actions": 459275,
+      "action_limit_count": 0,
+      "cost_limit_count": 0,
+      "step_limit_count": 0,
+      "no_matching_edge_count": 0,
+      "action_not_applied_count": 0,
+      "missing_price_run_count": 0,
+      "costed_action_count": 459275,
+      "missing_price_action_count": 0,
+      "known_total_cost": 39204147.55560009,
+      "cost_status": "complete",
+      "seed": 27092026,
+      "target_runs": 1000
+    },
+    "failure_summaries": []
+  },
+  "simulator_qualification": {
+    "requested_runs": 1000,
+    "max_actions_per_run": 1000000,
+    "max_graph_steps_per_run": 4000000,
+    "max_cost_per_run": 1000000000,
+    "success_count": 1000,
+    "failures": [],
+    "meaning": "finite execution qualification; censored runs do not estimate uncapped policy EV"
+  },
+  "wasm_memory": {
+    "initial_linear_memory_bytes": 134217728,
+    "current_linear_memory_bytes": 278396928,
+    "peak_observed_linear_memory_bytes": 278396928,
+    "linear_memory_growth_only": true,
+    "configured_maximum_linear_memory_bytes": 4294967296,
+    "process_rss_bytes": 395681792,
+    "process_rss_peak_observed_bytes": 466010112,
+    "process_lifetime_max_rss_bytes": 472735744,
+    "rss_scope": "fresh Node process, including worker; observations at product response boundaries"
+  },
+  "wall_ms": 4345.0439
+}

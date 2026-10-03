@@ -9,6 +9,7 @@
 #include "../src/solver_compile_contracts.hpp"
 #include "../src/solver_finder.hpp"
 #include "../src/solver_selective_completion.hpp"
+#include "../src/solver_diagnostic_options.hpp"
 #include "../src/json.hpp"
 #include "../src/solver_dirty_guidance.hpp"
 #include "poecraft/bitset.h"
@@ -4311,6 +4312,365 @@ struct SolveWorkTestAccess {
     using Impl = SolveWork::Impl;
     static Impl& get(SolveWork& work) { return *work.impl_; }
 };
+}
+
+void run_solver_growth_tests(const bool blocker) {
+    PC_CHECK(exact_checker_state_budget(200000, 800000, 200000) == 200000);
+    PC_CHECK(exact_checker_state_budget(0, 800000, 200000) == 0);
+    PC_CHECK(exact_checker_state_budget(std::nullopt, 800000, 200000) == 800000);
+    PC_CHECK(exact_checker_state_budget(std::nullopt, 0, 200000) == 200000);
+    // Finite witness for the Bow4 crash: a checked incremental upper seed
+    // arrives before lower preparation has initialized the native goal bitmap.
+    // Exercise both an absent bitmap and a stale bitmap after state growth.
+    for (const bool stale_bitmap : {false, true}) {
+        auto session = make_compile_session();
+        const auto registry = build_action_registry(*session);
+        GoalSpec goal; goal.rarity = PC_RARITY_RARE;
+        GoalSlot slot; slot.family_id = session->family_id[0]; slot.min_tier = 1;
+        goal.slots.push_back(slot);
+        CalcContext calc(session, goal, registry, {registry.index_by_id.at("chaos")});
+        pc_item_state root; pc_item_clear(&root); root.rarity = PC_RARITY_RARE;
+        SolveOptions options; apply_solve_profile_defaults(options, SolveProfile::CalculatorProductV1);
+        SolveWork work(calc, root, {{"chaos",100}}, options);
+        auto& impl = SolveWorkTestAccess::get(work);
+        const auto root_id = calc.intern_item(root);
+        auto successful = root;
+        PC_CHECK(pc_item_add_mod(&successful, PC_SIDE_PREFIX, 0,
+            session->primary_group[0], 0, nullptr) == PC_RESULT_OK);
+        const auto goal_id = calc.intern_item(successful);
+        PC_CHECK(!calc.is_goal_state(calc.state(root_id)) && calc.is_goal_state(calc.state(goal_id)));
+        impl.output_incumbent.emplace();
+        impl.output_incumbent->values.assign(calc.state_count(), 10);
+        impl.output_incumbent->values[goal_id] = 0;
+        impl.output_incumbent->policy_rows.assign(calc.state_count(), std::numeric_limits<std::uint64_t>::max());
+        impl.incremental_upper_policy_pass = true;
+        impl.result.goal_states.clear();
+        if (stale_bitmap) impl.result.goal_states.assign(1, 1);
+        PC_CHECK(impl.begin_focused_upper_solve());
+        PC_CHECK(impl.result.goal_states.size() == calc.state_count());
+        PC_CHECK(impl.result.goal_states[root_id] == 0 && impl.result.goal_states[goal_id] == 1);
+        PC_CHECK(impl.result.values[root_id] == 10 && impl.result.values[goal_id] == 0);
+        impl.abort_incremental_upper_policy_pass_for_bounded_finish();
+        impl.finalized_result.emplace();
+        impl.phase = SolvePhase::Done;
+        impl.incremental_action_generation = true;
+        impl.incremental_envelope_closed = false;
+        impl.incremental_upper_policy_dirty = true;
+        const auto previous_attempts = impl.incremental_upper_policy_passes_requested;
+        PC_CHECK(!impl.begin_incremental_upper_policy_pass());
+        PC_CHECK(impl.phase == SolvePhase::Done && impl.finalized_result.has_value());
+        PC_CHECK(impl.incremental_upper_policy_passes_requested == previous_attempts);
+        // finish() releases the optional result, but consumption remains a
+        // permanent publication boundary; no post-finish upper pass may start.
+        impl.consumed = true;
+        impl.finalized_result.reset();
+        PC_CHECK(!impl.begin_incremental_upper_policy_pass());
+        PC_CHECK(impl.phase == SolvePhase::Done && !impl.finalized_result.has_value());
+        PC_CHECK(impl.incremental_upper_policy_passes_requested == previous_attempts);
+    }
+    SolveOptions product;
+    apply_solve_profile_defaults(product, SolveProfile::CalculatorProductV1);
+    apply_solve_state_budget_overrides(product, 0, 0, 0);
+    PC_CHECK(product.max_states == 800000 && product.max_discovered_states == 800000);
+    PC_CHECK(product.max_expanded_states == 200000 && product.max_policy_refinement_states == 200000);
+    PC_CHECK(product.max_solver_owned_bytes == (1ull << 30));
+    PC_CHECK(product.candidate_evaluation_limits.max_states == 0);
+    auto explicit_caps = product;
+    explicit_caps.candidate_evaluation_limits.max_states = 12345;
+    apply_solve_state_budget_overrides(explicit_caps, 200000, 0, 0);
+    PC_CHECK(explicit_caps.max_states == 200000 && explicit_caps.max_discovered_states == 200000 &&
+             explicit_caps.max_expanded_states == 200000);
+    PC_CHECK(explicit_caps.candidate_evaluation_limits.max_states == 12345);
+    PC_CHECK(explicit_caps.max_solver_owned_bytes == product.max_solver_owned_bytes);
+    apply_solve_state_budget_overrides(explicit_caps, 150000, 170000, 190000);
+    PC_CHECK(explicit_caps.max_states == 150000 && explicit_caps.max_discovered_states == 170000 &&
+             explicit_caps.max_expanded_states == 190000);
+    SolveOptions ordinary;
+    apply_solve_profile_defaults(ordinary, SolveProfile::Default);
+    apply_solve_state_budget_overrides(ordinary, 0, 0, 0);
+    PC_CHECK(ordinary.max_states == 200000 && ordinary.max_discovered_states == 200000);
+    for (unsigned fixture = 0; fixture < 4u; ++fixture) {
+        auto session = make_compile_session();
+        auto data = std::const_pointer_cast<DataImpl>(session->data);
+        // Explicitly distinguish absent metamods from ordinary bench crafts
+        // in this synthetic data, as the loaded production schema does.
+        data->metamod_no_attack_code = 20;
+        data->metamod_no_caster_code = 21;
+        data->metamod_prefixes_locked_code = 22;
+        data->metamod_suffixes_locked_code = 23;
+        data->metamod_multimod_code = 24;
+        session->flags[9] = 1 << 1;
+        if (fixture == 1) {
+            for (auto& side : session->gen_type) side = 1 - side;
+            std::swap(session->prefix_mask, session->suffix_mask);
+        }
+        session->bench_mod_ids = {9};
+        const auto registry = build_action_registry(*session);
+        const auto chaos = registry.index_by_id.at("chaos");
+        GoalSpec goal; goal.rarity = PC_RARITY_RARE; goal.automatic_candidates = true;
+        goal.automatic_candidate_kind_mask = automatic_candidate_kind_bit(AutomaticCandidateKind::EldritchSide) |
+            automatic_candidate_kind_bit(AutomaticCandidateKind::TemporaryBenchBlocker);
+        for (auto mod : {0u, 3u, 4u, 5u, 6u}) {
+            GoalSlot slot; slot.family_id = session->family_id[mod]; slot.min_tier = 1;
+            goal.slots.push_back(slot);
+        }
+        SolveOptions caps; apply_solve_profile_defaults(caps, SolveProfile::CalculatorProductV1);
+        caps.max_discovered_states = 10000; caps.max_expanded_states = 10000;
+        caps.max_state_action_rows = 100000; caps.max_transitions = 1000000;
+        caps.max_reforge_work = 1000000; caps.max_solver_owned_bytes = 256ull << 20;
+        std::unordered_map<std::string,double> prices{{"chaos",100},{"eldritch_chaos",3},
+            {"eldritch_annul",2},{"eldritch_exalt",1},{"exalt",.1},{"scour",.01},{"bench:mod9",.01}};
+        for (unsigned tier=1; tier<=4; ++tier) {
+            prices["eldritch_ember:"+std::to_string(tier)] = .01;
+            prices["eldritch_ichor:"+std::to_string(tier)] = .01;
+        }
+        pc_item_state root; pc_item_clear(&root); root.rarity = PC_RARITY_RARE;
+        if (fixture == 2) for (auto mod : {3u,5u,6u})
+            PC_CHECK(pc_item_add_mod(&root, static_cast<pc_affix_side>(session->gen_type[mod]),
+                mod, session->primary_group[mod], 0, nullptr) == PC_RESULT_OK);
+        // Reproduce the refused c23 carrier as an independent original root:
+        // two target goals present, one missing, and both held goals present.
+        if (fixture == 3) for (auto mod : {3u,4u,5u,6u})
+            PC_CHECK(pc_item_add_mod(&root, static_cast<pc_affix_side>(session->gen_type[mod]),
+                mod, session->primary_group[mod], 0, nullptr) == PC_RESULT_OK);
+        for (unsigned proposal=blocker ? 3u : 2u; proposal<(blocker ? 4u : 3u); ++proposal) {
+            CalcContext calc(session, goal, registry, {chaos}, false, false, false,
+                std::nullopt, {}, false, {}, true);
+            calc.set_solve_resource_caps(caps.max_discovered_states, caps.max_reforge_work,
+                false, caps.max_solver_owned_bytes);
+            PC_CHECK(product_completion_proposal_count(calc) == 3);
+            const auto held = product_completion_held_side(calc, proposal);
+            const auto variant = product_completion_proposal_variant(calc, proposal);
+            SelectiveCompletionProducer producer(calc, root, prices, caps, variant, kNoId, held);
+            for (unsigned i=0; i<40000 && !producer.done(); ++i) producer.advance();
+            if (!producer.candidate()) std::printf("growth fixture=%u proposal=%u construction=%s\n",fixture,proposal,producer.status().c_str());
+            PC_CHECK(producer.done() && producer.candidate().has_value());
+            if (!producer.candidate()) continue;
+            const auto& control = producer.candidate()->control;
+            const auto graph = compile_finder_control_json(calc, root, control, caps);
+            const auto prepared = prepare_finder_candidate(calc, session, root, graph, &control);
+            PC_CHECK(prepared.ready());
+            PC_CHECK(!prepare_finder_candidate(calc, session, root, graph).ready());
+            if (!prepared.ready()) continue;
+            auto economy = std::make_shared<EconomyImpl>(); economy->prices = prices;
+            StrategyEvalOptions eval; eval.economy = economy;
+            eval.max_states = caps.max_discovered_states; eval.max_pairs = caps.max_state_action_rows;
+            eval.max_transitions = caps.max_transitions; eval.max_owned_bytes = caps.max_solver_owned_bytes;
+            eval.max_reforge_work = caps.max_reforge_work;
+            eval.continuation_entries.push_back({calc.intern_item(root),0,1,root,false});
+            eval.graph_local_provenance.strategy_json = graph;
+            for (unsigned node=0; node<control.nodes.size(); ++node) {
+                const auto& cn = control.nodes[node];
+                if (cn.kind != FinderControlKind::RunNativeProgram) continue;
+                const auto& binding = control.programs.at(cn.binding);
+                const auto key = finder_program_occurrence_key(calc, binding);
+                const auto id = "c"+std::to_string(node);
+                eval.graph_local_provenance.decisions.push_back({id,key,false,false});
+                StrategyPolicyDecisionRequest request; request.compiled_node_id = id;
+                request.selected_operator_identity = key; request.graph_local = true;
+                eval.policy_decision_entries.push_back(std::move(request));
+            }
+            const auto checked = evaluate_strategy(*prepared.strategy, eval);
+            PC_CHECK(finder_evaluation_accepted(checked));
+            if (proposal == 2 || fixture == 2)
+                PC_CHECK(checked.expected_consumption.contains("eldritch_exalt") && checked.expected_consumption.at("eldritch_exalt") > 0);
+            PC_CHECK(checked.expected_consumption.contains("eldritch_annul") && checked.expected_consumption.at("eldritch_annul") > 0);
+            if (proposal == 3) for (const auto key : {"exalt","scour","bench:mod9"})
+                PC_CHECK(checked.expected_consumption.contains(key) && checked.expected_consumption.at(key) > 0);
+            unsigned entries = 0;
+            try {
+                SelectiveProgrammeEntryValidator validator(calc, session, control, checked.policy_entries, prices, caps);
+                for (unsigned i=0; i<40000 && !validator.done(); ++i) validator.advance();
+                PC_CHECK(validator.done() && validator.positive_entries() > 0);
+                PC_CHECK(validator.validated_entries() == checked.policy_entries.entries.size());
+                entries = validator.positive_entries();
+            } catch (const std::exception& error) {
+                std::printf("growth fixture=%u proposal=%u entry_refusal=%s\n",fixture,proposal,error.what());
+                PC_CHECK(false);
+                continue;
+            }
+            // A paid root EV cannot authorize a different native occurrence.
+            auto tampered = checked.policy_entries;
+            if (!tampered.entries.empty()) tampered.entries.front().selected_operator_identity.push_back(7);
+            bool refused = false;
+            try {
+                SelectiveProgrammeEntryValidator invalid(calc, session, control, tampered, prices, caps);
+                for (unsigned i=0; i<40000 && !invalid.done(); ++i) invalid.advance();
+            } catch (const StrategyEvalUnsupported&) { refused = true; }
+            PC_CHECK(refused);
+            std::printf("growth fixture=%u proposal=%u cost=%.12g entries=%u\n",
+                fixture,proposal,checked.total_expected_cost,entries);
+        }
+    }
+}
+
+void run_solver_protected_fill_tests() {
+    // The native weighted fixture has three independent prefix goals, two
+    // suffix goals and ordinary junk. Dedicated crafts occupy the opposite
+    // side; neither their weights nor their flags enter ordinary rolls.
+    for (unsigned fixture = 0; fixture < 6; ++fixture) {
+        auto session = make_compile_session();
+        auto data = std::const_pointer_cast<DataImpl>(session->data);
+        session->eldritch_eligible = false;
+        if (fixture == 2) {
+            for (auto& side : session->gen_type) side = 1 - side;
+            std::swap(session->prefix_mask, session->suffix_mask);
+        }
+        data->metamod_prefixes_locked_code = 3;
+        data->metamod_suffixes_locked_code = 4;
+        for (auto mod : {8u, 9u}) {
+            session->metamod_type[mod] = session->gen_type[mod] == PC_SIDE_SUFFIX ? 3 : 4;
+            session->special_kind[mod] = -1;
+            session->flags[mod] = 1 << 1;
+        }
+        session->bench_mod_ids = {8, 9};
+        auto registry = build_action_registry(*session);
+        const auto chaos = registry.index_by_id.at("chaos");
+        const auto exalt = registry.index_by_id.at("exalt");
+        GoalSpec goal; goal.rarity = PC_RARITY_RARE; goal.automatic_candidates = true;
+        goal.automatic_candidate_kind_mask = automatic_candidate_kind_bit(AutomaticCandidateKind::ProtectedMetamod);
+        for (auto mod : {0u, 3u, 4u, 5u, 6u}) {
+            if ((fixture == 3 || fixture == 5) && mod == 0) continue;
+            if (fixture == 4 && mod == 6) continue;
+            GoalSlot slot; slot.family_id = session->family_id[mod]; slot.min_tier = 1;
+            goal.slots.push_back(slot);
+        }
+        SolveOptions caps; apply_solve_profile_defaults(caps, SolveProfile::CalculatorProductV1);
+        caps.consider_imprint_programs = false;
+        caps.max_discovered_states = caps.max_expanded_states = 10000;
+        caps.max_state_action_rows = 100000; caps.max_transitions = 1000000;
+        caps.max_reforge_work = 1000000; caps.max_solver_owned_bytes = 256ull << 20;
+        std::unordered_map<std::string, double> prices{
+            {"chaos", 100}, {"exalt", 2}, {"scour", .01}, {"bench:mod8", .01}, {"bench:mod9", .01}};
+        pc_item_state root; pc_item_clear(&root); root.rarity = PC_RARITY_RARE;
+        if (fixture == 1) for (auto mod : {0u, 3u, 4u})
+            PC_CHECK(pc_item_add_mod(&root, PC_SIDE_PREFIX, mod, session->primary_group[mod], 0, nullptr) == PC_RESULT_OK);
+        CalcContext calc(session, goal, registry, {chaos, exalt}, false, false, false,
+            std::nullopt, {}, false, {}, true);
+        calc.set_solve_resource_caps(caps.max_discovered_states, caps.max_reforge_work,
+            false, caps.max_solver_owned_bytes);
+        PC_CHECK(product_original_root_continuation_scope(calc, root, caps));
+        PC_CHECK(product_completion_variant(calc) == SelectiveCompletionVariant::ProtectedScourFill);
+        PC_CHECK(product_completion_has_two_orientations(calc) == (fixture == 3 || fixture == 5));
+        auto explicit_gate = caps;
+        explicit_gate.solve_profile_override_mask |= PC_SOLVE_PROFILE_OVERRIDE_GOAL_PROGRESS_GATED_REFORGES;
+        PC_CHECK(!product_original_root_continuation_scope(calc, root, explicit_gate));
+        auto gap = caps; gap.max_absolute_optimality_gap = 1;
+        PC_CHECK(!product_original_root_continuation_scope(calc, root, gap));
+        const auto held_side = fixture == 5 ? PC_SIDE_SUFFIX : product_completion_held_side(calc, 0);
+        SelectiveCompletionProducer producer(calc, root, prices, caps,
+            product_completion_variant(calc, held_side), kNoId, held_side);
+        for (unsigned i = 0; i < 40000 && !producer.done(); ++i) producer.advance();
+        if (!producer.candidate()) std::printf("protected fill fixture=%u construction=%s\n", fixture, producer.status().c_str());
+        PC_CHECK(producer.done() && producer.candidate().has_value());
+        if (!producer.candidate()) continue;
+        const auto& control = producer.candidate()->control;
+        const auto graph = compile_finder_control_json(calc, root, control, caps);
+        const auto prepared = prepare_finder_candidate(calc, session, root, graph, &control);
+        PC_CHECK(prepared.ready());
+        PC_CHECK(!prepare_finder_candidate(calc, session, root, graph).ready());
+        auto different_root = root; different_root.quality = 1;
+        PC_CHECK(!prepare_finder_candidate(calc, session, different_root, graph, &control).ready());
+        if (!prepared.ready()) continue;
+        auto economy = std::make_shared<EconomyImpl>(); economy->id = "protected-fill"; economy->prices = prices;
+        StrategyEvalOptions eval; eval.economy = economy;
+        eval.max_states = caps.max_discovered_states; eval.max_pairs = caps.max_state_action_rows;
+        eval.max_transitions = caps.max_transitions; eval.max_owned_bytes = caps.max_solver_owned_bytes;
+        eval.max_reforge_work = caps.max_reforge_work;
+        eval.continuation_entries.push_back({calc.intern_item(root), 0, 1, root, false});
+        eval.graph_local_provenance.strategy_json = graph;
+        for (unsigned node = 0; node < control.nodes.size(); ++node) {
+            const auto& cn = control.nodes[node];
+            if (cn.kind != FinderControlKind::RunNativeProgram) continue;
+            const auto& binding = control.programs.at(cn.binding);
+            const auto key = planner_operator_semantic_key(calc.operators().at(binding.operator_index));
+            const auto id = "c" + std::to_string(node);
+            eval.graph_local_provenance.decisions.push_back({id, key, false, false});
+            StrategyPolicyDecisionRequest request; request.compiled_node_id = id;
+            request.selected_operator_identity = key; request.graph_local = true;
+            eval.policy_decision_entries.push_back(std::move(request));
+        }
+        const auto checked = evaluate_strategy(*prepared.strategy, eval);
+        PC_CHECK(finder_evaluation_accepted(checked));
+        const auto lock_code = held_side == PC_SIDE_PREFIX
+            ? data->metamod_prefixes_locked_code : data->metamod_suffixes_locked_code;
+        const auto lock_mod = std::find_if(session->bench_mod_ids.begin(), session->bench_mod_ids.end(),
+            [&](const auto mod) { return session->metamod_type[mod] == lock_code; });
+        PC_CHECK(lock_mod != session->bench_mod_ids.end());
+        if (lock_mod == session->bench_mod_ids.end()) continue;
+        const auto lock_key = "bench:" + data->strings[data->mod_key_sid[*lock_mod]];
+        for (const auto& key : std::vector<std::string>{"exalt", "scour", lock_key})
+            PC_CHECK(checked.expected_consumption.contains(key) && checked.expected_consumption.at(key) > 0);
+        if (fixture == 1) PC_CHECK(!checked.expected_consumption.contains("chaos") || checked.expected_consumption.at("chaos") == 0);
+        SelectiveProgrammeEntryValidator validator(calc, session, control, checked.policy_entries, prices, caps);
+        for (unsigned i = 0; i < 40000 && !validator.done(); ++i) validator.advance();
+        PC_CHECK(validator.done() && validator.positive_entries() > 0);
+        PC_CHECK(validator.validated_entries() == checked.policy_entries.entries.size());
+        // Root cost alone cannot bless a native programme at an entry which
+        // lacks the held goal. Re-admission must reject that exact carrier.
+        auto corrupted = checked.policy_entries;
+        PC_CHECK(!corrupted.entries.empty());
+        if (!corrupted.entries.empty()) {
+            PC_CHECK(pc_item_remove_at(&corrupted.entries.front().item,
+                static_cast<pc_affix_side>(held_side), 0) == PC_RESULT_OK);
+            bool refused = false;
+            try {
+                SelectiveProgrammeEntryValidator invalid(calc, session, control, corrupted, prices, caps);
+                for (unsigned i = 0; i < 40000 && !invalid.done(); ++i) invalid.advance();
+            } catch (const StrategyEvalUnsupported&) { refused = true; }
+            PC_CHECK(refused);
+        }
+        CalcContext baseline_calc(session, goal, registry, {chaos});
+        const auto baseline = evaluate_compiled(session,
+            compile_finder_candidate_json(baseline_calc, root, {chaos}, caps), prices);
+        PC_CHECK(finder_evaluation_accepted(baseline));
+        PC_CHECK(checked.total_expected_cost < baseline.total_expected_cost);
+        std::printf("protected fill fixture=%u cost=%.12g chaos=%.12g positive_entries=%u\n",
+            fixture, checked.total_expected_cost, baseline.total_expected_cost, validator.positive_entries());
+        if (fixture != 0) continue;
+        // End-to-end Current and product Finder must keep native provenance
+        // through the original-root check, entry check and retained graph.
+        CalcContext current_calc(session, goal, registry, {chaos, exalt});
+        const auto current = solve(current_calc, root, prices, caps);
+        PC_CHECK(current.policy_available && current.options.product_original_root_continuations);
+        PC_CHECK(current.diagnostics.selective_completion_service_checks > 0);
+        PC_CHECK(current.diagnostics.selective_completion_service_status == "retained");
+        PC_CHECK(current.evaluated_policy_cost < baseline.total_expected_cost);
+        PC_CHECK(current.lower_bound == 0 && current.closure_unavailable_by_profile);
+        CalcContext finder_calc(session, goal, registry, {chaos, exalt});
+        PolicyFinderWork finder(finder_calc, session, root, prices, caps);
+        for (unsigned i = 0; i < 40000 && !finder.progress().done; ++i) finder.step(128);
+        PC_CHECK(finder.progress().done && finder.progress().considered <= 8);
+        PC_CHECK(finder.best().has_value());
+        if (finder.best()) {
+            PC_CHECK(finder.best()->native_control.has_value());
+            PC_CHECK(finder.best()->expected_cost < baseline.total_expected_cost);
+        }
+        const auto expect_refusal = [&](GoalSpec request, std::vector<std::uint32_t> actions,
+                                       std::unordered_map<std::string, double> costs, const char* reason) {
+            CalcContext unavailable(session, request, registry, actions, false, false, false,
+                std::nullopt, {}, false, {}, true);
+            unavailable.set_solve_resource_caps(caps.max_discovered_states, caps.max_reforge_work,
+                false, caps.max_solver_owned_bytes);
+            SelectiveCompletionProducer denied(unavailable, root, costs, caps,
+                SelectiveCompletionVariant::ProtectedScourFill);
+            for (unsigned i = 0; i < 40000 && !denied.done(); ++i) denied.advance();
+            PC_CHECK(denied.done() && !denied.candidate());
+            PC_CHECK(denied.status().starts_with(reason));
+        };
+        expect_refusal(goal, {chaos}, prices, "no_priced_requested_exalt_fill");
+        auto unpriced = prices; unpriced.erase("exalt");
+        expect_refusal(goal, {chaos, exalt}, unpriced, "no_priced_requested_exalt_fill");
+        auto no_bench = goal; no_bench.disabled_action_families |= solver_action_family_bit(SolverActionFamily::Bench);
+        expect_refusal(no_bench, {chaos, exalt}, prices, "no_admitted_held_side_program");
+        auto subset = goal; subset.min_satisfied_slots = 4;
+        expect_refusal(subset, {chaos, exalt}, prices, "protected_scour_fill_requires_all_goals_and_target_craft_space");
+        auto full_target = goal; GoalSlot extra; extra.family_id = session->family_id[7]; extra.min_tier = 1;
+        full_target.slots.push_back(extra);
+        CalcContext full_calc(session, full_target, registry, {chaos, exalt});
+        PC_CHECK(!product_original_root_continuation_scope(full_calc, root, caps));
+        expect_refusal(full_target, {chaos, exalt}, prices, "protected_scour_fill_requires_all_goals_and_target_craft_space");
+    }
 }
 
 void run_solver_protected_finder_tests() {

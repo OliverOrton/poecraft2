@@ -1,0 +1,9 @@
+{
+  "phase": "simulator",
+  "arm": "bow5",
+  "pid": 35836,
+  "identity_token": "35836:134355165023950928",
+  "started_utc": "2026-10-03T15:55:02.399778+00:00",
+  "watchdog_seconds": 7200,
+  "LOCAL_owner": "Sol6.1 serial product qualification"
+}

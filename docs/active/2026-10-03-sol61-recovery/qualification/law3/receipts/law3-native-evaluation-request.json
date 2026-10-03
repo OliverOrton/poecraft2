@@ -1,0 +1,131 @@
+{
+  "source_commit": "b11f4c58f0a7c979f2c66b71892295795944e045",
+  "model": {
+    "rare_reforge_count_law_version": 3,
+    "assumption": "owner-approved single-side ordinary-total 8:3:1; provisional game model"
+  },
+  "artifact": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\data\\runtime-snapshots\\82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+  "pins": {
+    "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\build\\engine\\poecraft_engine.dll": "7b8fba3dbf363a750f2f141874be973b5cd2e6dd3a52d39189fef8c13c32c7c7",
+    "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\evaluate-law3-native.py": "b1eee58665a13b712b7e7326ab4a610ed9a71c623a0bdb6835335c6fe32b5fc4",
+    "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\data\\runtime-snapshots\\82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d\\manifest.json": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-diagnostic-worktree\\out\\selective-cap-repair\\historical-conquest5-goal-order-adapted.strategy.json": "725fcf645903621ec123961846c82143632bcee9d3a0da30302fc002d167720a",
+    "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\conquest5.json": "b19c588b2f004fac7db6dae7fddb3f384693a18d722245f96f4a7c27d0dcd299",
+    "C:\\Users\\Oliver\\Documents\\poecraft2\\apps\\web\\public\\economy\\snapshots\\de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92",
+    "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\production-default-r1-conquest5.strategies\\sol61-trace-conquest5-currentmodel-120.strategy.json": "d65787d11ad895d5925ce9dd4d0aefde483e53bc25df3a80a6a9dfe7a0d7e053",
+    "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\production-fixed-bow4-r2-bow4-dirty.strategies\\sol61-preserved-bow4-currentmodel-120.strategy.json": "e32b550faf63157812628d5bea6a6d5d900848ff7c8944e0bfba25b503a6d347",
+    "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\bow4-dirty.json": "e54d87308c2aca8b5e508b40eb0868419f80c1ddcea765827466f010fad5406b",
+    "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\production-default-r1-amulet3.strategies\\sol61-amulet3-matched-currentlaw-120.strategy.json": "713403e86ba47e362aac1dc6eb56f970e4544dd8a6b353e9d18fd0c7965ab26f",
+    "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\amulet3.json": "9e2eb59392c8934dd6e15b115ec066fee53efe092154f2b0343a93dec70be95b",
+    "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\production-default-r1-bow5.strategies\\sol61-bow5-matched-currentlaw-120.strategy.json": "b6114194af1611cb68dc86994cbcc086f01e9804ecb3ffbca863593f5fb9f38c",
+    "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\bow5.json": "9257aec8f005c5a5869240f8629cd80234fee9ff5c8cf02d3d44250770b9522c"
+  },
+  "policies": [
+    {
+      "arm": "conquest5-historical",
+      "graph": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-diagnostic-worktree\\out\\selective-cap-repair\\historical-conquest5-goal-order-adapted.strategy.json",
+      "graph_sha256": "725fcf645903621ec123961846c82143632bcee9d3a0da30302fc002d167720a",
+      "case": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\conquest5.json",
+      "case_sha256": "b19c588b2f004fac7db6dae7fddb3f384693a18d722245f96f4a7c27d0dcd299",
+      "command": {
+        "argv": [
+          "C:\\Users\\Oliver\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+          "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\evaluate-law3-native.py",
+          "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-request.json",
+          "conquest5-historical"
+        ],
+        "cwd": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree",
+        "host_watchdog_seconds": 60,
+        "host_reservation": {},
+        "identity_sha256": "e48639526a9ebc5893ad16c92f9526c4f9ea5d5b36a1addde64fb6ffb7481dc2"
+      }
+    },
+    {
+      "arm": "conquest5-current",
+      "graph": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\production-default-r1-conquest5.strategies\\sol61-trace-conquest5-currentmodel-120.strategy.json",
+      "graph_sha256": "d65787d11ad895d5925ce9dd4d0aefde483e53bc25df3a80a6a9dfe7a0d7e053",
+      "case": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\conquest5.json",
+      "case_sha256": "b19c588b2f004fac7db6dae7fddb3f384693a18d722245f96f4a7c27d0dcd299",
+      "command": {
+        "argv": [
+          "C:\\Users\\Oliver\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+          "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\evaluate-law3-native.py",
+          "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-request.json",
+          "conquest5-current"
+        ],
+        "cwd": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree",
+        "host_watchdog_seconds": 60,
+        "host_reservation": {},
+        "identity_sha256": "2a229ec7ecbc103c0860f3d1b3f1644d391b68a6f24bbbbeeefce27d302ab370"
+      }
+    },
+    {
+      "arm": "bow4-dirty",
+      "graph": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\production-fixed-bow4-r2-bow4-dirty.strategies\\sol61-preserved-bow4-currentmodel-120.strategy.json",
+      "graph_sha256": "e32b550faf63157812628d5bea6a6d5d900848ff7c8944e0bfba25b503a6d347",
+      "case": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\bow4-dirty.json",
+      "case_sha256": "e54d87308c2aca8b5e508b40eb0868419f80c1ddcea765827466f010fad5406b",
+      "command": {
+        "argv": [
+          "C:\\Users\\Oliver\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+          "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\evaluate-law3-native.py",
+          "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-request.json",
+          "bow4-dirty"
+        ],
+        "cwd": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree",
+        "host_watchdog_seconds": 60,
+        "host_reservation": {},
+        "identity_sha256": "51a12955d85a176936f7adcfe5dc2ca6db32c940bac8fee0d2e6e7b3c0fe56b7"
+      }
+    },
+    {
+      "arm": "amulet3",
+      "graph": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\production-default-r1-amulet3.strategies\\sol61-amulet3-matched-currentlaw-120.strategy.json",
+      "graph_sha256": "713403e86ba47e362aac1dc6eb56f970e4544dd8a6b353e9d18fd0c7965ab26f",
+      "case": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\amulet3.json",
+      "case_sha256": "9e2eb59392c8934dd6e15b115ec066fee53efe092154f2b0343a93dec70be95b",
+      "command": {
+        "argv": [
+          "C:\\Users\\Oliver\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+          "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\evaluate-law3-native.py",
+          "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-request.json",
+          "amulet3"
+        ],
+        "cwd": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree",
+        "host_watchdog_seconds": 60,
+        "host_reservation": {},
+        "identity_sha256": "a17ea93bf3cc7a820680d78cfec7be9a46f12e5d1e3f65dc4bfd75330e255ce3"
+      }
+    },
+    {
+      "arm": "bow5",
+      "graph": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\production-default-r1-bow5.strategies\\sol61-bow5-matched-currentlaw-120.strategy.json",
+      "graph_sha256": "b6114194af1611cb68dc86994cbcc086f01e9804ecb3ffbca863593f5fb9f38c",
+      "case": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\bow5.json",
+      "case_sha256": "9257aec8f005c5a5869240f8629cd80234fee9ff5c8cf02d3d44250770b9522c",
+      "command": {
+        "argv": [
+          "C:\\Users\\Oliver\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+          "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\evaluate-law3-native.py",
+          "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-request.json",
+          "bow5"
+        ],
+        "cwd": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree",
+        "host_watchdog_seconds": 60,
+        "host_reservation": {},
+        "identity_sha256": "8cbc20aa62e2b909fc2644efa73b151ea1b2131363501765e6785b9964085a32"
+      }
+    }
+  ],
+  "evaluation_options": {
+    "max_states": 800000,
+    "max_pairs": 1215000,
+    "max_transitions": 10000000,
+    "max_owned_bytes": 1073741824,
+    "max_output_json_bytes": 16777216
+  },
+  "serial": true,
+  "LOCAL_owner": "Sol6.1",
+  "trials": 0,
+  "new_solves": 0
+}

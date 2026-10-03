@@ -1,0 +1,11 @@
+{
+  "original_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dual-lane-target-support\\U4\\current-ordinary-L\\strategies\\cb01-cross-base-product8-long240.strategy.json",
+  "original_sha256": "7df8b8be00a5c4513d6d5fb761605b5c399957c714079d8c39a103add036dc02",
+  "adapted_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-diagnostic-worktree\\out\\selective-cap-repair\\historical-conquest5-goal-order-adapted.strategy.json",
+  "adapted_sha256": "725fcf645903621ec123961846c82143632bcee9d3a0da30302fc002d167720a",
+  "only_logical_edit": "replace sole non-default success-ingress predicate with current native request predicate after equality modulo All/Any child order; routing nodes/edges/priorities/operations/base remain unchanged",
+  "full_atom_arguments_and_multiplicities_preserved": true,
+  "original_validator_unmodified": true,
+  "scope_and_economic_preflight": "pending; may refuse operations outside original trace scope; no certificate import",
+  "original_bytes_unchanged": true
+}

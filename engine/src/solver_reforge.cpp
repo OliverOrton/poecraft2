@@ -1999,8 +1999,16 @@ CalcContext::evaluate_reforge_cooperatively(
         const int other_count =
             eldritch_side == PC_SIDE_PREFIX ? base.suffix_count
                                             : base.prefix_count;
-        add_target(other_count + 2, 0.5);
-        add_target(other_count + 3, 0.5);
+        const int preserved_count =
+            eldritch_side == PC_SIDE_PREFIX ? base.prefix_count
+                                            : base.suffix_count;
+        const auto law = rare_reforge_count_law(session.rare_reforge_count_kind);
+        for (const auto& draw : law.draws) {
+            if (draw.weight == 0) continue;
+            add_target(single_side_rare_reforge_target_total(
+                           draw.count, other_count, preserved_count, cap),
+                       static_cast<double>(draw.weight) / law.denominator);
+        }
     } else {
         const auto law = rare_reforge_count_law(session.rare_reforge_count_kind);
         for (const auto& draw : law.draws) {

@@ -1,0 +1,34 @@
+diff --git a/engine/tests/test_solver_calc.cpp b/engine/tests/test_solver_calc.cpp
+index caff2c85..c5e85018 100644
+--- a/engine/tests/test_solver_calc.cpp
++++ b/engine/tests/test_solver_calc.cpp
+@@ -4594,8 +4594,17 @@ void run_eldritch_side_count_law_tests() {
+                             const auto* original = side == 0 ? source.suffixes : source.prefixes;
+                             const auto* opposite = side == 0 ? item.suffixes : item.prefixes;
+                             const auto other_count = side == 0 ? item.suffix_count : item.prefix_count;
+-                            if (other_count != held ||
+-                                std::memcmp(opposite, original, sizeof(source.prefixes)) != 0) return false;
++                            if (other_count != held) return false;
++                            // Exact materialization orders goal and junk carriers
++                            // canonically; retain each slot's full identity rather
++                            // than requiring the physical input array order.
++                            for (unsigned i = 0; i < held; ++i) {
++                                bool found = false;
++                                for (unsigned j = 0; j < held; ++j)
++                                    found |= std::memcmp(&opposite[j], &original[i],
++                                                         sizeof(pc_mod_slot)) == 0;
++                                if (!found) return false;
++                            }
+                             const auto* selected = side == 0 ? item.prefixes : item.suffixes;
+                             for (unsigned i = 0; i < fractures; ++i) {
+                                 bool found = false;
+@@ -4672,6 +4681,9 @@ void run_eldritch_side_count_law_tests() {
+                             auto item = source;
+                             const auto outcome = apply_action(context, &item, registry.actions[action].params);
+                             PC_CHECK(outcome.applied && retained(item));
++                            PC_CHECK(std::memcmp(side == 0 ? item.suffixes : item.prefixes,
++                                                 side == 0 ? source.suffixes : source.prefixes,
++                                                 sizeof(source.prefixes)) == 0);
+                             PC_CHECK(outcome.added == side_count(item) - fractures);
+                             PC_CHECK(outcome.removed == side_count(source) - fractures);
+                             ++counts[side_count(item)];

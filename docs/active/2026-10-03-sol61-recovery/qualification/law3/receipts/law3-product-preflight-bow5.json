@@ -1,0 +1,74 @@
+{
+  "graph_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\production-default-r1-bow5.strategies\\sol61-bow5-matched-currentlaw-120.strategy.json",
+  "graph_sha256": "b6114194af1611cb68dc86994cbcc086f01e9804ecb3ffbca863593f5fb9f38c",
+  "case_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\bow5.json",
+  "artifact_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\data\\runtime-snapshots\\82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+  "economy_identity": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+  "scope": "ordinary_strategy_execution_diagnostic; no imported native programme provenance or solver incumbent admission",
+  "trials": 0,
+  "status": "passed",
+  "product_board_import": "passed",
+  "exact": {
+    "converged": true,
+    "terminals": {
+      "success": 1,
+      "failure": 0,
+      "stop": 0,
+      "action_not_applied": 0,
+      "no_matching_edge": 0,
+      "unresolved": 0,
+      "by_node": [
+        {
+          "node_id": "c2",
+          "kind": "success",
+          "p": 1
+        }
+      ]
+    },
+    "expected_actions": 2643099.363149086,
+    "cost_complete": true,
+    "total_expected_cost": 4071502.8714904664,
+    "memory": {
+      "owned_bytes_estimate": 191334432,
+      "peak_owned_bytes_estimate": 253302658,
+      "retained_output_owned_bytes_estimate": 0,
+      "max_owned_bytes": 1073741824,
+      "max_output_json_bytes": 16777216
+    },
+    "consumption": [
+      {
+        "key": "bench:StrMasterItemGenerationCannotChangePrefixes",
+        "quantity": 3369.5577613388377
+      },
+      {
+        "key": "chaos",
+        "quantity": 2629620.531395418
+      },
+      {
+        "key": "exalt",
+        "quantity": 6739.716230996815
+      },
+      {
+        "key": "scour",
+        "quantity": 3369.5577613388377
+      }
+    ]
+  },
+  "native_cost_parity": {
+    "expected_cost": 4071502.8714904664,
+    "tolerance_relative": 1e-9,
+    "status": "passed"
+  },
+  "wasm_memory": {
+    "initial_linear_memory_bytes": 134217728,
+    "current_linear_memory_bytes": 400949248,
+    "peak_observed_linear_memory_bytes": 400949248,
+    "linear_memory_growth_only": true,
+    "configured_maximum_linear_memory_bytes": 4294967296,
+    "process_rss_bytes": 559910912,
+    "process_rss_peak_observed_bytes": 559910912,
+    "process_lifetime_max_rss_bytes": 562044928,
+    "rss_scope": "fresh Node process, including worker; observations at product response boundaries"
+  },
+  "wall_ms": 7640.2534000000005
+}

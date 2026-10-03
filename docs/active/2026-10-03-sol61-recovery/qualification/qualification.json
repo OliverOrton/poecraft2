@@ -1,0 +1,1782 @@
+{
+  "schema_version": "sol61_product_recovery_qualification_v1",
+  "created_utc": "2026-10-03T16:26:21.744110+00:00",
+  "qualified_source_commit": "afa83210196a2e07c00ccc6650881b44ae1b0e84",
+  "base_main": "72448deaacca2797058de0559378685ba71a983f",
+  "repair_commits": [
+    "5f7dbd274b38c93027593b5dcd9f7f9f053cb478",
+    "1e7a50b272f7e09b2a67443398a34ec7fdef5a6c",
+    "afa83210196a2e07c00ccc6650881b44ae1b0e84"
+  ],
+  "wasm_identity": {
+    "bindings\\wasm\\dist\\poecraft_engine.wasm": {
+      "sha256": "a4388e4bec43d61cb7c184978fa0c161e54812a4101d3d1c588fc753630aa387",
+      "bytes": 8608289
+    },
+    "bindings\\wasm\\dist\\poecraft_engine.mjs": {
+      "sha256": "23c405b984e19595b4007259d8d45fe713ea31a534c091c2ef9433ffbe2f1363",
+      "bytes": 21788
+    }
+  },
+  "native_binary_identity": {
+    "build\\engine\\poecraft_engine_tests.exe": "763149af457e8cfc17e24aed750548df407bd2dcc3758543effce6073ed5259f",
+    "build\\engine\\poecraft_solver_benchmark.exe": "e8353abb0aa3d98ec765a9f6e4ae33f6416a6cfa5531241ca81f404154a08af1"
+  },
+  "native_focused_checks": 52359,
+  "reporter_tests": 27,
+  "web": {
+    "npm_test": "passed",
+    "wasm_smoke": "37/37",
+    "typescript": "passed",
+    "browser_channel": "installed chrome; existing repository-supported local channel",
+    "Finish_Cancel": "actual worker dispatch plus actual WASM cancellation smoke passed"
+  },
+  "policy_matrix": [
+    {
+      "case": "bow4-dirty",
+      "native_product_cost_parity": {
+        "expected_cost": 38497.785744000365,
+        "tolerance_relative": 1e-09,
+        "status": "passed"
+      },
+      "exact": {
+        "converged": true,
+        "terminals": {
+          "success": 1,
+          "failure": 0,
+          "stop": 0,
+          "action_not_applied": 0,
+          "no_matching_edge": 0,
+          "unresolved": 0,
+          "by_node": [
+            {
+              "node_id": "goal",
+              "kind": "success",
+              "p": 1
+            },
+            {
+              "node_id": "offpolicy",
+              "kind": "failure",
+              "p": 0
+            }
+          ]
+        },
+        "expected_actions": 451.00000000000443,
+        "cost_complete": true,
+        "total_expected_cost": 38497.785744000365,
+        "memory": {
+          "owned_bytes_estimate": 842644,
+          "peak_owned_bytes_estimate": 1660276,
+          "retained_output_owned_bytes_estimate": 0,
+          "max_owned_bytes": 1073741824,
+          "max_output_json_bytes": 16777216
+        },
+        "consumption": [
+          {
+            "key": "bench:JunMaster2LocalAccuracyRatingStrengthDexterity2",
+            "quantity": 90.20000000000086
+          },
+          {
+            "key": "bench:StrMasterItemGenerationCannotChangePrefixes",
+            "quantity": 90.20000000000086
+          },
+          {
+            "key": "exalt",
+            "quantity": 90.20000000000086
+          },
+          {
+            "key": "scour",
+            "quantity": 180.4000000000017
+          }
+        ]
+      },
+      "simulator": {
+        "summary": {
+          "completed_runs": 1000,
+          "success_count": 1000,
+          "failure_count": 0,
+          "stop_count": 0,
+          "total_actions": 459275,
+          "action_limit_count": 0,
+          "cost_limit_count": 0,
+          "step_limit_count": 0,
+          "no_matching_edge_count": 0,
+          "action_not_applied_count": 0,
+          "missing_price_run_count": 0,
+          "costed_action_count": 459275,
+          "missing_price_action_count": 0,
+          "known_total_cost": 39204147.55560009,
+          "cost_status": "complete",
+          "seed": 27092026,
+          "target_runs": 1000
+        },
+        "failure_summaries": []
+      },
+      "simulator_qualification": {
+        "requested_runs": 1000,
+        "max_actions_per_run": 1000000,
+        "max_graph_steps_per_run": 4000000,
+        "max_cost_per_run": 1000000000,
+        "success_count": 1000,
+        "failures": [],
+        "meaning": "finite execution qualification; censored runs do not estimate uncapped policy EV"
+      },
+      "product_wasm_memory": {
+        "initial_linear_memory_bytes": 134217728,
+        "current_linear_memory_bytes": 278396928,
+        "peak_observed_linear_memory_bytes": 278396928,
+        "linear_memory_growth_only": true,
+        "configured_maximum_linear_memory_bytes": 4294967296,
+        "process_rss_bytes": 395681792,
+        "process_rss_peak_observed_bytes": 466010112,
+        "process_lifetime_max_rss_bytes": 472735744,
+        "rss_scope": "fresh Node process, including worker; observations at product response boundaries"
+      },
+      "wall_ms": 4345.0439
+    },
+    {
+      "case": "conquest5",
+      "native_product_cost_parity": {
+        "expected_cost": 100658.06762279187,
+        "tolerance_relative": 1e-09,
+        "status": "passed"
+      },
+      "exact": {
+        "converged": true,
+        "terminals": {
+          "success": 1,
+          "failure": 0,
+          "stop": 0,
+          "action_not_applied": 0,
+          "no_matching_edge": 0,
+          "unresolved": 0,
+          "by_node": [
+            {
+              "node_id": "c6",
+              "kind": "success",
+              "p": 1
+            }
+          ]
+        },
+        "expected_actions": 23139.675629263053,
+        "cost_complete": true,
+        "total_expected_cost": 100658.06762279187,
+        "memory": {
+          "owned_bytes_estimate": 33273891,
+          "peak_owned_bytes_estimate": 41717700,
+          "retained_output_owned_bytes_estimate": 0,
+          "max_owned_bytes": 1073741824,
+          "max_output_json_bytes": 16777216
+        },
+        "consumption": [
+          {
+            "key": "chaos",
+            "quantity": 19867.453763869078
+          },
+          {
+            "key": "eldritch_annul",
+            "quantity": 816.3308045664453
+          },
+          {
+            "key": "eldritch_chaos",
+            "quantity": 1091.8447791332521
+          },
+          {
+            "key": "eldritch_ember:1",
+            "quantity": 0.9999683293112982
+          },
+          {
+            "key": "eldritch_exalt",
+            "quantity": 1363.0463133649205
+          }
+        ]
+      },
+      "simulator": {
+        "summary": {
+          "completed_runs": 1000,
+          "success_count": 1000,
+          "failure_count": 0,
+          "stop_count": 0,
+          "total_actions": 23465828,
+          "action_limit_count": 0,
+          "cost_limit_count": 0,
+          "step_limit_count": 0,
+          "no_matching_edge_count": 0,
+          "action_not_applied_count": 0,
+          "missing_price_run_count": 0,
+          "costed_action_count": 23465828,
+          "missing_price_action_count": 0,
+          "known_total_cost": 103870829.0799996,
+          "cost_status": "complete",
+          "seed": 27092026,
+          "target_runs": 1000
+        },
+        "failure_summaries": []
+      },
+      "simulator_qualification": {
+        "requested_runs": 1000,
+        "max_actions_per_run": 1000000,
+        "max_graph_steps_per_run": 4000000,
+        "max_cost_per_run": 1000000000,
+        "success_count": 1000,
+        "failures": [],
+        "meaning": "finite execution qualification; censored runs do not estimate uncapped policy EV"
+      },
+      "product_wasm_memory": {
+        "initial_linear_memory_bytes": 134217728,
+        "current_linear_memory_bytes": 278396928,
+        "peak_observed_linear_memory_bytes": 278396928,
+        "linear_memory_growth_only": true,
+        "configured_maximum_linear_memory_bytes": 4294967296,
+        "process_rss_bytes": 269217792,
+        "process_rss_peak_observed_bytes": 456392704,
+        "process_lifetime_max_rss_bytes": 468164608,
+        "rss_scope": "fresh Node process, including worker; observations at product response boundaries"
+      },
+      "wall_ms": 11094.883199999998
+    },
+    {
+      "case": "amulet3",
+      "native_product_cost_parity": {
+        "expected_cost": 18996.576948551738,
+        "tolerance_relative": 1e-09,
+        "status": "passed"
+      },
+      "exact": {
+        "converged": true,
+        "terminals": {
+          "success": 1,
+          "failure": 0,
+          "stop": 0,
+          "action_not_applied": 0,
+          "no_matching_edge": 0,
+          "unresolved": 0,
+          "by_node": [
+            {
+              "node_id": "c2",
+              "kind": "success",
+              "p": 1
+            }
+          ]
+        },
+        "expected_actions": 47055.97225374125,
+        "cost_complete": true,
+        "total_expected_cost": 18996.576948551738,
+        "memory": {
+          "owned_bytes_estimate": 158877117,
+          "peak_owned_bytes_estimate": 214722009,
+          "retained_output_owned_bytes_estimate": 0,
+          "max_owned_bytes": 1073741824,
+          "max_output_json_bytes": 16777216
+        },
+        "consumption": [
+          {
+            "key": "bench:DexMasterItemGenerationCannotChangeSuffixes",
+            "quantity": 1.0000000000001288
+          },
+          {
+            "key": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+            "quantity": 47053.972253741274
+          },
+          {
+            "key": "scour",
+            "quantity": 1.0000000000001288
+          }
+        ]
+      },
+      "simulator": {
+        "summary": {
+          "completed_runs": 1000,
+          "success_count": 1000,
+          "failure_count": 0,
+          "stop_count": 0,
+          "total_actions": 46426572,
+          "action_limit_count": 0,
+          "cost_limit_count": 0,
+          "step_limit_count": 0,
+          "no_matching_edge_count": 0,
+          "action_not_applied_count": 0,
+          "missing_price_run_count": 0,
+          "costed_action_count": 46426572,
+          "missing_price_action_count": 0,
+          "known_total_cost": 18748152.66840204,
+          "cost_status": "complete",
+          "seed": 27092026,
+          "target_runs": 1000
+        },
+        "failure_summaries": []
+      },
+      "simulator_qualification": {
+        "requested_runs": 1000,
+        "max_actions_per_run": 1000000,
+        "max_graph_steps_per_run": 4000000,
+        "max_cost_per_run": 1000000000,
+        "success_count": 1000,
+        "failures": [],
+        "meaning": "finite execution qualification; censored runs do not estimate uncapped policy EV"
+      },
+      "product_wasm_memory": {
+        "initial_linear_memory_bytes": 134217728,
+        "current_linear_memory_bytes": 400949248,
+        "peak_observed_linear_memory_bytes": 400949248,
+        "linear_memory_growth_only": true,
+        "configured_maximum_linear_memory_bytes": 4294967296,
+        "process_rss_bytes": 416264192,
+        "process_rss_peak_observed_bytes": 531525632,
+        "process_lifetime_max_rss_bytes": 533614592,
+        "rss_scope": "fresh Node process, including worker; observations at product response boundaries"
+      },
+      "wall_ms": 22962.1378
+    },
+    {
+      "case": "bow5",
+      "native_product_cost_parity": {
+        "expected_cost": 4071502.8714904664,
+        "tolerance_relative": 1e-09,
+        "status": "passed"
+      },
+      "exact": {
+        "converged": true,
+        "terminals": {
+          "success": 1,
+          "failure": 0,
+          "stop": 0,
+          "action_not_applied": 0,
+          "no_matching_edge": 0,
+          "unresolved": 0,
+          "by_node": [
+            {
+              "node_id": "c2",
+              "kind": "success",
+              "p": 1
+            }
+          ]
+        },
+        "expected_actions": 2643099.363149086,
+        "cost_complete": true,
+        "total_expected_cost": 4071502.8714904664,
+        "memory": {
+          "owned_bytes_estimate": 191334432,
+          "peak_owned_bytes_estimate": 253302658,
+          "retained_output_owned_bytes_estimate": 0,
+          "max_owned_bytes": 1073741824,
+          "max_output_json_bytes": 16777216
+        },
+        "consumption": [
+          {
+            "key": "bench:StrMasterItemGenerationCannotChangePrefixes",
+            "quantity": 3369.5577613388377
+          },
+          {
+            "key": "chaos",
+            "quantity": 2629620.531395418
+          },
+          {
+            "key": "exalt",
+            "quantity": 6739.716230996815
+          },
+          {
+            "key": "scour",
+            "quantity": 3369.5577613388377
+          }
+        ]
+      },
+      "simulator": {
+        "summary": {
+          "completed_runs": 1000,
+          "success_count": 338,
+          "failure_count": 662,
+          "stop_count": 0,
+          "total_actions": 822414198,
+          "action_limit_count": 662,
+          "cost_limit_count": 0,
+          "step_limit_count": 0,
+          "no_matching_edge_count": 0,
+          "action_not_applied_count": 0,
+          "missing_price_run_count": 0,
+          "costed_action_count": 822414198,
+          "missing_price_action_count": 0,
+          "known_total_cost": 1289137841.7843518,
+          "cost_status": "complete",
+          "seed": 27092026,
+          "target_runs": 1000
+        },
+        "failure_summaries": [
+          {
+            "failure_reason": 2,
+            "node_id": "c1",
+            "detail": "action limit reached",
+            "count": 658
+          },
+          {
+            "failure_reason": 2,
+            "node_id": "c3",
+            "detail": "action limit reached",
+            "count": 1
+          },
+          {
+            "failure_reason": 2,
+            "node_id": "c3_o1",
+            "detail": "action limit reached",
+            "count": 2
+          },
+          {
+            "failure_reason": 2,
+            "node_id": "c9",
+            "detail": "action limit reached",
+            "count": 1
+          }
+        ]
+      },
+      "simulator_qualification": {
+        "requested_runs": 1000,
+        "max_actions_per_run": 1000000,
+        "max_graph_steps_per_run": 4000000,
+        "max_cost_per_run": 1000000000,
+        "success_count": 338,
+        "failures": [
+          {
+            "failure_reason": 2,
+            "node_id": "c1",
+            "detail": "action limit reached",
+            "count": 658
+          },
+          {
+            "failure_reason": 2,
+            "node_id": "c3",
+            "detail": "action limit reached",
+            "count": 1
+          },
+          {
+            "failure_reason": 2,
+            "node_id": "c3_o1",
+            "detail": "action limit reached",
+            "count": 2
+          },
+          {
+            "failure_reason": 2,
+            "node_id": "c9",
+            "detail": "action limit reached",
+            "count": 1
+          }
+        ],
+        "meaning": "finite execution qualification; censored runs do not estimate uncapped policy EV"
+      },
+      "product_wasm_memory": {
+        "initial_linear_memory_bytes": 134217728,
+        "current_linear_memory_bytes": 400949248,
+        "peak_observed_linear_memory_bytes": 400949248,
+        "linear_memory_growth_only": true,
+        "configured_maximum_linear_memory_bytes": 4294967296,
+        "process_rss_bytes": 415617024,
+        "process_rss_peak_observed_bytes": 564805632,
+        "process_lifetime_max_rss_bytes": 566689792,
+        "rss_scope": "fresh Node process, including worker; observations at product response boundaries"
+      },
+      "wall_ms": 293473.9242
+    }
+  ],
+  "fresh_browser_solve": {
+    "source_commit": "afa83210196a2e07c00ccc6650881b44ae1b0e84",
+    "wasm_sha256": "a4388e4bec43d61cb7c184978fa0c161e54812a4101d3d1c588fc753630aa387",
+    "browser_version": "152.0.7977.83",
+    "request_options": {
+      "solve_profile": "calculator_product_v1"
+    },
+    "native_default_limits": {
+      "discovered_states": 800000,
+      "expanded_states": 200000,
+      "solver_owned_bytes": 1073741824,
+      "authority": "source-pinned native calculator_product_v1 resolver; product omits overrides"
+    },
+    "summary": {
+      "converged": false,
+      "policy_available": true,
+      "policy_status": "bounded_feasible",
+      "termination": "requested_bounded_finish",
+      "stop_cause": "requested_bounded_finish",
+      "cap_hit_mask": 0,
+      "expanded_states": 2898,
+      "lower_bound": 0,
+      "upper_bound": 4071502.8714904664,
+      "evaluated_policy_cost": 4071502.8714904664
+    },
+    "worker": {
+      "work_policy": "adaptive",
+      "step_transport": "compact",
+      "step_count": 480024,
+      "max_step_ms": 1167.3999998569489,
+      "finalization_ms": 58.200000047683716
+    },
+    "ui_milestones": [
+      {
+        "stage": "worker_solve_requested",
+        "ui_elapsed_ms": 64.90000009536743
+      },
+      {
+        "stage": "worker_result_received",
+        "ui_elapsed_ms": 240767.5
+      },
+      {
+        "stage": "strategy_export",
+        "ui_elapsed_ms": 240858.09999990463
+      },
+      {
+        "stage": "handle_cleanup",
+        "ui_elapsed_ms": 240864
+      },
+      {
+        "stage": "ui_delivery_completed",
+        "ui_elapsed_ms": 240920.40000009537
+      }
+    ],
+    "memory": {
+      "baseline": {
+        "ok": true,
+        "live_handles": 1,
+        "native_live_owned_bytes": 184,
+        "native_peak_owned_bytes": 184,
+        "native_serialized_output_bytes": 159,
+        "scope": "facade_registries_plus_solver_and_evaluator_owned_allocations",
+        "wasm_memory_bytes": 334102528
+      },
+      "before_solve": {
+        "ok": true,
+        "live_handles": 7,
+        "native_live_owned_bytes": 1212314,
+        "native_peak_owned_bytes": 1212314,
+        "native_serialized_output_bytes": 103,
+        "scope": "facade_registries_plus_solver_and_evaluator_owned_allocations",
+        "wasm_memory_bytes": 334102528
+      },
+      "after_solve_before_cleanup": {
+        "ok": true,
+        "live_handles": 7,
+        "native_live_owned_bytes": 629442194,
+        "native_peak_owned_bytes": 681409083,
+        "native_serialized_output_bytes": 1103,
+        "scope": "facade_registries_plus_solver_and_evaluator_owned_allocations",
+        "wasm_memory_bytes": 912916480
+      },
+      "after_calculator_cleanup": {
+        "ok": true,
+        "live_handles": 4,
+        "native_live_owned_bytes": 606490,
+        "native_peak_owned_bytes": 606490,
+        "native_serialized_output_bytes": 50,
+        "scope": "facade_registries_plus_solver_and_evaluator_owned_allocations",
+        "wasm_memory_bytes": 912916480
+      }
+    },
+    "process_receipt": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 55612,
+      "process_identity_token": "55612:134355175450701229",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 249004.9112997949
+    },
+    "operation_types": [
+      "bench",
+      "chaos",
+      "exalt",
+      "scour"
+    ],
+    "page_errors": [],
+    "console_errors": []
+  },
+  "disposition": "Bounded feasible root-policy recovery; exact independent cost is qualified, optimal closure is not. Feeder/Lock/Recombination and multi-goal source gains from main preserved.",
+  "exclusions": [
+    "Budget-changing200k/800k runs are not interchangeable financial comparisons. run_overrides and resolved_checker_caps remain comparison identities.",
+    "Bow5:338success+662action-limit-censored; capped sample mean is not uncappedEV.",
+    "No pinned-Playwright-browser parity or rendered visual review claimed; installed Chrome used.",
+    "Optional current-law blocker constructor remains separately refused/unresolved; it does not erase retained checked fallback.",
+    "Main workspace, protected0, frozen SQLite/runtime/prices and existing npm dev untouched; no merge/push/deployment."
+  ],
+  "receipt_index": [
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\budget-identity-r3-tests.log",
+      "portable_path": "receipts/budget-identity-r3-tests.log",
+      "original_sha256": "cfb96e95b72412d9831d7448dd46a75ca7f359f1c216952965a02759b3cc3ef0",
+      "original_bytes": 101,
+      "stored_sha256": "cfb96e95b72412d9831d7448dd46a75ca7f359f1c216952965a02759b3cc3ef0",
+      "stored_bytes": 101,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\budget-identity-r3-tests.receipt.json",
+      "portable_path": "receipts/budget-identity-r3-tests.receipt.json",
+      "original_sha256": "9215ac287a3194a9d7e4d5939270fac3e14d092923c4398bd65167f7827edcc5",
+      "original_bytes": 899,
+      "stored_sha256": "9215ac287a3194a9d7e4d5939270fac3e14d092923c4398bd65167f7827edcc5",
+      "stored_bytes": 899,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-default-r1-runtime-request.json",
+      "portable_path": "receipts/production-default-r1-runtime-request.json",
+      "original_sha256": "f54af937909e9129f8b2de148e9c9bbb045015e3ec52899bdd74033c718b8164",
+      "original_bytes": 12860,
+      "stored_sha256": "f54af937909e9129f8b2de148e9c9bbb045015e3ec52899bdd74033c718b8164",
+      "stored_bytes": 12860,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-default-r1-runtime-result.json",
+      "portable_path": "receipts/production-default-r1-runtime-result.json",
+      "original_sha256": "6c976848633c2b9619328fce1bbb9e43cf14b8f0fb03d4ae49a2bd95f4647f26",
+      "original_bytes": 9959,
+      "stored_sha256": "6c976848633c2b9619328fce1bbb9e43cf14b8f0fb03d4ae49a2bd95f4647f26",
+      "stored_bytes": 9959,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-fixed-bow4-r2-bow4-dirty.receipt.json",
+      "portable_path": "receipts/production-fixed-bow4-r2-bow4-dirty.receipt.json",
+      "original_sha256": "e01cd500469f09a5acaf8366af203ba8e91b747c439a350775270f58a6711a45",
+      "original_bytes": 328,
+      "stored_sha256": "e01cd500469f09a5acaf8366af203ba8e91b747c439a350775270f58a6711a45",
+      "stored_bytes": 328,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-fixed-bow4-r2-runtime-request.json",
+      "portable_path": "receipts/production-fixed-bow4-r2-runtime-request.json",
+      "original_sha256": "f63378fe9ef34431fcaa35bc86af5861e76969dcac8bff50bf38f477e5f5ebf8",
+      "original_bytes": 3270,
+      "stored_sha256": "f63378fe9ef34431fcaa35bc86af5861e76969dcac8bff50bf38f477e5f5ebf8",
+      "stored_bytes": 3270,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-fixed-bow4-r2-runtime-result.json",
+      "portable_path": "receipts/production-fixed-bow4-r2-runtime-result.json",
+      "original_sha256": "df03d5793a81d9a5800274ee692fbeff06ed54076ecfba8d9c2b43841a2d7dfe",
+      "original_bytes": 2387,
+      "stored_sha256": "df03d5793a81d9a5800274ee692fbeff06ed54076ecfba8d9c2b43841a2d7dfe",
+      "stored_bytes": 2387,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-matched-r1-runtime-request.json",
+      "portable_path": "receipts/production-matched-r1-runtime-request.json",
+      "original_sha256": "d050b581355646a06196e2da772d235b25a1772023046eb249315df4a0e1c703",
+      "original_bytes": 8596,
+      "stored_sha256": "d050b581355646a06196e2da772d235b25a1772023046eb249315df4a0e1c703",
+      "stored_bytes": 8596,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-matched-r1-runtime-result.json",
+      "portable_path": "receipts/production-matched-r1-runtime-result.json",
+      "original_sha256": "299e572bd1a3ae95d3fc46054a46ad3a3549e4fc3add8e84481357f17ff53bc2",
+      "original_bytes": 7447,
+      "stored_sha256": "299e572bd1a3ae95d3fc46054a46ad3a3549e4fc3add8e84481357f17ff53bc2",
+      "stored_bytes": 7447,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-browser-bow5-started.json",
+      "portable_path": "receipts/production-product-r1-browser-bow5-started.json",
+      "original_sha256": "1a22596288af8fa2b7ef865b954ac207fe607cff14ce01cf57e50e738cbb1ec0",
+      "original_bytes": 251,
+      "stored_sha256": "1a22596288af8fa2b7ef865b954ac207fe607cff14ce01cf57e50e738cbb1ec0",
+      "stored_bytes": 251,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-browser-bow5.json",
+      "portable_path": "receipts/production-product-r1-browser-bow5.json",
+      "original_sha256": "3c9114edf80cabbcef8aea54f040cb74834aee5d6de4ba336a99c30d7d94a8da",
+      "original_bytes": 2087,
+      "stored_sha256": "3c9114edf80cabbcef8aea54f040cb74834aee5d6de4ba336a99c30d7d94a8da",
+      "stored_bytes": 2087,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-browser-bow5.log",
+      "portable_path": "receipts/production-product-r1-browser-bow5.log",
+      "original_sha256": "8caf85307ff1c971da880ae71a7ca617958ea14ae5ff7f8cefb6963e2710c7ed",
+      "original_bytes": 758,
+      "stored_sha256": "8caf85307ff1c971da880ae71a7ca617958ea14ae5ff7f8cefb6963e2710c7ed",
+      "stored_bytes": 758,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-browser-bow5.receipt.json",
+      "portable_path": "receipts/production-product-r1-browser-bow5.receipt.json",
+      "original_sha256": "d67c174282d96fa104dd4d50cab2d71d81b7130b270dc4461156933738ccfd13",
+      "original_bytes": 328,
+      "stored_sha256": "d67c174282d96fa104dd4d50cab2d71d81b7130b270dc4461156933738ccfd13",
+      "stored_bytes": 328,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-browser-receipts.json",
+      "portable_path": "receipts/production-product-r1-browser-receipts.json",
+      "original_sha256": "405d69f4beb054b66ae7f84d2fe1770c023c816fe673d9442755c6be78f67339",
+      "original_bytes": 423,
+      "stored_sha256": "405d69f4beb054b66ae7f84d2fe1770c023c816fe673d9442755c6be78f67339",
+      "stored_bytes": 423,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-browser-request.json",
+      "portable_path": "receipts/production-product-r1-browser-request.json",
+      "original_sha256": "604c3e44e0be5a466fc64811634c38af5bcbb399e461ac35cb355aed904acb70",
+      "original_bytes": 4624,
+      "stored_sha256": "604c3e44e0be5a466fc64811634c38af5bcbb399e461ac35cb355aed904acb70",
+      "stored_bytes": 4624,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-preflight-amulet3-started.json",
+      "portable_path": "receipts/production-product-r1-preflight-amulet3-started.json",
+      "original_sha256": "70dd132de9fe601fb2164049b8f2cf8fbce427c175632960680e8ce036be0107",
+      "original_bytes": 256,
+      "stored_sha256": "70dd132de9fe601fb2164049b8f2cf8fbce427c175632960680e8ce036be0107",
+      "stored_bytes": 256,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-preflight-amulet3.json",
+      "portable_path": "receipts/production-product-r1-preflight-amulet3.json",
+      "original_sha256": "135fbeb1c46777dc160203e2448d1c2d2390df9a7d549db0b42e581fc36fb257",
+      "original_bytes": 2638,
+      "stored_sha256": "135fbeb1c46777dc160203e2448d1c2d2390df9a7d549db0b42e581fc36fb257",
+      "stored_bytes": 2638,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-preflight-amulet3.log",
+      "portable_path": "receipts/production-product-r1-preflight-amulet3.log",
+      "original_sha256": "a468eb6e8de5aa9987174a049aa6b42b984bdaffe09b6962cbb9f4b7624f7023",
+      "original_bytes": 202,
+      "stored_sha256": "a468eb6e8de5aa9987174a049aa6b42b984bdaffe09b6962cbb9f4b7624f7023",
+      "stored_bytes": 202,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-preflight-amulet3.receipt.json",
+      "portable_path": "receipts/production-product-r1-preflight-amulet3.receipt.json",
+      "original_sha256": "0605a031da6c715f39f40b8abc24f737c77ec3c3fc7cee280d4c62fc1d87c9d8",
+      "original_bytes": 328,
+      "stored_sha256": "0605a031da6c715f39f40b8abc24f737c77ec3c3fc7cee280d4c62fc1d87c9d8",
+      "stored_bytes": 328,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-preflight-bow4-dirty-started.json",
+      "portable_path": "receipts/production-product-r1-preflight-bow4-dirty-started.json",
+      "original_sha256": "f9d436e08ba3df9a5de391d24aea2b3ece0e32dd232a5ad5234493b4cb804678",
+      "original_bytes": 259,
+      "stored_sha256": "f9d436e08ba3df9a5de391d24aea2b3ece0e32dd232a5ad5234493b4cb804678",
+      "stored_bytes": 259,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-preflight-bow4-dirty.json",
+      "portable_path": "receipts/production-product-r1-preflight-bow4-dirty.json",
+      "original_sha256": "ad0d160fbb6b351226ffa0452edbe2f4eb8b01f7ef7e283be462e11e1813e527",
+      "original_bytes": 2822,
+      "stored_sha256": "ad0d160fbb6b351226ffa0452edbe2f4eb8b01f7ef7e283be462e11e1813e527",
+      "stored_bytes": 2822,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-preflight-bow4-dirty.log",
+      "portable_path": "receipts/production-product-r1-preflight-bow4-dirty.log",
+      "original_sha256": "febd2a93cd17c38902e917d06231a51309b5587a8e9e0f62622ccd97ba10d7d0",
+      "original_bytes": 204,
+      "stored_sha256": "febd2a93cd17c38902e917d06231a51309b5587a8e9e0f62622ccd97ba10d7d0",
+      "stored_bytes": 204,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-preflight-bow4-dirty.receipt.json",
+      "portable_path": "receipts/production-product-r1-preflight-bow4-dirty.receipt.json",
+      "original_sha256": "315666f0e938863b3d54579600167494723ca1dda816941dcfc290ed916f7648",
+      "original_bytes": 327,
+      "stored_sha256": "315666f0e938863b3d54579600167494723ca1dda816941dcfc290ed916f7648",
+      "stored_bytes": 327,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-preflight-bow5-started.json",
+      "portable_path": "receipts/production-product-r1-preflight-bow5-started.json",
+      "original_sha256": "66add8904dd656eacaddc3bf226dfee6212b65fc92d936db122a7d9329613714",
+      "original_bytes": 253,
+      "stored_sha256": "66add8904dd656eacaddc3bf226dfee6212b65fc92d936db122a7d9329613714",
+      "stored_bytes": 253,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-preflight-bow5.json",
+      "portable_path": "receipts/production-product-r1-preflight-bow5.json",
+      "original_sha256": "302c93e4a2894668db7b84d1701f9f52d0141ddeb0b69a750317f4ec2264df30",
+      "original_bytes": 2659,
+      "stored_sha256": "302c93e4a2894668db7b84d1701f9f52d0141ddeb0b69a750317f4ec2264df30",
+      "stored_bytes": 2659,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-preflight-bow5.log",
+      "portable_path": "receipts/production-product-r1-preflight-bow5.log",
+      "original_sha256": "8fd480d50e5bd1fcfeb911ce3e9e3ae7bf652bc8459776acf66d167ffbcbebec",
+      "original_bytes": 199,
+      "stored_sha256": "8fd480d50e5bd1fcfeb911ce3e9e3ae7bf652bc8459776acf66d167ffbcbebec",
+      "stored_bytes": 199,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-preflight-bow5.receipt.json",
+      "portable_path": "receipts/production-product-r1-preflight-bow5.receipt.json",
+      "original_sha256": "29ad347f5af0462abceee2ee3d0092817954c4afbef4a7a6aeb173fe4bc00cf8",
+      "original_bytes": 327,
+      "stored_sha256": "29ad347f5af0462abceee2ee3d0092817954c4afbef4a7a6aeb173fe4bc00cf8",
+      "stored_bytes": 327,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-preflight-conquest5-started.json",
+      "portable_path": "receipts/production-product-r1-preflight-conquest5-started.json",
+      "original_sha256": "d375ea4c37138d763cb0c71adbd532e13c1f1fd177c701988a5bb58b237b62fb",
+      "original_bytes": 258,
+      "stored_sha256": "d375ea4c37138d763cb0c71adbd532e13c1f1fd177c701988a5bb58b237b62fb",
+      "stored_bytes": 258,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-preflight-conquest5.json",
+      "portable_path": "receipts/production-product-r1-preflight-conquest5.json",
+      "original_sha256": "52800d757906bf591c147b52eb05678bf4afbd606feb7a2402bb156820b5b3bf",
+      "original_bytes": 2748,
+      "stored_sha256": "52800d757906bf591c147b52eb05678bf4afbd606feb7a2402bb156820b5b3bf",
+      "stored_bytes": 2748,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-preflight-conquest5.log",
+      "portable_path": "receipts/production-product-r1-preflight-conquest5.log",
+      "original_sha256": "66d9b16a94c8b09bb8644ab99fa22be4440bbc9dada90aeff18e1db8cbd1eaa8",
+      "original_bytes": 204,
+      "stored_sha256": "66d9b16a94c8b09bb8644ab99fa22be4440bbc9dada90aeff18e1db8cbd1eaa8",
+      "stored_bytes": 204,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-preflight-conquest5.receipt.json",
+      "portable_path": "receipts/production-product-r1-preflight-conquest5.receipt.json",
+      "original_sha256": "d78c45ce25b28155873a7aa08a1571f4b762b795a3875ded5be50ea5d4b006da",
+      "original_bytes": 328,
+      "stored_sha256": "d78c45ce25b28155873a7aa08a1571f4b762b795a3875ded5be50ea5d4b006da",
+      "stored_bytes": 328,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-preflight-data-bundle-started.json",
+      "portable_path": "receipts/production-product-r1-preflight-data-bundle-started.json",
+      "original_sha256": "a5796a403395bb68d4349a46c6bd4d69c21b6a17d0411af2c156808eb27b1dd2",
+      "original_bytes": 260,
+      "stored_sha256": "a5796a403395bb68d4349a46c6bd4d69c21b6a17d0411af2c156808eb27b1dd2",
+      "stored_bytes": 260,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-preflight-data-bundle.log",
+      "portable_path": "receipts/production-product-r1-preflight-data-bundle.log",
+      "original_sha256": "bc6043527aeedfb634223275d5374e434e4c80a2a954cd2eddcb1645c60ec3d0",
+      "original_bytes": 267,
+      "stored_sha256": "bc6043527aeedfb634223275d5374e434e4c80a2a954cd2eddcb1645c60ec3d0",
+      "stored_bytes": 267,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-preflight-data-bundle.receipt.json",
+      "portable_path": "receipts/production-product-r1-preflight-data-bundle.receipt.json",
+      "original_sha256": "53a9f91ea0a536947324631f52c455cdb2b1180f5a02147ee87baca81c2814f9",
+      "original_bytes": 327,
+      "stored_sha256": "53a9f91ea0a536947324631f52c455cdb2b1180f5a02147ee87baca81c2814f9",
+      "stored_bytes": 327,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-preflight-receipts.json",
+      "portable_path": "receipts/production-product-r1-preflight-receipts.json",
+      "original_sha256": "c199afd2a7d1751d6f28f19bf7978120137089c56ae1d251a1760caec8f70ad5",
+      "original_bytes": 2113,
+      "stored_sha256": "c199afd2a7d1751d6f28f19bf7978120137089c56ae1d251a1760caec8f70ad5",
+      "stored_bytes": 2113,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-preflight-request.json",
+      "portable_path": "receipts/production-product-r1-preflight-request.json",
+      "original_sha256": "56dd029c6eac80793d94d4e2f112d23844f40a40c3debd15e8c92b5259cd43ec",
+      "original_bytes": 9361,
+      "stored_sha256": "56dd029c6eac80793d94d4e2f112d23844f40a40c3debd15e8c92b5259cd43ec",
+      "stored_bytes": 9361,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-simulator-amulet3-started.json",
+      "portable_path": "receipts/production-product-r1-simulator-amulet3-started.json",
+      "original_sha256": "d875ec8997e315e5ebed788e78667790385095c0a2927cf768e2cdbf3f4a976b",
+      "original_bytes": 257,
+      "stored_sha256": "d875ec8997e315e5ebed788e78667790385095c0a2927cf768e2cdbf3f4a976b",
+      "stored_bytes": 257,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-simulator-amulet3.json",
+      "portable_path": "receipts/production-product-r1-simulator-amulet3.json",
+      "original_sha256": "e01d23e702fe55037c6e402ade81daa97fa49e94091b5f97932839a247e17311",
+      "original_bytes": 3581,
+      "stored_sha256": "e01d23e702fe55037c6e402ade81daa97fa49e94091b5f97932839a247e17311",
+      "stored_bytes": 3581,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-simulator-amulet3.log",
+      "portable_path": "receipts/production-product-r1-simulator-amulet3.log",
+      "original_sha256": "c67a50902f791507f37af0e7d59bb845d85f7a36b12ad55b1330e2fabbe2a3bd",
+      "original_bytes": 203,
+      "stored_sha256": "c67a50902f791507f37af0e7d59bb845d85f7a36b12ad55b1330e2fabbe2a3bd",
+      "stored_bytes": 203,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-simulator-amulet3.receipt.json",
+      "portable_path": "receipts/production-product-r1-simulator-amulet3.receipt.json",
+      "original_sha256": "5cf58a1e1226335acd7c16234924537d7a0e2fd2a33693466276e3e589d7bc7c",
+      "original_bytes": 328,
+      "stored_sha256": "5cf58a1e1226335acd7c16234924537d7a0e2fd2a33693466276e3e589d7bc7c",
+      "stored_bytes": 328,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-simulator-bow4-dirty-started.json",
+      "portable_path": "receipts/production-product-r1-simulator-bow4-dirty-started.json",
+      "original_sha256": "e9f29daea21160c7c22d5ed46be635358952ca5d33470479a41e0011c26f4f54",
+      "original_bytes": 260,
+      "stored_sha256": "e9f29daea21160c7c22d5ed46be635358952ca5d33470479a41e0011c26f4f54",
+      "stored_bytes": 260,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-simulator-bow4-dirty.json",
+      "portable_path": "receipts/production-product-r1-simulator-bow4-dirty.json",
+      "original_sha256": "8d57103581db613909e77704359ec9567b79d9bddb91ea4de5c2b5e05211e717",
+      "original_bytes": 3761,
+      "stored_sha256": "8d57103581db613909e77704359ec9567b79d9bddb91ea4de5c2b5e05211e717",
+      "stored_bytes": 3761,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-simulator-bow4-dirty.log",
+      "portable_path": "receipts/production-product-r1-simulator-bow4-dirty.log",
+      "original_sha256": "9efe5f32ad70dce933753ca7236e98514aa4a0b2fb691974dcfd24f77695d562",
+      "original_bytes": 205,
+      "stored_sha256": "9efe5f32ad70dce933753ca7236e98514aa4a0b2fb691974dcfd24f77695d562",
+      "stored_bytes": 205,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-simulator-bow4-dirty.receipt.json",
+      "portable_path": "receipts/production-product-r1-simulator-bow4-dirty.receipt.json",
+      "original_sha256": "e516a08e16be43ae3a1eb63ee015ee5f904417479440d34167c1d12eddce0fb7",
+      "original_bytes": 327,
+      "stored_sha256": "e516a08e16be43ae3a1eb63ee015ee5f904417479440d34167c1d12eddce0fb7",
+      "stored_bytes": 327,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-simulator-bow5-started.json",
+      "portable_path": "receipts/production-product-r1-simulator-bow5-started.json",
+      "original_sha256": "80336f2d50d2c1265a6c4f997a562920be0f6c095a8112d348a720c24699e3d0",
+      "original_bytes": 254,
+      "stored_sha256": "80336f2d50d2c1265a6c4f997a562920be0f6c095a8112d348a720c24699e3d0",
+      "stored_bytes": 254,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-simulator-bow5.json",
+      "portable_path": "receipts/production-product-r1-simulator-bow5.json",
+      "original_sha256": "4c2908d1e98d6201af026ebce3ca23e7938bba16a6d0c3d9bf04c6094ee400b1",
+      "original_bytes": 4682,
+      "stored_sha256": "4c2908d1e98d6201af026ebce3ca23e7938bba16a6d0c3d9bf04c6094ee400b1",
+      "stored_bytes": 4682,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-simulator-bow5.log",
+      "portable_path": "receipts/production-product-r1-simulator-bow5.log",
+      "original_sha256": "fb040d4858dd34bab44f8e44aa966a0e65f2fa9f1dcf7e02e2a60ad29faa6a86",
+      "original_bytes": 201,
+      "stored_sha256": "fb040d4858dd34bab44f8e44aa966a0e65f2fa9f1dcf7e02e2a60ad29faa6a86",
+      "stored_bytes": 201,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-simulator-bow5.receipt.json",
+      "portable_path": "receipts/production-product-r1-simulator-bow5.receipt.json",
+      "original_sha256": "698ca7ae64f78d2f53c455960db2859af945bf3df381e57fb48f205d508eb1bd",
+      "original_bytes": 328,
+      "stored_sha256": "698ca7ae64f78d2f53c455960db2859af945bf3df381e57fb48f205d508eb1bd",
+      "stored_bytes": 328,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-simulator-conquest5-started.json",
+      "portable_path": "receipts/production-product-r1-simulator-conquest5-started.json",
+      "original_sha256": "f60754882fc492e77ff6a2f0cd1a30a2dcaf831166ec123133af5efc272a0b81",
+      "original_bytes": 259,
+      "stored_sha256": "f60754882fc492e77ff6a2f0cd1a30a2dcaf831166ec123133af5efc272a0b81",
+      "stored_bytes": 259,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-simulator-conquest5.json",
+      "portable_path": "receipts/production-product-r1-simulator-conquest5.json",
+      "original_sha256": "d620616ff52a8695c9143e53b9327ca378dc605cdb761f27e3076b1f8718dbe3",
+      "original_bytes": 3699,
+      "stored_sha256": "d620616ff52a8695c9143e53b9327ca378dc605cdb761f27e3076b1f8718dbe3",
+      "stored_bytes": 3699,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-simulator-conquest5.log",
+      "portable_path": "receipts/production-product-r1-simulator-conquest5.log",
+      "original_sha256": "5ffbafd48231defe65f814bfb8ef13befb961280d88a90c79c45906bce0f7dff",
+      "original_bytes": 213,
+      "stored_sha256": "5ffbafd48231defe65f814bfb8ef13befb961280d88a90c79c45906bce0f7dff",
+      "stored_bytes": 213,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-simulator-conquest5.receipt.json",
+      "portable_path": "receipts/production-product-r1-simulator-conquest5.receipt.json",
+      "original_sha256": "cd2b8506e9028212db770a97aec742de1f2288ad46a6723c37200893552e3a7d",
+      "original_bytes": 328,
+      "stored_sha256": "cd2b8506e9028212db770a97aec742de1f2288ad46a6723c37200893552e3a7d",
+      "stored_bytes": 328,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-simulator-receipts.json",
+      "portable_path": "receipts/production-product-r1-simulator-receipts.json",
+      "original_sha256": "56058289feda7d6624ed6e08467219222189dda4787e4000293a9f80bfe29531",
+      "original_bytes": 1690,
+      "stored_sha256": "56058289feda7d6624ed6e08467219222189dda4787e4000293a9f80bfe29531",
+      "stored_bytes": 1690,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-simulator-request.json",
+      "portable_path": "receipts/production-product-r1-simulator-request.json",
+      "original_sha256": "218d5972c4423c402ec56c97e9e31b6655206dcd412933f0eca880c8087eddbc",
+      "original_bytes": 8904,
+      "stored_sha256": "218d5972c4423c402ec56c97e9e31b6655206dcd412933f0eca880c8087eddbc",
+      "stored_bytes": 8904,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-web-npm-test-started.json",
+      "portable_path": "receipts/production-product-r1-web-npm-test-started.json",
+      "original_sha256": "fc27af9a5fd303028b8bd8060a935b43ef52fbc089b7f1fae462353f2f00cce4",
+      "original_bytes": 251,
+      "stored_sha256": "fc27af9a5fd303028b8bd8060a935b43ef52fbc089b7f1fae462353f2f00cce4",
+      "stored_bytes": 251,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-web-npm-test.log",
+      "portable_path": "receipts/production-product-r1-web-npm-test.log",
+      "original_sha256": "a9dcaa179f38c40c81025bb3b37d26d4e8d55182201e3277253e1d3a31cf924e",
+      "original_bytes": 2394,
+      "stored_sha256": "a9dcaa179f38c40c81025bb3b37d26d4e8d55182201e3277253e1d3a31cf924e",
+      "stored_bytes": 2394,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-web-npm-test.receipt.json",
+      "portable_path": "receipts/production-product-r1-web-npm-test.receipt.json",
+      "original_sha256": "137b3880b049d71ff1b4f4d25aae3f4aced3440cb56c2eba05b313e44b54e2f4",
+      "original_bytes": 327,
+      "stored_sha256": "137b3880b049d71ff1b4f4d25aae3f4aced3440cb56c2eba05b313e44b54e2f4",
+      "stored_bytes": 327,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-web-receipts.json",
+      "portable_path": "receipts/production-product-r1-web-receipts.json",
+      "original_sha256": "cc503b273fb90ec4dba62ad4f520d3afc81a4ede7ac3abca3a0efd9f62d81dbe",
+      "original_bytes": 426,
+      "stored_sha256": "cc503b273fb90ec4dba62ad4f520d3afc81a4ede7ac3abca3a0efd9f62d81dbe",
+      "stored_bytes": 426,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-web-request.json",
+      "portable_path": "receipts/production-product-r1-web-request.json",
+      "original_sha256": "282fd72ce514565ecceb029b49f613b315042473bb74ace1c5e134bb05119587",
+      "original_bytes": 4577,
+      "stored_sha256": "282fd72ce514565ecceb029b49f613b315042473bb74ace1c5e134bb05119587",
+      "stored_bytes": 4577,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r2-browser-bow5-started.json",
+      "portable_path": "receipts/production-product-r2-browser-bow5-started.json",
+      "original_sha256": "4af240729c6dd841db7966f85a7e67a7af88bddb4045f65d9236df4f863d4fc6",
+      "original_bytes": 251,
+      "stored_sha256": "4af240729c6dd841db7966f85a7e67a7af88bddb4045f65d9236df4f863d4fc6",
+      "stored_bytes": 251,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r2-browser-bow5.json",
+      "portable_path": "receipts/production-product-r2-browser-bow5.json.gz",
+      "original_sha256": "7f05465b5f0d2276cb910fc4e6e709b05d9382405db6d6149ca1f53a769a7111",
+      "original_bytes": 43861577,
+      "stored_sha256": "73b4188880b9e89940018a430066818b6e1b4225a56762b7cb4dcaae7cf204c4",
+      "stored_bytes": 615877,
+      "encoding": "gzip"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r2-browser-bow5.log",
+      "portable_path": "receipts/production-product-r2-browser-bow5.log.gz",
+      "original_sha256": "07d723e7f3aadff0eb799e49e6c9e31f2f4225b5c5adb1eae094a20ba8730dd2",
+      "original_bytes": 12880876,
+      "stored_sha256": "da0a411952cd0834f4933c8da7e923639be90d8e18a1a4ef0de1f62464577f7b",
+      "stored_bytes": 177233,
+      "encoding": "gzip"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r2-browser-bow5.receipt.json",
+      "portable_path": "receipts/production-product-r2-browser-bow5.receipt.json",
+      "original_sha256": "3c42893ee12192740fb2ccd4d92210e29be807c5eda7fbd779fce948c4f3a846",
+      "original_bytes": 327,
+      "stored_sha256": "3c42893ee12192740fb2ccd4d92210e29be807c5eda7fbd779fce948c4f3a846",
+      "stored_bytes": 327,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r2-browser-receipts.json",
+      "portable_path": "receipts/production-product-r2-browser-receipts.json",
+      "original_sha256": "60ec61a681cc7d1767a12baea52800c36e76bd27d2ad73136abdaec8ea202d7b",
+      "original_bytes": 422,
+      "stored_sha256": "60ec61a681cc7d1767a12baea52800c36e76bd27d2ad73136abdaec8ea202d7b",
+      "stored_bytes": 422,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r2-browser-request.json",
+      "portable_path": "receipts/production-product-r2-browser-request.json",
+      "original_sha256": "740edb6021be1e4108a6cdf37f49516347a39ea2d9011cc38091efba09918b33",
+      "original_bytes": 4624,
+      "stored_sha256": "740edb6021be1e4108a6cdf37f49516347a39ea2d9011cc38091efba09918b33",
+      "stored_bytes": 4624,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r2-web-npm-test-started.json",
+      "portable_path": "receipts/production-product-r2-web-npm-test-started.json",
+      "original_sha256": "c5d07896f5c513d678ccbabb948a0e32204fd9292bd6b0dfd03a04107d5a35a4",
+      "original_bytes": 251,
+      "stored_sha256": "c5d07896f5c513d678ccbabb948a0e32204fd9292bd6b0dfd03a04107d5a35a4",
+      "stored_bytes": 251,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r2-web-npm-test.log",
+      "portable_path": "receipts/production-product-r2-web-npm-test.log",
+      "original_sha256": "3ab0811290645196a7a1ae63a7524d08e220353e0dcd4785a8d6208efd7a7d5e",
+      "original_bytes": 12125,
+      "stored_sha256": "3ab0811290645196a7a1ae63a7524d08e220353e0dcd4785a8d6208efd7a7d5e",
+      "stored_bytes": 12125,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r2-web-npm-test.receipt.json",
+      "portable_path": "receipts/production-product-r2-web-npm-test.receipt.json",
+      "original_sha256": "65a0530e7f252d2fa5dcfa50f38a5f6de8e77c1ed9756f363a9a236ad65a4834",
+      "original_bytes": 328,
+      "stored_sha256": "65a0530e7f252d2fa5dcfa50f38a5f6de8e77c1ed9756f363a9a236ad65a4834",
+      "stored_bytes": 328,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r2-web-receipts.json",
+      "portable_path": "receipts/production-product-r2-web-receipts.json",
+      "original_sha256": "3434e6a67cd764e92cee9a29cdf57fcf7ddefebe119a7246d258dbdee9792808",
+      "original_bytes": 427,
+      "stored_sha256": "3434e6a67cd764e92cee9a29cdf57fcf7ddefebe119a7246d258dbdee9792808",
+      "stored_bytes": 427,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r2-web-request.json",
+      "portable_path": "receipts/production-product-r2-web-request.json",
+      "original_sha256": "74cd49282afa4adf61f9e1cd60236513c8bd4b16348204c87ee14933edc1e1e4",
+      "original_bytes": 4577,
+      "stored_sha256": "74cd49282afa4adf61f9e1cd60236513c8bd4b16348204c87ee14933edc1e1e4",
+      "stored_bytes": 4577,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r3-web-npm-test-started.json",
+      "portable_path": "receipts/production-product-r3-web-npm-test-started.json",
+      "original_sha256": "791802be1685abea825b2b5484e93f1a0560daffceda2b3b8ea51364ccf2fb54",
+      "original_bytes": 251,
+      "stored_sha256": "791802be1685abea825b2b5484e93f1a0560daffceda2b3b8ea51364ccf2fb54",
+      "stored_bytes": 251,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r3-web-npm-test.log",
+      "portable_path": "receipts/production-product-r3-web-npm-test.log",
+      "original_sha256": "f0ef0cbbdf5b43e1071d83945a137e638f81f79245be11d4d875dcc6a506b664",
+      "original_bytes": 17328,
+      "stored_sha256": "f0ef0cbbdf5b43e1071d83945a137e638f81f79245be11d4d875dcc6a506b664",
+      "stored_bytes": 17328,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r3-web-npm-test.receipt.json",
+      "portable_path": "receipts/production-product-r3-web-npm-test.receipt.json",
+      "original_sha256": "bfa1343464b2174d0054b130971937b45ffdcd039367f4ba92ea03256e88504e",
+      "original_bytes": 326,
+      "stored_sha256": "bfa1343464b2174d0054b130971937b45ffdcd039367f4ba92ea03256e88504e",
+      "stored_bytes": 326,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r3-web-receipts.json",
+      "portable_path": "receipts/production-product-r3-web-receipts.json",
+      "original_sha256": "16db77a41c4618dedec3e3e019c93b639f472e9e558b45c097ec748b5e1845d2",
+      "original_bytes": 848,
+      "stored_sha256": "16db77a41c4618dedec3e3e019c93b639f472e9e558b45c097ec748b5e1845d2",
+      "stored_bytes": 848,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r3-web-request.json",
+      "portable_path": "receipts/production-product-r3-web-request.json",
+      "original_sha256": "6f86c3f8043d5f00b09a09a590089b6a6d558070d8ef3997a37106da910d7fb5",
+      "original_bytes": 4609,
+      "stored_sha256": "6f86c3f8043d5f00b09a09a590089b6a6d558070d8ef3997a37106da910d7fb5",
+      "stored_bytes": 4609,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r3-web-typescript-started.json",
+      "portable_path": "receipts/production-product-r3-web-typescript-started.json",
+      "original_sha256": "c809b6db74edf3acc24c9845266fed5c1d3b2f9ea66f17c550a4c73d90752b49",
+      "original_bytes": 253,
+      "stored_sha256": "c809b6db74edf3acc24c9845266fed5c1d3b2f9ea66f17c550a4c73d90752b49",
+      "stored_bytes": 253,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r3-web-typescript.log",
+      "portable_path": "receipts/production-product-r3-web-typescript.log",
+      "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_bytes": 0,
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stored_bytes": 0,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r3-web-typescript.receipt.json",
+      "portable_path": "receipts/production-product-r3-web-typescript.receipt.json",
+      "original_sha256": "872006da4da7ad11fb16567cfe8a047a5fc8ae8def2b4b90a38a8ea027f6d585",
+      "original_bytes": 327,
+      "stored_sha256": "872006da4da7ad11fb16567cfe8a047a5fc8ae8def2b4b90a38a8ea027f6d585",
+      "stored_bytes": 327,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-r5-blocker-growth-started.json",
+      "portable_path": "receipts/production-r5-blocker-growth-started.json",
+      "original_sha256": "3d98960e64aa409234cb538c02e4528bf3c75e3d36c3c50bf6e5344e3705d915",
+      "original_bytes": 153,
+      "stored_sha256": "3d98960e64aa409234cb538c02e4528bf3c75e3d36c3c50bf6e5344e3705d915",
+      "stored_bytes": 153,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-r5-blocker-growth.log",
+      "portable_path": "receipts/production-r5-blocker-growth.log",
+      "original_sha256": "7be746418fdcc80f2ee2e9b94f024f03a78a2e1fe4bbafbce46e077a682d8466",
+      "original_bytes": 279,
+      "stored_sha256": "7be746418fdcc80f2ee2e9b94f024f03a78a2e1fe4bbafbce46e077a682d8466",
+      "stored_bytes": 279,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-r5-blocker-growth.receipt.json",
+      "portable_path": "receipts/production-r5-blocker-growth.receipt.json",
+      "original_sha256": "c1908301f1e6baf12691047cf8fc257f4a4e0796e5981f02eaff4ae4cabca536",
+      "original_bytes": 326,
+      "stored_sha256": "c1908301f1e6baf12691047cf8fc257f4a4e0796e5981f02eaff4ae4cabca536",
+      "stored_bytes": 326,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-r5-build-benchmark-started.json",
+      "portable_path": "receipts/production-r5-build-benchmark-started.json",
+      "original_sha256": "df576779aa76c3a4f340e3d59cd1d26472e6f6312f6da897d6205964fffcb72c",
+      "original_bytes": 153,
+      "stored_sha256": "df576779aa76c3a4f340e3d59cd1d26472e6f6312f6da897d6205964fffcb72c",
+      "stored_bytes": 153,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-r5-build-benchmark.log",
+      "portable_path": "receipts/production-r5-build-benchmark.log",
+      "original_sha256": "e1fdfe096e94f5e15928915ce5e162fa8ab0bb71315f41d5cc15ead392d20ef3",
+      "original_bytes": 102,
+      "stored_sha256": "e1fdfe096e94f5e15928915ce5e162fa8ab0bb71315f41d5cc15ead392d20ef3",
+      "stored_bytes": 102,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-r5-build-benchmark.receipt.json",
+      "portable_path": "receipts/production-r5-build-benchmark.receipt.json",
+      "original_sha256": "aca7820e24a80763512ca60cd349b346b107bbc730ec4dc6d61bcf49bfde246d",
+      "original_bytes": 327,
+      "stored_sha256": "aca7820e24a80763512ca60cd349b346b107bbc730ec4dc6d61bcf49bfde246d",
+      "stored_bytes": 327,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-r5-build-tests-started.json",
+      "portable_path": "receipts/production-r5-build-tests-started.json",
+      "original_sha256": "55ca09dd9aec26ecc972beee44972db48347a760b5bedf3684da1fe4a8ace7a5",
+      "original_bytes": 153,
+      "stored_sha256": "55ca09dd9aec26ecc972beee44972db48347a760b5bedf3684da1fe4a8ace7a5",
+      "stored_bytes": 153,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-r5-build-tests.log",
+      "portable_path": "receipts/production-r5-build-tests.log",
+      "original_sha256": "ec8ac6f7442ff954786a67dcdbbf7f4e231cd41f3b0dfa38965a5f842d0b6ad6",
+      "original_bytes": 354,
+      "stored_sha256": "ec8ac6f7442ff954786a67dcdbbf7f4e231cd41f3b0dfa38965a5f842d0b6ad6",
+      "stored_bytes": 354,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-r5-build-tests.receipt.json",
+      "portable_path": "receipts/production-r5-build-tests.receipt.json",
+      "original_sha256": "3f6df18ba63b464eb253faa02b27c3c36dd1f5e8e8c4462cc342f116a0055048",
+      "original_bytes": 327,
+      "stored_sha256": "3f6df18ba63b464eb253faa02b27c3c36dd1f5e8e8c4462cc342f116a0055048",
+      "stored_bytes": 327,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-r5-built-binary-identity.json",
+      "portable_path": "receipts/production-r5-built-binary-identity.json",
+      "original_sha256": "b071b24fd92e39d905c03cb3e2f561f9fc8b840532c5ca651ef9b492d39893f9",
+      "original_bytes": 239,
+      "stored_sha256": "b071b24fd92e39d905c03cb3e2f561f9fc8b840532c5ca651ef9b492d39893f9",
+      "stored_bytes": 239,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-r5-cap-diagnosis-started.json",
+      "portable_path": "receipts/production-r5-cap-diagnosis-started.json",
+      "original_sha256": "5c0c2bb99a6a1ae043cfaf8e18da3ed023281a499695c7a8ab8b02e89ca7b554",
+      "original_bytes": 153,
+      "stored_sha256": "5c0c2bb99a6a1ae043cfaf8e18da3ed023281a499695c7a8ab8b02e89ca7b554",
+      "stored_bytes": 153,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-r5-cap-diagnosis.log",
+      "portable_path": "receipts/production-r5-cap-diagnosis.log",
+      "original_sha256": "dee264b6da68fa8b0ce927450a53d86ad1bce3d2f24a058ec4dba3319dc0a770",
+      "original_bytes": 2370,
+      "stored_sha256": "dee264b6da68fa8b0ce927450a53d86ad1bce3d2f24a058ec4dba3319dc0a770",
+      "stored_bytes": 2370,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-r5-cap-diagnosis.receipt.json",
+      "portable_path": "receipts/production-r5-cap-diagnosis.receipt.json",
+      "original_sha256": "436cb037e3d5107e609f6e28cdbbce25928d7c4d6216a482cf8e94617d21bf44",
+      "original_bytes": 327,
+      "stored_sha256": "436cb037e3d5107e609f6e28cdbbce25928d7c4d6216a482cf8e94617d21bf44",
+      "stored_bytes": 327,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-r5-continuity-started.json",
+      "portable_path": "receipts/production-r5-continuity-started.json",
+      "original_sha256": "4f1ca3b1165a82174c9e7242a6c48f293f7982988abb34ac95a48f9f19e9cb3d",
+      "original_bytes": 153,
+      "stored_sha256": "4f1ca3b1165a82174c9e7242a6c48f293f7982988abb34ac95a48f9f19e9cb3d",
+      "stored_bytes": 153,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-r5-continuity.log",
+      "portable_path": "receipts/production-r5-continuity.log",
+      "original_sha256": "ad88d3b0abd11de37590a638b53fee2d211142ac7bd992792cedaa3343ee08c0",
+      "original_bytes": 108671,
+      "stored_sha256": "ad88d3b0abd11de37590a638b53fee2d211142ac7bd992792cedaa3343ee08c0",
+      "stored_bytes": 108671,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-r5-continuity.receipt.json",
+      "portable_path": "receipts/production-r5-continuity.receipt.json",
+      "original_sha256": "5537ec7bd9b8754d506351d5d0547599852dd909a947a9b3a32f013f3808f596",
+      "original_bytes": 327,
+      "stored_sha256": "5537ec7bd9b8754d506351d5d0547599852dd909a947a9b3a32f013f3808f596",
+      "stored_bytes": 327,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-r5-growth-started.json",
+      "portable_path": "receipts/production-r5-growth-started.json",
+      "original_sha256": "b2797337325d334cf8c88e840aef037a41afa2438b14200295e9efac14299dae",
+      "original_bytes": 153,
+      "stored_sha256": "b2797337325d334cf8c88e840aef037a41afa2438b14200295e9efac14299dae",
+      "stored_bytes": 153,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-r5-growth.log",
+      "portable_path": "receipts/production-r5-growth.log",
+      "original_sha256": "319d5ebd1dec95212e716fb61253c43f0f41e0c76cda5a712d236f50d8ca9efe",
+      "original_bytes": 262,
+      "stored_sha256": "319d5ebd1dec95212e716fb61253c43f0f41e0c76cda5a712d236f50d8ca9efe",
+      "stored_bytes": 262,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-r5-growth.receipt.json",
+      "portable_path": "receipts/production-r5-growth.receipt.json",
+      "original_sha256": "565148269355580a1bc517c73fcf6bbe31ab8d3629f616d47c0968d08583bff1",
+      "original_bytes": 328,
+      "stored_sha256": "565148269355580a1bc517c73fcf6bbe31ab8d3629f616d47c0968d08583bff1",
+      "stored_bytes": 328,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-r5-protected-fill-started.json",
+      "portable_path": "receipts/production-r5-protected-fill-started.json",
+      "original_sha256": "67fd2c89207d7822f8dcfd92788c894eb41397017c82259b8ea89e5acf2eb1ee",
+      "original_bytes": 153,
+      "stored_sha256": "67fd2c89207d7822f8dcfd92788c894eb41397017c82259b8ea89e5acf2eb1ee",
+      "stored_bytes": 153,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-r5-protected-fill.log",
+      "portable_path": "receipts/production-r5-protected-fill.log",
+      "original_sha256": "ef16b0c0159fd265188f809cc9bcf5d1a2b6680ed59e60b8b33643c6581878eb",
+      "original_bytes": 532,
+      "stored_sha256": "ef16b0c0159fd265188f809cc9bcf5d1a2b6680ed59e60b8b33643c6581878eb",
+      "stored_bytes": 532,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-r5-protected-fill.receipt.json",
+      "portable_path": "receipts/production-r5-protected-fill.receipt.json",
+      "original_sha256": "2711cca43ef67c55db86457beb15035e763353aebf6b4567aff9eb2ca310c402",
+      "original_bytes": 327,
+      "stored_sha256": "2711cca43ef67c55db86457beb15035e763353aebf6b4567aff9eb2ca310c402",
+      "stored_bytes": 327,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-r5-protected-finder-started.json",
+      "portable_path": "receipts/production-r5-protected-finder-started.json",
+      "original_sha256": "e3356c6c64e4f899c5602be9dd6bfcfc8b605b35551f03b57750e1122c72ec5a",
+      "original_bytes": 153,
+      "stored_sha256": "e3356c6c64e4f899c5602be9dd6bfcfc8b605b35551f03b57750e1122c72ec5a",
+      "stored_bytes": 153,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-r5-protected-finder.log",
+      "portable_path": "receipts/production-r5-protected-finder.log",
+      "original_sha256": "601e9dd3acdfc3c6c345c2da900cc8e863baf39287d2fa830f27c6233da7ae57",
+      "original_bytes": 54,
+      "stored_sha256": "601e9dd3acdfc3c6c345c2da900cc8e863baf39287d2fa830f27c6233da7ae57",
+      "stored_bytes": 54,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-r5-protected-finder.receipt.json",
+      "portable_path": "receipts/production-r5-protected-finder.receipt.json",
+      "original_sha256": "49d53a6b6cf8f7b7fa38ca6564f09a29e8b73272eb6037607702b7839a466dc4",
+      "original_bytes": 327,
+      "stored_sha256": "49d53a6b6cf8f7b7fa38ca6564f09a29e8b73272eb6037607702b7839a466dc4",
+      "stored_bytes": 327,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-r5-qualification-request.json",
+      "portable_path": "receipts/production-r5-qualification-request.json",
+      "original_sha256": "5a034e80f2993665cd4fe12cb8017ed6dc1f5c6c04f92760e4b765ccc078ffbf",
+      "original_bytes": 4337,
+      "stored_sha256": "5a034e80f2993665cd4fe12cb8017ed6dc1f5c6c04f92760e4b765ccc078ffbf",
+      "stored_bytes": 4337,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-r5-qualification-result.json",
+      "portable_path": "receipts/production-r5-qualification-result.json",
+      "original_sha256": "4424806f14158690b8d68e7cdbb4da982e2d97bf34ef4ce04bcd6878405b0e1a",
+      "original_bytes": 4275,
+      "stored_sha256": "4424806f14158690b8d68e7cdbb4da982e2d97bf34ef4ce04bcd6878405b0e1a",
+      "stored_bytes": 4275,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-r5-source.patch",
+      "portable_path": "receipts/production-r5-source.patch",
+      "original_sha256": "be7a2e2e0ecdd68cd3296eb91a36023d85ad3c1370a3073721838f2d6987fb68",
+      "original_bytes": 1844,
+      "stored_sha256": "be7a2e2e0ecdd68cd3296eb91a36023d85ad3c1370a3073721838f2d6987fb68",
+      "stored_bytes": 1844,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-wasm-r3-identity.json",
+      "portable_path": "receipts/production-wasm-r3-identity.json",
+      "original_sha256": "df6615f3c4150a2e5bafbc296124ce8fab35bcbf682515ba6ea1cbf1f5cb52b7",
+      "original_bytes": 326,
+      "stored_sha256": "df6615f3c4150a2e5bafbc296124ce8fab35bcbf682515ba6ea1cbf1f5cb52b7",
+      "stored_bytes": 326,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-wasm-r3-request.json",
+      "portable_path": "receipts/production-wasm-r3-request.json",
+      "original_sha256": "b5a1932e5e409c048367813b75b4d6a562ad00508729305486d701c0d2f3974b",
+      "original_bytes": 20630,
+      "stored_sha256": "b5a1932e5e409c048367813b75b4d6a562ad00508729305486d701c0d2f3974b",
+      "stored_bytes": 20630,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-wasm-r3-started.json",
+      "portable_path": "receipts/production-wasm-r3-started.json",
+      "original_sha256": "cf27510788a9b0543d62c509e5adcbe91dfac6f7c9f9dd8ab69b49502e3f027d",
+      "original_bytes": 154,
+      "stored_sha256": "cf27510788a9b0543d62c509e5adcbe91dfac6f7c9f9dd8ab69b49502e3f027d",
+      "stored_bytes": 154,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\amulet3.json",
+      "portable_path": "cases/amulet3.json",
+      "original_sha256": "9e2eb59392c8934dd6e15b115ec066fee53efe092154f2b0343a93dec70be95b",
+      "original_bytes": 7291,
+      "stored_sha256": "9e2eb59392c8934dd6e15b115ec066fee53efe092154f2b0343a93dec70be95b",
+      "stored_bytes": 7291,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\bow4-dirty.json",
+      "portable_path": "cases/bow4-dirty.json",
+      "original_sha256": "e54d87308c2aca8b5e508b40eb0868419f80c1ddcea765827466f010fad5406b",
+      "original_bytes": 7421,
+      "stored_sha256": "e54d87308c2aca8b5e508b40eb0868419f80c1ddcea765827466f010fad5406b",
+      "stored_bytes": 7421,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\bow5.json",
+      "portable_path": "cases/bow5.json",
+      "original_sha256": "9257aec8f005c5a5869240f8629cd80234fee9ff5c8cf02d3d44250770b9522c",
+      "original_bytes": 4803,
+      "stored_sha256": "9257aec8f005c5a5869240f8629cd80234fee9ff5c8cf02d3d44250770b9522c",
+      "stored_bytes": 4803,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\conquest5.json",
+      "portable_path": "cases/conquest5.json",
+      "original_sha256": "b19c588b2f004fac7db6dae7fddb3f384693a18d722245f96f4a7c27d0dcd299",
+      "original_bytes": 6920,
+      "stored_sha256": "b19c588b2f004fac7db6dae7fddb3f384693a18d722245f96f4a7c27d0dcd299",
+      "stored_bytes": 6920,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\manifest.json",
+      "portable_path": "cases/manifest.json",
+      "original_sha256": "fca6c237159327f5e77a36b20510939186a650b0c69465f3eea46588b69acbe3",
+      "original_bytes": 1131,
+      "stored_sha256": "fca6c237159327f5e77a36b20510939186a650b0c69465f3eea46588b69acbe3",
+      "stored_bytes": 1131,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\ring2.json",
+      "portable_path": "cases/ring2.json",
+      "original_sha256": "887c0d8736dd77a70a2dbd4d7ac24c186c6f20a08645b9606f08ddc8130fae9c",
+      "original_bytes": 4149,
+      "stored_sha256": "887c0d8736dd77a70a2dbd4d7ac24c186c6f20a08645b9606f08ddc8130fae9c",
+      "stored_bytes": 4149,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\apps\\web\\test\\sol61-policy-qualification.ts",
+      "portable_path": "probes/sol61-policy-qualification.ts",
+      "original_sha256": "f71cddd121754f52066583901e1452873d6967b28193ee45127631c08b14be1a",
+      "original_bytes": 7200,
+      "stored_sha256": "f71cddd121754f52066583901e1452873d6967b28193ee45127631c08b14be1a",
+      "stored_bytes": 7200,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\apps\\web\\test\\sol61-worker-bootstrap.mjs",
+      "portable_path": "probes/sol61-worker-bootstrap.mjs",
+      "original_sha256": "8818b38dd0642f344c4d55ff0ba1acdc301b72b2c321f5b1070a60ffe4df2ec9",
+      "original_bytes": 1620,
+      "stored_sha256": "8818b38dd0642f344c4d55ff0ba1acdc301b72b2c321f5b1070a60ffe4df2ec9",
+      "stored_bytes": 1620,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\apps\\web\\test\\sol61-browser-solve.mjs",
+      "portable_path": "probes/sol61-browser-solve.mjs",
+      "original_sha256": "d48bbde5d9611a2c2f19a805230639b121e30c62645c1c0f4e542d93a98cfd73",
+      "original_bytes": 8299,
+      "stored_sha256": "d48bbde5d9611a2c2f19a805230639b121e30c62645c1c0f4e542d93a98cfd73",
+      "stored_bytes": 8299,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\qualify-product.py",
+      "portable_path": "probes/qualify-product.py",
+      "original_sha256": "68af8a6982249f6b2534597ab8df95654f202033290c0a02b0bfaf6c54037678",
+      "original_bytes": 5133,
+      "stored_sha256": "68af8a6982249f6b2534597ab8df95654f202033290c0a02b0bfaf6c54037678",
+      "stored_bytes": 5133,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\production-fixed-bow4-r2-bow4-dirty.strategies\\sol61-preserved-bow4-currentmodel-120.strategy.json",
+      "portable_path": "policies/bow4-dirty.strategy.json",
+      "original_sha256": "e32b550faf63157812628d5bea6a6d5d900848ff7c8944e0bfba25b503a6d347",
+      "original_bytes": 110996,
+      "stored_sha256": "e32b550faf63157812628d5bea6a6d5d900848ff7c8944e0bfba25b503a6d347",
+      "stored_bytes": 110996,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\production-default-r1-conquest5.strategies\\sol61-trace-conquest5-currentmodel-120.strategy.json",
+      "portable_path": "policies/conquest5.strategy.json",
+      "original_sha256": "d65787d11ad895d5925ce9dd4d0aefde483e53bc25df3a80a6a9dfe7a0d7e053",
+      "original_bytes": 6557,
+      "stored_sha256": "d65787d11ad895d5925ce9dd4d0aefde483e53bc25df3a80a6a9dfe7a0d7e053",
+      "stored_bytes": 6557,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\production-default-r1-amulet3.strategies\\sol61-amulet3-matched-currentlaw-120.strategy.json",
+      "portable_path": "policies/amulet3.strategy.json",
+      "original_sha256": "713403e86ba47e362aac1dc6eb56f970e4544dd8a6b353e9d18fd0c7965ab26f",
+      "original_bytes": 2958,
+      "stored_sha256": "713403e86ba47e362aac1dc6eb56f970e4544dd8a6b353e9d18fd0c7965ab26f",
+      "stored_bytes": 2958,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\production-default-r1-bow5.strategies\\sol61-bow5-matched-currentlaw-120.strategy.json",
+      "portable_path": "policies/bow5.strategy.json",
+      "original_sha256": "b6114194af1611cb68dc86994cbcc086f01e9804ecb3ffbca863593f5fb9f38c",
+      "original_bytes": 3314,
+      "stored_sha256": "b6114194af1611cb68dc86994cbcc086f01e9804ecb3ffbca863593f5fb9f38c",
+      "stored_bytes": 3314,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-diagnostic-worktree\\out\\selective-cap-repair\\historical-conquest-currentlaw.r3.product-result.json",
+      "portable_path": "historical/historical-conquest-currentlaw.r3.product-result.json",
+      "original_sha256": "d0dd637de4f12a6b46059c9b0d06e85f8c3a4f5305bf0606357386306543aef5",
+      "original_bytes": 2792,
+      "stored_sha256": "d0dd637de4f12a6b46059c9b0d06e85f8c3a4f5305bf0606357386306543aef5",
+      "stored_bytes": 2792,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-diagnostic-worktree\\out\\selective-cap-repair\\historical-conquest-currentlaw.r3.product.receipt.json",
+      "portable_path": "historical/historical-conquest-currentlaw.r3.product.receipt.json",
+      "original_sha256": "768652dd4dbb897498eb84bf17215c7b34e72a0c1493512495a236ce8d19453c",
+      "original_bytes": 1900,
+      "stored_sha256": "768652dd4dbb897498eb84bf17215c7b34e72a0c1493512495a236ce8d19453c",
+      "stored_bytes": 1900,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-diagnostic-worktree\\out\\selective-cap-repair\\historical-price-only-repricing.json",
+      "portable_path": "historical/historical-price-only-repricing.json",
+      "original_sha256": "10de002bd69b84042bcb765ae94a097ff57b1dd73057ce52d505a505b1fdd9a7",
+      "original_bytes": 1678,
+      "stored_sha256": "10de002bd69b84042bcb765ae94a097ff57b1dd73057ce52d505a505b1fdd9a7",
+      "stored_bytes": 1678,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-diagnostic-worktree\\out\\selective-cap-repair\\historical-conquest5-goal-order-adapted.strategy.adaptation.json",
+      "portable_path": "historical/historical-conquest5-goal-order-adapted.strategy.adaptation.json",
+      "original_sha256": "bc990e0d520067bf2d19de434ee6c4da0e003c66bba56b67b72ca5cee849f31a",
+      "original_bytes": 1027,
+      "stored_sha256": "bc990e0d520067bf2d19de434ee6c4da0e003c66bba56b67b72ca5cee849f31a",
+      "stored_bytes": 1027,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-diagnostic-worktree\\out\\selective-cap-repair\\matching-wasm-module-identity.json",
+      "portable_path": "historical/matching-wasm-module-identity.json",
+      "original_sha256": "89d2c90b322e4ee5fc3b123721abf82b0f5775f07a9f05bd7ab7a1104210f710",
+      "original_bytes": 420,
+      "stored_sha256": "89d2c90b322e4ee5fc3b123721abf82b0f5775f07a9f05bd7ab7a1104210f710",
+      "stored_bytes": 420,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-diagnostic-worktree\\out\\selective-cap-repair\\wasm-product-qualification-request.json",
+      "portable_path": "historical/wasm-product-qualification-request.json",
+      "original_sha256": "39ec664bd9c15a4c00f2a5509849a9172fe9e63cc2a5d498f2b889771ff318bf",
+      "original_bytes": 14949,
+      "stored_sha256": "39ec664bd9c15a4c00f2a5509849a9172fe9e63cc2a5d498f2b889771ff318bf",
+      "stored_bytes": 14949,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dual-lane-target-support\\U4\\current-ordinary-L\\cases\\cb01-cross-base-product8-long240.json",
+      "portable_path": "historical/original-old-law-case-report.json.gz",
+      "original_sha256": "e35e6310fb0bdd32c18be541c26d31a4ed931bb94ee92dfac26acfca54fc25d6",
+      "original_bytes": 8531719,
+      "stored_sha256": "5ff936464620ba92033897c0d848f11ea55370b30879356258cd3aa6e909f649",
+      "stored_bytes": 293294,
+      "encoding": "gzip"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-diagnostic-worktree\\out\\selective-cap-repair\\historical-conquest5-goal-order-adapted.strategy.json",
+      "portable_path": "historical/conquest5.strategy.json",
+      "original_sha256": "725fcf645903621ec123961846c82143632bcee9d3a0da30302fc002d167720a",
+      "original_bytes": 320194,
+      "stored_sha256": "725fcf645903621ec123961846c82143632bcee9d3a0da30302fc002d167720a",
+      "stored_bytes": 320194,
+      "encoding": "original bytes"
+    }
+  ],
+  "portable_replay": "Original paths and raw identities are preserved. gzip files decompress to byte-identical originals. Probes are snapshots of apps/web/test or out paths; restore to those locations in an isolated checkout before replay. No replay is authorized by this archive alone."
+}

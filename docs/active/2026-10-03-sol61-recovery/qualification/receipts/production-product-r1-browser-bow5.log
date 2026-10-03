@@ -1,0 +1,11 @@
+{"status":"failed","wall_ms":2291.8424,"output":"C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-product-r1-browser-bow5.json","error":"Error: page.evaluate: Error: Actual Calculator SOLVE button is not enabled\n    at eval (eval at evaluate (:290:30), <anonymous>:40:51)\n    at async <anonymous>:316:30"}
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+page.evaluate: Error: Actual Calculator SOLVE button is not enabled
+    at eval (eval at evaluate (:290:30), <anonymous>:40:51)
+    at async <anonymous>:316:30
+    at C:\Users\Oliver\AppData\Local\Temp\poecraft2-sol61-production-worktree\apps\web\test\sol61-browser-solve.mjs:43:31
+
+Node.js v20.20.0

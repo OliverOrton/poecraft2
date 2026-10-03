@@ -88,6 +88,8 @@ void run_solver_setup_service_tests();
 #endif
 
 void run_solver_protected_finder_tests();
+void run_solver_protected_fill_tests();
+void run_solver_growth_tests(bool blocker = false);
 
 void run_solver_finder_essence_tests();
 void run_solver_uniform_removal_tests();

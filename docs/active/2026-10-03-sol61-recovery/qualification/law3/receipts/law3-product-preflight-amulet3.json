@@ -1,0 +1,70 @@
+{
+  "graph_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\production-default-r1-amulet3.strategies\\sol61-amulet3-matched-currentlaw-120.strategy.json",
+  "graph_sha256": "713403e86ba47e362aac1dc6eb56f970e4544dd8a6b353e9d18fd0c7965ab26f",
+  "case_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\amulet3.json",
+  "artifact_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\data\\runtime-snapshots\\82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+  "economy_identity": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+  "scope": "ordinary_strategy_execution_diagnostic; no imported native programme provenance or solver incumbent admission",
+  "trials": 0,
+  "status": "passed",
+  "product_board_import": "passed",
+  "exact": {
+    "converged": true,
+    "terminals": {
+      "success": 1,
+      "failure": 0,
+      "stop": 0,
+      "action_not_applied": 0,
+      "no_matching_edge": 0,
+      "unresolved": 0,
+      "by_node": [
+        {
+          "node_id": "c2",
+          "kind": "success",
+          "p": 1
+        }
+      ]
+    },
+    "expected_actions": 47055.97225374125,
+    "cost_complete": true,
+    "total_expected_cost": 18996.576948551738,
+    "memory": {
+      "owned_bytes_estimate": 158877117,
+      "peak_owned_bytes_estimate": 214722009,
+      "retained_output_owned_bytes_estimate": 0,
+      "max_owned_bytes": 1073741824,
+      "max_output_json_bytes": 16777216
+    },
+    "consumption": [
+      {
+        "key": "bench:DexMasterItemGenerationCannotChangeSuffixes",
+        "quantity": 1.0000000000001288
+      },
+      {
+        "key": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+        "quantity": 47053.972253741274
+      },
+      {
+        "key": "scour",
+        "quantity": 1.0000000000001288
+      }
+    ]
+  },
+  "native_cost_parity": {
+    "expected_cost": 18996.576948551738,
+    "tolerance_relative": 1e-9,
+    "status": "passed"
+  },
+  "wasm_memory": {
+    "initial_linear_memory_bytes": 134217728,
+    "current_linear_memory_bytes": 400949248,
+    "peak_observed_linear_memory_bytes": 400949248,
+    "linear_memory_growth_only": true,
+    "configured_maximum_linear_memory_bytes": 4294967296,
+    "process_rss_bytes": 528203776,
+    "process_rss_peak_observed_bytes": 528203776,
+    "process_lifetime_max_rss_bytes": 533475328,
+    "rss_scope": "fresh Node process, including worker; observations at product response boundaries"
+  },
+  "wall_ms": 5180.1603000000005
+}

@@ -1,0 +1,71 @@
+{
+  "created_utc": "2026-10-03T15:07:26.250615+00:00",
+  "qualification": "production-r4",
+  "source_patch_sha256": "953fafb9556379eadeb882c5b52298aab51bcf118f16384d3b413b47e271574c",
+  "benchmark_sha256": "8324cd8ac3dd85448f257b425ba0eb4a35fed8006017352cd4956c10868f4b1b",
+  "case_pins": {
+    "bow4-dirty": {
+      "case_sha256": "e54d87308c2aca8b5e508b40eb0868419f80c1ddcea765827466f010fad5406b",
+      "caps": {
+        "cancel_ack_ms": 250,
+        "full_evidence": true,
+        "max_compiled_edges": 400000,
+        "max_compiled_nodes": 100000,
+        "max_diagnostic_samples": 64,
+        "max_reforge_work": 50000000,
+        "max_solver_owned_bytes": 1073741824,
+        "max_state_action_rows": 1215000,
+        "max_strategy_json_bytes": 67108864,
+        "max_sweeps": 100000,
+        "max_telemetry_json_bytes": 2097152,
+        "max_transitions": 10000000,
+        "solve_profile": "calculator_product_v1",
+        "solve_step_work_items": 8,
+        "worker_step_ms": 250
+      },
+      "purpose": "capture exact private cap phase/counters"
+    }
+  },
+  "serial": true,
+  "new_budget": true,
+  "purpose": "repeat only the exact failing Bow4 default-budget request after the native goal-bitmap initialization fix",
+  "budget_source": "native calculator_product_v1 defaults; no explicit state/discovery/expansion caps",
+  "simulator_trials": 0,
+  "state_override": 0,
+  "memory_limit_bytes": 1073741824,
+  "finish_seconds": 120,
+  "native_deadline_seconds": 150,
+  "host_watchdog_seconds": 165,
+  "final_exact_evaluation_seconds": 30,
+  "commands": [
+    {
+      "argv": [
+        "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\build\\engine\\poecraft_solver_benchmark.exe",
+        "--artifact",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\runtime-snapshots\\82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+        "--corpus",
+        "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\manifest.json",
+        "--case",
+        "sol61-preserved-bow4-currentmodel-120",
+        "--solver-mode",
+        "current",
+        "--native-goal-terminal",
+        "legacy-clean",
+        "--output",
+        "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\production-fixed-bow4-r2-bow4-dirty.json",
+        "--partial-output",
+        "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\production-fixed-bow4-r2-bow4-dirty.partial.json",
+        "--strategy-output",
+        "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\production-fixed-bow4-r2-bow4-dirty.strategies",
+        "--skip-verification",
+        "--exact-strategy-evaluation",
+        "--exact-strategy-evaluation-time-limit-seconds",
+        "30"
+      ],
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "host_watchdog_seconds": 165,
+      "host_reservation": {},
+      "identity_sha256": "e42b75770f1ee37643d05c9f0e91e6bb0617e9f78c5f1075868865998341da29"
+    }
+  ]
+}

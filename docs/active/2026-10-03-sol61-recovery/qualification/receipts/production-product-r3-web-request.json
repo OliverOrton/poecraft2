@@ -1,0 +1,64 @@
+{
+  "created_utc": "2026-10-03T16:06:53.238459+00:00",
+  "source_commit": "afa83210196a2e07c00ccc6650881b44ae1b0e84",
+  "wasm_identity": {
+    "bindings\\wasm\\dist\\poecraft_engine.wasm": {
+      "sha256": "a4388e4bec43d61cb7c184978fa0c161e54812a4101d3d1c588fc753630aa387",
+      "bytes": 8608289
+    },
+    "bindings\\wasm\\dist\\poecraft_engine.mjs": {
+      "sha256": "23c405b984e19595b4007259d8d45fe713ea31a534c091c2ef9433ffbe2f1363",
+      "bytes": 21788
+    }
+  },
+  "pins": {
+    "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\apps\\web\\test\\sol61-policy-qualification.ts": "f71cddd121754f52066583901e1452873d6967b28193ee45127631c08b14be1a",
+    "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\apps\\web\\test\\sol61-worker-bootstrap.mjs": "8818b38dd0642f344c4d55ff0ba1acdc301b72b2c321f5b1070a60ffe4df2ec9",
+    "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\manifest.json": "fca6c237159327f5e77a36b20510939186a650b0c69465f3eea46588b69acbe3",
+    "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\data\\runtime-snapshots\\82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d\\manifest.json": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\production-wasm-r3-request.json": "b5a1932e5e409c048367813b75b4d6a562ad00508729305486d701c0d2f3974b",
+    "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\production-fixed-bow4-r2-bow4-dirty.strategies\\sol61-preserved-bow4-currentmodel-120.strategy.json": "e32b550faf63157812628d5bea6a6d5d900848ff7c8944e0bfba25b503a6d347",
+    "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\bow4-dirty.json": "e54d87308c2aca8b5e508b40eb0868419f80c1ddcea765827466f010fad5406b",
+    "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\production-default-r1-conquest5.strategies\\sol61-trace-conquest5-currentmodel-120.strategy.json": "d65787d11ad895d5925ce9dd4d0aefde483e53bc25df3a80a6a9dfe7a0d7e053",
+    "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\conquest5.json": "b19c588b2f004fac7db6dae7fddb3f384693a18d722245f96f4a7c27d0dcd299",
+    "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\production-default-r1-amulet3.strategies\\sol61-amulet3-matched-currentlaw-120.strategy.json": "713403e86ba47e362aac1dc6eb56f970e4544dd8a6b353e9d18fd0c7965ab26f",
+    "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\amulet3.json": "9e2eb59392c8934dd6e15b115ec066fee53efe092154f2b0343a93dec70be95b",
+    "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\production-default-r1-bow5.strategies\\sol61-bow5-matched-currentlaw-120.strategy.json": "b6114194af1611cb68dc86994cbcc086f01e9804ecb3ffbca863593f5fb9f38c",
+    "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\bow5.json": "9257aec8f005c5a5869240f8629cd80234fee9ff5c8cf02d3d44250770b9522c"
+  },
+  "LOCAL_owner": "Sol6.1 serial product qualification",
+  "browser_channel": "chrome",
+  "commands": [
+    {
+      "arm": "npm-test",
+      "command": {
+        "argv": [
+          "cmd",
+          "/c",
+          "npm",
+          "test"
+        ],
+        "cwd": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\apps\\web",
+        "host_watchdog_seconds": 900,
+        "host_reservation": {},
+        "identity_sha256": "b59cbe655b3f143490e5e8f34de3bd7204b115adf42fbd6c68edcbac5e7d9021"
+      }
+    },
+    {
+      "arm": "typescript",
+      "command": {
+        "argv": [
+          "cmd",
+          "/c",
+          "npx",
+          "tsc",
+          "--noEmit"
+        ],
+        "cwd": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\apps\\web",
+        "host_watchdog_seconds": 300,
+        "host_reservation": {},
+        "identity_sha256": "08c800f6509fafcb8b3b6708fa2669108eb72b1c1c5794dd752c07abf452901c"
+      }
+    }
+  ]
+}

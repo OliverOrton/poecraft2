@@ -889,6 +889,14 @@ class CalcContext {
      */
     bool materialize(std::uint32_t state_id, pc_item_state& out_item) const;
 
+    /* Bounded proposal for programme admission, using native pool eligibility.
+     * It has no acquisition probability or reached-entry authority. The caller
+     * must independently evaluate its original-root graph and validate every
+     * positive-mass programme entry before retaining an executable upper. */
+    bool propose_native_held_context(const pc_item_state& original,
+        std::uint32_t held_goal_mask, std::uint32_t target_count,
+        std::uint32_t acquisition_action, pc_item_state& proposal);
+
     /*
      * Exact successor distribution, cache-first. The result stays valid
      * until the CalcContext is destroyed. Distributions are
@@ -927,6 +935,8 @@ class CalcContext {
     const OptionKernel& option_kernel(
         std::uint32_t state_id,
         std::uint32_t operator_index);
+    const OptionKernel* cached_option_kernel(
+        std::uint32_t state_id, std::uint32_t operator_index) const;
     /*
      * Import one context-independent operator. Primitive dependencies are
      * resolved by canonical id in this registry; numeric index parity with
@@ -959,6 +969,12 @@ class CalcContext {
         std::optional<std::uint64_t> max_owned_bytes = std::nullopt);
     void refresh_solve_owned_bytes_cap(
         std::optional<std::uint64_t> max_owned_bytes);
+    /* A private service sets itself as the aggregate scratch owner. Its
+     * admission children delegate to that owner before allocating; ordinary
+     * contexts keep their existing independent cap behavior. */
+    void set_solve_owned_bytes_budget_owner(CalcContext* owner) {
+        solve_owned_bytes_budget_owner_ = owner;
+    }
     void consume_reforge_work(
         std::uint64_t active_amount,
         std::uint64_t logical_v1_amount);
@@ -1102,6 +1118,8 @@ class CalcContext {
         std::uint64_t resumes = 0;
         std::uint64_t suspensions = 0;
         std::uint64_t max_slice_ns = 0;
+        CalcContext* transient_scratch_context = nullptr;
+        std::uint64_t checkpoint_transient_owned_bytes = 0;
         solve_detail::CooperativeTask<StateLocalAutomaticBatch> task;
     };
     /* Parent operators are staged in one append-only range, so admission is
@@ -1123,6 +1141,7 @@ class CalcContext {
     std::optional<std::uint64_t> solve_reforge_work_cap_;
     CalcContext* reforge_work_budget_owner_ = nullptr;
     std::optional<std::uint64_t> solve_owned_bytes_cap_;
+    CalcContext* solve_owned_bytes_budget_owner_ = nullptr;
     /* Synchronous parent-layout automatic kernels share this CalcContext but
      * not the retained graph's reforge allowance. While nonzero,
      * consume_reforge_work routes charges to the automatic-admission ledger. */

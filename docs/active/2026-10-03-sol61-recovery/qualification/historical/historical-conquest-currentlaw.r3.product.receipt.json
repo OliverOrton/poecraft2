@@ -1,0 +1,40 @@
+{
+  "id": "historical-conquest-currentlaw",
+  "command": {
+    "argv": [
+      "node",
+      "--import",
+      "tsx",
+      "test/sol61-policy-qualification.ts",
+      "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-diagnostic-worktree\\out\\selective-cap-repair\\historical-conquest5-goal-order-adapted.strategy.json",
+      "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-diagnostic-worktree\\out\\selective-cap-repair\\frozen-requests\\trace-conquest5.case.json",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\runtime-snapshots\\82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+      "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-diagnostic-worktree\\out\\selective-cap-repair\\historical-conquest-currentlaw.r3.product-result.json",
+      "0"
+    ],
+    "cwd": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-diagnostic-worktree\\apps\\web",
+    "host_watchdog_seconds": 300,
+    "host_reservation": {},
+    "identity_sha256": "2735c275c5b8586e397625af2267b3f888047b864c41764aa0a4b1cf0e19fc39"
+  },
+  "started_utc": "2026-10-03T10:40:28.859343+00:00",
+  "finished_utc": "2026-10-03T10:40:32.317689+00:00",
+  "process": {
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 85976,
+    "process_identity_token": "85976:134354976288616037",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 3457.705599954352
+  },
+  "log": {
+    "path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-diagnostic-worktree\\out\\selective-cap-repair\\historical-conquest-currentlaw.r3.product.log",
+    "bytes": 211,
+    "sha256": "4155a564d5554ad36fb1474167fe003e87988171c55dc619380b8ca40a5bfd6a"
+  }
+}

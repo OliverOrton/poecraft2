@@ -1,0 +1,22 @@
+{
+  "selected_source": "b11f4c58f0a7c979f2c66b71892295795944e045",
+  "latest_main": "4ad4058086cbaa766a7178aad7ac5625eb8772a8",
+  "common_changed_paths": [
+    "bindings/wasm/dist/poecraft_engine.wasm"
+  ],
+  "latest_main_engine_delta": [
+    "engine/include/poecraft/hinekora.h",
+    "engine/src/hinekora.cpp"
+  ],
+  "pins": {
+    "engine/include/poecraft/hinekora.h": {
+      "production": "ae517ce783ed3a302aedf0d37978ea9b07fc8443d3d741786211287aeabcbb68",
+      "main": "74eca3a79115382459f1e59e2fbaa0918e431a84600ff4d7c678a5eb681c21d3"
+    },
+    "engine/src/hinekora.cpp": {
+      "production": "bb50299b6ff57c7c95b72b1f05e1f960a3392340540fb3e026c1349ffbd012e0",
+      "main": "1652ad924835c71c093315c1ed46e7f2dcfb5f277758d26007d2b2057f826b01"
+    }
+  },
+  "disposition": "Source deltas do not overlap except generated WASM. Latest main adds cached same-action Lock Observe return in hinekora.cpp plus contract comments in hinekora.h. Law3 source references shared count identity in Hinekora but does not edit these files. A combined engine rebuild is required before replacing main WASM; 0ac738f5 remains qualified only for b11 source. Latest Calculator/Lock UI must remain on main."
+}

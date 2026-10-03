@@ -444,9 +444,19 @@ std::string compile_finder_control_json(
             option.primitive_program.size() == 2 &&
             option.primitive_program.front() == option.setup_action &&
             option.primitive_program.back() == option.followup_action;
+        const bool temporary = finder_program_is_single_temporary_attempt(
+            calc, binding.admitted_state, binding.operator_index);
         if (option.kind != PlannerOperatorKind::FixedOption ||
-            (!eldritch && !protected_scour) || option.primitive_program.empty())
+            (!eldritch && !protected_scour && !temporary) || option.primitive_program.empty())
             throw std::invalid_argument("finder program is not a supported native side programme");
+        if ((binding.intent == FinderProgramIntent::NativeMissingEldritchGoal &&
+             (!eldritch || calc.registry().actions.at(option.primitive_program.back()).params.type != ActionType::EldritchExalt)) ||
+            (binding.intent == FinderProgramIntent::NativeTemporaryGoalAttempt && !temporary) ||
+            (temporary && binding.intent != FinderProgramIntent::NativeTemporaryGoalAttempt) ||
+            (binding.intent != FinderProgramIntent::ExactOperator &&
+             binding.intent != FinderProgramIntent::NativeMissingEldritchGoal &&
+             binding.intent != FinderProgramIntent::NativeTemporaryGoalAttempt))
+            throw std::invalid_argument("finder native programme intent rule is invalid");
         const std::uint32_t valid_mask =
             (1u << calc.goal().slots.size()) - 1u;
         if (binding.held_goal_mask == 0 ||
@@ -457,7 +467,9 @@ std::string compile_finder_control_json(
         for (std::uint32_t slot = 0; slot < calc.goal().slots.size(); ++slot)
             if ((binding.held_goal_mask & (1u << slot)) != 0 &&
                 goal_slot_side(calc.session(), calc.goal().slots[slot]) !=
-                    (protected_scour ? option.intended_side :
+                    (temporary ? calc.session().gen_type.at(
+                        calc.registry().actions.at(option.setup_action).params.mod_id) :
+                     protected_scour ? option.intended_side :
                      option.intended_side == PC_SIDE_PREFIX
                         ? PC_SIDE_SUFFIX : PC_SIDE_PREFIX))
                 throw std::invalid_argument(

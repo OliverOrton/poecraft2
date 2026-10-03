@@ -1,0 +1,9 @@
+{
+  "phase": "browser",
+  "arm": "conquest5",
+  "pid": 3584,
+  "identity_token": "3584:134355251042466081",
+  "started_utc": "2026-10-03T18:18:24.259027+00:00",
+  "watchdog_seconds": 420,
+  "LOCAL_owner": "Sol6.1 serial product qualification"
+}

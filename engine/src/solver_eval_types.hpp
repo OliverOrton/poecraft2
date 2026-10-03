@@ -113,7 +113,7 @@ struct StrategyContinuationStateUpper {
 
 struct StrategyContinuationUpperCertificate {
     static constexpr std::uint64_t kSchemaVersion = 1;
-    static constexpr std::uint64_t kEvaluatorVersion = 2; // Rare count law v2.
+    static constexpr std::uint64_t kEvaluatorVersion = 3; // Rare count law v3.
 
     std::uint64_t schema_version = kSchemaVersion;
     std::uint64_t evaluator_version = kEvaluatorVersion;
@@ -359,7 +359,7 @@ struct StrategyPolicySelectedKernel {
 
 struct StrategyPolicyEntryCertificate {
     static constexpr std::uint64_t kSchemaVersion = 1;
-    static constexpr std::uint64_t kEvaluatorVersion = 2; // Rare count law v2.
+    static constexpr std::uint64_t kEvaluatorVersion = 3; // Rare count law v3.
 
     std::uint64_t schema_version = kSchemaVersion;
     std::uint64_t evaluator_version = kEvaluatorVersion;

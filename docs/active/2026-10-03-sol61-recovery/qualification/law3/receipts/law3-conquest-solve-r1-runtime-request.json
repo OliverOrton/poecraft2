@@ -1,0 +1,72 @@
+{
+  "created_utc": "2026-10-03T18:03:29.550835+00:00",
+  "qualification": "law3-native-r2",
+  "source_patch_sha256": "c5c8af1a8c416652dd2f34bc89587af765bca5904ce00f8a27513734c8f03f0d",
+  "mechanics_model": "owner-approved single-side ordinary-total 8:3:1, provisional game model",
+  "rare_reforge_count_law_version": 3,
+  "benchmark_sha256": "dc1fa0651bbf66bd1e8de5564fd6c5086ada6406640b4df6b563a9afadef289d",
+  "case_pins": {
+    "conquest5": {
+      "case_sha256": "b19c588b2f004fac7db6dae7fddb3f384693a18d722245f96f4a7c27d0dcd299",
+      "caps": {
+        "cancel_ack_ms": 250,
+        "full_evidence": true,
+        "max_compiled_edges": 400000,
+        "max_compiled_nodes": 100000,
+        "max_diagnostic_samples": 64,
+        "max_reforge_work": 50000000,
+        "max_solver_owned_bytes": 1073741824,
+        "max_state_action_rows": 1215000,
+        "max_strategy_json_bytes": 67108864,
+        "max_sweeps": 100000,
+        "max_telemetry_json_bytes": 2097152,
+        "max_transitions": 10000000,
+        "solve_profile": "calculator_product_v1",
+        "solve_step_work_items": 8,
+        "worker_step_ms": 250
+      },
+      "purpose": "check native partial-progress proposal from original root"
+    }
+  },
+  "serial": true,
+  "new_budget": true,
+  "budget_source": "native calculator_product_v1 defaults; no explicit state/discovery/expansion caps",
+  "simulator_trials": 0,
+  "state_override": 0,
+  "memory_limit_bytes": 1073741824,
+  "finish_seconds": 120,
+  "native_deadline_seconds": 150,
+  "host_watchdog_seconds": 165,
+  "final_exact_evaluation_seconds": 30,
+  "commands": [
+    {
+      "argv": [
+        "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\build\\engine\\poecraft_solver_benchmark.exe",
+        "--artifact",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\runtime-snapshots\\82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+        "--corpus",
+        "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\manifest.json",
+        "--case",
+        "sol61-trace-conquest5-currentmodel-120",
+        "--solver-mode",
+        "current",
+        "--native-goal-terminal",
+        "legacy-clean",
+        "--output",
+        "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\law3-conquest-solve-r1-conquest5.json",
+        "--partial-output",
+        "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\law3-conquest-solve-r1-conquest5.partial.json",
+        "--strategy-output",
+        "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\law3-conquest-solve-r1-conquest5.strategies",
+        "--skip-verification",
+        "--exact-strategy-evaluation",
+        "--exact-strategy-evaluation-time-limit-seconds",
+        "30"
+      ],
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "host_watchdog_seconds": 165,
+      "host_reservation": {},
+      "identity_sha256": "dc18c3070d105cd0eca4c35075b5f845712e6b05d75f94a41521e10cc2f5f549"
+    }
+  ]
+}

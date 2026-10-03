@@ -1,0 +1,25 @@
+selective scratch preflight parent_limit=67108864 live=143807 remaining=66965057 requested=66965058 production_refused=1
+selective scratch preflight test_local_cap boundary_allowed=1 over_limit_refused=1 checks=0
+selective transient scratch aggregate_before=119831 child_before=40367 aggregate_after=120075 child_after=40611 boundary=1 over_refused=1 growth_refused=1 zero_refused=1
+native held proposal states=0 logical_work=112 bounded_pool_only=1
+selective target=1 native reroll mass=1 one_suffix=0 goal=0
+selective target=1 checking=1 validating=1 status=retained cost=942.22916820871001
+selective cap fixture=0 after_service_live=13198543 limit=1073741824 compatible=1
+selective cap fixture=0 published=1 peak=14002740 limit=1073741824 cost=942.22916820871001 reason=
+selective cap fixture=1 live=13181642 incumbent_bytes=12502 cost=31984.615384614921
+selective target=1 checking=0 validating=0 status=censored_capacity:solver exceeded max_solver_owned_bytes (13181641) cost=inf
+selective cap fixture=1 after_service_live=13139877 limit=13181641 compatible=1
+selective cap fixture=1 published=0 peak=14002740 limit=13181641 cost=inf reason=retained solve result reached max_solver_owned_bytes
+selective cap fixture=2 live=13792707 incumbent_bytes=12502 cost=31984.615384614921
+selective target=1 native reroll mass=1 one_suffix=0 goal=0
+selective target=1 checking=1 validating=0 status=censored_capacity:selective completion has no aggregate memory headroom cost=inf
+selective cap fixture=2 after_service_live=13139881 limit=13792706 compatible=1
+selective cap fixture=2 published=1 peak=14002740 limit=13792706 cost=31984.615384614921 reason=
+selective target=1 checking=0 validating=0 status=native_construction_refused:injected_bad_alloc cost=inf
+selective cap fixture=3 after_service_live=13139870 limit=1073741824 compatible=1
+selective cap fixture=3 published=1 peak=14002740 limit=1073741824 cost=31984.615384614921 reason=
+selective target=1 native reroll mass=1 one_suffix=0 goal=0
+selective target=1 checking=1 validating=0 status=censored_capacity:solver exceeded max_discovered_states (1) cost=inf
+selective cap fixture=4 after_service_live=13139870 limit=1073741824 compatible=1
+selective cap fixture=4 published=1 peak=14002740 limit=1073741824 cost=31984.615384614921 reason=
+solver integrity tests: 196 checks, 0 failures

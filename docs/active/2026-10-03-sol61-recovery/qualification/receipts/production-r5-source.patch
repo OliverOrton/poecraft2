@@ -1,0 +1,31 @@
+diff --git a/engine/src/solver_solve_incremental.cpp b/engine/src/solver_solve_incremental.cpp
+index 4203782d..1b649cff 100644
+--- a/engine/src/solver_solve_incremental.cpp
++++ b/engine/src/solver_solve_incremental.cpp
+@@ -789,7 +789,7 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
+ bool SolveWork::Impl::begin_incremental_upper_policy_pass() {
+     // Publication transfers result ownership. A completed result cannot
+     // re-enter an upper pass or expose its moved-from workspace vectors.
+-    if (finalized_result.has_value() ||
++    if (consumed || finalized_result.has_value() ||
+         !options.high_impact_executable_uppers ||
+         !incremental_action_generation ||
+         incremental_envelope_closed ||
+diff --git a/engine/tests/test_solver_compile.cpp b/engine/tests/test_solver_compile.cpp
+index dda3307c..8d97cfa3 100644
+--- a/engine/tests/test_solver_compile.cpp
++++ b/engine/tests/test_solver_compile.cpp
+@@ -4360,6 +4360,13 @@ void run_solver_growth_tests(const bool blocker) {
+         PC_CHECK(!impl.begin_incremental_upper_policy_pass());
+         PC_CHECK(impl.phase == SolvePhase::Done && impl.finalized_result.has_value());
+         PC_CHECK(impl.incremental_upper_policy_passes_requested == previous_attempts);
++        // finish() releases the optional result, but consumption remains a
++        // permanent publication boundary; no post-finish upper pass may start.
++        impl.consumed = true;
++        impl.finalized_result.reset();
++        PC_CHECK(!impl.begin_incremental_upper_policy_pass());
++        PC_CHECK(impl.phase == SolvePhase::Done && !impl.finalized_result.has_value());
++        PC_CHECK(impl.incremental_upper_policy_passes_requested == previous_attempts);
+     }
+     SolveOptions product;
+     apply_solve_profile_defaults(product, SolveProfile::CalculatorProductV1);

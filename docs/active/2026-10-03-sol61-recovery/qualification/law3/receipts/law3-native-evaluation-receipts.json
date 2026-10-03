@@ -1,0 +1,67 @@
+[
+  {
+    "arm": "conquest5-historical",
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 35220,
+    "process_identity_token": "35220:134355233587823646",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 5583.234499907121
+  },
+  {
+    "arm": "conquest5-current",
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 76312,
+    "process_identity_token": "76312:134355233643665152",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 1823.659999994561
+  },
+  {
+    "arm": "bow4-dirty",
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 88248,
+    "process_identity_token": "88248:134355233661911829",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 419.4070000667125
+  },
+  {
+    "arm": "amulet3",
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 26080,
+    "process_identity_token": "26080:134355233666114746",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 8797.195699997246
+  },
+  {
+    "arm": "bow5",
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 75116,
+    "process_identity_token": "75116:134355233754097281",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 13132.083900040016
+  }
+]

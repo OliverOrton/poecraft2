@@ -1,0 +1,40 @@
+{
+  "case_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\bow5.json",
+  "case_sha256": "9257aec8f005c5a5869240f8629cd80234fee9ff5c8cf02d3d44250770b9522c",
+  "source_commit": "afa83210196a2e07c00ccc6650881b44ae1b0e84",
+  "wasm_sha256": "a4388e4bec43d61cb7c184978fa0c161e54812a4101d3d1c588fc753630aa387",
+  "runtime": {
+    "manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "source": {
+      "data_hash": "d511e23d1289674c4ac869d20ccd62a979af65f58d4aac83a01ac9bbb02c853e",
+      "database_schema_version": "3",
+      "source_hash": "b458174874efbe64cf830d603f9e3effddd2042d0f3faa548b40c0e69a68ca7a",
+      "source_version": "repoe-b458174874efbe64"
+    },
+    "artifact_schema_version": 4,
+    "files": {
+      "game-data.json": {
+        "byte_size": 16914460,
+        "sha256": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e"
+      },
+      "strings.json": {
+        "byte_size": 6740473,
+        "sha256": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6"
+      }
+    },
+    "bundle_sha256": "6688e9e36d458d629554ca969a9c46901c362c4b919e41eebb0460bf3a3338ec",
+    "bundle_bytes": 23660953,
+    "url": "poecraft-data.6688e9e36d458d629554ca969a9c46901c362c4b919e41eebb0460bf3a3338ec.json"
+  },
+  "economy_sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92",
+  "economy_content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+  "status": "failed",
+  "scope": "fresh Chromium actual Calculator SOLVE; default profile and default 240s Finish; detached fixture DOM as existing Calculator probe; no rendered visual review",
+  "parent_app_watchdog_ms": 300000,
+  "page_errors": [],
+  "console_errors": [],
+  "browser_channel": "chrome",
+  "browser_version": "152.0.7977.83",
+  "error": "Error: page.evaluate: Error: Actual Calculator SOLVE button is not enabled\n    at eval (eval at evaluate (:290:30), <anonymous>:40:51)\n    at async <anonymous>:316:30",
+  "wall_ms": 2291.8424
+}

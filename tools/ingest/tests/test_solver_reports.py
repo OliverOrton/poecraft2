@@ -16,6 +16,7 @@ from poecraft_ingest.solver_reports import (
     compare_runs,
     exact_closure_profile,
     load_run,
+    main as reports_main,
     research_markdown,
 )
 
@@ -393,6 +394,90 @@ def test_paired_comparison_requires_identical_caps_and_flags_regressions() -> No
     ]
 
 
+def _economic_case(cost: float) -> dict[str, object]:
+    case = _case("economic", wall_ms=100, memory=500, target=False)
+    case["exact_strategy_evaluation"] = {
+        "completed": True, "status": "matched", "converged": True,
+        "cost_complete": True, "zero_off_policy_mass": True,
+        "cost_reconciled": True, "success_probability": 1, "total_expected_cost": cost,
+    }
+    return case
+
+
+def test_same_status_economic_regression_requires_independent_cost() -> None:
+    before = _economic_case(85558.70618560436)
+    after = _economic_case(627313592.5067186)
+    comparison = compare_runs("before", [before], "after", [after])
+    assert comparison["regressions"][0]["reasons"] == [
+        "independently_evaluated_policy_cost_increased"
+    ]
+    pair = comparison["pairs"][0]
+    assert pair["economics"]["candidate_independently_evaluated_cost"] == 627313592.5067186
+    assert pair["deltas"]["independently_evaluated_policy_cost"] > 627000000
+    # Repricing/model/scope changes remain excluded before economic comparison.
+    after["input"]["economy"]["content_sha256"] = "changed"
+    excluded = compare_runs("before", [before], "after", [after])
+    assert excluded["paired_cases"] == 0
+    assert excluded["regressions"] == []
+
+
+@pytest.mark.parametrize("broken", ["completed", "converged", "cost_complete", "zero_off_policy_mass", "cost_reconciled", "success_probability"])
+def test_economic_gate_records_loss_of_independent_evaluation(broken: str) -> None:
+    before = _economic_case(100)
+    after = _economic_case(50)
+    after["exact_strategy_evaluation"][broken] = False
+    comparison = compare_runs("before", [before], "after", [after])
+    assert comparison["regressions"][0]["reasons"] == [
+        "independently_evaluated_policy_cost_lost"
+    ]
+    # A solver scalar alone never supplies the missing independent authority.
+    after["solve_summary"]["evaluated_policy_cost"] = 50
+    assert compare_runs("before", [before], "after", [after])["pairs"][0]["economics"][
+        "candidate_independently_evaluated_cost"
+    ] is None
+
+
+@pytest.mark.parametrize("before_cost,after_cost", [(100, 50), (100, 100 + 5e-8), (0, 0)])
+def test_economic_gate_preserves_improvement_and_numerical_tolerance(
+    before_cost: float, after_cost: float
+) -> None:
+    comparison = compare_runs("before", [_economic_case(before_cost)],
+        "after", [_economic_case(after_cost)])
+    assert comparison["regressions"] == []
+
+
+def test_economic_gate_preserves_explicit_zero_tolerance_and_excludes_changed_checker() -> None:
+    before = _economic_case(100)
+    after = _economic_case(100 + 5e-8)
+    for case in (before, after):
+        case["input"]["verification"] = {
+            "exact_cost_absolute_tolerance": 0, "exact_cost_relative_tolerance": 0,
+        }
+    assert compare_runs("before", [before], "after", [after])["regressions"][0]["reasons"] == [
+        "independently_evaluated_policy_cost_increased"
+    ]
+    after["input"]["verification"]["exact_cost_absolute_tolerance"] = 1
+    excluded = compare_runs("before", [before], "after", [after])
+    assert excluded["paired_cases"] == 0
+    assert excluded["excluded"][0]["fields"] == ["input.verification"]
+
+
+@pytest.mark.parametrize("candidate_cost,expected_exit", [(627313592.5067186, 1), (40000, 0)])
+def test_economic_gate_cli_preserves_report_and_fails_material_cost_regression(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, candidate_cost: float, expected_exit: int
+) -> None:
+    before = _economic_case(85558.70618560436)
+    after = _economic_case(candidate_cost)
+    monkeypatch.setattr("poecraft_ingest.solver_reports.load_run",
+        lambda path, **kwargs: ({}, [before if path.name == "before" else after]))
+    output = tmp_path / "economic-gate.json"
+    result = reports_main(["--run", "base=before", "--run", "candidate=after",
+        "--pair", "base:candidate", "--economic-gate", "--output", str(output)])
+    assert result == expected_exit
+    report = json.loads(output.read_text(encoding="utf-8"))
+    assert report["comparisons"][0]["economic_gate"]["passed"] is (expected_exit == 0)
+
+
 def test_load_run_includes_analyzable_partial_watchdog_report(
     tmp_path: Path,
 ) -> None:
@@ -473,3 +558,48 @@ def test_stage_predecessors_are_hard_gates(tmp_path: Path) -> None:
     )
 
     require_completed_predecessors(tmp_path, "candidate", stage)
+
+
+@pytest.mark.parametrize("field,before_budget,after_budget", [
+    ("run_overrides", {"max_discovered_states": 200000}, {"max_discovered_states": 800000}),
+    ("resolved_checker_caps", {"max_states": 200000, "max_owned_bytes": 1073741824},
+        {"max_states": 800000, "max_owned_bytes": 1073741824}),
+])
+def test_financial_identity_excludes_changed_resolved_budget(
+    field: str, before_budget: dict, after_budget: dict,
+) -> None:
+    before, after = _economic_case(100), _economic_case(50)
+    before["input"][field], after["input"][field] = before_budget, after_budget
+    comparison = compare_runs("before", [before], "after", [after])
+    assert comparison["paired_cases"] == 0
+    assert comparison["economic_gate"]["passed"] is False
+    assert comparison["excluded"][0]["fields"] == [f"input.{field}"]
+    after["input"][field] = copy.deepcopy(before_budget)
+    matched = compare_runs("before", [before], "after", [after])
+    assert matched["paired_cases"] == 1
+    assert matched["economic_gate"]["passed"] is True
+
+
+@pytest.mark.parametrize("old_law_version", [None, 2])
+def test_financial_identity_excludes_changed_reforge_model(old_law_version) -> None:
+    before, after = _economic_case(100), _economic_case(50)
+    if old_law_version is not None:
+        before["input"]["rare_reforge_count_law_version"] = old_law_version
+    after["input"]["rare_reforge_count_law_version"] = 3
+    comparison = compare_runs("before", [before], "after", [after])
+    assert comparison["paired_cases"] == 0
+    assert comparison["economic_gate"]["passed"] is False
+    assert comparison["excluded"][0]["fields"] == ["input.rare_reforge_count_law_version"]
+    before["input"]["rare_reforge_count_law_version"] = 3
+    matched = compare_runs("before", [before], "after", [after])
+    assert matched["paired_cases"] == 1
+    assert matched["economic_gate"]["passed"] is True
+
+
+def test_financial_identity_excludes_omitted_versus_explicit_override() -> None:
+    before, after = _economic_case(100), _economic_case(50)
+    after["input"]["run_overrides"] = {"max_discovered_states": 800000}
+    comparison = compare_runs("before", [before], "after", [after])
+    assert comparison["paired_cases"] == 0
+    assert comparison["economic_gate"]["passed"] is False
+    assert comparison["excluded"][0]["fields"] == ["input.run_overrides"]

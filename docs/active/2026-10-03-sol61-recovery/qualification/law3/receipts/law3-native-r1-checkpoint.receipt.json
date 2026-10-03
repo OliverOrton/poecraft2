@@ -1,0 +1,12 @@
+{
+  "exit_code": 3221226505,
+  "timed_out": false,
+  "canceled": false,
+  "cancellation_mode": null,
+  "cancellation_ack_ms": null,
+  "process_id": 3300,
+  "process_identity_token": "3300:134355225964074674",
+  "survivor": false,
+  "survivor_check": "process_group_kill_then_parent_poll",
+  "wall_ms": 1952.7661001775414
+}

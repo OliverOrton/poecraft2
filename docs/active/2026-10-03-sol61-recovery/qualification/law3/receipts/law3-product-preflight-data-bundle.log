@@ -1,0 +1,5 @@
+
+> @poecraft/web@0.0.0 build:data
+> node ../../scripts/build-data-bundle.mjs
+
+Verified runtime 82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d; ABI 3; bundle 23660953 bytes; build 37d8a578050182a26118cbfd9682dbd41e21476159f1f97f4b571ab1a63c91a3

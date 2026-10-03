@@ -1,0 +1,298 @@
+
+> @poecraft/web@0.0.0 pretest
+> npm run build:data
+
+
+> @poecraft/web@0.0.0 build:data
+> node ../../scripts/build-data-bundle.mjs
+
+Verified runtime 82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d; ABI 3; bundle 23660953 bytes; build af82bb33d6eb46c329e2e15aaeda240658b56ffdf2fa5f3761f16fc3aa9416eb
+
+> @poecraft/web@0.0.0 test
+> tsx test/engine-smoke.test.ts && tsx test/engine-client-transfer.test.ts && tsx test/calculator-delivery.test.ts && tsx test/worker-finish-control.test.ts && tsx test/solver-benchmark-corpus.test.ts && tsx test/bestiary-bindings.test.ts && tsx test/hinekora-bindings.test.ts && tsx test/hinekora-controls.test.ts && tsx test/item-display.test.ts && tsx test/unveil-controls.test.ts && tsx test/calculator-currency-controls.test.ts && tsx test/mod-text.test.ts && tsx test/calculator-goal-item.test.ts && tsx test/calculator-goal-set.test.ts && tsx test/recombination-wasm.test.ts && tsx test/odds-presentation.test.ts && tsx test/solve-workspace.test.ts && tsx test/solver-lab-export.test.ts && tsx test/solver-result-presentation.test.ts && tsx test/workspace-model.test.ts && tsx test/edit-history.test.ts && tsx test/workspace-resources.test.ts && tsx test/craft-costs.test.ts && tsx test/base-picker-model.test.ts && tsx test/cluster-configuration.test.ts && tsx test/engine-clusters.test.ts && tsx test/strategy-model.test.ts && tsx test/strategy-feeder.test.ts && tsx test/engine-feeder.test.ts && tsx test/strategy-layout.test.ts && tsx test/strategy-calculator-mode.test.ts && tsx test/economy-service.test.ts && tsx test/hosted-tester.test.ts
+
+  ok - API shape: ABI version is current
+  ok - load data through the memory bundle path
+  ok - create a session and an item
+  ok - emulator editing can add and remove an exact explicit mod
+  ok - Fracturing Orb fractures one random explicit modifier
+  ok - catalog exposes mod groups, essences, and fossils as usable keys
+  ok - WASM Fossil and Essence transitions ignore metamods but keep fractures
+  ok - Phase 13 mechanics run through the WASM worker boundary
+  ok - Phase 13 strategy operations run natively through WASM
+  ok - exact strategy evaluation agrees with a 5k-run simulation
+  ok - S6 Phase 4 exact evaluation supports veiled reforges
+  ok - S6 Phase 4 condition vocabulary compiles through WASM
+  ok - exact evaluation reports capacity without double-prefixing
+  ok - stepped exact evaluation reports ordered progress
+  ok - exact evaluation cancellation is prompt and leaks no handles
+  ok - fallback-capable evaluation completes or cancels promptly
+  ok - a burst of obsolete evaluations leaves only the newest graph
+  ok - apply an action mutates the item per the rules
+  ok - WASM debug pool matches the native spec fixtures
+  ok - native strategy run reports progress, traces, and economy cost
+  ok - published-size economy metadata loads without exhausting the WASM stack
+  ok - modifier family minimum tier executes in the native WASM simulator
+  ok - long strategy run cancels promptly via AbortSignal
+  ok - an already-aborted strategy run performs no simulations
+    solver strategy transfer: 49,704 bytes in 0.40 ms
+    solver close: handles 5 -> 4; live bytes 14,793,441 -> 3,764; peak 3,764; WASM high-water 334,102,528 -> 334,102,528; max solve step 62.62 ms
+  ok - solver runs in the browser runtime: odds, solve, compiled policy
+  ok - calculator picker: full-registry solver, filtered actions, fossil combos
+  ok - product Eldritch dependency wins through release WASM
+  ok - automatic S8.3 bench selects and executes through WASM
+  ok - experimental finder runs through the WASM worker and exports a checked graph
+  ok - coverage goals use native terminal truth and neutral proof authority
+  ok - special essence acquisition does not block crafting
+  ok - emulator native cost descriptors
+currency-pro-witness {"base_key":"Metadata/Items/Armours/BodyArmours/BodyInt17","item_level":86,"root_rarity":"normal","with_implicits":false,"goal":{"version":"v1","rarity":"rare","allow_extra_modifiers":true,"slots":[{"family_mod_key":"LocalIncreasedEnergyShield11","min_tier":0}],"actions":["alchemy","foulborn_exalt","scour"]},"economy":{"version":"v1","prices":{"alchemy":2,"foulborn_exalt":0.01,"scour":0.1}},"options":{"solver_mode":"current","solve_profile":"calculator_product_v1"},"result":{"policy_available":true,"termination":"numerical_stability","lower_bound":0,"upper_bound":4.368411973286115,"evaluated_policy_cost":4.368411973286115,"start_value":4.368411973286115,"expanded_states":3,"skipped_missing_price_actions":0}}
+currency-pro-witness {"base_key":"Metadata/Items/Armours/BodyArmours/BodyInt17","item_level":86,"root_rarity":"normal","with_implicits":false,"goal":{"version":"v1","rarity":"rare","allow_extra_modifiers":true,"slots":[{"family_mod_key":"LocalIncreasedEnergyShield11","min_tier":0}],"actions":["alchemy","foulborn_exalt","scour"]},"economy":{"version":"v1","prices":{"alchemy":2,"foulborn_exalt":0.01,"scour":0.1}},"options":{"solver_mode":"strategy_finder","solve_profile":"calculator_product_v1"},"result":{"policy_available":true,"termination":"finder_complete","lower_bound":null,"upper_bound":4.371636858398551,"evaluated_policy_cost":4.371636858398551,"start_value":null,"expanded_states":0,"skipped_missing_price_actions":0}}
+  ok - currency expansion state and original-root policy contracts
+  ok - Dominance and Vaal native actions preserve transport and costs
+  ok - Expanded currency Calculator returns native odds without consuming items
+  ok - Calculator item goals and editors preserve native joint outcomes
+  ok - current Fractured Fossil refuses without mutation, RNG draw or exact scope reduction
+
+37/37 passed
+  ok - strategy graphs cross client/worker boundaries as transferable JSON bytes
+  ok - evaluation cancellation ordering, native errors and terminal callback cleanup remain intact
+  ok - Calculator DOM export, frozen request, partial states and bounded history
+  ok - actual worker Finish/Cancel dispatch, stale IDs, one terminal, release and client handle reuse
+TAP version 13
+# Subtest: S7 solver benchmark corpus is versioned, unique, and explicitly gated
+ok 1 - S7 solver benchmark corpus is versioned, unique, and explicitly gated
+  ---
+  duration_ms: 6.4806
+  ...
+# Subtest: owner-approved real crafts are benchmark-enabled
+ok 2 - owner-approved real crafts are benchmark-enabled
+  ---
+  duration_ms: 6.1421
+  ...
+# Subtest: general benchmarks default Imprint off and retain explicit opt-in
+ok 3 - general benchmarks default Imprint off and retain explicit opt-in
+  ---
+  duration_ms: 6.0477
+  ...
+# Subtest: Gate 1 solver-anytime controls disclose exact mechanic-family proofs
+ok 4 - Gate 1 solver-anytime controls disclose exact mechanic-family proofs
+  ---
+  duration_ms: 10.8254
+  ...
+# Subtest: corpus artifact pins reject stale WASM/data combinations
+ok 5 - corpus artifact pins reject stale WASM/data combinations
+  ---
+  duration_ms: 6.6543
+  ...
+# Subtest: state-scaling corpus materializes its pinned economy snapshot
+ok 6 - state-scaling corpus materializes its pinned economy snapshot
+  ---
+  duration_ms: 5.5573
+  ...
+# Subtest: goal-realignment corpora validate every current case and economy
+ok 7 - goal-realignment corpora validate every current case and economy
+  ---
+  duration_ms: 30.9641
+  ...
+# Subtest: goal-realignment materialization rejects undisclosed market overrides
+ok 8 - goal-realignment materialization rejects undisclosed market overrides
+  ---
+  duration_ms: 6.4994
+  ...
+# Subtest: cross-base reliability corpus covers every class and authored start
+ok 9 - cross-base reliability corpus covers every class and authored start
+  ---
+  duration_ms: 22.4047
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 110.5097
+ok - B1.4 Bestiary bindings and workspace contracts
+Independent Lock worker: selection-free application, switching, aliases, atomic failed import, unseen replay, Undo/Redo and separate spending passed
+Lock worker: paid preview, exact restore, failed import, Undo/Redo spend, context cleanup and native strand editing passed
+Lock controls: Apply Lock, free independent-request preview, read-only numerical rolls and separate payment/commit passed
+Lock spending: exact one-unit quantity remains visibly unpriced without a quote
+  ok - concrete and target slots keep stable presentation identities
+  ok - modifier sources stay distinct and native corrupted flags reach item cards
+  ok - implicit goals and item properties are editable and respect the Unveil lock
+  ok - Unveil locks edits until confirmed, persists across reload and handles refusal/storage failure
+  ok - Expanded currency controls calculate native odds and clean up read-only handles
+  ok - modifier markup and ranges format without discarding mechanical qualifiers
+  ok - Calculator v1 goals adapt to the shared target item model
+Calculator goal-list, nonvisual tabs, migration and stale-response checks passed
+Random recombination native pair/goal/atomic Apply worker contracts passed
+  ok - odds precision and per-success cost stay explicit
+  ok - Calculator odds selection is isolated from the product Solve envelope
+  ok - incomplete solves report their native resource boundary
+  ok - Solve readiness uses native cost keys and shared prices
+  ok - priced Fracture requires an actionable Restart base price
+  ok - uniquely transferred policies preserve opaque exact routers and auto-layout without a full clone
+solver lab Calculator export tests passed
+  ok - bounded target results use the approved certificate DOM
+  ok - Calculator solves select the native product profile and map explicit overrides
+  ok - capped bounded policies stay executable and non-exact
+  ok - capped no-policy results retain their stopping cause
+  ok - equal numeric bounds cannot create executable-policy or exactness authority
+  ok - retained core candidates report the certification stage that stopped publication
+  ok - refined bounded policies do not inherit a coarse exactness claim
+  ok - exact results remain exact and factors round conservatively
+  ok - an explicitly open action envelope blocks exact presentation
+  ok - numerical stability stops remain explicitly bounded
+  ok - finder mode presents checked cost without proof authority
+  ok - incomplete action discovery retains its bounded policy without a false cap
+  ok - configured cluster search retains full primitive scope and open optimality authority
+  ok - saved item rarity survives reopen (including legacy records)
+Edit history: snapshots, branching, recovery, grouping and limits passed
+Calculator IndexedDB: versioned goal-list payload, ordering, names, selection, reload and deletion passed
+Workspace resources: atomic apply, Undo/Redo, memory, spend and stale/alias rejection passed
+Craft spend: repeated quantities, unknown consumption, history trimming/branching and Harvest material recipes passed
+  ok - Ritual and variant armour bases retain their full defence category
+  ok - base order is level descending, unknown last, then name/path
+  ok - the shared picker orders only supported, named bases
+  ok - cluster catalog identity, picker validation and saved preview transport
+  ok - Emulator Undo recreates the saved cluster configuration of the same base
+  ok - native fixed enchantments and configured authored strategy transport
+  ok - WASM configured pools, level gates, caps, cache parity and stable import
+  ok - WASM shared passive tags cannot substitute for configured identity
+  ok - WASM Calculator matches independent native two-draw enumeration and preserves restart identity
+  ok - new editor strategies start with a base and blank board
+  ok - editor creates the Phase 10 chaos-repeat graph
+  ok - strategy layout, semantics, and optional solver provenance round-trip
+  ok - invalid graphs surface actionable warnings
+  ok - Emulator item imports as a stable-key start state only
+  ok - leaf condition round-trips through the builder tree
+  ok - composite conditions round-trip through the builder tree
+  ok - modifier family minimum tier validates
+  ok - S6 Phase 4 condition vocabulary validates and labels
+  ok - fractured modifier condition round-trips
+  ok - engine-authored observation signatures validate and round-trip opaquely
+  ok - multi-modifier ALL and N OF sets round-trip and expand
+  ok - NOT condition round-trips through the builder tree
+  ok - empty condition group compiles to always
+  ok - operation labels use live parameters and catalog names
+  ok - node manual overrides persist and clear back to automatic
+  ok - edge manual overrides persist and clear back to automatic
+  ok - full nested condition chains are readable without losing overrides
+  ok - save/reopen preserves manual overrides and automatic mode
+Strategy feeder pinning, output contracts, item ports and history checks passed.
+WASM worker feeder cost, output predicate, limits, resources and exact-refusal checks passed.
+  ok - 30k-node chain lays out iteratively in 102ms
+  ok - cyclic policy-shaped graph lays out with columns
+  ok - existing positions are preserved
+  ok - calculator mode persists and legacy drafts use Simulator
+  ok - solver values use the existing board annotation channel
+  ok - structural edits rerun evaluation but node drags do not
+  ok - canned exact results render node and edge annotations
+  ok - evaluator refusal text is preserved and safely rendered
+  ok - capacity and allocation failures use honest exact-size copy
+TAP version 13
+# Subtest: first startup selects current softcore and migrates legacy prices only to manual
+ok 1 - first startup selects current softcore and migrates legacy prices only to manual
+  ---
+  duration_ms: 22.4781
+  ...
+# Subtest: advancing the product index preserves the research bytes and an in-flight request pin
+ok 2 - advancing the product index preserves the research bytes and an in-flight request pin
+  ---
+  duration_ms: 4.144
+  ...
+# Subtest: league overrides remain separate and pinned work keeps its original identity
+ok 3 - league overrides remain separate and pinned work keeps its original identity
+  ---
+  duration_ms: 2.2121
+  ...
+# Subtest: engine-key fallback is non-zero, lower priority than overrides, and pinned
+ok 4 - engine-key fallback is non-zero, lower priority than overrides, and pinned
+  ---
+  duration_ms: 1.3995
+  ...
+# Subtest: owner defaults retain provenance and clear overrides back to the default
+ok 5 - owner defaults retain provenance and clear overrides back to the default
+  ---
+  duration_ms: 1.0781
+  ...
+# Subtest: offline startup uses the last verified cached snapshot
+ok 6 - offline startup uses the last verified cached snapshot
+  ---
+  duration_ms: 1.9081
+  ...
+# Subtest: offline first startup without a cache stays explicitly manual-only
+ok 7 - offline first startup without a cache stays explicitly manual-only
+  ---
+  duration_ms: 0.2272
+  ...
+# Subtest: hash mismatch rejects a switch and preserves the active league
+ok 8 - hash mismatch rejects a switch and preserves the active league
+  ---
+  duration_ms: 1.8
+  ...
+# Subtest: refresh failure retains the active verified snapshot
+ok 9 - refresh failure retains the active verified snapshot
+  ---
+  duration_ms: 0.9388
+  ...
+# Subtest: non-JSON index responses surface a concise error
+ok 10 - non-JSON index responses surface a concise error
+  ---
+  duration_ms: 0.2441
+  ...
+# Subtest: browser verification accepts the Python canonical hash fixture
+ok 11 - browser verification accepts the Python canonical hash fixture
+  ---
+  duration_ms: 1.0999
+  ...
+# Subtest: checked-in publication defaults to Allflame and preserves archived Mirage selection
+ok 12 - checked-in publication defaults to Allflame and preserves archived Mirage selection
+  ---
+  duration_ms: 19.4218
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 64.0963
+TAP version 13
+# Subtest: runtime paths support root, project and explicit external URLs
+ok 1 - runtime paths support root, project and explicit external URLs
+  ---
+  duration_ms: 0.6363
+  ...
+# Subtest: runtime rejects corruption, HTML and missing assets before the native loader
+ok 2 - runtime rejects corruption, HTML and missing assets before the native loader
+  ---
+  duration_ms: 14.7643
+  ...
+# Subtest: selected runtime validates payload bytes and selection separately
+ok 3 - selected runtime validates payload bytes and selection separately
+  ---
+  duration_ms: 53.7178
+  ...
+# Subtest: generic diagnostics freeze a non-Allflame request including checkpoint, flags and effective prices
+ok 4 - generic diagnostics freeze a non-Allflame request including checkpoint, flags and effective prices
+  ---
+  duration_ms: 0.6231
+  ...
+# Subtest: artwork packaging rejects wrong runtime, dangling references and corrupt image bytes
+ok 5 - artwork packaging rejects wrong runtime, dangling references and corrupt image bytes
+  ---
+  duration_ms: 5.4172
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 78.968
