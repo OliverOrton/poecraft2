@@ -1,9 +1,7 @@
 {
   "status": "source_checkpoint_unqualified",
   "programme": "feeder-first Strategy Builder; typed item flow continuation",
-  "worktree": "C:\\Users\\Oliver\\Documents\\poecraft2-strategy-feeder",
   "branch": "dot/strategy-feeder-20261003",
-  "integration_owner": "01a0fd2f-7f88-7588-a1ea-bfe1e6991036",
   "last_verified_remote_main": "d29d0682648ecc24cf83aa4284f4b3791fb05793",
   "source_head": "06206b06380990e3c5f6fec28645cda0ad4cb862",
   "source_commits": [
@@ -75,5 +73,8 @@
     "Source-matched WASM build, all compiler/linker/Binaryen workers capped at 2",
     "One final npm test covers strategy-feeder/engine-feeder and affected model/history/resources/layout/Calculator controls, followed by npx tsc --noEmit; focused repair/rechecks only for failures",
     "No solver/economic comparisons; no budget expansion; rendered review only if separately selected"
-  ]
+  ],
+  "worktree_kind": "isolated_sibling",
+  "historical_snapshot": true,
+  "latest_qualification_receipt": "itemflow-qualification-pause.json"
 }

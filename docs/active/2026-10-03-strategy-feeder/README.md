@@ -1,5 +1,32 @@
 # Feeder-first Strategy Builder programme
 
+
+## Pro branch review checkpoint (2026-10-03)
+
+Review branch `dot/strategy-feeder-20261003`, built from published
+`4ad4058086cbaa766a7178aad7ac5625eb8772a8`. Implementation/artifact checkpoint
+`1deff4d127d83a9bb891949f6e527a6b8b61ad46` contains matching native, DLL, Python,
+WASM, web and final TypeScript evidence. The
+[bounded qualification receipt](itemflow-qualification-pause.json) is current;
+the earlier source receipt is a historical, unqualified snapshot.
+
+**Partial qualification:** complete rendered acceptance and screenshot review
+remain pending. The real browser's fixed 1,000-run summary passed, then the
+fixture confused trace `node_id` with `terminal_node_id`. Its earlier attempt
+omitted the add-condition step. Those fixture failures are retained, not counted
+as passing rendered acceptance. This branch extends no exact inventory authority,
+exclusive admission, profit solver or game-exact probability law.
+
+Committed evidence is limited to source/tests, the matching release WASM and
+compact repository-relative receipts. Bulk logs, native DLL, temporary renderer
+fixtures, screenshots and local browser data remain outside Git. Protected
+root `0` was not read, edited or staged. The integration owner is authorized to
+publish this review branch; this scope does not push or merge into main.
+
+Heavy work remains paused for solver priority. No queued autorun exists. Respect
+the October 3 America/Vancouver wind-down at16:45 and quiet window17:00–22:00;
+resumption requires a parent grant after that window.
+
 Oliver resumed this prepared scope at 2026-10-03 04:00 UTC. This fresh execution
 uses isolated sibling `C:/Users/Oliver/Documents/poecraft2-strategy-feeder`, branch
 `dot/strategy-feeder-20261003`. Baseline local HEAD, cached origin/main and
@@ -230,7 +257,7 @@ Next step: parent grants the serialized qualification slot for this exact source
 then native/header/DLL and affected Python checks, source-matched WASM, focused
 model/worker acceptance and final web/TypeScript run. Rendered review remains
 Oliver's unless separately selected. All commits stay local for designated
-integration owner01a0fd2f-7f88-7588-a1ea-bfe1e6991036; no independent main merge,
+integration owner; no independent main merge,
 push or deployment is authorized here.
 
 ## Matching qualification; priority pause (2026-10-03)

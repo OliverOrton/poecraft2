@@ -16,8 +16,7 @@
   "owned_processes": [],
   "remaining": [
     "Correct rendered fixture trace node field and rerun only when parent selects/resumes it",
-    "Review rendered screenshots after successful fixture",
-    "Commit rebuilt WASM and terminal qualification/pause receipt locally; no push"
+    "Review rendered screenshots after successful fixture"
   ],
   "engine_tree": "8d8551d60ca4d71f20a496d85154a4de89a75161",
   "web_tree": "493ad965020420c9f11bc63a6e1973fc02e358bc",
@@ -29,5 +28,15 @@
     "itemflow-rendered-second-failure.json: trace node_id fixture assumption after 1000-run summary passed"
   ],
   "bulk_evidence_directory": "out/strategy-feeder",
-  "matching_wasm_bytes": 8612728
+  "matching_wasm_bytes": 8612728,
+  "local_checkpoint_commit": "1deff4d127d83a9bb891949f6e527a6b8b61ad46",
+  "review_disposition": "Ready for research branch review; partial qualification, not main publication approval",
+  "quiet_window": {
+    "timezone": "America/Vancouver",
+    "date": "2026-10-03",
+    "wind_down": "16:45",
+    "start": "17:00",
+    "end": "22:00",
+    "resumption": "No queued autorun; parent grant required after the window"
+  }
 }
