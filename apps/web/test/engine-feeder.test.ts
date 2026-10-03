@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import {readFileSync} from "node:fs";
+import {selectedRuntime} from "../../../scripts/build-data-bundle.mjs";
 import {Worker, type TransferListItem} from "node:worker_threads";
 import {EngineClient, type EngineTransport} from "../src/app/engine-client";
 import type {ClientMessage, WorkerMessage, SimulationOptions} from "../src/app/engine-protocol";
@@ -9,9 +9,8 @@ const worker = new Worker(new URL("./worker-bootstrap.mjs", import.meta.url));
 const transport: EngineTransport = {postMessage: (message: ClientMessage, transfer?: Transferable[]) => worker.postMessage(message, (transfer ?? []) as unknown as TransferListItem[]),
     onMessage: handler => worker.on("message", (message: WorkerMessage) => handler(message)), terminate: () => void worker.terminate()};
 const client = new EngineClient(transport);
-const root = new URL("../../../data/compiled/current/", import.meta.url);
-const read = (name: string) => readFileSync(new URL(name, root), "utf8");
-const bundle = new TextEncoder().encode(`{"manifest":${read("manifest.json")},"strings":${read("strings.json")},"game_data":${read("game-data.json")}}`);
+const selected = selectedRuntime();
+const bundle = new Uint8Array(selected.bundle);
 const base = "Metadata/Items/Armours/BodyArmours/BodyInt17";
 const child: StrategyDocument = {version: "v1", name: "Paid child", description: "", start_node_id: "start",
     base_state: {base_key: base, item_level: 86, rarity: "normal"},

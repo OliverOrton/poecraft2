@@ -72,6 +72,16 @@ parent permission request is pending. Recombination owns the slot, multi-goal
 is next according to the launch instructions; this scope has not taken it.
 No owned heavy process or compiler job has started; no slot release is implied.
 
+Frozen input preflight: `data/compiled/current` is untracked and absent in this
+sibling. The committed product runtime lock instead selects
+`data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d`.
+The prepared worker case uses the existing `selectedRuntime` owner, which
+verifies the manifest and payload identities. Focused native qualification must
+use that same frozen directory. No data is regenerated or refreshed. An initial
+receipt preflight trying to resolve the untracked current directory as a Git tree
+failed; the corrected receipt binds this committed frozen snapshot explicitly.
+
+
 Prepared focused cases live in `engine/tests/test_simulator.cpp` under
 `--strategy-feeder-only`, `apps/web/test/strategy-feeder.test.ts`, and
 `apps/web/test/engine-feeder.test.ts`. The native and source-matched worker
@@ -92,7 +102,7 @@ the designated integration owner; publication is gated on their qualification.
 
 After the parent explicitly grants the shared slot, build the native tests via
 `powershell -File scripts/dev-engine.ps1 -Task Tests -Jobs 2`, run the focused
-`build/engine/poecraft_engine_tests.exe --strategy-feeder-only data/compiled/current`,
+`build/engine/poecraft_engine_tests.exe --strategy-feeder-only data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d`,
 and select any further existing Simulator checks only for an actual changed
 contract. Run focused web/model/history checks and TypeScript. Rebuild matching
 WASM with at most two compiler jobs (`EMCC_CORES=2`) through its existing script,
