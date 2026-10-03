@@ -734,3 +734,28 @@ new source. Multi-goal owns the local heavy slot; no command/push begins from
 source readiness. Existing matched WASM472f644b requires no rebuild.
 `out/local-native-repair/evaluation-cancel-race-ready.json` and the qualification
 receipt own exact source hashes, preserved failure and proposed checks.
+
+
+### Cancellation lifetime/order review
+
+The aa19a2d8 adapter correction adds no handle or cleanup owner. Client terminal
+observation first removes the pending invocation and abort listener; late/duplicate
+messages cannot re-enter it. Already-aborted requests carry the existing atomic
+cancelled bit before native dispatch, so evaluation refuses before compiling any
+native handle. Active work still has exactly one unchanged worker finally that
+closes evaluator/economy/strategy. Native errors remain errors; solverSolve and
+other request contracts remain unchanged.
+
+Finite source regressions now cover pre-readiness abort, queued success after
+progress abort, ordinary success/late abort, native errors before/after abort,
+and duplicate terminal/stale progress cleanup. A pre-cancelled real-WASM request
+also checks live handles against the baseline. The original six cancellation
+iterations are verified verbatim unchanged, including1000ms promptness and final
+handle accounting. Production adapter/worker/native/WASM source is unchanged from
+aa19a2d8. All new runtime checks remain unrun at this source checkpoint.
+
+The diagnostic explicitly released its process/slot, and the parent now grants
+focused finite ordering tests, full unfiltered npm with explicit Chrome, and
+TypeScript on this reviewed follow-up. Record identities before running and
+release the local slot immediately after commands, before receipts/publication.
+`evaluation_cancel_lifetime_review` and its ignored receipt preserve this review.

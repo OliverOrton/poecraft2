@@ -87,57 +87,73 @@ console.log(
     "  ok - strategy graphs cross client/worker boundaries as transferable JSON bytes",
 );
 
-// Force the cross-thread ordering without relying on worker/main scheduling:
-// a progress listener aborts before an already-computed terminal reply is read.
-for (const mode of ["cancel_before_success", "ordinary_success", "native_error"] as const) {
+// Force cross-thread ordering without relying on worker/main scheduling.
+for (const mode of ["cancel_before_dispatch", "cancel_before_success", "ordinary_success",
+    "native_error_after_abort", "native_error_before_abort"] as const) {
     let receiveRace!: (message: WorkerMessage) => void;
     const sent: ClientMessage[] = [];
     const raceClient = new EngineClient({
         postMessage: (message) => { sent.push(message); },
         onMessage: (handler) => { receiveRace = handler; },
     });
-    receiveRace({kind: "ready", abiVersion: 2});
+    const preAbort = mode === "cancel_before_dispatch";
+    const nativeError = mode === "native_error_after_abort" || mode === "native_error_before_abort";
+    const abortOnProgress = mode === "cancel_before_success" || mode === "native_error_after_abort";
+    if (!preAbort) receiveRace({kind: "ready", abiVersion: 2});
     const controller = new AbortController();
+    let progressCalls = 0;
     const evaluation = raceClient.strategyEvaluate(3, document, undefined, {
         signal: controller.signal,
         onProgress: () => {
-            if (mode !== "ordinary_success") controller.abort();
+            ++progressCalls;
+            if (abortOnProgress) controller.abort();
         },
     });
+    if (preAbort) {
+        controller.abort();
+        await Promise.resolve();
+        assert.equal(sent.length, 0, "no request may dispatch before worker readiness");
+        receiveRace({kind: "ready", abiVersion: 2});
+    }
     await Promise.resolve();
     const request = sent[0];
     assert.ok(request?.kind === "request");
     assert.equal(request.method, "strategyEvaluate");
-    receiveRace({kind: "progress", id: request.id, done: 1, total: 32,
+    assert.equal(request.cancelled, preAbort ? true : undefined);
+    const progress: WorkerMessage = {kind: "progress", id: request.id, done: 1, total: 32,
         evaluation: {phase: "discovery", done: false, discovered_pairs: 1,
             pending_pairs: 31, solved_sccs: 0, total_sccs: 0,
-            fallback_sweeps: 0, residual: 0}});
-    assert.equal(controller.signal.aborted, mode !== "ordinary_success");
+            fallback_sweeps: 0, residual: 0}};
+    if (!preAbort) receiveRace(progress);
+    assert.equal(controller.signal.aborted, preAbort || abortOnProgress);
     assert.deepEqual(sent.filter(message => message.kind === "cancel"),
-        mode === "ordinary_success" ? [] : [{kind: "cancel", id: request.id}]);
-    const completion = mode === "ordinary_success"
-        ? evaluation.then(result => assert.equal(
-            (result as unknown as {marker: string}).marker, "computed"))
-        : assert.rejects(evaluation, (error: unknown) => {
+        preAbort || abortOnProgress ? [{kind: "cancel", id: request.id}] : []);
+    const rejected = mode !== "ordinary_success";
+    const completion = rejected
+        ? assert.rejects(evaluation, (error: unknown) => {
             assert.ok(error instanceof EngineError);
-            assert.equal(error.code, mode === "native_error" ? 8 : 1);
-            assert.equal(error.detail, mode === "native_error"
-                ? "max_transitions" : "strategy evaluation cancelled");
+            assert.equal(error.code, nativeError ? 8 : 1);
+            assert.equal(error.detail, nativeError ? "max_transitions" : "strategy evaluation cancelled");
             return true;
-        });
-    if (mode === "native_error") {
-        receiveRace({kind: "response", id: request.id, ok: false,
-            error: {code: 8, detail: "max_transitions"}});
-    } else {
-        receiveRace({kind: "response", id: request.id, ok: true,
-            result: {marker: "computed"}});
-    }
+        })
+        : evaluation.then(result => assert.equal(
+            (result as unknown as {marker: string}).marker, "computed"));
+    const reply: WorkerMessage = nativeError || preAbort
+        ? {kind: "response", id: request.id, ok: false,
+            error: {code: nativeError ? 8 : 1,
+                detail: nativeError ? "max_transitions" : "strategy evaluation cancelled"}}
+        : {kind: "response", id: request.id, ok: true, result: {marker: "computed"}};
+    receiveRace(reply);
     await completion;
-    // After completion the listener is removed; late abort cannot cancel a
-    // settled success or send control for a reused/future invocation.
+    // Terminal observation removes this invocation before a duplicate reply,
+    // stale progress, or a later abort can reach the old callbacks/control.
+    const progressBefore = progressCalls;
     const cancelCount = sent.filter(message => message.kind === "cancel").length;
+    receiveRace(reply);
+    receiveRace(progress);
     controller.abort();
+    assert.equal(progressCalls, progressBefore);
     assert.equal(sent.filter(message => message.kind === "cancel").length, cancelCount);
     raceClient.dispose();
 }
-console.log("  ok - evaluation abort discards a queued success; ordinary success, native errors and settled cleanup remain intact");
+console.log("  ok - evaluation cancellation ordering, native errors and terminal callback cleanup remain intact");

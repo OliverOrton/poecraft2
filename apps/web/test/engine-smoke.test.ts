@@ -1093,6 +1093,11 @@ test("exact evaluation cancellation is prompt and leaks no handles", async () =>
         baseline.scope,
         "facade_registries_plus_solver_and_evaluator_owned_allocations",
     );
+    const preCancelled = new AbortController();
+    preCancelled.abort();
+    await assert.rejects(client.strategyEvaluate(sessionId, graph, undefined,
+        {signal: preCancelled.signal}), /cancelled/);
+    assert.equal((await client.memoryStats()).live_handles, baseline.live_handles);
     for (let attempt = 0; attempt < 6; attempt += 1) {
         const controller = new AbortController();
         const started = performance.now();

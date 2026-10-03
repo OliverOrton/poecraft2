@@ -1,3 +1,15 @@
+# Evaluation cancellation lifetime review complete (2026-10-03)
+
+Production aa19a2d8 adapter remains unchanged. Expanded finite cases cover all
+requested cancellation/error/terminal orderings; pre-cancelled real-WASM case
+checks baseline handles. Original six reject/time/handle iterations are verbatim.
+Worker finally remains sole native cleanup owner; other request contracts unchanged.
+Diagnostic released, parent grants focused/full unfiltered Chrome npm/TS. These
+checks are unrun until following this checkpoint; release slot immediately after
+commands. The [living integration record](docs/active/2026-10-02-sprint-integration/README.md)
+and `evaluation_cancel_lifetime_review` own source review and pending evidence.
+No install/WASM rebuild/feature integration.
+
 # Evaluation queued-success cancellation repair prepared (2026-10-03)
 
 Main c00bb449 is remote-verified. CI37109852631 passes17 native/275 binding

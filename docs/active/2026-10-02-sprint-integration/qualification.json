@@ -2633,5 +2633,38 @@
     "installation": false,
     "native_wasm_rebuild_needed": false,
     "solver_feature_integration": false
+  },
+  "evaluation_cancel_lifetime_review": {
+    "recorded_utc": "2026-10-03T09:12:41.744399+00:00",
+    "production_source": "aa19a2d8adf64707b247efa6a51c1750d5004a56",
+    "status": "Lifetime/order review complete; expanded finite and pre-cancelled native cases prepared; runtime qualification now granted",
+    "ownership": {
+      "client": "First terminal message deletes pending entry and removes abort listener before resolve/reject; duplicates/stale progress have no invocation to call. Wrapper only rejects a successful result, allocates/closes no native handle.",
+      "worker": "Already-cancelled request token is bound before dispatch; evaluateStrategy refuses before compile. For active work one existing finally closes evaluator/economy/strategy; wrapper adds no cleanup owner.",
+      "unrelated": "Generic call, other methods and worker/native behavior unchanged"
+    },
+    "cases": [
+      "Abort before worker readiness/dispatch sets atomic request.cancelled and emits no request until ready",
+      "Progress abort before queued success rejects cancelled",
+      "Ordinary success and post-completion abort leave settled result untouched",
+      "Native error8 preserves its detail both before and after abort",
+      "Duplicate terminal/stale progress/late abort cannot re-enter old callbacks or emit stale cancel"
+    ],
+    "native_smoke": "Added pre-cancelled real-WASM request and live-handle baseline check; all original six reject/promptness/handle assertions unchanged",
+    "original_six_loop_verbatim": true,
+    "production_patch_unchanged": true,
+    "test_hashes": {
+      "apps/web/test/engine-client-transfer.test.ts": "1eaff002054ccf113b9550c9c565c4cb92ad240c2a3262a5596e3d6f3438505e",
+      "apps/web/test/engine-smoke.test.ts": "7a6285e46d344daa377d0459a6ade92196b914af214a46c8734cc8a205f359f4"
+    },
+    "unrun": [
+      "Focused finite client test",
+      "Full unfiltered npm with Chrome",
+      "TypeScript"
+    ],
+    "slot": "Diagnostic explicitly released; parent granted this task focused/full npm/TS; commands start after source checkpoint",
+    "owned_heavy_processes_remaining": 0,
+    "no_install": true,
+    "no_wasm_rebuild": true
   }
 }
