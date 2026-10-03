@@ -144,3 +144,16 @@ matching WASM/MJS SHA256, frozen runtime identity and test outcomes in the same
 receipt. Generated bundle metadata is setup from the frozen selection, not a
 data refresh. Release the heavy slot promptly after executable checks complete;
 documentation and local source/artifact commits need no continued heavy slot.
+
+## Qualification authorized; serial slot still pending
+
+The parent supplied Oliver's explicit approval to finish build/test qualification
+and fix failures within Lock, multi-goal Calculator, recombination and feeders.
+The exact approval is retained in `qualification_approval` in the same receipt.
+This resolves qualification permission; it does not grant the current heavy slot.
+Priority solver cap repair owns that slot and Lock is queued next. No build,
+test or WASM command may start until the parent's explicit slot grant arrives.
+Preserve aligned source checkpoint `69b60e81781dffc3d16e1ce1bcf08e491f738a1a`.
+Observed main `0fecbc404925548dc978ecdcf4d2aa0e62c91e1a` adds only solver-test
+diagnostics and documentation since `0187f3d8`; it changes no Lock/native/WASM
+implementation input. No heavy command, process or handle has started here.

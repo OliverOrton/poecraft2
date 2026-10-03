@@ -1,6 +1,6 @@
 {
   "status": "aligned source and replay fixtures ready; executable qualification unrun awaiting explicit parent heavy-slot grant",
-  "recorded_utc": "2026-10-03T05:08:52.9024623Z",
+  "recorded_utc": "2026-10-03T06:29:16.5186023Z",
   "baseline": "3ab862fece9d52ca733ad01a0869fd06cec84810",
   "live_remote_main": "0187f3d8334c3b9deb9730a6fa89899c051e9931",
   "remote_verification": "connected GitHub read-only fetch_commit(main); direct git proxy unavailable",
@@ -57,8 +57,8 @@
     "request_pending": true,
     "grant_received": false,
     "solver_runs": 0,
-    "current_owner": "multi-goal 01a0ffee-23a8-74a2-be97-7281728a5023",
-    "queue_position": "next after explicit parent grant"
+    "current_owner": "priority solver cap repair (parent coordinated)",
+    "queue_position": "Lock next; await explicit parent slot grant"
   },
   "exclusions": [
     "ordinary Calculator/Current/Finder/authored Simulator admission",
@@ -75,5 +75,19 @@
     "method": "merge; original source commit retained as ancestor",
     "conflicts": "HANDOFF entries only; both retained",
     "native_and_facade_unchanged_from_original_source": true
+  },
+  "qualification_approval": {
+    "source_thread": "01a0fe65-6e83-76d9-b710-f09a7cd4e0cb",
+    "assistant_selected_scope": "Finish the build/test qualification for Lock, multi-goal Calculator, recombination and feeders, fixing failures within those scopes.",
+    "exact_user_reply": "1. yes and you can run whatever tests you need when i dont tell you im using my computer(like i did earlier)\n2. go for it",
+    "qualification_permission_resolved": true,
+    "current_slot_grant": false,
+    "native_binding_wasm_worker_web_typescript_authorized_after_grant": true,
+    "max_compiler_jobs": 2,
+    "preserve_source_checkpoint": "69b60e81781dffc3d16e1ce1bcf08e491f738a1a",
+    "observed_main": "0fecbc404925548dc978ecdcf4d2aa0e62c91e1a",
+    "observed_main_delta": "solver test diagnostics and documentation; Lock/native/WASM implementation inputs unchanged",
+    "independent_model_already_approved": true,
+    "no_adaptive_exact_solver_authority": true
   }
 }
