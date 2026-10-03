@@ -1,3 +1,16 @@
+# Optional local Chrome test channel prepared (2026-10-03)
+
+`f9e46c6a` full unfiltered engine smoke passes37/37; npm stops later at missing
+pinned Playwright browser in workspace-resources. TypeScript passes. Failed log
+preserved; no survivor, local slot released. Optional test-only Chrome override
+is now prepared; unset keeps pinned Chromium. Real-browser assertions/cleanup
+unchanged; launch uses a fresh temporary profile. Playwright1.58.2 / installed
+Chrome152.0.7977.83 compatibility is unrun, with no pinned-browser parity claim.
+The [living integration record](docs/active/2026-10-02-sprint-integration/README.md)
+and `currency_guard_optional_chrome_channel_ready` own exact evidence/pending
+full npm/TypeScript checks. No install/push/native-WASM change. Diagnostic has
+next slot priority; source-only work is complete, no heavy command running.
+
 # Currency expansion smoke guard fixture prepared (2026-10-03)
 
 CI `37101710211` on `0fecbc40` passes17 native targets/275 bindings, then web

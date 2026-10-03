@@ -637,3 +637,34 @@ coordination: the cap owner retains the local heavy slot. The existing exact smo
 filter selects this fixture plus the three ABI/data/session setup cases; use it
 for the focused smoke and complete following npm chain, plus TypeScript. No
 native/WASM rebuild or blind remote retry is selected. No new push.
+
+
+### Full web qualification and optional local Chrome launch
+
+On `f9e46c6a`, the authorized full unfiltered `npm test` passes **37/37 engine
+smoke cases**, including both corrected remembered-root rejections and the
+remaining original-root product witnesses. Subsequent test files run until
+`workspace-resources.test.ts:6` cannot find Playwright's pinned headless-shell
+executable. npm exits1 in38.478s; TypeScript passes in8.011s. Both supervised
+process groups exit without survivors and the local heavy slot is released
+immediately. Full-chain qualification remains incomplete. The original failure
+log/results are preserved under `out/local-native-repair/currency-guard-full-*`.
+
+Playwright/core1.58.2 expects Chromium145.0.7632.6, revision1208. Default cached
+revision directories are empty. Installed Chrome152.0.7977.83 is available at
+`C:\Program Files\Google\Chrome\Application\chrome.exe`. The parent selected
+an optional local test channel without installation. `POECRAFT_TEST_BROWSER_CHANNEL`
+may be unset (unchanged pinned Chromium default) or `chrome`; other values fail.
+The existing `chromium.launch` owner creates a fresh temporary profile. No user
+profile path, persistent context or browser installation is used. Every existing
+resource-test assertion and cleanup statement remains verbatim unchanged.
+
+This channel change is source-only and **unrun**. At the next coordinated slot,
+clear the smoke filter, set the Chrome override, run the full npm chain and
+TypeScript. Record any Chrome/Playwright compatibility failure without relaxing
+checks. A passing installed-Chrome run will qualify that alternative locally; it
+will not claim pinned-browser parity. Native/WASM remains unchanged at472f644b.
+`currency_guard_optional_chrome_channel_ready` in
+[qualification.json](qualification.json) owns exact versions, retained failure
+and pending commands. Diagnostic has priority; no heavy command or push starts
+from this source-only checkpoint.

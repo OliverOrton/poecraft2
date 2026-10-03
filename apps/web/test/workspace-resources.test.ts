@@ -3,7 +3,15 @@ import { build } from "esbuild";
 import { chromium } from "playwright";
 
 const bundle = await build({entryPoints: ["src/app/workspace/persistence.ts"], bundle: true, write: false, format: "iife", globalName: "storage"});
-const browser = await chromium.launch({headless: true});
+// Optional local qualification with installed Chrome; CI keeps pinned Chromium.
+const browserChannel = process.env.POECRAFT_TEST_BROWSER_CHANNEL;
+assert.ok(browserChannel === undefined || browserChannel === "chrome",
+    "POECRAFT_TEST_BROWSER_CHANNEL must be unset or chrome");
+// launch() uses a fresh temporary profile; no persistent/user profile is supplied.
+const browser = await chromium.launch({
+    headless: true,
+    ...(browserChannel ? {channel: browserChannel} : {}),
+});
 try {
     const page = await browser.newPage();
     await page.route("https://workspace.test/", route => route.fulfill({contentType: "text/html", body: "<title>Storage contract test</title>"}));

@@ -2303,5 +2303,125 @@
     "build_tests_started": false,
     "no_new_ci_rerun": true,
     "no_push": true
+  },
+  "currency_guard_full_validation": {
+    "source": "f9e46c6af4639c5b8bd754198ed354b16189b1a7",
+    "wasm_sha256": "472f644bed756caee538868b714e4d144989e9ec1990232f82562d2f80b7424f",
+    "smoke_filter": null,
+    "results": [
+      {
+        "exit_code": 1,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 29196,
+        "process_identity_token": "29196:134354872352761433",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 38477.50960011035,
+        "name": "npm",
+        "command": [
+          "cmd.exe",
+          "/d",
+          "/s",
+          "/c",
+          "npm test"
+        ],
+        "source": "f9e46c6af4639c5b8bd754198ed354b16189b1a7",
+        "watchdog_seconds": 900.0,
+        "log": "out/local-native-repair/currency-guard-full-npm.log",
+        "summary": [
+          "║ Looks like Playwright Test or Playwright was just installed or updated. ║",
+          "║ Please run the following command to download new browsers:              ║",
+          "║                                                                         ║",
+          "║     npx playwright install                                              ║",
+          "║                                                                         ║",
+          "║ <3 Playwright Team                                                      ║",
+          "╚═════════════════════════════════════════════════════════════════════════╝",
+          "    at <anonymous> (C:\\Users\\Oliver\\Documents\\poecraft2-local-native-repair\\apps\\web\\test\\workspace-resources.test.ts:6:32) {",
+          "  name: 'Error'",
+          "}",
+          "",
+          "Node.js v20.20.0"
+        ],
+        "smoke_summaries": [
+          "37/37 passed",
+          "Lock worker: paid preview, exact restore, failed import, Undo/Redo spend, context cleanup and native strand editing passed",
+          "Lock controls: selected-request preview, read-only numerical rolls and separate payment/commit passed",
+          "solver lab Calculator export tests passed",
+          "Edit history: snapshots, branching, recovery, grouping and limits passed"
+        ],
+        "errors": []
+      },
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 93948,
+        "process_identity_token": "93948:134354872737545208",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 8011.302399914712,
+        "name": "typescript",
+        "command": [
+          "cmd.exe",
+          "/d",
+          "/s",
+          "/c",
+          "npx tsc --noEmit"
+        ],
+        "source": "f9e46c6af4639c5b8bd754198ed354b16189b1a7",
+        "watchdog_seconds": 300.0,
+        "log": "out/local-native-repair/currency-guard-full-typescript.log",
+        "summary": [],
+        "smoke_summaries": [],
+        "errors": []
+      }
+    ],
+    "completed_utc": "2026-10-03T07:48:01.766062+00:00",
+    "owned_processes_remaining": 0
+  },
+  "currency_guard_optional_chrome_channel_ready": {
+    "recorded_utc": "2026-10-03T07:59:33.463844+00:00",
+    "status": "source-only optional Chrome test channel prepared; new source unrun/unpushed",
+    "source_file": "apps/web/test/workspace-resources.test.ts",
+    "file_sha256": "5137c13389eb82aea3ae66308a08a4c2fe9bc10ca993d432965d025a8dd00da6",
+    "launch": {
+      "default": "Pinned Playwright Chromium headless shell, unchanged when env unset",
+      "local_override": "POECRAFT_TEST_BROWSER_CHANNEL=chrome",
+      "validation": "Only unset or chrome accepted; invalid override fails",
+      "profile": "Existing chromium.launch creates a fresh temporary user-data directory; no launchPersistentContext, userDataDir or user profile supplied"
+    },
+    "versions": {
+      "playwright": "1.58.2",
+      "playwright_core": "1.58.2",
+      "chrome": "152.0.7977.83",
+      "chrome_executable": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+      "pinned_chromium": "145.0.7632.6",
+      "pinned_revision": "1208"
+    },
+    "coverage": "Existing workspace resource assertion and cleanup body verbatim unchanged; real browser IndexedDB/atomic apply/Undo/Redo/stale and alias checks retained",
+    "compatibility": "Installed Chrome with pinned Playwright is untested; report any launch/protocol incompatibility without weakening assertions. Alternative browser qualification does not prove pinned-browser parity.",
+    "preserved_failure": {
+      "source": "f9e46c6af4639c5b8bd754198ed354b16189b1a7",
+      "npm_log": "out/local-native-repair/currency-guard-full-npm.log",
+      "npm_exit_code": 1,
+      "full_smoke": "37/37 passed",
+      "stop": "Missing pinned headless-shell executable at workspace-resources.test.ts:6",
+      "typescript": "passed",
+      "results": "out/local-native-repair/currency-guard-full-results.json"
+    },
+    "pending_checks": [
+      "Clear POECRAFT_SMOKE_TEST; set POECRAFT_TEST_BROWSER_CHANNEL=chrome; full npm test",
+      "npx tsc --noEmit on new source"
+    ],
+    "no_install": true,
+    "no_browser_launched": true,
+    "no_native_wasm_build": true,
+    "owned_heavy_processes_remaining": 0,
+    "slot": "Diagnostic has next priority; no local heavy command granted"
   }
 }
