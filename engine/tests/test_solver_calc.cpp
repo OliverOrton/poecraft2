@@ -4145,6 +4145,14 @@ void run_foulborn_kernel_tests() {
 // every v1 predicate. Single-goal evaluations below are test parity controls.
 void run_calculator_goal_set_tests() {
     auto session = make_calc_session();
+    const auto mod_satisfies_goal_slot = [](const SessionImpl& physical, std::uint32_t mod, const GoalSlot& slot) {
+        bool member = slot.family_id != kNoId && physical.family_id[mod] == slot.family_id;
+        if (slot.group_id != kNoId)
+            for (auto i = physical.group_offsets[mod]; i < physical.group_offsets[mod+1]; ++i)
+                member |= physical.group_ids[i] == slot.group_id;
+        const auto tier = physical.family_tier_index[mod];
+        return member && (!slot.min_tier || (tier && tier <= slot.min_tier));
+    };
     auto registry = build_action_registry(*session);
     const auto make_goal = [](std::uint32_t family, std::uint32_t tier = 0) {
         GoalSpec goal; goal.slots.push_back({kNoId, family, tier});
