@@ -33,11 +33,10 @@ export interface CraftControlsModel {
     checkpoint?: boolean;
     memoryStrands?: number;
     onMemoryStrands?: (count: number) => void;
-    lockNext?: boolean;
     lockActive?: boolean;
     lockCurrency?: string;
     lockPreview?: ConcreteModListModel;
-    onLockNext?: (enabled: boolean) => void;
+    onLockApply?: () => void;
     onLockCommit?: () => void;
     donors?: CatalogEntry[];
     donorModel?: ConcreteModListModel;
@@ -73,7 +72,7 @@ export function CraftControls({model: m}: {model: CraftControlsModel}) {
         const selected = !configured && m.selectedAction === id;
         const attribute = calculator ? (configured ? "data-derive-action" : "data-select-action") : (configured ? "data-config-action" : "data-simple-action");
         return <button key={id} {...{[attribute]: id}} className={configured ? "pc-craft-apply" : selected ? "is-selected" : ""} disabled={disabled}
-            onClick={() => configured ? m.onConfigured(id) : m.onSimple(id)}>{!configured && <GameIcon assetKey={"action:" + id} />}{label}</button>;
+            onClick={() => configured ? m.onConfigured(id) : m.onSimple(id)}>{!configured && <GameIcon assetKey={"action:" + id} />}{!calculator && m.lockActive && id !== "remove_crafted_modifiers" ? `Preview ${label}` : label}</button>;
     };
     const choices = (name: string, label: string, entries: Array<{key: string; name: string}>, art: (entry: {key: string; name: string}) => string) =>
         <div className="pc-material-options" role="group" aria-label={label}>
@@ -180,15 +179,14 @@ export function CraftControls({model: m}: {model: CraftControlsModel}) {
             onReveal={() => m.onRevealUnveil?.()} onSelect={key => m.onValue("unveil", key)}
             onConfirm={() => m.onConfigured("unveil")} onVeiledCurrency={() => m.onPanel("veiled")} />; break;
     }
-    return <>{!calculator && m.onLockNext && <section aria-label="Hinekora's Lock" className="pc-material-panel">
-        <label><input type="checkbox" checked={Boolean(m.lockNext)} disabled={m.lockActive}
-            onChange={event => m.onLockNext?.(event.target.checked)} />Use one Hinekora's Lock before the next currency</label>
-        <span className="pc-help">Choose a supported currency and its settings below to reserve a fixed preview. Inspection does not spend that currency. Veiled currencies and items awaiting Unveil are unavailable for Lock previews.</span>
+    return <>{!calculator && m.onLockApply && <section aria-label="Hinekora's Lock" className="pc-material-panel">
+        <button data-lock-apply disabled={m.lockActive} onClick={m.onLockApply}>Apply Hinekora's Lock</button>
+        <span className="pc-help">Independent cached previews are an approximate simulation model. One Lock is paid when applied. Preview supported currencies and settings below for free, then apply one result. Veiled currencies, pending Unveil and donor-dependent previews are unavailable.</span>
         {m.lockActive && <>
-            <span>Foreseen: {m.lockCurrency}</span>
+            <span>{m.lockCurrency ? `Foreseen: ${m.lockCurrency}` : "Lock active: choose a currency to preview"}</span>
             {m.lockPreview && createElement("pc-mod-list", {ref: (element: PcModList | null) => { if (element && m.lockPreview) element.setModel({...m.lockPreview, readOnly: true}); }})}
-            <button data-lock-commit onClick={m.onLockCommit}>Apply foreseen currency</button>
-            <span className="pc-help">Decline by leaving the preview open. Another stochastic currency is unavailable while this preview is live; commit it or change the item. Cross-currency previews and Lock strategies are unavailable.</span>
+            <button data-lock-commit disabled={!m.lockCurrency} onClick={m.onLockCommit}>Apply foreseen currency</button>
+            <span className="pc-help">Repeated previews stay fixed through Undo and reload. Applying one currency or modifying the item ends every preview. Refused actions preserve the Lock. This model supplies no exact adaptive strategy odds.</span>
         </>}
     </section>}<div className="pc-craft-panel-tabs">{PANELS.map(([key, label, icon]) => <button key={key} data-craft-panel={key}
         className={key === m.panel ? "is-active" : ""} onClick={() => m.onPanel(key)}><GameIcon assetKey={"action:" + icon} />{label}</button>)}

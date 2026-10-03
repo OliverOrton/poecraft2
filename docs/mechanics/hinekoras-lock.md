@@ -1,5 +1,26 @@
 # Hinekora's Lock
 
+The selected October 3 Emulator programme adds Apply Lock, free repeated
+normalized request observations, then committing one result or modifying the
+item ends all foresight. Its `independent-cached-lock-v1` model is explicitly
+approximate and simulation-only, approved by Oliver at 04:12 UTC. It supplies
+no game-exact cross-currency correlation or adaptive solver authority. The
+[programme record](../active/2026-10-03-lock-multi-preview/README.md) owns interface,
+restoration decisions and qualification status. Native and matching WASM/worker
+qualification of this isolated continuation passes; the receipt separates its
+exact identities from prior fixed-request receipts and future combined integration.
+
+Each paid Lock reserves the supported finite native request domain before any
+selection. Observation is free and stable; synonymous requests resolve to the
+same native parameters. Checkpoints preserve full numerical outcomes, including
+unseen reservations, without RNG seeds/state. Undo/reload cannot obtain a new
+outcome for the same paid Lock. Actual currency is charged only when applied.
+A successful consumed currency ends all foresight even if visible output is
+unchanged; refused/no-op actions preserve it. Ordinary solver/Calculator/authored
+Simulator ingress, pending Unveil and donor-dependent previews remain held.
+
+## Legacy fixed-request compatibility
+
 The native Emulator slice previews one complete configured currency request per
 paid Lock. The native allowlist is `pc_hinekora_lock_currency_supported`; Lock
 consumption is the separate `hinekora_lock` key. Creation reserves the existing
@@ -44,8 +65,9 @@ record does not prevent later ordinary veiled acquisition or its persistence. Co
 ordinary item metadata and does not alone block Lock. A visible/hidden preview
 model requires owner review before this scope can expand.
 
-Multicurrency previews, donor-dependent previews and adaptive Lock valuation
-remain held. The old free-decline Bellman sketch is not an accepted model.
+Legacy fixed-request APIs continue to refuse cross-request observation.
+Donor-dependent previews and adaptive exact Lock valuation remain held for
+both models. The old free-decline Bellman sketch is not an accepted model.
 [Current execution and qualification](../active/2026-10-02-lock-strands-completion/README.md)
 records the selected scope, tests and unresolved approval decisions.
 

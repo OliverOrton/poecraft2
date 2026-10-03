@@ -100,6 +100,7 @@ struct LockEntry {
     std::uint32_t context = 0;
     std::string currency;
     std::string snapshot;
+    bool independent = false;
 };
 std::unordered_map<std::uint32_t, LockEntry> g_locks;
 std::unordered_map<std::uint32_t, pc_bestiary_craft_state> g_bestiary_states;
@@ -1301,12 +1302,14 @@ void restore_lock(std::uint32_t item_id, std::uint32_t context_id, pc_session_ha
     std::string actual, expected;
     append_item_state(actual, *item, session); append_item_state(expected, stored, session);
     if (actual != expected) throw std::invalid_argument("Lock checkpoint full transported item identity mismatch");
-    const auto spec = Parser(entry->currency.data(), entry->currency.size()).parse();
     pc_action_request request{}; std::vector<std::string> strings; std::string message;
-    if (!parse_action(spec, request, strings, message)) throw std::invalid_argument(message);
+    if (!entry->currency.empty()) {
+        const auto spec = Parser(entry->currency.data(), entry->currency.size()).parse();
+        if (!parse_action(spec, request, strings, message)) throw std::invalid_argument(message);
+    }
     const auto before = *item; *item = stored;
     pc_hinekora_lock_handle handle = nullptr;
-    if (pc_hinekora_lock_restore(*context, item, &request, entry->snapshot.data(), entry->snapshot.size(), &handle, &error) != PC_RESULT_OK) {
+    if (pc_hinekora_lock_restore(*context, item, entry->currency.empty() ? nullptr : &request, entry->snapshot.data(), entry->snapshot.size(), &handle, &error) != PC_RESULT_OK) {
         *item = before; throw std::invalid_argument(error.message);
     }
     if (entry->handle) pc_hinekora_lock_destroy(entry->handle);
@@ -1760,7 +1763,7 @@ const char* pcw_item_clone(uint32_t item_id) {
     g_items[id] = *item;
     if (const auto* session_id = find(g_item_sessions, item_id)) g_item_sessions[id] = *session_id;
     if (auto* entry = find(g_locks, item_id)) {
-        try { g_locks[id] = {nullptr, 0, entry->currency, lock_snapshot(*entry, *item)}; }
+        try { g_locks[id] = {nullptr, 0, entry->currency, lock_snapshot(*entry, *item), entry->independent}; }
         catch (const std::exception& e) { g_items.erase(id); g_item_sessions.erase(id); return fail(PC_RESULT_INVALID_ARGUMENT, e.what()); }
     }
     if (auto* original = sync_bestiary_state(item_id, *item)) {
@@ -2111,7 +2114,7 @@ const char* pcw_item_import(const char* state_json, uint32_t session_id, uint32_
             const auto& snapshot = foresight->at("snapshot").as_string();
             // Currency is preserved as a JSON string by export for exact replay.
             const auto& currency_text = foresight->at("currency_json").as_string();
-            g_locks[id] = {nullptr, 0, currency_text, snapshot};
+            g_locks[id] = {nullptr, 0, currency_text, snapshot, Parser(snapshot.data(), snapshot.size()).parse().at("version").as_string() == "independent-cached-lock-v1"};
         }
         if (context_id) restore_lock(id, context_id, session);
     } catch (const std::exception& e) {
@@ -2235,6 +2238,26 @@ const char* pcw_hinekora(uint32_t context_id, uint32_t item_id, uint32_t session
                 pc_hinekora_lock_destroy(previous->handle);
             g_locks[item_id] = {handle, context_id, currency, ""};
             paid = "["; append_escaped(paid, pc_hinekora_lock_cost_key()); paid += ']';
+        } else if (operation == "apply_lock") {
+            if (const auto* previous = find(g_locks, item_id); previous && !previous->handle)
+                return fail(PC_RESULT_UNSUPPORTED_FEATURE, "Restore the paid Lock checkpoint before creating another Lock");
+            pc_hinekora_lock_handle handle = nullptr; auto error = make_error();
+            if (pc_hinekora_lock_apply(*context, item, &handle, &error) != PC_RESULT_OK) return fail(error);
+            if (const auto* previous = find(g_locks, item_id); previous && previous->handle)
+                pc_hinekora_lock_destroy(previous->handle);
+            g_locks[item_id] = {handle, context_id, "", "", true};
+            paid = "["; append_escaped(paid, pc_hinekora_lock_cost_key()); paid += ']';
+        } else if (operation == "observe") {
+            auto* entry = find(g_locks, item_id);
+            if (!entry || !entry->handle || entry->context != context_id)
+                return fail(PC_RESULT_UNSUPPORTED_FEATURE, "Observe requires the original live paid Lock context");
+            const auto& currency = options.at("currency_json").as_string();
+            const auto spec = Parser(currency.data(), currency.size()).parse();
+            pc_action_request request{}; std::vector<std::string> strings; std::string message;
+            if (!parse_action(spec, request, strings, message)) return fail(PC_RESULT_INVALID_ARGUMENT, message.c_str());
+            pc_item_state preview{}; pc_action_result result{}; auto error = make_error();
+            if (pc_hinekora_lock_observe(entry->handle, item, &request, &preview, &result, &error) != PC_RESULT_OK) return fail(error);
+            entry->currency = currency;
         } else if (operation != "inspect") return fail(PC_RESULT_INVALID_ARGUMENT, "Unknown Lock operation");
         auto* entry = find(g_locks, item_id);
         if (!entry) {
@@ -2246,8 +2269,10 @@ const char* pcw_hinekora(uint32_t context_id, uint32_t item_id, uint32_t session
         auto error = make_error(); std::int32_t active = 0;
         if (pc_hinekora_lock_status(entry->handle, item, &active, &error) != PC_RESULT_OK) return fail(error);
         std::string out = "{\"ok\":true,\"active\":"; out += active ? "true" : "false";
-        out += ",\"currency\":" + entry->currency + ",\"cost_keys\":" + paid;
-        if (active) {
+        out += ",\"cost_keys\":" + paid;
+        if (entry->independent) out += ",\"model\":\"independent-cached-lock-v1\",\"approximate\":true";
+        if (!entry->currency.empty()) out += ",\"currency\":" + entry->currency;
+        if (active && !entry->currency.empty()) {
             pc_item_state preview{}; pc_action_result result{};
             if (pc_hinekora_lock_preview(entry->handle, item, &preview, &result, &error) != PC_RESULT_OK) return fail(error);
             out += ",\"preview\":"; append_item_state(out, preview, *session);

@@ -1,3 +1,12 @@
+# Lock source merged; combined qualification pending (2026-10-03)
+
+Isolated dot/features-integration-20261003 starts from green main4b092b0b plus
+receipt db1d8404. Qualified Lock e2b6ff70 is merged as source; its native/WASM
+checks remain individual evidence only. Main evaluation cancellation correction
+and test controls are retained. Calculator source merge follows; parent will
+select Recomb after its terminal receipt. No build, test, browser or publication;
+LOCAL remains with Recomb. The living integration record owns the pending batch.
+
 # Current main CI green; combined features source-reviewed (2026-10-03)
 
 Main 4b092b0b passes Windows37114415245/job111178311856:17 native targets,

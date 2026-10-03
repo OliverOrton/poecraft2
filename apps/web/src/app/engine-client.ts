@@ -398,6 +398,14 @@ export class EngineClient {
         return this.call("hinekora", {context, item, session, operation: "inspect"});
     }
 
+    applyHinekoraLock(context: number, item: number, session: number): Promise<import("./engine-protocol").HinekoraInfo> {
+        return this.call("hinekora", {context, item, session, operation: "apply_lock"});
+    }
+
+    observeHinekoraLock(context: number, item: number, session: number, currency: CraftAction): Promise<import("./engine-protocol").HinekoraInfo> {
+        return this.call("hinekora", {context, item, session, operation: "observe", currency});
+    }
+
     createHinekoraLock(context: number, item: number, session: number, currency: CraftAction): Promise<import("./engine-protocol").HinekoraInfo> {
         return this.call("hinekora", {context, item, session, operation: "create", currency});
     }

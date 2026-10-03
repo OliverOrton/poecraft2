@@ -942,7 +942,7 @@ async function dispatch(
             return {};
         case "hinekora":
             return bindings.hinekora(params.context as number, params.item as number, params.session as number,
-                params.operation as "create" | "inspect", params.currency as CraftAction | undefined);
+                params.operation as "create" | "inspect" | "apply_lock" | "observe", params.currency as CraftAction | undefined);
         case "apply":
             return {
                 result: bindings.apply(
