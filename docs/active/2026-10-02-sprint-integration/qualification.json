@@ -2857,5 +2857,51 @@
       "Solver recovery and all pending feature integration",
       "Installation/data/price refresh/deployment"
     ]
+  },
+  "hosted_pinned_browser_setup": {
+    "recorded_utc": "2026-10-03T09:50:40.605156+00:00",
+    "status": "CI-only pinned headless-shell setup syntax/order qualified; hosted runtime execution pending",
+    "baseline": "75270c83c7d14c17a4de231d5cc3af1810d2d7ff",
+    "failure_receipt": "out/local-native-repair/evaluation-cancel-hosted-browser-failure.json",
+    "change": {
+      "workflow": ".github/workflows/windows.yml:69 opts into -InstallTestBrowser",
+      "owner": "scripts/test.ps1",
+      "command": "node ./node_modules/playwright/cli.js install chromium --only-shell",
+      "order": [
+        "npm ci (exactly once)",
+        "Opt-in installed project Playwright CLI",
+        "build:data",
+        "full unfiltered npm test",
+        "TypeScript"
+      ],
+      "default": "Browser install switch off; only Windows CI explicitly opts in",
+      "sources": "Default official Playwright CDN from project-pinned installed CLI; no floating npx package install",
+      "destination": "C:\\Users\\runneradmin\\AppData\\Local\\ms-playwright",
+      "scope": "Disposable hosted runner, not user PC"
+    },
+    "passed": [
+      "PowerShell Parser::ParseFile: zero errors",
+      "Switch present with no enabled default",
+      "PyYAML safe_parse: valid workflow and exact opt-in call",
+      "Command/error guards/order checked; npm ci occurs once",
+      "git diff --check"
+    ],
+    "runtime_unrun": [
+      "Browser download locally (explicitly excluded)",
+      "New hosted pinned-browser execution pending publication"
+    ],
+    "preserves": [
+      "Pinned default Chromium",
+      "All native/web assertions and limits",
+      "All project-native/WASM source/artifacts",
+      "Full npm chain and TypeScript"
+    ],
+    "local_installations": 0,
+    "local_heavy_processes": 0,
+    "new_feature_integration": false,
+    "file_hashes": {
+      "scripts/test.ps1": "da0b5ff084046f6bbd00784cc57b748ba08b345f3031dc78d16ad496da0e044e",
+      ".github/workflows/windows.yml": "8ec1bba0f7b78a5dd35a76c96f2bb7640570a9ec00f7ce5e9a28805996450415"
+    }
   }
 }

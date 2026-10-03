@@ -1,3 +1,15 @@
+# Hosted pinned-browser setup syntax/order qualified (2026-10-03)
+
+75270c83 CI passes17 native/275 bindings/37 smoke, then cannot launch missing
+pinned headless-shell1208. CI-only opt-in setup now uses project Playwright CLI
+after one npm ci; local default is off. Assertions/default pinned browser and
+native/WASM unchanged. PowerShell/YAML/order/diff checks pass; no local install
+or heavy process. Authorized normal publication will let hosted CI execute setup.
+The [living integration record](docs/active/2026-10-02-sprint-integration/README.md)
+and hosted_pinned_browser_setup own evidence; actual remote/CI receipt is
+`out/local-native-repair/ci-pinned-browser-delivery.json`. Failure retained; no
+solver recovery or pending feature integrated.
+
 # Evaluation cancellation reply ordering qualified (2026-10-03)
 
 532b2219 qualifies unchanged adapter fixaa19a2d8: five finite ordering controls,

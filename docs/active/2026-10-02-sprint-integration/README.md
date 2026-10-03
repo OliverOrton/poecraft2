@@ -783,3 +783,29 @@ Normal qualified publication is approved; actual remote and hosted terminal resu
 are recorded separately in `out/local-native-repair/evaluation-cancel-delivery.json`.
 No solver recovery, Lock or other pending feature is integrated by this delivery.
 No local heavy capacity is held for publication or hosted CI.
+
+
+## Hosted pinned-browser dependency setup
+
+Exact-head Windows37112607929/job111173301597 on75270c83 passes17 native
+targets,275 bindings and37/37 engine smoke cases, then fails browser launch at
+workspace-resources:11. The disposable runner has no pinned headless-shell1208
+executable. This is a missing CI dependency, not an assertion failure. The failed
+run/projection remains in `evaluation-cancel-hosted-browser-failure.json`.
+
+The parent explicitly approves hosted-runner-only browser provisioning. Existing
+test.ps1 gains an opt-in InstallTestBrowser switch, disabled by default; Windows
+CI explicitly supplies it. After exactly one npm ci, the project's installed
+Playwright CLI provisions Chromium headless shell from its official default
+Playwright sources, then the unchanged full web chain and TypeScript run. Setup
+failure stops validation. No local browser/package installation, channel override
+in CI, assertion change, native/WASM change or pending-feature integration occurs.
+
+PowerShell parser, workflow YAML parser, default-switch/error guards, exact command
+order and diff checks pass. Browser download/runtime execution is intentionally
+unrun locally; normal post-push hosted CI will validate the selected setup. The
+[official headless-shell setup](https://playwright.dev/docs/browsers#chromium-headless-shell)
+supports the minimal only-shell choice. `hosted_pinned_browser_setup` and
+`out/local-native-repair/ci-pinned-browser-qualified.json` own evidence/exclusions.
+Actual remote/run/terminal outcome is recorded separately in
+`out/local-native-repair/ci-pinned-browser-delivery.json`. No local slot is held.

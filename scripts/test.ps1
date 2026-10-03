@@ -3,7 +3,9 @@ param(
     [ValidateSet("All", "Python", "Native", "Web")]
     [string]$Scope = "All",
     [switch]$SkipBuild,
-    [switch]$FetchPinnedData
+    [switch]$FetchPinnedData,
+    # Opt-in browser setup for disposable CI runners; local runs keep their default.
+    [switch]$InstallTestBrowser
 )
 
 $ErrorActionPreference = "Stop"
@@ -126,7 +128,14 @@ if ($NeedsWeb) {
     }
     Push-Location "$Root/apps/web"
     try {
-        foreach ($NpmArguments in @(@("ci"), @("run", "build:data"), @("test"), @("run", "typecheck"))) {
+        & $Npm.Source ci
+        if ($LASTEXITCODE -ne 0) { throw "npm ci failed with exit code $LASTEXITCODE." }
+        if ($InstallTestBrowser) {
+            $Node = Get-Command node -ErrorAction Stop
+            & $Node.Source "./node_modules/playwright/cli.js" install chromium --only-shell
+            if ($LASTEXITCODE -ne 0) { throw "Pinned Playwright browser setup failed with exit code $LASTEXITCODE." }
+        }
+        foreach ($NpmArguments in @(@("run", "build:data"), @("test"), @("run", "typecheck"))) {
             & $Npm.Source @NpmArguments
             if ($LASTEXITCODE -ne 0) { throw "npm $NpmArguments failed with exit code $LASTEXITCODE." }
         }
