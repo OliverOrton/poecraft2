@@ -10,6 +10,10 @@ Verification scope: native Eldritch implicit and explicit-currency actions,
 influence-exalt application, exact calculator, solver registry/options, and
 product controls and catalog.
 
+The 2026-10-03 single-side count rule below supersedes the older two-or-three
+target assumption. Its source implementation is pending matching native/WASM
+qualification; the earlier verification stamp does not qualify this delta.
+
 ## Scope
 
 This family owns `eldritch_ember`, `eldritch_ichor`, `eldritch_exalt`,
@@ -57,11 +61,54 @@ attempts to add one ordinary-pool modifier only on the targeted side. Without
 dominance it uses ordinary open-side selection.
 
 `eldritch_chaos` requires an Eldritch-eligible rare item. With dominance it
-clears only the targeted side, restores its fractured affix if present, and
-rolls two or three modifiers on that side; the opposing side is unchanged.
+clears only the targeted side, restores its fractured modifiers, and fills
+that side according to the approved single-side count model below. The
+opposing side is unchanged.
 The target-side clear does not consult a target-side metamod lock. Without
 dominance it performs the ordinary full Chaos reforge, including fractured and
 locked-side preservation.
+
+### Approved single-side count model (2026-10-03)
+
+Oliver selected the working assumption: "im fine with just assuming the 1 sided
+equivalent of the 8:3:1 rule". Draw the ordinary equipment rare total `T` from
+4/5/6 with probabilities 8/12, 3/12 and 1/12. Let `n` be the unchanged opposite
+side's count, `f` the fractured count retained on the rerolled side, and `c` its
+capacity. The target total is `max(n + f, min(T, n + c))`; only the rerolled side
+can receive modifiers. Fractures occupy the target, so they reduce fresh rolls
+rather than increase the drawn total. The rule applies to the native mutation
+path and all exact reforge consumers through one shared count/target owner.
+
+For equipment capacity three and a complete pool, with no rerolled-side
+fracture:
+
+| Preserved opposite count | Final rerolled-side count and probability |
+| ---: | --- |
+| 0 | 3 with probability 1 |
+| 1 | 3 with probability 1 |
+| 2 | 2 with 8/12; 3 with 4/12 |
+| 3 | 1 with 8/12; 2 with 3/12; 3 with 1/12 |
+
+Existing fractures and capacity coalesce target mass. Pool exhaustion absorbs
+the remaining mass at the actual partial result; it does not redraw or
+condition on a reachable target. Opposite-side crafted and fractured modifiers
+survive. A crafted modifier on the rerolled side is removed unless fractured;
+remaining native pool filters keep their existing meaning.
+
+This is an owner-approved model, not a verified game-rate claim. The public
+[Craft of Exile implementation](https://www.craftofexile.com/packages/package.js?v=1786125802)
+uses the same total-count weights, subtracts all surviving modifiers including
+fractures, and caps additions at the rerolled side's free capacity. That is
+implementation evidence rather than independent game measurement. The
+October 2 [ordinary count-law receipts](../active/2026-10-02-reforge-law/README.md)
+remain historical and explicitly retained the prior dominant Eldritch law.
+
+Count-law identity is version 3, action refinement contract 5, and entry/
+continuation evaluator identity 3. Existing reforge memo, lower/proposal,
+Hinekora preview and checkpoint identities consume the shared law version.
+Older costs, certificates and checkpoints cannot be reused as current-law
+authority. Existing v1 strategy graphs require fresh evaluation: the changed
+single-side support can expose previously unreachable routing branches.
 
 `eldritch_annul` requires an Eldritch-eligible item. With dominance it removes
 one uniformly sampled non-fractured affix from the targeted side; it does not

@@ -1098,37 +1098,37 @@ ActionOutcome do_eldritch_chaos(
     if (side < 0)
         return reforge(context, item, PC_RARITY_RARE, rare_count(context),
                        PoolBuildRequest{});
-    pc_mod_slot fractured{};
-    bool has_fractured = false;
+    std::vector<pc_mod_slot> fractured;
     pc_mod_slot* slots =
         side == PC_SIDE_PREFIX ? item->prefixes : item->suffixes;
     const std::uint8_t count =
         side == PC_SIDE_PREFIX ? item->prefix_count : item->suffix_count;
     for (std::uint8_t i = 0; i < count; ++i) {
         if (slots[i].flags & PC_MOD_SLOT_FRACTURED) {
-            fractured = slots[i];
-            has_fractured = true;
-            break;
+            fractured.push_back(slots[i]);
         }
     }
     pc_item_clear_side(item, side);
-    if (has_fractured) {
+    for (const auto& kept : fractured) {
         pc_mod_slot* restored = nullptr;
-        pc_item_add_mod(item, side, fractured.mod_id, fractured.group_id,
-                        fractured.flags, &restored);
-        if (restored) *restored = fractured;
+        pc_item_add_mod(item, side, kept.mod_id, kept.group_id,
+                        kept.flags, &restored);
+        if (restored) *restored = kept;
     }
-    const int target = 2 + static_cast<int>(context.rng.next_below(2));
+    const int preserved_count =
+        side == PC_SIDE_PREFIX ? item->prefix_count : item->suffix_count;
+    const int opposite_count =
+        side == PC_SIDE_PREFIX ? item->suffix_count : item->prefix_count;
+    const int target = single_side_rare_reforge_target_total(
+        rare_count(context), opposite_count, preserved_count,
+        context.session->rare_affix_cap);
     PoolBuildRequest request;
     request.side_filter = side;
-    fill_random_mods(
-        context, request, item,
-        item->prefix_count + item->suffix_count +
-            target -
-            (side == PC_SIDE_PREFIX ? item->prefix_count
-                                    : item->suffix_count));
-    return {true, target - (has_fractured ? 1 : 0),
-            static_cast<int>(count) - (has_fractured ? 1 : 0)};
+    fill_random_mods(context, request, item, target);
+    const int final_count =
+        side == PC_SIDE_PREFIX ? item->prefix_count : item->suffix_count;
+    return {true, final_count - preserved_count,
+            static_cast<int>(count) - preserved_count};
 }
 
 ActionOutcome do_eldritch_annul(

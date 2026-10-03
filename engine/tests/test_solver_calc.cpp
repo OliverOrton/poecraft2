@@ -4517,7 +4517,182 @@ void run_calculator_incoming_tests(const char* artifact_dir) {
 
 }
 
+void run_eldritch_side_count_law_tests() {
+    // Literal conditional laws, independent of the production count helper.
+    // Complete equipment pools: held0/1 -> side3, held2 -> side2/3 at8:4,
+    // held3 -> side1/2/3 at8:3:1. Fractures occupy those side targets.
+    constexpr double side_mass[4][4] = {
+        {0, 0, 0, 1}, {0, 0, 0, 1},
+        {0, 0, 8.0 / 12, 4.0 / 12},
+        {0, 8.0 / 12, 3.0 / 12, 1.0 / 12},
+    };
+    const unsigned mods[2][3] = {{0, 3, 4}, {5, 6, 7}};
+    for (int side = 0; side < 2; ++side) {
+        for (unsigned held = 0; held <= 3; ++held) {
+            for (unsigned fractures = 0; fractures <= 3; ++fractures) {
+                for (unsigned available : {0u, 1u, 3u}) {
+                    // No bench; opposite-side lock on the rerolled side;
+                    // rerolled-side bench lock, which itself must be removed.
+                    for (unsigned bench = 0; bench < 3; ++bench) {
+                        if ((bench == 1 && held == 0) ||
+                            (bench == 2 && fractures == 3)) continue;
+                        auto session = make_calc_session();
+                        session->rare_affix_cap = 3;
+                        session->rare_reforge_count_kind = RareReforgeCountKind::Equipment;
+                        auto data = std::const_pointer_cast<DataImpl>(session->data);
+                        session->veiled_prefix_mod_id = session->veiled_suffix_mod_id = kNoId;
+                        data->metamod_prefixes_locked_code = 20;
+                        data->metamod_suffixes_locked_code = 21;
+                        session->metamod_type[8] = 21;
+                        session->metamod_type[9] = 20;
+                        session->flags[8] |= 1u << 1;
+                        session->flags[9] |= 1u << 1;
+                        session->crafted_mask.assign(session->words, 0);
+                        pc_bitset_set(session->crafted_mask.data(), 8);
+                        pc_bitset_set(session->crafted_mask.data(), 9);
+                        session->normal_random_roll_mask.assign(session->words, 0);
+                        auto carrier_mask = session->normal_random_roll_mask;
+                        for (unsigned mod : {0u, 3u, 4u, 5u, 6u, 7u, 8u, 9u})
+                            pc_bitset_set(carrier_mask.data(), mod);
+                        for (unsigned i = 0; i < available; ++i)
+                            pc_bitset_set(session->normal_random_roll_mask.data(), mods[side][i]);
+                        const auto registry = build_action_registry(*session);
+                        const auto action = registry.index_by_id.at("eldritch_chaos");
+                        pc_item_state source{};
+                        pc_item_clear(&source);
+                        source.rarity = PC_RARITY_RARE;
+                        source.searing_exarch_tier = side == 0 ? 1 : 0;
+                        source.eater_of_worlds_tier = side == 1 ? 1 : 0;
+                        for (unsigned i = 0; i < held; ++i) {
+                            const bool lock = bench == 1 && i + 1 == held;
+                            const auto mod = lock ? static_cast<unsigned>(side == 0 ? 9 : 8)
+                                                  : mods[1 - side][i];
+                            place(&source, 1 - side, mod, session->primary_group[mod],
+                                  lock ? PC_MOD_SLOT_CRAFTED :
+                                  i == 0 ? PC_MOD_SLOT_FRACTURED : 0);
+                        }
+                        for (unsigned i = 0; i < fractures; ++i) {
+                            const auto mod = mods[side][i];
+                            place(&source, side, mod, session->primary_group[mod], PC_MOD_SLOT_FRACTURED);
+                        }
+                        if (fractures < 3) {
+                            const auto mod = bench == 2 ? static_cast<unsigned>(side == 0 ? 8 : 9)
+                                                       : mods[side][fractures];
+                            place(&source, side, mod, session->primary_group[mod],
+                                  bench == 2 ? PC_MOD_SLOT_CRAFTED : 0);
+                        }
+                        auto base = source;
+                        pc_item_clear_side(&base, side);
+                        for (unsigned i = 0; i < fractures; ++i) {
+                            const auto mod = mods[side][i];
+                            place(&base, side, mod, session->primary_group[mod], PC_MOD_SLOT_FRACTURED);
+                        }
+                        const auto side_count = [side](const pc_item_state& item) {
+                            return side == 0 ? item.prefix_count : item.suffix_count;
+                        };
+                        const auto retained = [&](const pc_item_state& item) {
+                            const auto* original = side == 0 ? source.suffixes : source.prefixes;
+                            const auto* opposite = side == 0 ? item.suffixes : item.prefixes;
+                            const auto other_count = side == 0 ? item.suffix_count : item.prefix_count;
+                            if (other_count != held ||
+                                std::memcmp(opposite, original, sizeof(source.prefixes)) != 0) return false;
+                            const auto* selected = side == 0 ? item.prefixes : item.suffixes;
+                            for (unsigned i = 0; i < fractures; ++i) {
+                                bool found = false;
+                                for (unsigned j = 0; j < side_count(item); ++j)
+                                    found |= selected[j].mod_id == mods[side][i] &&
+                                             (selected[j].flags & PC_MOD_SLOT_FRACTURED);
+                                if (!found) return false;
+                            }
+                            return true;
+                        };
+                        for (unsigned extra = 0; extra < 2; ++extra) {
+                            for (unsigned implementation = 0; implementation < 3; ++implementation) {
+                                auto goal = family_goal_100();
+                                if (extra) goal.terminal.extras = ExtraExplicitPolicy::Allow;
+                                CalcContext calc(session, goal, registry, {action}, false, false, false,
+                                    std::nullopt, {}, false, carrier_mask, false,
+                                    false, implementation != 0, false, implementation == 2);
+                                ActionContextImpl context(20261003);
+                                context.session = session;
+                                std::map<unsigned, double> expected;
+                                const auto visit = [&](auto&& self, pc_item_state item,
+                                                       unsigned target, double probability) -> void {
+                                    if (side_count(item) >= target) {
+                                        expected[calc.intern_item(item)] += probability;
+                                        return;
+                                    }
+                                    PoolBuildRequest request;
+                                    request.side_filter = side;
+                                    const auto pool = get_weighted_pool(context, &item, request);
+                                    if (!pool.total_weight) {
+                                        expected[calc.intern_item(item)] += probability;
+                                        return;
+                                    }
+                                    for (const auto& row : pool.entries) if (row.final_weight) {
+                                        auto next = item;
+                                        PC_CHECK(pc_item_add_mod(&next, side, row.session_mod_id,
+                                            row.primary_group, 0, nullptr) == PC_RESULT_OK);
+                                        self(self, next, target,
+                                             probability * row.final_weight / pool.total_weight);
+                                    }
+                                };
+                                for (unsigned target = 0; target <= 3; ++target)
+                                    if (side_mass[held][target] > 0)
+                                        visit(visit, base, std::max(target, fractures), side_mass[held][target]);
+                                const auto& actual = calc.outcomes(calc.intern_item(source), action);
+                                PC_CHECK(actual.supported && sums_to_one(actual));
+                                PC_CHECK(actual.entries.size() == expected.size());
+                                for (const auto& row : actual.entries)
+                                    PC_CHECK(near(row.probability, expected[row.state], 1e-12));
+                                double counts[4]{};
+                                for (const auto& row : actual.entries) {
+                                    pc_item_state item{};
+                                    PC_CHECK(calc.materialize(row.state, item));
+                                    PC_CHECK(retained(item));
+                                    counts[side_count(item)] += row.probability;
+                                }
+                                if (available == 3) {
+                                    double expected_counts[4]{};
+                                    for (unsigned target = 0; target <= 3; ++target)
+                                        expected_counts[std::max(target, fractures)] += side_mass[held][target];
+                                    for (unsigned count = 0; count <= 3; ++count)
+                                        PC_CHECK(near(counts[count], expected_counts[count], 1e-12));
+                                }
+                                if (available == 0) PC_CHECK(near(counts[fractures], 1, 1e-12));
+                            }
+                        }
+                        // Native mutation frequency/support and actual added/removed
+                        // accounting. Sparse pools absorb mass without redrawing.
+                        ActionContextImpl context(20261003 + held + fractures);
+                        context.session = session;
+                        unsigned counts[4]{};
+                        const unsigned trials = available == 3 && bench == 0 && fractures <= 1 ? 2000 : 12;
+                        for (unsigned trial = 0; trial < trials; ++trial) {
+                            auto item = source;
+                            const auto outcome = apply_action(context, &item, registry.actions[action].params);
+                            PC_CHECK(outcome.applied && retained(item));
+                            PC_CHECK(outcome.added == side_count(item) - fractures);
+                            PC_CHECK(outcome.removed == side_count(source) - fractures);
+                            ++counts[side_count(item)];
+                        }
+                        if (trials == 2000) {
+                            double expected_counts[4]{};
+                            for (unsigned target = 0; target <= 3; ++target)
+                                expected_counts[std::max(target, fractures)] += side_mass[held][target];
+                            for (unsigned count = 0; count <= 3; ++count)
+                                PC_CHECK(std::abs(double(counts[count]) / trials - expected_counts[count]) < 0.05);
+                        }
+                        if (available == 0) PC_CHECK(counts[fractures] == trials);
+                    }
+                }
+            }
+        }
+    }
+}
+
 void run_reforge_count_law_tests() {
+    run_eldritch_side_count_law_tests();
     // Independent finite native ordered draws, with literal mixture constants.
     // No production count helper or cached DP row constructs the reference.
     for (unsigned scenario = 0; scenario < 8; ++scenario) {

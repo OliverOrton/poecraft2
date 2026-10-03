@@ -6,6 +6,7 @@
 
 #include "json.hpp"
 #include "handles_internal.hpp"
+#include "reforge_count_law.hpp"
 #include "solver_policy_refinement_helpers.hpp"
 #include "solver_diagnostic_options.hpp"
 #include "solver_calc_types.hpp"
@@ -5504,7 +5505,9 @@ void append_case_report(
         first_input = false;
     }
     if (!first_input) out << ',';
-    out << "\"resolved_checker_caps\":" << result.resolved_checker_caps;
+    out << "\"resolved_checker_caps\":" << result.resolved_checker_caps
+        << ",\"rare_reforge_count_law_version\":"
+        << poecraft::kRareReforgeCountLawVersion;
     out << "},\n";
     out << "  \"phase_wall_ms\":{\"registry_layout\":";
     append_nullable_number(out, measured, result.registry_layout_ms);

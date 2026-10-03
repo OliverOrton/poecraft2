@@ -580,6 +580,22 @@ def test_financial_identity_excludes_changed_resolved_budget(
     assert matched["economic_gate"]["passed"] is True
 
 
+@pytest.mark.parametrize("old_law_version", [None, 2])
+def test_financial_identity_excludes_changed_reforge_model(old_law_version) -> None:
+    before, after = _economic_case(100), _economic_case(50)
+    if old_law_version is not None:
+        before["input"]["rare_reforge_count_law_version"] = old_law_version
+    after["input"]["rare_reforge_count_law_version"] = 3
+    comparison = compare_runs("before", [before], "after", [after])
+    assert comparison["paired_cases"] == 0
+    assert comparison["economic_gate"]["passed"] is False
+    assert comparison["excluded"][0]["fields"] == ["input.rare_reforge_count_law_version"]
+    before["input"]["rare_reforge_count_law_version"] = 3
+    matched = compare_runs("before", [before], "after", [after])
+    assert matched["paired_cases"] == 1
+    assert matched["economic_gate"]["passed"] is True
+
+
 def test_financial_identity_excludes_omitted_versus_explicit_override() -> None:
     before, after = _economic_case(100), _economic_case(50)
     after["input"]["run_overrides"] = {"max_discovered_states": 800000}
