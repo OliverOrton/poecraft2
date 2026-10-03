@@ -8555,6 +8555,37 @@ void run_primitive_destructive_renewal_upper_tests(bool sample = true) {
         progressive.diagnostics.progressive_fracture_start_value));
     PC_CHECK(progressive.diagnostics.progressive_fracture_post_modes > 0);
 
+    // A later strict-refinement failure must retain its already checked graph,
+    // rather than publish a historical scalar or claim unfinished exactness.
+    PC_CHECK(progressive.policy_available);
+    PC_CHECK(progressive.policy_status == SolvePolicyStatus::BoundedFeasible);
+    PC_CHECK(!progressive.converged);
+    PC_CHECK(!progressive.diagnostics.policy_refinement.strict_global_lower_bound_closed);
+    PC_CHECK(!progressive.diagnostics.policy_refinement.global_lower_bound_closed);
+    PC_CHECK(progressive.diagnostics.policy_refinement.strict_lift_failure_reason ==
+             "invalid_policy_transition");
+    PC_CHECK(progressive.lower_bound <= progressive.evaluated_policy_cost + 1e-9);
+    PC_CHECK(near(progressive.evaluated_policy_cost, progressive.upper_bound, 1e-9));
+    const std::string retained_fracture_json = compile_policy_strategy_json(
+        fracture_calc, progressive, "retained checked fracture policy");
+    const auto retained_fracture_strategy = compile_strategy_json(
+        fracture_session, retained_fracture_json.data(), retained_fracture_json.size());
+    auto retained_fracture_economy = std::make_shared<EconomyImpl>();
+    retained_fracture_economy->id = "retained-checked-fracture";
+    retained_fracture_economy->prices = fracture_prices;
+    StrategyEvalOptions retained_fracture_options;
+    retained_fracture_options.economy = retained_fracture_economy;
+    const auto retained_fracture_evaluation = evaluate_strategy(
+        *retained_fracture_strategy, retained_fracture_options);
+    PC_CHECK(retained_fracture_evaluation.converged);
+    PC_CHECK(retained_fracture_evaluation.cost_complete);
+    PC_CHECK(near(retained_fracture_evaluation.total_expected_cost,
+                  progressive.evaluated_policy_cost, 1e-9));
+    PC_CHECK(near(retained_fracture_evaluation.success_probability, 1.0, 1e-12));
+    PC_CHECK(near(retained_fracture_evaluation.failure_probability, 0.0, 1e-12));
+    PC_CHECK(near(retained_fracture_evaluation.action_not_applied_probability, 0.0, 1e-12));
+    PC_CHECK(near(retained_fracture_evaluation.no_matching_edge_probability, 0.0, 1e-12));
+
     /* The product solver parent must not introduce more junk distinctions
      * than the strict primitive oracle. Under an exact terminal observer the
      * strict layout may already contain the minimal required distinctions,
@@ -13393,12 +13424,18 @@ void run_automatic_eldritch_side_tests(
     const std::uint64_t cancelled_reforge_count_before =
         cancelled_calc.cached_reforge_count();
     StateLocalAutomaticBatch abandoned_batch;
-    PC_CHECK(
-        !cancelled_calc.advance_state_local_automatic_candidates(
-            cancelled_state, limits, abandoned_batch, 1));
-    PC_CHECK(
-        !cancelled_calc.advance_state_local_automatic_candidates(
-            cancelled_state, limits, abandoned_batch, 1));
+    // Cooperative startup may take more than two yields. Cancel at the
+    // semantic boundary with an actually staged operator, not a yield count.
+    bool abandoned_complete = false;
+    for (unsigned steps = 0;
+         steps < 256 && !abandoned_complete &&
+             cancelled_calc.operators().size() == cancelled_operator_count_before;
+         ++steps) {
+        abandoned_complete =
+            cancelled_calc.advance_state_local_automatic_candidates(
+                cancelled_state, limits, abandoned_batch, 1);
+    }
+    PC_CHECK(!abandoned_complete);
     PC_CHECK(
         cancelled_calc.operators().size() >
         cancelled_operator_count_before);

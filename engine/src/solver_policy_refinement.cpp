@@ -5970,8 +5970,29 @@ struct PolicyExactLiftWork::Impl {
             }
             progress.phase = PolicyExactLiftPhase::Done;
             progress.done = true;
-            reusable_assertion.reset();
             completed = std::move(*result.certificate);
+            if (completed->status == PolicyExactLiftStatus::RefinementFailure) {
+                if (auto* retained = finish_artifact()) {
+                    // A failed optional refinement does not revoke an earlier
+                    // graph checked by this same immutable root/law/price owner.
+                    // Transfer only the feasible artifact; retain the failure
+                    // diagnosis without statewise or global proof authority.
+                    PolicyExactLiftCertificate sealed;
+                    sealed.solver_cost = completed->solver_cost;
+                    sealed.adapter = std::move(completed->adapter);
+                    sealed.adapter.global_lower_bound_closed = false;
+                    sealed.adapter.exact_alternative_envelope_closed = false;
+                    sealed.failure_reason = std::move(completed->failure_reason);
+                    sealed.resource_cap = std::move(completed->resource_cap);
+                    sealed.compiled = std::move(*retained);
+                    sealed.status = PolicyExactLiftStatus::Complete;
+                    sealed.executable = sealed.lumpable = true;
+                    sealed.exact_start_cost = sealed.compiled.exact_cost;
+                    sealed.exact_root_key = exact_item_state_key(exact_start);
+                    completed = std::move(sealed);
+                }
+            }
+            reusable_assertion.reset();
         }
     }
 

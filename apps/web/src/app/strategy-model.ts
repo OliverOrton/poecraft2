@@ -266,7 +266,8 @@ export type SolverPolicyScope =
     | "unrestricted"
     | "zero_progress_reroll_policy_restriction"
     | "no_economic_restart_policy_restriction"
-    | "zero_progress_reroll_and_no_economic_restart_restrictions";
+    | "zero_progress_reroll_and_no_economic_restart_restrictions"
+    | "gated_search_with_paid_root_foulborn_salvage_v2";
 
 export interface StrategyDocument {
     version: "v1";
@@ -339,7 +340,9 @@ export function isStrategyDocument(value: unknown): value is StrategyDocument {
         candidate.solver_policy_scope ===
             "zero_progress_reroll_and_no_economic_restart_restrictions" ||
         candidate.solver_policy_scope ===
-            "zero_progress_reroll_policy_restriction";
+            "zero_progress_reroll_policy_restriction" ||
+        candidate.solver_policy_scope ===
+            "gated_search_with_paid_root_foulborn_salvage_v2";
     const validImprintProgramScope =
         candidate.solver_imprint_programs_considered === undefined ||
         typeof candidate.solver_imprint_programs_considered === "boolean";

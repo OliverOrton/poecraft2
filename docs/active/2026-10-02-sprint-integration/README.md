@@ -308,3 +308,212 @@ the Dominance-only artifact was deliberately excluded. The continuation above
 qualifies `b794e009` worker bytes; later source changes need a matching rebuild.
 Whole product acceptance, Simulator and rendered UI remain unrun. No push,
 deployment, data/prices refresh, install or protected root `0` access occurred.
+
+
+## Native CI repair continuation; paused for gaming
+
+The parent selected repair of Windows run **37064817767**, job
+**111029911509**, on delivered `dbc142a26f7060c6114453d85f7b4c776077dc2b`.
+Work is isolated in `C:/Users/Oliver/Documents/poecraft2-local-native-repair`,
+branch `dot/local-native-repair-20261002`; main and the overnight checkout are
+unchanged. Normal main's delivered WASM was verified matching its qualified
+hash. Oliver owns the existing dev-server restart.
+
+Two concrete defects were reproduced. Strict-to-coarse projection omitted
+`fractured_side_counts`, changing exact carrier identity after a fracture; the
+one-line preservation restores valid fractured-root closure and S8's price-flip
+while retaining the stale-group root rejection. Separately, strict refinement
+advertised an already checked feasible graph's upper cost, then discarded its
+owned assertion when later optional refinement failed. The non-cap publication
+invariant correctly rejected that scalar without its graph.
+
+The local repair transfers an eligible graph from the same immutable
+root/law/price owner only on `RefinementFailure`, keeps the failure reason, and
+seals a fresh feasible certificate without statewise, reconciliation or global
+proof authority. Resource-cap, root-mapping and other failure classifications
+remain unchanged. The publication-loss invariant is unchanged. A finite
+regression now independently parses/evaluates the returned graph, checks proper
+success/zero off-policy/cost, and rejects false convergence/global closure.
+
+Evidence is recorded in `qualification.json` under
+`native_ci_repair_checkpoint`. Delivered baseline reproductions failed:
+fracture integrity had two assertions followed by the non-cap abort; S8 had
+one convergence failure. The preliminary projection plus retained-graph version
+passed **621 fracture integrity** and **36 S8 price-flip** checks. That preliminary
+version retained every failed status; it is not the final qualification. The
+current narrowed failure-only version plus stronger regression **builds**, but
+its tests are **unrun**. No final native target, matching WASM or push has run.
+Logs and temporary diagnostic patch are under `out/local-native-repair`;
+diagnostic instrumentation was removed from retained source.
+
+At **21:52 UTC** Oliver requested pausing heavy work to play games. The active
+two-job build completed before termination; all tracked processes were confirmed
+exited, and no native build/test process remained visible. Automatic approval
+review had rejected a process-tree stop because PID ownership was not established;
+no unrelated process was stopped. Snapshot: 10% system CPU, 33.97/63.71 GiB RAM.
+Do not start builds, tests, benchmarks, WASM compilation or server restarts until
+explicit resume. On resume: run affected native targets and publication continuity,
+then matching WASM and bounded affected worker checks; qualify before the newly
+authorized normal main delivery. No heavy solver experiment is selected.
+
+Proposed later audit, not started: carrier transformations preserving every
+native identity/occupancy flag; independent complete native outcome enumeration;
+and paid setup/recovery graph provenance plus cached-artifact ownership. Mechanics
+requiring Oliver's decisions remain held.
+
+
+### Prepared resume runs (not executed)
+
+Resume from repair checkpoint `652c1fab913ea2d99e53bce740733e9bbda94359`
+on `dot/local-native-repair-20261002`. Worktree is clean. The built native test
+executable is SHA256
+`4fc179553f0218c9f6c644ca2e361ef37a421ca6f4f6fe75f2dbd0b9a1ce6d72`.
+It matches the current source/regression and needs no rebuild unless source
+changes. Frozen artifact input is the existing immutable main snapshot
+`82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d`;
+do not ingest, refresh prices, modify SQLite or substitute old-law evidence.
+
+Run A, after Oliver explicitly resumes: the final narrowed regression and price
+flip, serially. These are unrun on the committed repair.
+
+```powershell
+Set-Location 'C:\Users\Oliver\Documents\poecraft2-local-native-repair'
+Get-FileHash build/engine/poecraft_engine_tests.exe -Algorithm SHA256
+& .\build\engine\poecraft_engine_tests.exe --solver-integrity-only fracture
+# Record exit/log; stop and diagnose on failure before starting the next run.
+& .\build\engine\poecraft_engine_tests.exe --solver-s8-3-only run_fracture_price_flip
+```
+
+Run B, only after A passes: the two failed CI native targets, serially, and the
+specific selective-cap negative control. The full solver target already includes
+ordinary-step incumbent continuity, so do not rerun its separate selector by
+routine. Preserve native cancellation/watchdog and record exact exits, counts,
+logs and elapsed time. No benchmark/Simulator qualification is selected; any
+sampling built into these existing tests is test validation, not new strategy
+authority.
+
+```powershell
+Set-Location 'C:\Users\Oliver\Documents\poecraft2-local-native-repair'
+& .\build\engine\poecraft_engine_tests.exe --solver-solve-only 'C:\Users\Oliver\Documents\poecraft2\data\runtime-snapshots\82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d'
+# Stop on failure. Full target includes the new fracture regression and continuity.
+& .\build\engine\poecraft_engine_tests.exe --solver-s8-3-only
+# Stop on failure.
+& .\build\engine\poecraft_engine_tests.exe --solver-integrity-only selective-cap-diagnosis
+```
+
+Run C, only after native qualification: source-matched WASM build with at most two
+jobs; never restart Oliver's server. Dependencies/SDK already exist; do not
+install. Source, engine tree and artifact hashes must be recorded before delivery.
+
+```powershell
+Set-Location 'C:\Users\Oliver\Documents\poecraft2-local-native-repair'
+$env:EMCC_CORES = '2'
+$env:CMAKE_BUILD_PARALLEL_LEVEL = '2'
+powershell -NoProfile -File scripts/build-wasm.ps1
+```
+
+Then reuse the repository's existing affected Calculator/worker finite checks
+and source-matched WASM loader. Native-only checkpoint is not web qualification.
+Do not promote until those results, final hashes and failure/authority review are
+recorded. Qualified normal main delivery has separate explicit user permission;
+no push is part of this pause checkpoint. Recheck main ancestry/unrelated changes
+without touching protected `0`. No architecture, mechanics guesses or new UI
+features are selected. The later three-boundary audit remains a proposal only.
+
+A second process check after the pause again found **zero tracked owned
+processes** and **zero visible native build/test processes**. No work is scheduled
+automatically; Oliver will choose the overnight resume. No owned process remains.
+
+
+## October 3 native repair qualification
+
+Oliver resumed local qualification at 04:00 UTC, then explicitly approved normal
+main delivery of completed tested changes at 04:12:22 UTC. This supersedes the
+previous pause and local-only dispatch for this selected repair. No deployment,
+other feature integration or new mechanic authority is implied.
+
+Repair source `652c1fab` plus test/contract checkpoint `057b5325` is qualified
+with engine tree `53c70f2226ee0274dd544ea5fdfa3821deec5c68`. Final native solver
+checks **158,188**, full S8 **1,087** and selective-cap **63** pass. The focused
+fracture integrity **636** and price-flip **36** checks also pass. The full target
+includes ordinary-step continuity, the deliberate non-cap lost-artifact negative
+control and independent evaluation of the retained bounded fracture graph.
+
+The first full solver run failed one previously hidden cancellation fixture:
+it assumed an operator was staged after exactly two cooperative yields. The
+fixture now advances to actual staged ownership before cancelling; rollback of
+operators, candidates and caches plus clean retry remain asserted. The full rerun
+passes. Production repair is unchanged from `652c1fab`. No assertion was relaxed
+to admit a historical scalar or failed proof.
+
+Matching two-job WASM build passes; SHA256
+`472f644bed756caee538868b714e4d144989e9ec1990232f82562d2f80b7424f`.
+Both real-worker Calculator carrier/goal and Fracturing Orb filters pass **4/4**;
+Finish/Cancel control passes. TypeScript initially lacked ignored build metadata
+in the fresh worktree; the existing bundle owner generated it from the unchanged
+frozen snapshot and TypeScript passes. The broad repository suite and generic
+WASM solver smoke containing an unchanged 5,000-run Simulator remain unrun.
+
+The heavy slot is released and all owned heavy processes exited. The artifact
+receipt `out/local-native-repair/qualified-artifacts.json` and
+`native_ci_repair_qualification` in [qualification.json](qualification.json)
+preserve exact commands, identities and failed/unrun evidence. Normal delivery's
+actual local/remote commit and CI projection are written separately to
+`out/local-native-repair/delivery.json`; no delivery is claimed by local
+qualification alone. Main/remote changes require the recorded normal delivery
+step. Other feature owners remain isolated until parent coordination and combined
+qualification. The short later audit remains proposed, not started.
+
+
+## Latest-head web strategy scope guard checkpoint
+
+Windows run [37096236872](https://github.com/OliverOrton/poecraft2/actions/runs/37096236872),
+job **111126637666**, passes all **17 native targets** and **275 bindings**, then
+fails npm test. The specific fixture is `product Eldritch dependency wins through
+release WASM`; its call at `engine-smoke.test.ts:2161` fails the shape guard in
+`prepareSolverStrategy` at `solve-workspace.ts:208`. The earlier generic browser
+solver and Calculator picker cases passed; this does not show that all native
+solver graphs are invalid.
+
+Source inspection identifies the missing adapter value: native
+`solver_compile.cpp` emits `gated_search_with_paid_root_foulborn_salvage_v2` for
+active product paid-root scope, while the web strategy scope type/shape whitelist
+only accepts the four older values. The local patch recognizes that exact v2
+value. `prepareSolverStrategy`, native parsing/provenance/scope authority and
+board validation are unchanged. Unknown future scope v3 and dangling graphs
+remain explicit negative controls. The real WASM fixture also asserts the native
+scope before preparation so future contract mismatches are specific.
+
+No native source or WASM changes are made; the qualified `472f644b…` artifact is
+reused. All tests for this patch are **unrun** pending the coordinated web-test
+slot after recombination and multi-goal. Prepared commands and exclusions live in
+`web_solver_scope_guard_checkpoint` in [qualification.json](qualification.json).
+The existing product Eldritch fixture's 10,000-run Simulator tail is unchanged;
+it is not selected as local strategy qualification for this adapter-only change.
+Main remains `3ab862fe`; no new push or deployment. Multi-goal `e45b92b8` is
+unbuilt/untested and must not be integrated as qualified.
+
+
+### Web scope adapter qualified
+
+Source `7f235bbf` passes focused strategy-model and solve-workspace checks,
+including exact v2 roundtrip, unknown v3 refusal and invalid-graph rejection.
+TypeScript and the complete npm test chain pass with the existing Calculator
+carrier/goal smoke selection (4/4). Every later test file in the chain executes.
+`scope-guard-qualified.json` under `out/local-native-repair` and
+`web_solver_scope_guard_qualification` in [qualification.json](qualification.json)
+own exact commands, logs and exclusions. The specific product Eldritch smoke's
+unchanged 10,000-run Simulator tail is unrun locally; normal CI keeps the full
+fixture unchanged. No native/WASM rebuild is required or performed.
+
+The serial slot was released immediately after all test commands exited, before
+receipt/commit work. Main delivery is separately approved. Actual remote/CI
+result is recorded in `out/local-native-repair/scope-guard-delivery.json` after
+normal delivery; local qualification alone claims no remote success.
+
+Lightweight pinned-source review found multi-goal `e45b92b8` forked from
+`dbc142a2`, before the delivered native repair. Its eventual acceptance must
+qualify the current combined source and matching WASM, retaining the repair and
+scope adapter. Lock `e792c041` is based on `3ab862fe`; inspected shared protocol
+hunks are disjoint. Neither source-only feature has been merged or accepted by
+this review. Other native/model/WASM qualification remains with their owners.

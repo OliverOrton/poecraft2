@@ -25,6 +25,35 @@ Recombination owns the next heavy slot. No builds/tests/WASM/benchmarks/Simulato
 have started here; no release artifact was regenerated. Parent owns serialized
 integration and grants the next slot. No push, main merge or deployment.
 
+# Web solver scope adapter qualified (2026-10-03)
+
+Repair source `7f235bbf` recognizes only the native product v2 scope. Focused
+shape/roundtrip, unknown-scope and invalid-graph controls, TypeScript and complete
+filtered npm chain pass; native/WASM unchanged. Heavy slot released immediately;
+no owned heavy process remains. Normal main delivery approved; actual remote/CI
+outcome lives in `out/local-native-repair/scope-guard-delivery.json`.
+The [living integration record](docs/active/2026-10-02-sprint-integration/README.md)
+and `web_solver_scope_guard_qualification` receipt own evidence/exclusions.
+Multi-goal `e45b92b8` is based on pre-repair `dbc142a2`; qualify combined current
+source, not that old isolated native base. Lock `e792c041` source completion is
+unqualified. Feature branches remain separate; parent coordinates their slots.
+
+# Native CI repair qualified (2026-10-03)
+
+Oliver resumed this selected repair and explicitly approved normal main delivery
+of tested overnight changes at 04:12:22 UTC. Isolated
+`dot/local-native-repair-20261002` repair source `652c1fab`, qualified checkpoint
+`057b5325`, has 158,188 solver / 1,087 S8 / 63 selective-cap passing checks and
+matching WASM `472f644b…`; real worker filters and TypeScript pass. Bounded artifact
+retention supplies no exact/statewise authority; publication-loss negative control
+still passes. No owned heavy process remains; the serial slot is released.
+The [living integration record](docs/active/2026-10-02-sprint-integration/README.md)
+and `native_ci_repair_qualification` receipt own passed/failed/unrun evidence.
+Actual normal main/remote/CI outcome is in `out/local-native-repair/delivery.json`.
+No deployment, refresh, dev-server restart or other feature integration is selected
+by this checkpoint. Parent coordinates the remaining isolated owners and combined
+qualification; new model approvals supply no game-exact solver authority.
+
 # Combined completion batch delivered; paused (2026-10-02)
 
 The [living integration record](docs/active/2026-10-02-sprint-integration/README.md)
