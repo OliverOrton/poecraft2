@@ -91,3 +91,32 @@ to the multi-goal owner next. A broader binding recheck requires a correctly pin
 read-only canonical SQLite fixture in the isolated checkout. No long experiment,
 Simulator, timing/economic comparison or game-exact claim is authorized by this
 checkpoint.
+
+## Shared Calculator integration (source checkpoint; unqualified)
+
+Qualified main `0187f3d8` is integrated in this isolated branch. The shared
+goal-set observer source interface is `e45b92b8` (dependency cherry-pick
+`dc103207`, not a second implementation). The native pair dispatcher binds the
+bounded shared goal set to input A's original session, maps canonical modifier
+identities into separate output-base/level observation sessions, preserves the
+reference family's tier thresholds, and combines conditional carrier streams
+with their native half probabilities. Overlapping goals retain their native
+joint membership; result-local row IDs are unique across both carriers.
+
+The structural projection excludes recorded rolls, memory strands, sockets,
+enchantments and defence percentiles from goal observation, with explicit
+metadata. Full item materialization and Apply retain the approved represented
+carrier properties. Unsupported goal fields and unbound tiered group categories
+refuse. No strategy action or recombination solver is added.
+
+The missing Python fixture is restored at the expected ignored SQLite path by
+a byte-identical read-only copy of the normal checkout's frozen database:
+SHA256 `f239ec69f995504d555f34ebd3a2c105128aab54f6d5900fc61bb1b264676a9a`,
+81,133,568 bytes. Source identity was unchanged before/after copy. No ingest,
+runtime compile, data/price refresh or test rerun has occurred. The historical
+nine failed SQLite-dependent tests remain failed until qualified rerun.
+
+Dispatcher tests are authored for carrier-specific implicits, original tier
+binding, overlapping union, mass conservation and typed refusal. Builds/tests
+are held for the parent's next serial heavy-slot grant. The next small commit
+adds dedicated WASM/worker pair APIs and the two-input Calculator panel.

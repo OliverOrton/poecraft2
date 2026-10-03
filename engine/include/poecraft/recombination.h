@@ -30,6 +30,15 @@ pc_result pc_recombination_pair_output_session(pc_recombination_pair_handle pair
 pc_result pc_recombination_pair_calculate_json(pc_recombination_pair_handle pair,
     char* buffer, size_t buffer_size, size_t* out_length, pc_error_info* out_error);
 
+/* Bounded shared structural goal set, bound to input A's original session.
+ * Native dispatch maps canonical identities and original tier thresholds into
+ * each carrier's output session, then finalizes their half-weighted union.
+ * Estimated game odds; exact probability projection of the versioned model.
+ * Same query-required-count contract as calculate_json. Read only. */
+pc_result pc_recombination_pair_goal_outcomes_json(pc_recombination_pair_handle pair,
+    const char* goal_set_json, size_t goal_set_json_size,
+    char* buffer, size_t buffer_size, size_t* out_length, pc_error_info* out_error);
+
 typedef struct pc_recombination_result {
     uint32_t struct_size;
     uint32_t abi_version;

@@ -1,5 +1,6 @@
 #include "tests.hpp"
 #include "../src/recombination.hpp"
+#include "../src/recombination_calculator.hpp"
 #include "poecraft/multi_item.h"
 #include "poecraft/bitset.h"
 #include "poecraft/recombination.h"
@@ -252,6 +253,56 @@ void run_recomb_pair_contracts(const char* artifact_dir) {
         PC_CHECK(carrier.properties.quality == pair.inputs[c].item.quality);
         PC_CHECK(carrier.properties.memory_strands == pair.inputs[c].item.memory_strands);
     }
+    // The native finalizer observes both actual carrier sessions and takes a
+    // union over one stream, rather than summing overlapping goal marginals.
+    const std::string all_goal = R"({"version":"v1","rarity":"rare","slots":[],"allow_extra_modifiers":true})";
+    const auto goal_set = [&](const std::string& second) {
+        return std::string(R"({"version":"calculator_goal_set_v1","actions":[],"goals":[{"id":"all","goal":)") +
+            all_goal + R"(},{"id":"other","goal":)" + second + "}]}";
+    };
+    const auto observe = [&](const RandomRecombPair& value, const std::string& goals) {
+        const auto text = calculate_random_recomb_goals_json(value, goals.data(), goals.size());
+        return json::Parser(text.data(), text.size()).parse();
+    };
+    const auto overlap = observe(pair, goal_set(all_goal));
+    PC_CHECK(close(overlap.at("any_goal_probability").number, 1));
+    PC_CHECK(overlap.at("game_odds_estimated").boolean && overlap.at("model_projection_exact").boolean);
+    PC_CHECK(!overlap.at("cost_complete").boolean && overlap.at("gold_cost").is_null());
+    PC_CHECK(close(overlap.at("goal_results").array[0].at("success_probability").number, 1));
+    PC_CHECK(close(overlap.at("goal_results").array[1].at("success_probability").number, 1));
+    std::array<double, 2> projected_mass{};
+    std::set<unsigned> projected_ids;
+    for (const auto& row : overlap.at("outcomes").array) {
+        const auto c = unsigned(row.at("carrier").number);
+        PC_CHECK(c < 2 && row.at("item_level").number == 75);
+        PC_CHECK(projected_ids.insert(unsigned(row.at("state").number)).second);
+        PC_CHECK(row.at("matched_goal_ids").array.size() == 2);
+        projected_mass[c] += row.at("probability").number;
+    }
+    PC_CHECK(close(projected_mass[0], .5) && close(projected_mass[1], .5));
+    const auto implicit = a.item.implicits[0].mod_id;
+    const auto implicit_key = low->impl->data->string_at(low->impl->data->mod_key_sid.at(low->impl->global_index.at(implicit)));
+    const auto implicit_goal = std::string(R"({"version":"v1","rarity":"rare","slots":[],"allow_extra_modifiers":true,"implicit_mod_keys":[")") + implicit_key + "\"]}";
+    const auto property = observe(pair, goal_set(implicit_goal));
+    PC_CHECK(close(property.at("goal_results").array[1].at("success_probability").number, .5));
+    PC_CHECK(close(property.at("any_goal_probability").number, 1));
+    // Bind the tier in the high reference session, then retain it below the
+    // output roll level on either carrier. Its original tier rank cannot be
+    // silently reinterpreted by the output session's visible catalogue.
+    const auto reverse = prepare_random_recomb_pair(b, a);
+    const auto key = s.data->string_at(s.data->mod_key_sid.at(s.global_index.at(transferred)));
+    const auto tier_goal = std::string(R"({"version":"v1","rarity":"rare","allow_extra_modifiers":true,"slots":[{"family_mod_key":")") +
+        key + "\",\"min_tier\":" + std::to_string(s.family_tier_index.at(transferred)) + "}]}";
+    const auto tier_result = observe(reverse, goal_set(tier_goal));
+    PC_CHECK(close(tier_result.at("goal_results").array[1].at("success_probability").number, .59));
+    for (const auto& unsupported : {std::string(R"({"version":"v1","slots":[],"rolled_stat_total":123})"),
+            std::string(R"({"version":"v1","slots":[{"group":"MaximumLife","min_tier":1.5}]})")}) {
+        bool refused = false;
+        try { observe(pair, goal_set(unsupported)); } catch (const std::invalid_argument&) { refused = true; }
+        PC_CHECK(refused);
+    }
+    PC_CHECK(std::memcmp(&a.item, &a_before, sizeof(a.item)) == 0);
+    PC_CHECK(std::memcmp(&b.item, &b_before, sizeof(b.item)) == 0);
     auto outcomes = enumerate_random_recomb_pair(pair); double mass = 0;
     std::array<double, 2> carrier_mass{};
     for (const auto& o : outcomes) {

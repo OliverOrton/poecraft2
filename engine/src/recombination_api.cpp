@@ -1,4 +1,5 @@
 #include "recombination.hpp"
+#include "recombination_calculator.hpp"
 #include "handles_internal.hpp"
 #include "poecraft/recombination.h"
 #include <cstdio>
@@ -120,6 +121,22 @@ pc_result pc_recombination_pair_calculate_json(pc_recombination_pair_handle pair
         std::memcpy(buffer, text.c_str(), text.size() + 1);
         if (error) pc_error_info_init(error); return PC_RESULT_OK;
     } catch (const std::exception& ex) { return fail(error, PC_RESULT_INTERNAL_ERROR, ex.what()); }
+}
+pc_result pc_recombination_pair_goal_outcomes_json(pc_recombination_pair_handle pair,
+        const char* goals, size_t goals_size, char* buffer, size_t size,
+        size_t* length, pc_error_info* error) {
+    if (!pair || !goals || !length)
+        return fail(error, PC_RESULT_INVALID_ARGUMENT, "Invalid recombination goal request");
+    try {
+        const auto text = poecraft::calculate_random_recomb_goals_json(pair->impl, goals, goals_size);
+        *length = text.size();
+        if (!buffer || size < text.size() + 1)
+            return fail(error, PC_RESULT_BUFFER_TOO_SMALL, "Recombination goal JSON buffer required");
+        std::memcpy(buffer, text.c_str(), text.size() + 1);
+        if (error) pc_error_info_init(error); return PC_RESULT_OK;
+    } catch (const std::length_error& ex) { return fail(error, PC_RESULT_CAPACITY_EXCEEDED, ex.what()); }
+      catch (const std::invalid_argument& ex) { return fail(error, PC_RESULT_UNSUPPORTED_FEATURE, ex.what()); }
+      catch (const std::exception& ex) { return fail(error, PC_RESULT_INVALID_ARGUMENT, ex.what()); }
 }
 pc_result pc_recombination_pair_apply(pc_recombination_pair_handle pair,
         pc_action_context_handle context, pc_craft_resource* resources, uint32_t count,
