@@ -3572,5 +3572,742 @@
       "engine/tests/test_solver_calc.cpp": "d38773aed3916484c78964973656bd76ae2bdbe0b22725279a90c174ac81ba28",
       "engine/tests/tests.hpp": "7a9ff83828b5920666975209b999518bc069b5ab42c719c2c43b1523db335c76"
     }
+  },
+  "combined_feature_qualification": {
+    "schema": "poecraft2.feature-integration-qualified.v1",
+    "recorded_utc": "2026-10-03T11:32:12.408205+00:00",
+    "status": "Combined native/Python/WASM/worker/web/TypeScript and supported rendered controlled-transport flows qualified locally; authorized publication ready",
+    "qualified_source": "5cc2e185b503fe7a9182b3f003411ef8a8040554",
+    "engine_tree": "4f3741ae7b20095575125efe710f5ba89d97c989",
+    "merged_inputs": [
+      "e2b6ff700f452e91b6b8d4067762e4b765eb239f",
+      "b269a564867f061f089ac117aed566d2a98a9767",
+      "e830a3a54ad3fd2c71660d113c5e5f3f6f72d043"
+    ],
+    "source_changed_after_checks": false,
+    "commands": [
+      {
+        "name": "native-tests-build",
+        "command": [
+          "C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe",
+          "-NoProfile",
+          "-File",
+          "scripts/dev-engine.ps1",
+          "-Task",
+          "Tests",
+          "-Jobs",
+          "2"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "watchdog_seconds": 1200
+      },
+      {
+        "name": "native-shared-header-build",
+        "command": [
+          "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/cmake.exe",
+          "--build",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\build\\engine",
+          "--target",
+          "poecraft_engine_shared",
+          "poecraft_header_smoke",
+          "--parallel",
+          "2"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "watchdog_seconds": 600
+      },
+      {
+        "name": "native-header",
+        "command": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\build\\engine\\poecraft_header_smoke.exe"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "watchdog_seconds": 60
+      },
+      {
+        "name": "native-pair",
+        "command": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\build\\engine\\poecraft_engine_tests.exe",
+          "--random-recombination-only",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\data\\compiled\\current"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "watchdog_seconds": 180
+      },
+      {
+        "name": "native-currency",
+        "command": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\build\\engine\\poecraft_engine_tests.exe",
+          "--currency-contracts-only",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\data\\compiled\\current"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "watchdog_seconds": 180
+      },
+      {
+        "name": "native-incoming",
+        "command": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\build\\engine\\poecraft_engine_tests.exe",
+          "--calculator-incoming-only",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\data\\compiled\\current"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "watchdog_seconds": 180
+      },
+      {
+        "name": "native-layout",
+        "command": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\build\\engine\\poecraft_engine_tests.exe",
+          "--solver-observation-layout-only"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "watchdog_seconds": 120
+      },
+      {
+        "name": "native-calculator",
+        "command": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\build\\engine\\poecraft_engine_tests.exe",
+          "--solver-calc-only",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\data\\compiled\\current"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "watchdog_seconds": 300
+      },
+      {
+        "name": "python-four-files",
+        "command": [
+          "py",
+          "-3",
+          "-B",
+          "-m",
+          "pytest",
+          "bindings/python/tests/test_hinekora_lock.py",
+          "bindings/python/tests/test_hinekora_multi_preview.py",
+          "bindings/python/tests/test_random_recombination.py",
+          "bindings/python/tests/test_currency_calculator.py",
+          "-q",
+          "-p",
+          "no:cacheprovider",
+          "--basetemp",
+          "out/feature-integration/pytest-tmp"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "watchdog_seconds": 300
+      },
+      {
+        "name": "wasm-build",
+        "command": [
+          "C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe",
+          "-NoProfile",
+          "-File",
+          "scripts/build-wasm.ps1"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "watchdog_seconds": 1200
+      },
+      {
+        "name": "web-data",
+        "command": [
+          "cmd.exe",
+          "/d",
+          "/s",
+          "/c",
+          "npm run build:data"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\apps\\web",
+        "watchdog_seconds": 180
+      },
+      {
+        "name": "web-goal-worker",
+        "command": [
+          "cmd.exe",
+          "/d",
+          "/s",
+          "/c",
+          "npx tsx test/calculator-goal-set-wasm.test.ts"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\apps\\web",
+        "watchdog_seconds": 180
+      },
+      {
+        "name": "web-full",
+        "command": [
+          "cmd.exe",
+          "/d",
+          "/s",
+          "/c",
+          "npm test"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\apps\\web",
+        "watchdog_seconds": 900
+      },
+      {
+        "name": "web-typescript",
+        "command": [
+          "cmd.exe",
+          "/d",
+          "/s",
+          "/c",
+          "npx tsc --noEmit"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\apps\\web",
+        "watchdog_seconds": 300
+      }
+    ],
+    "results": [
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 8184,
+        "process_identity_token": "8184:134354996462979837",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 244243.49889997393,
+        "name": "native-tests-build",
+        "command": [
+          "C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe",
+          "-NoProfile",
+          "-File",
+          "scripts/dev-engine.ps1",
+          "-Task",
+          "Tests",
+          "-Jobs",
+          "2"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "completed_utc": "2026-10-03T11:18:10.542836+00:00",
+        "log": "out\\feature-integration\\native-tests-build.log",
+        "log_sha256": "57843c6eb12a5e88fe3c0ea1e336ec54c70077d2e351429b2217b16468d12b89",
+        "summary": [
+          "[91/101] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_refinement.cpp.obj",
+          "[92/101] Building CXX object CMakeFiles/poecraft_engine_tests.dir/benchmarks/solver_executable_fragment_engine.cpp.obj",
+          "[93/101] Building CXX object CMakeFiles/poecraft_engine_tests.dir/benchmarks/solver_executable_fragment.cpp.obj",
+          "[94/101] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_quotient_proof.cpp.obj",
+          "[95/101] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_fragment.cpp.obj",
+          "[96/101] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_quotient_partition.cpp.obj",
+          "[97/101] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_quotient_bellman.cpp.obj",
+          "[98/101] Linking CXX executable poecraft_header_smoke.exe",
+          "[99/101] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_quotient_lower.cpp.obj",
+          "[100/101] Linking CXX executable poecraft_engine_tests.exe"
+        ]
+      },
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 40024,
+        "process_identity_token": "40024:134354998905487523",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 596.1589000653476,
+        "name": "native-shared-header-build",
+        "command": [
+          "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/cmake.exe",
+          "--build",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\build\\engine",
+          "--target",
+          "poecraft_engine_shared",
+          "poecraft_header_smoke",
+          "--parallel",
+          "2"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "completed_utc": "2026-10-03T11:18:11.144673+00:00",
+        "log": "out\\feature-integration\\native-shared-header-build.log",
+        "log_sha256": "aa00facd995c2d0df8ed245a837764cf27504b9217b6b8e12200c390421e24f6",
+        "summary": [
+          "[0/2] Re-checking globbed directories...",
+          "[1/2] Linking CXX shared library poecraft_engine.dll"
+        ]
+      },
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 71016,
+        "process_identity_token": "71016:134354998911611734",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 30.85159999318421,
+        "name": "native-header",
+        "command": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\build\\engine\\poecraft_header_smoke.exe"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "completed_utc": "2026-10-03T11:18:11.180252+00:00",
+        "log": "out\\feature-integration\\native-header.log",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summary": []
+      },
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 56152,
+        "process_identity_token": "56152:134354998914350639",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 605.3967999760062,
+        "name": "native-pair",
+        "command": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\build\\engine\\poecraft_engine_tests.exe",
+          "--random-recombination-only",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\data\\compiled\\current"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "completed_utc": "2026-10-03T11:18:11.786575+00:00",
+        "log": "out\\feature-integration\\native-pair.log",
+        "log_sha256": "f7744202afe554e9e92f62cebc117347feac350e9f0eed3c0620350fd562dd12",
+        "summary": [
+          "random recombination tests: 237 checks, 0 failures"
+        ]
+      },
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 72736,
+        "process_identity_token": "72736:134354998917926192",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 285.82119988277555,
+        "name": "native-currency",
+        "command": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\build\\engine\\poecraft_engine_tests.exe",
+          "--currency-contracts-only",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\data\\compiled\\current"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "completed_utc": "2026-10-03T11:18:12.078232+00:00",
+        "log": "out\\feature-integration\\native-currency.log",
+        "log_sha256": "6a30ffdb686617d30d582e40eda263b6207854bfbc777a4eb6b73af8e91cf1a0",
+        "summary": [
+          "Currency contracts: 6484 checks, 0 failures"
+        ]
+      },
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 25732,
+        "process_identity_token": "25732:134354998920831633",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 1514.9912999477237,
+        "name": "native-incoming",
+        "command": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\build\\engine\\poecraft_engine_tests.exe",
+          "--calculator-incoming-only",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\data\\compiled\\current"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "completed_utc": "2026-10-03T11:18:13.597902+00:00",
+        "log": "out\\feature-integration\\native-incoming.log",
+        "log_sha256": "66d20c2e9291ba77d44c2af84f95e33f9be07a0a1b7f793eb8d8f9bc63201d1b",
+        "summary": [
+          "Original Foulborn carrier Calculator probability: 0.21153846153846151",
+          "Calculator incoming tests: 10681 checks, 0 failures"
+        ]
+      },
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 30380,
+        "process_identity_token": "30380:134354998936031881",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 29.400300001725554,
+        "name": "native-layout",
+        "command": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\build\\engine\\poecraft_engine_tests.exe",
+          "--solver-observation-layout-only"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "completed_utc": "2026-10-03T11:18:13.632397+00:00",
+        "log": "out\\feature-integration\\native-layout.log",
+        "log_sha256": "babd3f9921ae883beb5a34385798e77a4d137b5f5128ceda7aee2260426dc8b7",
+        "summary": [
+          "solver observation layout tests: 839 checks, 0 failures"
+        ]
+      },
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 83492,
+        "process_identity_token": "83492:134354998936368639",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 7908.1276000943035,
+        "name": "native-calculator",
+        "command": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\build\\engine\\poecraft_engine_tests.exe",
+          "--solver-calc-only",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\data\\compiled\\current"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "completed_utc": "2026-10-03T11:18:21.544926+00:00",
+        "log": "out\\feature-integration\\native-calculator.log",
+        "log_sha256": "f035c11cc097e8a82d7286579df94c04fd4bbb3d652b702aba1e684b95692884",
+        "summary": [
+          "retained occupancy held=3 forced=1 pool=2: total3=0 total4=1 total5=0 total6=0; suffix-full old=0 new=0",
+          "finite cross-goal terminal projection: scenario=0 cases=126 materialized=450 Annul-rows=450 V3-commits=69; complete native laws checked",
+          "finite cross-goal terminal projection: scenario=1 cases=126 materialized=5679 Annul-rows=5679 V3-commits=104; complete native laws checked",
+          "finite cross-goal terminal projection: scenario=2 cases=126 materialized=5679 Annul-rows=5679 V3-commits=104; complete native laws checked",
+          "Original Foulborn carrier Calculator probability: 0.21153846153846151",
+          "solver calc artifact: 110 states interned",
+          "solver reforge artifact: chaos goal-hit p=0.159585 over 12 outcomes",
+          "solver reforge artifact: 21 states after chaos/essence/fossil/harvest",
+          "solver special artifact: 11752 states after veiled/eldritch",
+          "solver calc tests: 1775297 checks, 0 failures"
+        ]
+      },
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 73988,
+        "process_identity_token": "73988:134354999015741245",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 29479.540300089866,
+        "name": "python-four-files",
+        "command": [
+          "py",
+          "-3",
+          "-B",
+          "-m",
+          "pytest",
+          "bindings/python/tests/test_hinekora_lock.py",
+          "bindings/python/tests/test_hinekora_multi_preview.py",
+          "bindings/python/tests/test_random_recombination.py",
+          "bindings/python/tests/test_currency_calculator.py",
+          "-q",
+          "-p",
+          "no:cacheprovider",
+          "--basetemp",
+          "out/feature-integration/pytest-tmp"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "completed_utc": "2026-10-03T11:18:51.031534+00:00",
+        "log": "out\\feature-integration\\python-four-files.log",
+        "log_sha256": "fb2f9725b1c4abd2249f326dc4d685711a4caa5e505c89e89cbd69e517440003",
+        "summary": [
+          "........................................................................ [ 80%]",
+          ".................                                                        [100%]",
+          "89 passed in 28.95s"
+        ]
+      },
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 70296,
+        "process_identity_token": "70296:134354999310368354",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 362791.24749987386,
+        "name": "wasm-build",
+        "command": [
+          "C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe",
+          "-NoProfile",
+          "-File",
+          "scripts/build-wasm.ps1"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+        "completed_utc": "2026-10-03T11:24:53.827974+00:00",
+        "log": "out\\feature-integration\\wasm-build.log",
+        "log_sha256": "424a39cf8b5ce31d1b2cd0f791910a53ef93dabd872b30d513d940d621d671ed",
+        "summary": [
+          "      |                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
+          " 1544 |                         (sizeof(std::uint8_t) + sizeof(double))",
+          "      |                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
+          "1 warning generated.",
+          "In file included from C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\engine\\src\\solver_compile.cpp:1:",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\engine\\src\\solver_compile_serialization.hpp:216:13: warning: 6 enumeration values not handled in switch: 'Remembrance', 'Unravelling', 'Tempering'... [-Wswitch]",
+          "  216 |     switch (action.params.type) {",
+          "      |             ^~~~~~~~~~~~~~~~~~",
+          "1 warning generated.",
+          "WASM engine written to C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\bindings\\wasm\\dist\\poecraft_engine.mjs"
+        ]
+      },
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 79396,
+        "process_identity_token": "79396:134355002938348985",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 1341.731899883598,
+        "name": "web-data",
+        "command": [
+          "cmd.exe",
+          "/d",
+          "/s",
+          "/c",
+          "npm run build:data"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\apps\\web",
+        "completed_utc": "2026-10-03T11:24:55.176280+00:00",
+        "log": "out\\feature-integration\\web-data.log",
+        "log_sha256": "347c92fb445f70dfb1b0f4d023d8b57730fd38783849aeead34ff89b1ef6d450",
+        "summary": [
+          "",
+          "> @poecraft/web@0.0.0 build:data",
+          "> node ../../scripts/build-data-bundle.mjs",
+          "",
+          "Verified runtime 82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d; ABI 3; bundle 23660953 bytes; build 628ab7cd5fe51f187d45e8cb5b98065fd777af52ab79c15b984887bfee5eb161"
+        ]
+      },
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 66352,
+        "process_identity_token": "66352:134355002951831715",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 2250.9968001395464,
+        "name": "web-goal-worker",
+        "command": [
+          "cmd.exe",
+          "/d",
+          "/s",
+          "/c",
+          "npx tsx test/calculator-goal-set-wasm.test.ts"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\apps\\web",
+        "completed_utc": "2026-10-03T11:24:57.433006+00:00",
+        "log": "out\\feature-integration\\web-goal-worker.log",
+        "log_sha256": "6a8309554e6a58549de8de97e22c47b908d31734d311e945811d36f4c8cef3e4",
+        "summary": [
+          "Source-matched WASM goal-set worker transport passed"
+        ]
+      },
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 65392,
+        "process_identity_token": "65392:134355002974380492",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 47212.72290009074,
+        "name": "web-full",
+        "command": [
+          "cmd.exe",
+          "/d",
+          "/s",
+          "/c",
+          "npm test"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\apps\\web",
+        "completed_utc": "2026-10-03T11:25:44.650470+00:00",
+        "log": "out\\feature-integration\\web-full.log",
+        "log_sha256": "8c16cb739780129810c03e8636626ff3197e407172aa0593978f15ed1d5d5881",
+        "summary": [
+          "  ...",
+          "1..5",
+          "# tests 5",
+          "# suites 0",
+          "# pass 5",
+          "# fail 0",
+          "# cancelled 0",
+          "# skipped 0",
+          "# todo 0",
+          "# duration_ms 79.1924"
+        ]
+      },
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 31736,
+        "process_identity_token": "31736:134355003446579128",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 3605.4187000263482,
+        "name": "web-typescript",
+        "command": [
+          "cmd.exe",
+          "/d",
+          "/s",
+          "/c",
+          "npx tsc --noEmit"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\apps\\web",
+        "completed_utc": "2026-10-03T11:25:48.262990+00:00",
+        "log": "out\\feature-integration\\web-typescript.log",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summary": []
+      }
+    ],
+    "native_and_python_counts": {
+      "pair": 237,
+      "currency": 6484,
+      "calculator_incoming": 10681,
+      "observation_layout": 839,
+      "calculator": 1775297,
+      "python": 89,
+      "engine_smoke": 37
+    },
+    "wasm_artifacts": {
+      "build\\engine\\poecraft_engine_tests.exe": {
+        "sha256": "52ff427ace918bc680ea06b31a1c279554035afbbc311e14b11de5b8a50449b0",
+        "bytes": 19836932
+      },
+      "build\\engine\\poecraft_engine.dll": {
+        "sha256": "ed31beba021b380852f4bb4f3e4fe27ed5c2f9f64b22adc52b7e83116668eb3d",
+        "bytes": 14456519
+      },
+      "bindings\\wasm\\dist\\poecraft_engine.mjs": {
+        "sha256": "23c405b984e19595b4007259d8d45fe713ea31a534c091c2ef9433ffbe2f1363",
+        "bytes": 21788
+      },
+      "bindings\\wasm\\dist\\poecraft_engine.wasm": {
+        "sha256": "10da55d0f6cfc6021118a5a6be5cce560c6a6b55060ed1b278f2ef9aafbcb568",
+        "bytes": 8521566
+      }
+    },
+    "frozen_inputs_unchanged": true,
+    "rendered": {
+      "schema": "poecraft2.rendered-controlled-flows.v1",
+      "started_utc": "2026-10-03T11:26:49.778Z",
+      "browser_channel": "chrome",
+      "profile": "Fresh ephemeral Playwright profile",
+      "mode": "Real Chromium DOM/React with existing controlled transport fixtures; CLI real-worker tests separately own native execution",
+      "server": "No dev/preview server launched or restarted",
+      "results": [
+        {
+          "fixture": "calculator-goal-set.test.ts",
+          "source_sha256": "403150252e5552d04f7ad0dbf4cd497361f2ee864ed480ad8762b78dddde99ce",
+          "bundle_sha256": "7f861a7be7dfc7de752bd6af163355de402fb1300360f7da10757ca7b52d358f",
+          "status": "pass",
+          "assertions": 47,
+          "page_errors": [],
+          "screenshot": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\out\\feature-integration\\rendered-calculator-goal-set.png",
+          "screenshot_sha256": "96fcb9469ba63147dc33ff68091624bc02a4db98bf47faaddd1409d731c42816"
+        },
+        {
+          "fixture": "hinekora-controls.test.ts",
+          "source_sha256": "70862d3e1d1b7e95a7d367932bd9e3fa36b893df6bb49a310ef25470d894e576",
+          "bundle_sha256": "c22ff1d6df01205af036dee7c39abb04909791212b2f851aca0820abf36d7a0a",
+          "status": "pass",
+          "assertions": 21,
+          "page_errors": [],
+          "screenshot": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\out\\feature-integration\\rendered-hinekora-controls.png",
+          "screenshot_sha256": "d1291d0f6589b31e0325eab07b6b5fa93a3572ff9c67495e1595697c0a5cf98e"
+        },
+        {
+          "fixture": "calculator-currency-controls.test.ts",
+          "source_sha256": "ed107e21428b54f1c0d986f9d53ebf53f84a580fa6639c89460ce7c38b7e7dfc",
+          "bundle_sha256": "06be75509f48296446fe4e9e7b34f334f4781fec5aaf029d9f3830e83e9f2b0f",
+          "status": "pass",
+          "assertions": 68,
+          "page_errors": [],
+          "screenshot": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\out\\feature-integration\\rendered-calculator-currency-controls.png",
+          "screenshot_sha256": "29f8d65feadd8ccb4309e8736aa75b63b2989f80ffa27c9c5648aaf1c31ad35b"
+        }
+      ],
+      "status": "passed",
+      "completed_utc": "2026-10-03T11:26:51.671Z",
+      "browser_closed": true
+    },
+    "rendered_process": {
+      "started_utc": "2026-10-03T11:26:49.332192+00:00",
+      "command": [
+        "C:/Program Files/nodejs/node.exe",
+        "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\out\\feature-integration\\rendered-flows.mjs"
+      ],
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+      "watchdog_seconds": 150,
+      "script_sha256": "ef1b9d2760787352bb8d1f51b4efaa146327275c2b9e624516adc707e250a760",
+      "source": "5cc2e185b503fe7a9182b3f003411ef8a8040554",
+      "browser_channel": "chrome",
+      "fresh_profile": true,
+      "server_created_or_restarted": false,
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 52296,
+      "process_identity_token": "52296:134355004093434423",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 2341.6484999470413,
+      "completed_utc": "2026-10-03T11:26:51.684457+00:00"
+    },
+    "screenshot_review": {
+      "reviewed_utc": "2026-10-03T11:32:12.408217+00:00",
+      "reviewer": "Codex integrator",
+      "files": [
+        "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\out\\feature-integration\\rendered-calculator-goal-set.png",
+        "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\out\\feature-integration\\rendered-hinekora-controls.png",
+        "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\out\\feature-integration\\rendered-calculator-currency-controls.png"
+      ],
+      "findings": [
+        "Goal selected label/tabs readable in minimal fixture markup",
+        "Lock numeric roll10 remains visible and readonly, approximate cached-model disclosure visible, missing quote remains unpriced",
+        "Recomb estimated odds and fresh-two-input assumptions visible; gold/dust explicitly unknown"
+      ],
+      "material_visual_issue": false,
+      "limits": "Server-free fixture pages with real Chromium DOM/React and controlled transport. Goal fixture is intentionally partial markup, not full workspace layout. Native odds/Apply/cleanup separately pass real worker tests; no end-to-end interaction with a running product dev server."
+    },
+    "local_slot": {
+      "released_utc": "2026-10-03T11:26:51.684457+00:00",
+      "owned_processes_remaining": 0,
+      "parent_notified_before_receipts": true,
+      "no_server_start_restart": true
+    },
+    "publication_approval": {
+      "user_reply_utc": "2026-10-03T04:12:21.629661+00:00",
+      "reply": "1.yes\n2.yes",
+      "approved_request": "Use disclosed independent cached Lock and preserved-tier/roll recombination models; merge and push completed tested overnight changes to main",
+      "evidence": "Parent directly verified room-history transcript at11:09UTC and authorized publication after completed checks/review",
+      "deployment_authorized": false
+    },
+    "remaining_limits": [
+      "Independent cached Lock and Random game odds remain disclosed approximations; no new solver/exact adaptive authority",
+      "Gold/dust incomplete and unsupported categories/compound saved-Imprint Apply remain refused",
+      "Full rendered workspace layout and product-server end-to-end flows were not exercised",
+      "Pinned Chromium parity for new features unrun locally; installed Chrome used; exact-head hosted CI still pending",
+      "Historical intermittent native prefix parity issue is not proved fixed by this pass",
+      "Feeder and incomplete solver recovery/Bow5 economics/product controls excluded"
+    ],
+    "local_installations": 0,
+    "data_or_price_refresh": false,
+    "publication_result": "Record separately after normal guarded fast-forward/push and exact remote/CI inspection"
   }
 }

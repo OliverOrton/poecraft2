@@ -930,3 +930,41 @@ Lock lifecycle/full cached numeric previews/spend, Random estimated carrier rows
 unknown gold/dust, full frozen donor staleness, readonly calculation inputs and
 atomic output/Undo/Redo. Rendered execution remains unrun; feeder and incomplete
 solver recovery remain excluded.
+
+
+## Combined features locally qualified and reviewed (2026-10-03)
+
+Source **5cc2e185**, engine tree **4f3741ae**, completes the frozen14-stage serial
+batch. Native/header/shared builds and pair237, currency6484, incoming10681,
+layout839 and Calculator1775297 checks pass with zero failures. The four finite
+Python files pass89/89. Matching WASM, standard frozen build:data, explicit real
+shared-goal worker, full unfiltered npm (37/37 smoke and all following owners,
+including real pair/atomic Apply and Lock controls) and TypeScript pass. All frozen
+runtime/SQLite/economy/package inputs remain identical. No product/test source
+changed after these checks; only generated matching WASM/MJS and this receipt are
+being committed.
+
+The release WASM is **10da55d0f6cfc6021118a5a6be5cce560c6a6b55060ed1b278f2ef9aafbcb568**
+(8521566bytes), MJS **23c405b984e19595b4007259d8d45fe713ea31a534c091c2ef9433ffbe2f1363**.
+Maximum compiler/Binaryen/linker concurrency is two. No watchdog/cancellation or
+survivor failure occurs. LOCAL is released at11:26:51UTC before receipt work.
+
+Supported rendered flows pass136 assertions across three fresh Chrome fixture
+pages. They exercise real DOM/React with existing controlled transport, including
+repeated goal selection, rejected stale/interrupted replies with handle cleanup,
+repeated readonly Lock previews, and Calculator/Random controls. Native execution
+is qualified separately by real WASM/worker tests. No dev/preview server was started
+or restarted. All three screenshots are actually inspected: covered labels,
+numerical readonly preview, approximate/estimated model disclosures and unknown/
+unpriced costs are readable, with no material visual issue found. The goal fixture
+uses minimal markup; full workspace layout and product-server end-to-end flows
+remain unrun. This is not an expanded native game-law or solver certificate.
+
+User approval at04:12:21UTC explicitly covers the disclosed initial models and
+merge/push of completed tested changes. The parent directly verified that transcript
+and instructs qualified publication after this review. Normal guarded publication
+may now proceed; actual main/remote/CI results are recorded separately. No deployment,
+dependency installation or refresh is authorized or performed. Pending feeder and
+solver recovery remain excluded. Historical parity uncertainty and unsupported
+categories/costs remain explicit. combined_feature_qualification and
+out/feature-integration/qualified-final.json own exact passed/unrun evidence.

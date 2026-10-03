@@ -1,17 +1,20 @@
-# Lock, Calculator and Recomb source integrated; qualification pending (2026-10-03)
+# Combined Lock, Calculator and Recomb qualified; publication authorized (2026-10-03)
 
-Fresh poecraft2-feature-integration, dot/features-integration-20261003, retains
-main4b092b0b/receipt db1d8404 and ordinary qualified Lock e2b6ff70, Calculator
-b269a564 (tested53be4ce8) and Recomb e830a3a5 source merges. Shared Calculator
-ancestor31078439 preserves one donor/goal observer. No production source conflicts;
-main cancellation/tests/smoke/CI and copied fixture setup remain intact. Native
-carrier-specific observer/finalizer retains estimated-model/unknown-cost limits.
-Paired main WASM/MJS are unqualified placeholders pending matching combined build.
-Frozen runtime/price/package inputs and serial native/Python/WASM/worker/web batch
-belong to the [living integration record](docs/active/2026-10-02-sprint-integration/README.md).
-Diagnostic owns LOCAL; no heavy command/browser/push or process is held here.
-Feeder/recovery excluded. Parent slot grant and combined/rendered qualification
-are required before feature publication.
+Source5cc2e185 retains qualified e2b6ff70/b269a564/e830a3a5 ancestry and main
+cancellation/tests/CI. Frozen serial native/header/shared, pair237/currency6484/
+incoming10681/layout839/Calculator1775297, Python89, matching WASM, real worker,
+unfiltered npm37/37 plus all owners, and TypeScript pass. WASM10da55d0/MJS23c405b9
+match combined source; no source change after checks. Rendered fresh Chrome
+DOM/React controlled-transport flows pass136 assertions; three screenshots reviewed,
+no material issue. Separate real-worker checks own native behavior. Full workspace
+layout/product-server end-to-end and local pinned-browser parity remain unrun.
+LOCAL released11:26:51UTC, no survivor/server restart. Verified user04:12approval
+and parent instruction authorize normal qualified merge/push, followed by exact
+remote/CI inspection; no deployment. The
+[living integration record](docs/active/2026-10-02-sprint-integration/README.md)
+and combined_feature_qualification own evidence/limits. Feeder/recovery excluded;
+approximate models, unknown costs, unsupported categories and parity uncertainty
+retain their limits. Actual publication receipt follows separately.
 
 # Current main CI green; combined features source-reviewed (2026-10-03)
 
