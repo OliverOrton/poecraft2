@@ -1,5 +1,41 @@
 # Persistent multi-preview Hinekora programme
 
+## Targeted currency UI/error follow-up (source checkpoint)
+
+Oliver selected normal-currency integration and reported an engine error using
+Lock. The isolated `dot/lock-currency-ui-20261003` worktree starts from published,
+remote-verified `72448deaacca2797058de0559378685ba71a983f`. The engine information
+state API remains separate from ordinary solver action admission; its UI now
+uses the normal Basic currency grid and action handler, with active preview and
+commit status beside currency controls. Applying another Lock is disabled while
+one is active. The old standalone application panel is removed. Existing busy
+and pending-Unveil disabling now covers the normal Lock action control.
+
+Unchanged published real-worker contracts pass on WASM `0b800f57...`. Targeted
+baseline reproduction records exact requests, full input snapshots, phases and
+error codes in `out/lock-currency-ui/baseline-errors.json`. Modern independent
+application and supported cross-request observations pass. A confirmed legacy
+compatibility bug returns **engine error 4**, `Unsupported or inapplicable Lock
+observation; no currency was consumed`, when the UI observes the *same* Exalt
+request of a saved `fixed-currency-lock-v2` Lock. The shared UI always calls
+Observe, while native Observe previously accepted only independent Locks.
+The source repair returns the original cached legacy outcome for the same
+normalized request; different legacy requests still refuse. This draws/spends
+nothing and changes no coupling model. New native and worker regression fixtures
+cover that witness. Native inapplicable/unsupported previews retain their refusal
+and show a specific unchanged-Lock status in the UI; unexpected errors retain
+their original code/detail. The user's particular error is still unclassified
+pending the exact message and phase; this reproduced bug is not asserted to be
+their error. The corrupt-input scratch case used an unsupported edit field and
+is excluded from conclusions pending corrected fixture preparation.
+
+Source diff checks pass. Changed-source native/shared/WASM, worker/web/TypeScript
+and rendered normal-currency flows are **unrun**. Both baseline worker processes
+have ended; LOCAL is released for the waiting Calculator owner while source is
+prepared. Obtain a fresh parent grant before qualification. No user stash/history,
+main files, data/prices, existing server, push or deployment has been changed.
+The prior qualified receipts below remain historical and do not qualify this delta.
+
 Current qualification: two-job native Engine/shared/header and matching WASM
 builds pass; all **64** focused fixed/independent Lock Python tests, the real
 worker/Emulator contracts, all nine `test:lock` files and TypeScript pass.

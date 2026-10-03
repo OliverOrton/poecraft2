@@ -28,7 +28,11 @@ Object.assign(access,{catalog,item:1,session:2,context:3,busy:false,
         apply:async(_context:number,_item:number,currency:CraftAction)=>{actual.push(structuredClone(currency));return{applied:true,added:1,removed:0};}},
     craftCosts:{forAction:async()=>["original-essence-price-key"]}});
 access.markChanged=async()=>{if(access.pendingHistoryEntry)entries.push(access.pendingHistoryEntry);access.pendingHistoryEntry=null;};
-await access.applyLock();
+access.renderShell();
+const ordinaryLockButton = emulator.querySelector<HTMLButtonElement>('.pc-craft-options [data-simple-action="hinekora_lock"]')!;
+assert.ok(ordinaryLockButton);
+assert.equal(ordinaryLockButton.disabled,false);
+ordinaryLockButton.click(); await access.currentWork;
 assert.deepEqual(observations,[]);assert.deepEqual(actual,[]);
 assert.deepEqual(entries[0].costKeys,["hinekora_lock"]);
 access.lockInfo={active:true,cost_keys:[],model:"independent-cached-lock-v1",approximate:true};
@@ -42,8 +46,10 @@ access.renderShell();
 const model=()=>(emulator.querySelector("pc-craft-controls") as unknown as {model:CraftControlsModel}).model;
 assert.match(emulator.textContent!,/Hinekora's Lock/);
 assert.match(emulator.textContent!,/Roll values: 10/);
-assert.equal(emulator.querySelector<HTMLInputElement>('[data-lock-apply]')!.disabled,true);
-assert.equal(emulator.querySelector('[aria-label="Hinekora\'s Lock"] .pc-item-remove-mod'),null);
+assert.equal(emulator.querySelector<HTMLInputElement>('[data-simple-action="hinekora_lock"]')!.disabled,true);
+assert.equal(emulator.querySelector('[aria-label="Hinekora\'s Lock preview"] .pc-item-remove-mod'),null);
+assert.ok(emulator.querySelector('.pc-craft-options [data-simple-action="hinekora_lock"]'));
+assert.equal(emulator.querySelector('[data-lock-apply]'),null);
 // Inspection/render and changing UI settings never execute the cached action.
 model().onValue("essence-key","a-different-current-selection");
 assert.deepEqual(actual,[]);
