@@ -4309,5 +4309,186 @@
     "local_installations": 0,
     "data_or_price_refresh": false,
     "publication_result": "Record separately after normal guarded fast-forward/push and exact remote/CI inspection"
+  },
+  "combined_feature_ci_terminal": {
+    "schema": "poecraft2.feature-ci-terminal.v1",
+    "inspected_utc": "2026-10-03T12:02:41.873666+00:00",
+    "delivery_commit": "1ffba88eb03ba065345f6d51a0c517f5dbe5385b",
+    "windows": {
+      "run_id": 37120110338,
+      "job_id": 111194412769,
+      "head_sha": "1ffba88eb03ba065345f6d51a0c517f5dbe5385b",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/OliverOrton/poecraft2/actions/runs/37120110338",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Classify required validation",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Native validation not applicable",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 5
+        },
+        {
+          "name": "Bind project Python and install test dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Run msys2/setup-msys2@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "Configure UCRT64 tool paths",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9
+        },
+        {
+          "name": "Build",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10
+        },
+        {
+          "name": "Test",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11
+        },
+        {
+          "name": "Preserve frozen runtime identity failure",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 12
+        },
+        {
+          "name": "Preserve native test failure",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 13
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 24
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 25
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 26
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 27
+        }
+      ]
+    },
+    "solver_knowledge": {
+      "run_id": 37120110285,
+      "head_sha": "1ffba88eb03ba065345f6d51a0c517f5dbe5385b",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/OliverOrton/poecraft2/actions/runs/37120110285"
+    },
+    "passed": {
+      "native_ctest_targets": 17,
+      "python_bindings_tests": 292,
+      "engine_smoke": 37,
+      "full_unfiltered_web_chain": true,
+      "real_pair_goal_atomic_apply_worker": true,
+      "cancellation_controls": true,
+      "typescript": true,
+      "pinned_chromium_hosted": true
+    },
+    "log_projection": [
+      "2026-10-03T11:49:57.9509050Z 292 passed in 184.37s (0:03:04)",
+      "2026-10-03T11:54:13.4486322Z 100% tests passed out of 17",
+      "2026-10-03T11:54:23.0174218Z Downloading Chrome Headless Shell 145.0.7632.6 (playwright chromium-headless-shell v1208) from https://cdn.playwright.dev/builds/cft/145.0.7632.6/win64/chrome-headless-shell-win64.zip",
+      "2026-10-03T11:55:10.1073064Z 37/37 passed",
+      "2026-10-03T11:55:10.5811736Z   ok - evaluation cancellation ordering, native errors and terminal callback cleanup remain intact",
+      "2026-10-03T11:55:24.3190323Z Random recombination native pair/goal/atomic Apply worker contracts passed",
+      "2026-10-03T11:55:37.7192299Z > tsc --noEmit",
+      "2026-10-03T11:55:44.2079220Z Validation completed for scope All. Other scopes were not selected. Optional GUI coverage is reported by pytest."
+    ],
+    "normal_checkout": {
+      "path": "C:/Users/Oliver/Documents/poecraft2",
+      "head": "1ffba88eb03ba065345f6d51a0c517f5dbe5385b",
+      "main": "1ffba88eb03ba065345f6d51a0c517f5dbe5385b",
+      "origin_main": "1ffba88eb03ba065345f6d51a0c517f5dbe5385b",
+      "engine_tree": "4f3741ae7b20095575125efe710f5ba89d97c989",
+      "wasm_sha256": "10da55d0f6cfc6021118a5a6be5cce560c6a6b55060ed1b278f2ef9aafbcb568",
+      "mjs_sha256": "23c405b984e19595b4007259d8d45fe713ea31a534c091c2ef9433ffbe2f1363",
+      "runtime_manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+      "clean_excluding_protected_path": true
+    },
+    "dev_readiness": {
+      "generated_receipt_source": "0187f3d8334c3b9deb9730a6fa89899c051e9931",
+      "generated_receipt_wasm_sha256": "472f644bed756caee538868b714e4d144989e9ec1990232f82562d2f80b7424f",
+      "generated_receipt_current": false,
+      "scripts": {
+        "predev": "npm run build:data",
+        "dev": "vite"
+      },
+      "observed_contract": "Engine boot verifies ABI and unchanged runtime bundle, not WASM hash; stale receipt affects build diagnostics/Calculator request provenance. Page reload creates a fresh engine worker.",
+      "recommendation": "For current receipt and fresh worker: user runs npm run dev (predev regenerates build:data) after stopping/restarting their server, then hard refreshes. Alternative without server restart: npm run build:data in apps/web, then hard refresh existing Vite page.",
+      "actions_performed": "Read-only checks only; no dev server restart or build:data run in normal checkout",
+      "install_or_native_rebuild_required": false,
+      "inference": "A refresh alone can load updated code/worker with unchanged ABI/runtime, but it does not regenerate the stale build receipt."
+    },
+    "local_heavy_processes": 0,
+    "local_slot": "Feeder owns LOCAL; no heavy repeat",
+    "rerun_requested": false,
+    "feature_readiness": "Published and exact-head hosted acceptance passed. Existing browser should load fresh worker with current generated receipt.",
+    "remaining_limits": [
+      "Independent cached Lock and Random game odds remain disclosed approximate models; no solver/adaptive authority extension",
+      "Unknown gold/dust, unsupported categories and compound saved-Imprint Apply remain refused",
+      "Rendered real DOM/React uses controlled transport; separate real-worker behavior passed. Full production-server/workspace layout end-to-end remains unrun.",
+      "Normal ignored generated web receipt needs user-owned predev/build:data plus browser refresh; not refreshed by this task",
+      "Historical intermittent prefix-parity issue not proved fixed by passing runs",
+      "Feeder and incomplete solver recovery remain excluded"
+    ]
   }
 }

@@ -1,38 +1,36 @@
-# Feeder-first local qualification complete; slot released (2026-10-03)
+# Feeder integration qualified; publication selected (2026-10-03)
 
-Isolated `dot/strategy-feeder-20261003` aligns published main `1ffba88e` without
-solver recovery. Source `6ad7d1ca` qualifies pinned paid native children, actual
-output predicates, parent limits, explicit consumption/recycling and immutable
-history. Native300/300, six focused web suites, matching WASM0b800f57, full npm
-(37/37 smoke plus all owners including 1,000-run feeder worker) and final TS pass.
-Initial TS typo/generated-metadata failure repaired; shared DLL/Python acceptance
-and Oliver's rendered Builder review remain unrun. ABI/export unchanged.
-LOCAL released 2026-10-03T12:01:18.7067788Z; all commands ended, no owned heavy survivor.
-The [living feeder record](docs/active/2026-10-03-strategy-feeder/README.md) and
-qualification receipt own exact commands/artifacts/exclusions. Builder recombination
-still refuses pending qualified pair result/session slot integration; exact inventory
-evaluation remains held. Commits local for integration owner
-01a0fd2f-7f88-7588-a1ea-bfe1e6991036; no main integration/push/deploy/dev restart.
-Next: integrator review/publication under Oliver's authorization, and Oliver's
-rendered Builder review. No more heavy work selected by this scope.
+Isolated `dot/feeder-integration-20261003` starts qualification at `bba7574a`,
+retaining Feeder `d76e3369` production bytes: engine `1ec6f4c1`, web `024a8d62`,
+WASM `0b800f57`/MJS `23c405b9`, new DLL `c88e0549`, runtime `82fb60a2`. Native
+owner300/300/full npm/TS evidence is reused; new DLL/header,unfiltered Python
+298+5subtests,native trace capture,metadata and rendered52/zero-error pass.
+Four screenshots reviewed; controlled boot/server end-to-end limits retained.
+Missing SQLite and two fixture lifecycle failures are preserved and resolved
+without weakening assertions or changing production code. The
+[living integration record](docs/active/2026-10-03-feeder-integration/README.md)
+owns evidence and disposition. LOCAL released13:13:07UTC,no survivors/browser.
+Verified overnight approval selects qualified normal fast-forward/push followed
+by exact remote/CI checks. Builder recombination/exact inventory remain held;
+no law/scope/goal/bound/controller authority extends. No deployment,data refresh,
+dependency install,dev restart or overwrite of ignored main build metadata.
 
-# Combined Lock, Calculator and Recomb qualified; publication authorized (2026-10-03)
+# Combined features published; exact-head CI green (2026-10-03)
 
-Source5cc2e185 retains qualified e2b6ff70/b269a564/e830a3a5 ancestry and main
-cancellation/tests/CI. Frozen serial native/header/shared, pair237/currency6484/
-incoming10681/layout839/Calculator1775297, Python89, matching WASM, real worker,
-unfiltered npm37/37 plus all owners, and TypeScript pass. WASM10da55d0/MJS23c405b9
-match combined source; no source change after checks. Rendered fresh Chrome
-DOM/React controlled-transport flows pass136 assertions; three screenshots reviewed,
-no material issue. Separate real-worker checks own native behavior. Full workspace
-layout/product-server end-to-end and local pinned-browser parity remain unrun.
-LOCAL released11:26:51UTC, no survivor/server restart. Verified user04:12approval
-and parent instruction authorize normal qualified merge/push, followed by exact
-remote/CI inspection; no deployment. The
-[living integration record](docs/active/2026-10-02-sprint-integration/README.md)
-and combined_feature_qualification own evidence/limits. Feeder/recovery excluded;
-approximate models, unknown costs, unsupported categories and parity uncertainty
-retain their limits. Actual publication receipt follows separately.
+Main/remote1ffba88e delivers qualified Lock/Calculator/Recomb, engine4f3741ae,
+WASM10da55d0/MJS23c405b9, unchanged runtime82fb60a2. Windows37120110338 passes
+17 native targets,292 bindings,37/37 smoke/full web/TypeScript/pinned browser;
+Solver knowledge37120110285 passes. Local focused89 Python and rendered136
+controlled-transport assertions remain separately scoped; screenshots reviewed.
+Normal source/artifacts are aligned; ignored generated web receipt still0187f3d8.
+User-owned npm run dev invokes predev/build:data, then refresh for current receipt
+and fresh worker; alternatively build:data plus refresh retains the Vite server.
+No restart/regeneration performed here. Feeder owns LOCAL; no heavy repeat or
+process is held. The [living integration record](docs/active/2026-10-02-sprint-integration/README.md)
+and combined_feature_ci_terminal own exact terminal/readiness evidence. This
+receipt checkpoint stays local; published1ffba88e remains exact-head accepted.
+Disclosed model/cost/unsupported/full-app-review/parity limits remain; feeder and
+incomplete recovery excluded. No deployment, dependency install or data refresh.
 
 # Current main CI green; combined features source-reviewed (2026-10-03)
 

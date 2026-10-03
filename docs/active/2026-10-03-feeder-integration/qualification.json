@@ -1,0 +1,275 @@
+{
+  "status": "qualified_feeder_integration",
+  "source_checkpoint": "e429e69fafd38bc3040bb3f5fb6636afd2e370e0",
+  "worktree": "C:\\Users\\Oliver\\Documents\\poecraft2-feeder-integration",
+  "branch": "dot/feeder-integration-20261003",
+  "base_published_main": "1ffba88eb03ba065345f6d51a0c517f5dbe5385b",
+  "accepted_delivery_receipt": "ed79b16d24a0493689d70d4f1acbcdf8417f3b2e",
+  "feeder_owner": "d76e3369820c7582d2793c9e23cd6caf8d04ace3",
+  "source_merge": "1fff2b6192c1a3fec576f525a04995a3b2448cc8",
+  "engine_tree": "1ec6f4c10c010590c7284add865b5ed56c81fe0a",
+  "web_source_tree": "024a8d62020ef09edf372e1389e373615cc5ccb1",
+  "wasm_sha256": "0b800f57410841ebf7efe7ab658ff1c93cfcdb67467ae3ea001c9d6730198f32",
+  "mjs_sha256": "23c405b984e19595b4007259d8d45fe713ea31a534c091c2ef9433ffbe2f1363",
+  "dll_sha256": "c88e0549be252f030e99d3d39053cc28a94d832ea073f12fdca49d331a4f5fe6",
+  "sqlite_sha256": "f239ec69f995504d555f34ebd3a2c105128aab54f6d5900fc61bb1b264676a9a",
+  "runtime_sha256": {
+    "manifest.json": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "strings.json": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6",
+    "game-data.json": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e"
+  },
+  "review": {
+    "production_files_byte_equal_to_qualified_feeder": true,
+    "merge_conflicts": [
+      "HANDOFF.md only"
+    ],
+    "native_session_move_checks_retained": true,
+    "output_acceptance_uses_actual_item_and_session": true,
+    "paid_child_failed_output_retained": true,
+    "parent_absolute_limits_shared": true,
+    "exact_inventory_refusal_retained": true,
+    "builder_recombination_execution_held": true,
+    "abi_export_layout_unchanged": true,
+    "proposed_production_fixes": []
+  },
+  "reused_owner_checks": [
+    "native300/300 incl 1000 paid-child trials",
+    "matching WASM0b800f57",
+    "full npm37/37 plus all owners including 1000-run feeder worker",
+    "final TypeScript pass"
+  ],
+  "new_checks": {
+    "shared_dll_and_benchmark_build": "passed; max two jobs",
+    "c_header_smoke": "passed",
+    "python_first_full": "258 passed, 40 failed, 5 subtests passed; all six Feeder tests passed",
+    "python_failure_root": "All40 sqlite3.OperationalError no such table: base_item; missing fixture produced an empty local database",
+    "frozen_sqlite_restoration": "passed; original empty database preserved; verified byte copy only",
+    "full_python_after_restoration": "PASSED:298 tests,5 subtests;158.19seconds; no changed binding assertion",
+    "rendered_builder": "PASSED:52 assertions,zero page errors,fresh Chrome DOM/React,ephemeral IndexedDB; four screenshots inspected",
+    "native_trace_capture": "PASSED: actual DLL success/mismatch receipts, paid cost9 and actual magic child retained",
+    "web_metadata": "PASSED: runtime82fb60a2,ABI3,matching WASM0b800f57"
+  },
+  "remaining_commands": [
+    {
+      "id": "python-bindings-final",
+      "argv": [
+        "py",
+        "-3",
+        "-m",
+        "pytest",
+        "bindings/python/tests",
+        "--import-mode=importlib",
+        "-q"
+      ],
+      "watchdog_seconds": 1200
+    },
+    {
+      "id": "native-trace-capture",
+      "argv": [
+        "py",
+        "-3",
+        "out/feeder-integration/capture-native-traces.py"
+      ],
+      "watchdog_seconds": 120
+    },
+    {
+      "id": "web-data-bundle",
+      "argv": [
+        "node",
+        "scripts/build-data-bundle.mjs"
+      ],
+      "watchdog_seconds": 120
+    },
+    {
+      "id": "rendered-builder",
+      "argv": [
+        "node",
+        "out/feeder-integration/render-builder.mjs"
+      ],
+      "watchdog_seconds": 120
+    }
+  ],
+  "prepared_fixture_hashes": {
+    "capture-native-traces.py": "d2112a93c3bd2fb2f2f7f751f2ea40222d5433ff48c2e9027d77c9ed031931b1",
+    "builder-rendered-fixture.ts": "46a9f5f5e814de54a47e92c8edf74777b5cad11927f4361e48dc9799063ccaa2",
+    "render-builder.mjs": "54558d8ebb4fce5e22c45316aeb42451c8e7e18892c2e71a6f3c7b2bf63640c6"
+  },
+  "bulk_evidence_directory": "out/feeder-integration",
+  "first_results": "out/feeder-integration/acceptance-results.json",
+  "failure_log": "out/feeder-integration/python-bindings-full.log",
+  "sqlite_preflight": "out/feeder-integration/sqlite-preflight.json",
+  "remaining_plan": "out/feeder-integration/remaining-plan.json",
+  "local_release": {
+    "released_utc": "2026-10-03T12:39:12.343409+00:00",
+    "reason": "Full Python command ended; Builder fixture preparation remains source-only. Diagnostic may use LOCAL.",
+    "owned_processes": [],
+    "acceptance_status": "failed",
+    "pytest_summary": "40 failed, 258 passed, 5 subtests passed in 153.67s (0:02:33)",
+    "supervised_session": 8383,
+    "survivors": false
+  },
+  "publication": "Qualified ordinary fast-forward/push selected under verified overnight user approval; exact delivered SHA/remote/CI follow in delivery receipt",
+  "preservation": "Main and feature-owner branches unchanged; no push, dependency install, price/data refresh, deployment or dev restart; protected root0 excluded",
+  "updated_utc": "2026-10-03T13:21:13.623453+00:00",
+  "qualification_start_head": "bba7574ae82adeb4ae454014e78d4c577e1bfc17",
+  "rendered_review": {
+    "schema": "poecraft2.rendered-feeder-controlled-flow.v1",
+    "started_utc": "2026-10-03T13:11:59.352Z",
+    "status": "passed",
+    "scope": "Actual Chrome DOM/React Builder and IndexedDB pinning/ports/history/held recombination; separately executed native DLL trace receipts, controlled workspace transport; no product server end-to-end claim",
+    "browser_channel": "chrome",
+    "profile": "Fresh ephemeral Playwright profile",
+    "server": "No dev/preview server launched or restarted",
+    "fixture_sha256": "46a9f5f5e814de54a47e92c8edf74777b5cad11927f4361e48dc9799063ccaa2",
+    "native_trace_sha256": "30dad5abf0b2fd013657200921893297ca40bfec5233356ac47184e8e0409181",
+    "screenshots": [
+      {
+        "phase": "pinning",
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-feeder-integration\\out\\feeder-integration\\builder-pinning.png",
+        "sha256": "373b45dda111100d2e4841a7b5415fd322515670d98743c5aac6b3eb9f2a4d20"
+      },
+      {
+        "phase": "ports",
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-feeder-integration\\out\\feeder-integration\\builder-ports.png",
+        "sha256": "ca95f974f3db3888751d748f0a26302d39b95d921677e73a4336141a68dfb97b"
+      },
+      {
+        "phase": "held",
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-feeder-integration\\out\\feeder-integration\\builder-held.png",
+        "sha256": "c9597a874f23febecf6b8c5e86a92d3e2784c9bd2b43f8729ce4cac7f690ddbc"
+      },
+      {
+        "phase": "trace",
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-feeder-integration\\out\\feeder-integration\\builder-trace.png",
+        "sha256": "313f2bab770ab2a6a25a9b66159c44d532a57f47b0b7537ff4974ffaf7d1b444"
+      }
+    ],
+    "bundle_sha256": "42d90963e8709e1a80e8c19390b4a930107855a1121ff6841e314664fca5cb9e",
+    "assertions": 52,
+    "page_errors": [],
+    "completed_utc": "2026-10-03T13:12:00.582Z",
+    "browser_closed": true,
+    "visual_review": "Four screenshots inspected; no material visual issue in covered controls",
+    "limits": [
+      "Controlled engine/workspace boot; full product-server startup/end-to-end is UNRUN",
+      "Native trace documents are independently executed public-ABI fixtures; displayed board has explicit additional unconnected move/pair palette examples",
+      "Fixture uses an empty base catalogue and native-default unconditional edges, so demonstration validation/base-selection messages are fixture context",
+      "Pinned revision and decoded resource fields are asserted in DOM; long panels require scrolling"
+    ],
+    "fixture_lifecycle_repairs": "Deferred only the synthetic first reconnect refresh until attached renderShell initialized child DOM, then immediately restored real updateView; all52 assertions and zero-page-error requirement retained",
+    "failed_receipts": [
+      "out/feeder-integration/rendered-builder-first-lifecycle-failure.json",
+      "out/feeder-integration/rendered-builder-second-lifecycle-failure.json"
+    ]
+  },
+  "completed_command_results": [
+    {
+      "id": "python-bindings-final",
+      "argv": [
+        "py",
+        "-3",
+        "-m",
+        "pytest",
+        "bindings/python/tests",
+        "--import-mode=importlib",
+        "-q"
+      ],
+      "started_utc": "2026-10-03T13:02:55.427599+00:00",
+      "process_id": 26916,
+      "process_identity_token": "26916:134355061754485077",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 158737.22989996895,
+      "completed_utc": "2026-10-03T13:05:34.165646+00:00",
+      "log": "C:\\Users\\Oliver\\Documents\\poecraft2-feeder-integration\\out\\feeder-integration\\python-bindings-final.log",
+      "log_sha256": "1942cef8c194a2991f3fa9b372b551187a80c1ec746aaa0842d1e0cd51ee028a"
+    },
+    {
+      "id": "native-trace-capture",
+      "argv": [
+        "py",
+        "-3",
+        "out/feeder-integration/capture-native-traces.py"
+      ],
+      "started_utc": "2026-10-03T13:05:34.169770+00:00",
+      "process_id": 91436,
+      "process_identity_token": "91436:134355063341816178",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 782.4404998682439,
+      "completed_utc": "2026-10-03T13:05:34.952789+00:00",
+      "log": "C:\\Users\\Oliver\\Documents\\poecraft2-feeder-integration\\out\\feeder-integration\\native-trace-capture.log",
+      "log_sha256": "a37695e01c901046df0c2d80bde467c27b34307487b41afdccd770a9f750f431"
+    },
+    {
+      "id": "web-data-bundle",
+      "argv": [
+        "node",
+        "scripts/build-data-bundle.mjs"
+      ],
+      "started_utc": "2026-10-03T13:05:34.958358+00:00",
+      "process_id": 31692,
+      "process_identity_token": "31692:134355063349611191",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 996.6767998412251,
+      "completed_utc": "2026-10-03T13:05:35.955764+00:00",
+      "log": "C:\\Users\\Oliver\\Documents\\poecraft2-feeder-integration\\out\\feeder-integration\\web-data-bundle.log",
+      "log_sha256": "c84ede59b59f0d7c29d767baa307efcef1a34cfda66bc114a87d6b17870d1b42"
+    },
+    {
+      "id": "rendered-builder-final",
+      "argv": [
+        "node",
+        "out/feeder-integration/render-builder.mjs"
+      ],
+      "started_utc": "2026-10-03T13:11:58.914852+00:00",
+      "process_id": 89792,
+      "process_identity_token": "89792:134355067189171962",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 1681.4418002031744,
+      "completed_utc": "2026-10-03T13:12:00.596875+00:00",
+      "log": "C:\\Users\\Oliver\\Documents\\poecraft2-feeder-integration\\out\\feeder-integration\\rendered-builder-final.log",
+      "log_sha256": "4abb66fd41e5ee83e8f8ccbfa79f2703d216985464aedd68c44cea409b93cf39"
+    }
+  ],
+  "final_results": "out/feeder-integration/rendered-final-results.json",
+  "final_local_release": {
+    "released_utc": "2026-10-03T13:13:07.446776+00:00",
+    "status": "all remaining acceptance commands passed; screenshot visual review and publication follow without LOCAL",
+    "owned_processes": [],
+    "survivors": false,
+    "browser_closed": true,
+    "rendered_assertions": 52,
+    "page_errors": 0
+  },
+  "held_or_unrun": [
+    "Builder recombination execution",
+    "Exact inventory/feeder/move/discard evaluation",
+    "Full product-server rendered startup/end-to-end",
+    "Unchanged native/web/TypeScript suites not repeated: matching-source owner evidence reused",
+    "Historical intermittent native prefix parity remains unproved fixed; no such repair is claimed",
+    "Normal checkout ignored native/generated metadata are not overwritten; user-owned rebuild/reload needed for local consumption"
+  ]
+}

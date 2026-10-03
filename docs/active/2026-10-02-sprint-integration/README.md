@@ -968,3 +968,34 @@ dependency installation or refresh is authorized or performed. Pending feeder an
 solver recovery remain excluded. Historical parity uncertainty and unsupported
 categories/costs remain explicit. combined_feature_qualification and
 out/feature-integration/qualified-final.json own exact passed/unrun evidence.
+
+
+## Combined feature publication accepted by exact-head CI (2026-10-03)
+
+Published normal main/remote **1ffba88e** passes
+[Windows37120110338](https://github.com/OliverOrton/poecraft2/actions/runs/37120110338),
+job111194412769:17 native targets,292 binding tests,37/37 engine smoke,
+cancellation controls, real Random pair/goal/atomic Apply worker, complete
+unfiltered web chain and TypeScript with pinned headless-shell1208.
+[Solver knowledge37120110285](https://github.com/OliverOrton/poecraft2/actions/runs/37120110285)
+also passes. Normal checkout HEAD/main/origin, engine4f3741ae, WASM10da55d0 and
+MJS23c405b9 match the delivered identities. Runtime82fb60a2 remains unchanged.
+No local heavy repeat, refresh/install, deployment or dev-server restart occurs.
+
+The normal checkout's ignored generated web receipt remains at0187f3d8 and the
+old472f644b engine hash. Engine boot verifies ABI/runtime, which are compatible;
+a browser refresh can start the new worker but does not regenerate that receipt.
+For aligned diagnostics/request provenance, Oliver can restart through npm run dev
+in apps/web (its predev hook runs build:data), then refresh. Alternatively, run
+npm run build:data and refresh while retaining the existing Vite process. These
+are instructions only; this task does not touch the running server or regenerate
+normal-checkout fixtures. No dependency installation, native rebuild or data/
+economy refresh is needed for those web steps.
+
+Exact terminal steps/log projection, delivered identities and this readiness
+contract are recorded in combined_feature_ci_terminal and
+out/feature-integration/terminal-ci.json; delivery.json is reconciled. Feeder owns
+LOCAL and remains excluded from this delivery, as does incomplete solver recovery.
+Model/cost/scope, full-app rendered-review and historical parity limits remain.
+This final terminal documentation checkpoint is local only, preserving the exact
+accepted delivery commit rather than starting another hosted build.

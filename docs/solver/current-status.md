@@ -29,8 +29,11 @@ at the grammar checkpoint.
 
 The isolated [feeder programme](../active/2026-10-03-strategy-feeder/README.md)
 adds pinned paid native child invocations, output predicates and explicit
-resource recycling. Its local native C API/web/TypeScript and matching WASM
-acceptance passed under the resumed programme's own receipt. Current/Finder
+resource recycling. Its source-matched native/web/TypeScript and WASM evidence
+is retained. The [integration receipt](../active/2026-10-03-feeder-integration/README.md)
+adds shared DLL/header, unfiltered298 Python bindings and52 controlled rendered
+Builder assertions with zero page errors; full product-server rendering remains
+unrun. Current/Finder
 producers and exact closure are unchanged. Exact inventory/feeder evaluation
 and Builder recombination execution stay held; native pair Apply is qualified
 separately. This row extends no exact authority.
