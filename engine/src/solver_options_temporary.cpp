@@ -529,6 +529,21 @@ bool CalcContext::is_candidate_operator_admitted_for_state(
             std::binary_search(retained->second.begin(), retained->second.end(), operator_index))
             return true;
     }
+    // A complete constructive query admits its selected operators at this
+    // carrier without certifying the unrestricted envelope. Preserve the two
+    // legacy full/cheap fast paths above; query keys cannot alias either one.
+    if (state_local_automatic_query_mask_ == 0) return false;
+    for (std::uint8_t query = 1; query < kAutomaticAdmissionQueryCount; ++query) {
+        if ((state_local_automatic_query_mask_ & (1u << query)) == 0) continue;
+        for (const bool cheap : {false, true}) {
+            const auto retained = state_local_automatic_operators_.find(
+                automatic_admission_key(state_id, cheap,
+                    static_cast<AutomaticAdmissionQuery>(query)));
+            if (retained != state_local_automatic_operators_.end() &&
+                std::binary_search(retained->second.begin(), retained->second.end(), operator_index))
+                return true;
+        }
+    }
     return false;
 }
 

@@ -1,0 +1,41 @@
+[
+  {
+    "phase": "build-tests",
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 62624,
+    "process_identity_token": "62624:134355339447827359",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 18232.474100077525
+  },
+  {
+    "phase": "blocker-growth",
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 22920,
+    "process_identity_token": "22920:134355339635116586",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 582.8021999914199
+  },
+  {
+    "phase": "native-blocker",
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 83128,
+    "process_identity_token": "83128:134355339636384465",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 3925.4158998373896
+  }
+]

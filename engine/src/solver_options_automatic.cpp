@@ -24,6 +24,7 @@ bool same_automatic_admission_limits(
     const AutomaticAdmissionLimits& left,
     const AutomaticAdmissionLimits& right) {
     return left.cheap_programs_only == right.cheap_programs_only &&
+           left.query == right.query &&
            left.max_state_action_rows == right.max_state_action_rows &&
            left.max_transitions == right.max_transitions &&
            left.max_solver_owned_bytes == right.max_solver_owned_bytes &&
@@ -201,6 +202,8 @@ bool CalcContext::advance_state_local_automatic_candidates(
     const AutomaticAdmissionLimits& limits,
     StateLocalAutomaticBatch& completed,
     const std::uint32_t max_checkpoints) {
+    if (!valid_automatic_admission_query(limits.query))
+        throw std::invalid_argument("invalid automatic admission query");
     if (!state_local_automatic_admission_cursor_.has_value()) {
         StateLocalAutomaticAdmissionCursor created;
         created.state_id = state_id;
@@ -343,8 +346,9 @@ CalcContext::build_state_local_automatic_candidates(
     const std::uint32_t state_id,
     AutomaticAdmissionLimits limits) {
     StateLocalAutomaticBatch batch;
-    const std::uint64_t carrier_admission_key = static_cast<std::uint64_t>(state_id) |
-        (static_cast<std::uint64_t>(limits.cheap_programs_only) << 32);
+    batch.query = limits.query;
+    const std::uint64_t carrier_admission_key = automatic_admission_key(
+        state_id, limits.cheap_programs_only, limits.query);
     struct PublicationStaging {
         std::vector<std::uint32_t> candidate_operators;
         std::unordered_set<std::uint32_t> state_local_indices;
@@ -781,6 +785,9 @@ CalcContext::build_state_local_automatic_candidates(
                 "automatic publication omitted carrier cache entry");
         }
         account_state_local_operators(stored->second);
+        if (limits.query != AutomaticAdmissionQuery::Unrestricted)
+            state_local_automatic_query_mask_ |= static_cast<std::uint16_t>(
+                1u << static_cast<std::uint8_t>(limits.query));
     };
     const std::vector<std::uint32_t> empty_publication_members;
     const auto cached = state_local_automatic_operators_.find(carrier_admission_key);
@@ -884,6 +891,9 @@ CalcContext::build_state_local_automatic_candidates(
     const auto shared_started = std::chrono::steady_clock::now();
     const auto synthesis_started = std::chrono::steady_clock::now();
     GoalSpec selected = goal_;
+    if (limits.query != AutomaticAdmissionQuery::Unrestricted)
+        selected.automatic_candidate_kind_mask &=
+            automatic_candidate_kind_bit(AutomaticCandidateKind::EldritchSide);
     if (limits.cheap_programs_only)
         selected.automatic_candidate_kind_mask &=
             automatic_candidate_kind_bit(AutomaticCandidateKind::ProtectedMetamod) |
@@ -892,6 +902,13 @@ CalcContext::build_state_local_automatic_candidates(
     AutomaticOptionSynthesis synthesis =
         synthesize_automatic_options(
             *this, state_id, carrier, limits.prices, &selected, limits.cheap_programs_only);
+    if (limits.query != AutomaticAdmissionQuery::Unrestricted)
+        synthesis.specs.erase(std::remove_if(
+            synthesis.specs.begin(), synthesis.specs.end(),
+            [&](const FixedOptionSpec& spec) {
+                return !automatic_admission_query_matches_spec(
+                    limits.query, spec, registry_);
+            }), synthesis.specs.end());
     /*
      * Eldritch side intents operate on the parent carrier's exact preserved
      * side and can add parent-layout delta states. Do not reproject them
@@ -933,7 +950,9 @@ CalcContext::build_state_local_automatic_candidates(
     std::vector<std::uint32_t> local_candidates = candidates_;
     for (std::uint32_t index = 0; index < registry_.actions.size(); ++index) {
         const PlannerOperator& planner = operators_.at(index);
-        if (planner.automatic_kind !=
+        if (!automatic_admission_query_allows_kind(
+                limits.query, AutomaticCandidateKind::PermanentBench) ||
+            planner.automatic_kind !=
                 AutomaticCandidateKind::PermanentBench ||
             std::find(candidates_.begin(), candidates_.end(), index) !=
                 candidates_.end() ||
@@ -970,8 +989,13 @@ CalcContext::build_state_local_automatic_candidates(
     local_goal.automatic_candidates = false;
     local_goal.fixed_options = std::move(synthesis.specs);
     const auto local_context_started = std::chrono::steady_clock::now();
-    const std::string context_key = automatic_context_key(
+    std::string context_key = automatic_context_key(
         local_goal.fixed_options, local_candidates);
+    // Unrestricted keys begin with a decimal spec count. The finite q-prefix
+    // keeps query-dependent family work out of that reuse namespace.
+    if (limits.query != AutomaticAdmissionQuery::Unrestricted)
+        context_key.insert(0, "q" + std::to_string(
+            static_cast<std::uint8_t>(limits.query)) + ";");
     /* Carrier-local contexts are only a cross-carrier performance cache; the
      * active coroutine owns its transient context across suspension.  A broad
      * product envelope can synthesize thousands of distinct context keys, so
@@ -1082,6 +1106,8 @@ CalcContext::build_state_local_automatic_candidates(
     }
     std::array<std::uint64_t, kAutomaticTelemetryKindCount> shared_weights{};
     const bool imprint_family_enabled =
+        automatic_admission_query_allows_kind(
+            limits.query, AutomaticCandidateKind::Imprint) &&
         limits.consider_imprint_programs &&
         !solver_automatic_candidate_disabled(
             goal_, AutomaticCandidateKind::Imprint) &&

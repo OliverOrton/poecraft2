@@ -68,6 +68,11 @@ int main(int argc, char** argv) {
         std::printf("solver protected fill tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
         return pctest::g_failures == 0 ? 0 : 1;
     }
+    if (argc > 1 && std::string(argv[1]) == "--solver-admission-query-only") {
+        run_solver_admission_query_tests();
+        std::printf("solver admission query tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     if (argc > 1 && std::string(argv[1]) == "--solver-growth-only") {
         run_solver_growth_tests();
         std::printf("solver growth tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);

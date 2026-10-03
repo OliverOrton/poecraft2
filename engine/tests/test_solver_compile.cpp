@@ -9,6 +9,7 @@
 #include "../src/solver_compile_contracts.hpp"
 #include "../src/solver_finder.hpp"
 #include "../src/solver_selective_completion.hpp"
+#include "../src/solver_options_helpers.hpp"
 #include "../src/solver_diagnostic_options.hpp"
 #include "../src/json.hpp"
 #include "../src/solver_dirty_guidance.hpp"
@@ -3587,6 +3588,7 @@ void run_imprint_gate(const char* artifact_dir) {
 } // namespace
 
 void run_solver_compile_tests(const char* artifact_dir) {
+    run_solver_admission_query_tests();
     run_policy_description_test();
     run_finder_request_binding_tests();
     run_finder_default_success_regression();
@@ -4134,6 +4136,46 @@ void run_solver_native_blocker_entry_tests(const char* artifact_dir) {
     PC_CHECK(read_text_file(std::string(artifact_dir)+"/strings.json",strings));
     PC_CHECK(read_text_file(std::string(artifact_dir)+"/game-data.json",game));
     const auto data=load_data_impl(manifest,strings,game);
+    {
+        // Real Conquest c23: two prefixes and both suffix goals are present.
+        // Every branch pays the temporary bench, ordinary Exalt and cleanup.
+        auto session=std::make_shared<SessionImpl>(); session->data=data;
+        session->base_index=data->base_by_path.at("Metadata/Items/Armours/BodyArmours/BodyStrDex20");
+        session->item_level=86; build_session(*session);
+        const auto mod=[&](const char* key) {
+            const auto global=data->mod_global_ids.at(data->mod_pos_by_key.at(key));
+            return session->session_id_by_global_id.at(global);
+        };
+        GoalSpec goal; goal.rarity=PC_RARITY_RARE; goal.automatic_candidates=true;
+        for (const char* key : {"LocalBaseArmourAndEvasionRating8", "LocalIncreasedArmourAndEvasion8",
+                "LocalIncreasedArmourAndEvasionAndStunRecovery6", "AdditionalPhysicalDamageReduction5_",
+                "ChanceToSuppressSpellsHigh5___"}) {
+            GoalSlot slot; slot.family_id=session->family_id.at(mod(key)); slot.min_tier=1;
+            goal.slots.push_back(slot);
+        }
+        const auto registry=build_action_registry(*session);
+        // Match the production admission carrier: retain every automatic
+        // dependency and exact modifier identity, including the bench affix.
+        CalcContext calc(session,goal,registry,{registry.index_by_id.at("chaos")},
+            false,false,false,std::nullopt,{},false,{},true);
+        pc_item_state root; pc_item_clear(&root); root.rarity=PC_RARITY_RARE;
+        for (const char* key : {"LocalIncreasedArmourAndEvasion8", "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+                "AdditionalPhysicalDamageReduction5_", "ChanceToSuppressSpellsHigh5___"}) {
+            const auto id=mod(key);
+            PC_CHECK(pc_item_add_mod(&root,session->gen_type[id],id,session->primary_group[id],0,nullptr)==PC_RESULT_OK);
+        }
+        const std::vector<std::uint32_t> word{registry.index_by_id.at("bench:HelenaMasterFireResist1"),
+            registry.index_by_id.at("exalt"),registry.index_by_id.at("remove_crafted_modifiers")};
+        const auto attempt=execute_attempt(calc,word,calc.intern_item(root));
+        PC_CHECK(attempt.supported && attempt.fully_legal);
+        PC_CHECK(attempt.expected_primitive_actions==3);
+        PC_CHECK(attempt.expected_resources==aggregate_resources(registry,word));
+        const auto scour=std::find_if(attempt.expected_resources.begin(),attempt.expected_resources.end(),
+            [](const auto& resource) { return resource.first=="scour"; });
+        PC_CHECK(scour!=attempt.expected_resources.end() && scour->second==1);
+        std::printf("real Conquest fixed attempt: actions=%.17g, scour=%.17g\n",
+            attempt.expected_primitive_actions,scour==attempt.expected_resources.end()?0:scour->second);
+    }
     for (const char* base:{"Metadata/Items/Amulets/Amulet7","Metadata/Items/Rings/Ring10"}) {
         auto session=std::make_shared<SessionImpl>(); session->data=data;
         session->base_index=data->base_by_path.at(base); session->item_level=86; build_session(*session);
@@ -4249,6 +4291,17 @@ void run_solver_native_blocker_entry_tests(const char* artifact_dir) {
             while (!local.advance_state_local_automatic_candidates(source,admission,options,1)) {}
             std::string old_graph;
             PC_CHECK(read_text_file("docs/active/2026-09-13-execution-aware-proposals/strategies/ring-four-count.strategy.json",old_graph));
+            const auto original_graph = old_graph;
+            // The archived graph omits implicits and therefore starts with
+            // Ring10's native Chaos-resistance implicit by parser default.
+            // This fixture's exact root was pc_item_clear: no implicits.
+            // Keep the original as a rejection witness, then adapt only this
+            // in-memory test graph to that explicit root. Archive is unchanged.
+            const auto start_field = old_graph.find("\"start_node_id\"");
+            const auto base_end = old_graph.rfind('}', start_field);
+            PC_CHECK(start_field != std::string::npos && base_end != std::string::npos);
+            if (start_field == std::string::npos || base_end == std::string::npos) continue;
+            old_graph.insert(base_end, ",\"implicits\":[]");
             unsigned composed_options=0;
             for (const auto index : options.admitted_operators) {
                 const auto op=local.operators().at(index);
@@ -4275,6 +4328,15 @@ void run_solver_native_blocker_entry_tests(const char* artifact_dir) {
                     selected.options.max_strategy_json_bytes,nullptr,selected.options.max_solver_owned_bytes,
                     PolicyRouteDefaultMode::CertificationFailClosed);
                 const auto original_metadata=metadata;
+                bool persistent_mismatch_refused=false;
+                try {
+                    (void)compile_dirty_continuation_strategy_json(local,graph,original_graph,{source},returns,
+                        selected.options,nullptr,returns.empty(),nullptr,index);
+                } catch (const std::exception& error) {
+                    persistent_mismatch_refused=std::string_view(error.what()).find(
+                        "dirty continuation base or persistent context mismatch") != std::string_view::npos;
+                }
+                PC_CHECK(persistent_mismatch_refused);
                 const auto composed=compile_dirty_continuation_strategy_json(local,graph,old_graph,{source},returns,
                     selected.options,&metadata,returns.empty(),nullptr,index);
                 PC_CHECK(metadata.graph_local_provenance.matches(composed));
@@ -4312,6 +4374,253 @@ struct SolveWorkTestAccess {
     using Impl = SolveWork::Impl;
     static Impl& get(SolveWork& work) { return *work.impl_; }
 };
+}
+
+void run_solver_admission_query_tests() {
+    // Exhaust the finite request identity, including the uint32 state boundary.
+    // This protects the existing full/cheap cache namespaces from query aliases.
+    std::set<std::uint64_t> keys;
+    for (const auto state : {0u, std::numeric_limits<std::uint32_t>::max()}) {
+        for (const bool cheap : {false, true}) {
+            for (std::uint8_t query = 0; query < kAutomaticAdmissionQueryCount; ++query) {
+                const auto key = automatic_admission_key(state, cheap,
+                    static_cast<AutomaticAdmissionQuery>(query));
+                PC_CHECK(keys.insert(key).second);
+                PC_CHECK(static_cast<std::uint32_t>(key) == state);
+                PC_CHECK(((key >> 32) & 1u) == cheap);
+                PC_CHECK((key >> 33) == query);
+            }
+        }
+    }
+    PC_CHECK(keys.size() == 52);
+    for (const auto invalid : {static_cast<AutomaticAdmissionQuery>(13),
+                              static_cast<AutomaticAdmissionQuery>(255)}) {
+        bool refused = false;
+        try { (void)automatic_admission_key(0, false, invalid); }
+        catch (const std::invalid_argument&) { refused = true; }
+        PC_CHECK(refused);
+    }
+    bool wrong_side = false, wrong_action = false;
+    try { (void)eldritch_admission_query(-1, ActionType::EldritchAnnul, false); }
+    catch (const std::invalid_argument&) { wrong_side = true; }
+    try { (void)eldritch_admission_query(PC_SIDE_PREFIX, ActionType::Chaos, false); }
+    catch (const std::invalid_argument&) { wrong_action = true; }
+    PC_CHECK(wrong_side && wrong_action);
+
+    auto session = make_compile_session();
+    session->base_spawn_weight = {7,11,19,23,31,37,43,101,53,59};
+    session->base_roll_weight = session->base_spawn_weight;
+    const auto registry = build_action_registry(*session);
+    const auto chaos = registry.index_by_id.at("chaos");
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    goal.automatic_candidates = true;
+    goal.automatic_candidate_kind_mask =
+        automatic_candidate_kind_bit(AutomaticCandidateKind::EldritchSide);
+    for (const auto mod : {3u,4u,5u,6u}) {
+        GoalSlot slot; slot.family_id = session->family_id[mod]; slot.min_tier = 1;
+        goal.slots.push_back(slot);
+    }
+    std::unordered_map<std::string,double> prices;
+    for (const auto& action : registry.actions)
+        for (const auto& key : action.cost_keys) prices[key] = 1.0;
+    AutomaticAdmissionLimits limits;
+    limits.max_solver_owned_bytes = 256ull * 1024ull * 1024ull;
+    limits.max_imprint_program_depth = 3;
+    limits.max_imprint_program_work = 256;
+    limits.prices = &prices;
+    pc_item_state root; pc_item_clear(&root); root.rarity = PC_RARITY_RARE;
+    for (const auto mod : {3u,0u,5u,7u}) {
+        const auto side = session->gen_type[mod];
+        PC_CHECK(pc_item_add_mod(&root, side, mod,
+            session->primary_group[mod], 0, nullptr) == PC_RESULT_OK);
+    }
+    using ItemKey = decltype(exact_item_state_key(root));
+    struct Snapshot {
+        std::vector<std::pair<std::string,double>> resources;
+        std::map<ItemKey,double> exits;
+        double actions = 0;
+        bool setup = false, cleanup = false, recovery = false, complete = false;
+    };
+    using Snapshots = std::map<std::vector<std::uint64_t>,Snapshot>;
+    const auto matches = [&](const PlannerOperator& option,
+                             const std::int8_t side, const ActionType action,
+                             const bool direct) {
+        // The pre-existing consumer predicate, independent of query encoding.
+        return option.option_kind == FixedOptionKind::EldritchSideIntent &&
+            option.automatic_kind == AutomaticCandidateKind::EldritchSide &&
+            option.intended_side == side && !option.primitive_program.empty() &&
+            (!direct || option.primitive_program.size() == 1) &&
+            registry.actions.at(option.primitive_program.back()).params.type == action;
+    };
+    const auto snapshot = [&](CalcContext& calc, const std::uint32_t state,
+                              const StateLocalAutomaticBatch& batch) {
+        Snapshots result;
+        PC_CHECK(batch.status == StateLocalAutomaticBatchStatus::Complete);
+        for (const auto index : batch.admitted_operators) {
+            const auto& option = calc.operators().at(index);
+            const auto& kernel = calc.option_kernel(state,index);
+            PC_CHECK(calc.is_candidate_operator_admitted_for_state(state,index));
+            PC_CHECK(kernel.supported && kernel.legal && kernel.automatic.eligible &&
+                     kernel.terminates_almost_surely);
+            PC_CHECK(kernel.retry_states.empty() &&
+                     kernel.observation_choice_groups.empty() && !kernel.entry_continues);
+            Snapshot s;
+            s.resources = kernel.expected_resources;
+            s.actions = kernel.expected_primitive_actions;
+            s.setup = kernel.automatic.setup_complete;
+            s.cleanup = kernel.automatic.cleanup_complete;
+            s.recovery = kernel.automatic.recovery_complete;
+            s.complete = kernel.automatic.exits_complete;
+            for (const auto& exit : kernel.exits) {
+                pc_item_state item;
+                PC_CHECK(calc.materialize(exit.state,item));
+                s.exits[exact_item_state_key(item)] += exit.probability;
+            }
+            double mass = 0; for (const auto& [unused,p] : s.exits) mass += p;
+            PC_CHECK(std::abs(mass-1.0) < 1e-12);
+            PC_CHECK(result.emplace(planner_operator_semantic_key(option),std::move(s)).second);
+        }
+        return result;
+    };
+    const auto compare = [&](const Snapshots& a, const Snapshots& b) {
+        PC_CHECK(a.size() == b.size());
+        for (const auto& [key,x] : a) {
+            const auto it = b.find(key);
+            PC_CHECK(it != b.end()); if (it == b.end()) continue;
+            const auto& y = it->second;
+            PC_CHECK(x.resources == y.resources && x.actions == y.actions);
+            PC_CHECK(x.setup == y.setup && x.cleanup == y.cleanup &&
+                     x.recovery == y.recovery && x.complete == y.complete);
+            PC_CHECK(x.exits.size() == y.exits.size());
+            for (const auto& [item,p] : x.exits) {
+                const auto reached = y.exits.find(item);
+                PC_CHECK(reached != y.exits.end());
+                if (reached != y.exits.end()) PC_CHECK(std::abs(p-reached->second) < 1e-12);
+            }
+        }
+    };
+    // Three exact carriers exercise dominance setup, prefix-direct and suffix-direct.
+    // Both call orders must preserve all semantic words and full native outcome laws.
+    for (const std::int8_t dominance : {std::int8_t{-1},
+            static_cast<std::int8_t>(PC_SIDE_PREFIX),
+            static_cast<std::int8_t>(PC_SIDE_SUFFIX)}) {
+        auto carrier = root;
+        if (dominance == PC_SIDE_PREFIX) carrier.searing_exarch_tier = 1;
+        if (dominance == PC_SIDE_SUFFIX) carrier.eater_of_worlds_tier = 1;
+        CalcContext reference(session,goal,registry,{chaos});
+        const auto reference_state = reference.intern_item(carrier);
+        const auto full = reference.admit_state_local_automatic_candidates(reference_state,limits);
+        const auto all = snapshot(reference,reference_state,full);
+        PC_CHECK(!all.empty() && full.query == AutomaticAdmissionQuery::Unrestricted);
+        for (const bool full_first : {false,true}) {
+            CalcContext queried(session,goal,registry,{chaos});
+            const auto state = queried.intern_item(carrier);
+            if (full_first) {
+                const auto initial = queried.admit_state_local_automatic_candidates(state,limits);
+                PC_CHECK(!initial.cached);
+                compare(all,snapshot(queried,state,initial));
+            }
+            for (const std::int8_t side : {PC_SIDE_PREFIX,PC_SIDE_SUFFIX}) {
+                for (const auto action : {ActionType::EldritchAnnul,
+                        ActionType::EldritchChaos,ActionType::EldritchExalt}) {
+                    for (const bool direct : {false,true}) {
+                        auto request = limits;
+                        request.query = eldritch_admission_query(side,action,direct);
+                        const auto batch = queried.admit_state_local_automatic_candidates(state,request);
+                        PC_CHECK(!batch.cached && batch.query == request.query);
+                        Snapshots expected;
+                        for (const auto index : full.admitted_operators) {
+                            const auto& option = reference.operators().at(index);
+                            if (matches(option,side,action,direct))
+                                expected.emplace(planner_operator_semantic_key(option),
+                                    all.at(planner_operator_semantic_key(option)));
+                        }
+                        for (const auto index : batch.admitted_operators)
+                            PC_CHECK(matches(queried.operators().at(index),side,action,direct));
+                        if (direct && dominance != side) PC_CHECK(expected.empty());
+                        compare(expected,snapshot(queried,state,batch));
+                        const auto cached = queried.admit_state_local_automatic_candidates(state,request);
+                        PC_CHECK(cached.cached && cached.query == request.query);
+                        compare(expected,snapshot(queried,state,cached));
+                    }
+                }
+            }
+            const auto after = queried.admit_state_local_automatic_candidates(state,limits);
+            PC_CHECK(after.cached == full_first);
+            compare(all,snapshot(queried,state,after));
+            PC_CHECK(queried.admit_state_local_automatic_candidates(state,limits).cached);
+        }
+    }
+    // A query cannot grant a family disabled by the original request.
+    auto disabled_goal = goal; disabled_goal.automatic_candidate_kind_mask = 0;
+    CalcContext disabled(session,disabled_goal,registry,{chaos});
+    auto request = limits;
+    request.query = eldritch_admission_query(PC_SIDE_PREFIX,ActionType::EldritchChaos,false);
+    const auto disabled_state = disabled.intern_item(root);
+    const auto refused_family = disabled.admit_state_local_automatic_candidates(disabled_state,request);
+    PC_CHECK(refused_family.status == StateLocalAutomaticBatchStatus::Complete &&
+             refused_family.admitted_operators.empty());
+    PC_CHECK(!disabled.admit_state_local_automatic_candidates(disabled_state,limits).cached);
+
+    // Resumption binds the whole query and cancellation publishes no completion.
+    CalcContext resumable(session,goal,registry,{chaos});
+    const auto state = resumable.intern_item(root);
+    const auto operators_before = resumable.operators().size();
+    StateLocalAutomaticBatch pending;
+    PC_CHECK(!resumable.advance_state_local_automatic_candidates(state,request,pending,1));
+    auto other = request;
+    other.query = eldritch_admission_query(PC_SIDE_SUFFIX,ActionType::EldritchAnnul,false);
+    bool mismatch = false;
+    try { (void)resumable.advance_state_local_automatic_candidates(state,other,pending,1); }
+    catch (const std::invalid_argument&) { mismatch = true; }
+    PC_CHECK(mismatch);
+    resumable.cancel_state_local_automatic_candidates(state);
+    PC_CHECK(resumable.operators().size() == operators_before);
+    const auto resumed = resumable.admit_state_local_automatic_candidates(state,request);
+    PC_CHECK(!resumed.cached && !resumed.admitted_operators.empty());
+    auto different = root; pc_item_clear(&different); different.rarity = PC_RARITY_RARE;
+    const auto different_state = resumable.intern_item(different);
+    for (const auto index : resumed.admitted_operators)
+        PC_CHECK(!resumable.is_candidate_operator_admitted_for_state(different_state,index));
+    resumable.reset_solve_telemetry();
+    for (const auto index : resumed.admitted_operators)
+        PC_CHECK(!resumable.is_candidate_operator_admitted_for_state(state,index));
+    PC_CHECK(!resumable.admit_state_local_automatic_candidates(state,request).cached);
+
+    // Work refusal must roll back the query and leave the same request retryable.
+    CalcContext capped(session,goal,registry,{chaos});
+    const auto capped_state = capped.intern_item(root);
+    const auto capped_operators = capped.operators().size();
+    capped.set_reforge_resource_accounting(true);
+    capped.set_solve_resource_caps(100000,1,false);
+    const auto deferred = capped.admit_state_local_automatic_candidates(capped_state,request);
+    PC_CHECK(deferred.status == StateLocalAutomaticBatchStatus::ResourceDeferred &&
+             deferred.query == request.query && deferred.admitted_operators.empty());
+    PC_CHECK(capped.operators().size() == capped_operators);
+    capped.set_solve_resource_caps(100000,100000000,false);
+    const auto retried = capped.admit_state_local_automatic_candidates(capped_state,request);
+    PC_CHECK(!retried.cached && !retried.admitted_operators.empty());
+    CalcContext memory_capped(session,goal,registry,{chaos});
+    const auto memory_state = memory_capped.intern_item(root);
+    const auto memory_operators = memory_capped.operators().size();
+    auto memory_limit = request; memory_limit.max_solver_owned_bytes = 1;
+    bool memory_refused = false;
+    try {
+        const auto batch = memory_capped.admit_state_local_automatic_candidates(memory_state,memory_limit);
+        memory_refused = batch.status == StateLocalAutomaticBatchStatus::ResourceDeferred &&
+            batch.resource_cap == "max_solver_owned_bytes";
+    } catch (const SolverResourceLimit& limit) {
+        memory_refused = limit.cap_name() == "max_solver_owned_bytes";
+    }
+    PC_CHECK(memory_refused && memory_capped.operators().size() == memory_operators);
+    PC_CHECK(!memory_capped.admit_state_local_automatic_candidates(memory_state,request).cached);
+    auto tiny = limits; tiny.query = static_cast<AutomaticAdmissionQuery>(255);
+    bool invalid = false;
+    try { (void)capped.advance_state_local_automatic_candidates(capped_state,tiny,pending,1); }
+    catch (const std::invalid_argument&) { invalid = true; }
+    PC_CHECK(invalid);
+    PC_CHECK(capped.admit_state_local_automatic_candidates(capped_state,request).cached);
 }
 
 void run_solver_growth_tests(const bool blocker) {
@@ -4389,7 +4698,7 @@ void run_solver_growth_tests(const bool blocker) {
     apply_solve_profile_defaults(ordinary, SolveProfile::Default);
     apply_solve_state_budget_overrides(ordinary, 0, 0, 0);
     PC_CHECK(ordinary.max_states == 200000 && ordinary.max_discovered_states == 200000);
-    for (unsigned fixture = 0; fixture < 4u; ++fixture) {
+    for (unsigned fixture = 0; fixture < (blocker ? 8u : 4u); ++fixture) {
         auto session = make_compile_session();
         auto data = std::const_pointer_cast<DataImpl>(session->data);
         // Explicitly distinguish absent metamods from ordinary bench crafts
@@ -4400,7 +4709,13 @@ void run_solver_growth_tests(const bool blocker) {
         data->metamod_suffixes_locked_code = 23;
         data->metamod_multimod_code = 24;
         session->flags[9] = 1 << 1;
-        if (fixture == 1) {
+        const auto shape = fixture % 4;
+        if (fixture >= 4) {
+            // Non-dyadic, unequal masses expose reward accumulation drift.
+            session->base_spawn_weight = {7, 11, 19, 23, 31, 37, 43, 101, 53, 59};
+            session->base_roll_weight = session->base_spawn_weight;
+        }
+        if (shape == 1) {
             for (auto& side : session->gen_type) side = 1 - side;
             std::swap(session->prefix_mask, session->suffix_mask);
         }
@@ -4425,12 +4740,12 @@ void run_solver_growth_tests(const bool blocker) {
             prices["eldritch_ichor:"+std::to_string(tier)] = .01;
         }
         pc_item_state root; pc_item_clear(&root); root.rarity = PC_RARITY_RARE;
-        if (fixture == 2) for (auto mod : {3u,5u,6u})
+        if (shape == 2) for (auto mod : {3u,5u,6u})
             PC_CHECK(pc_item_add_mod(&root, static_cast<pc_affix_side>(session->gen_type[mod]),
                 mod, session->primary_group[mod], 0, nullptr) == PC_RESULT_OK);
         // Reproduce the refused c23 carrier as an independent original root:
         // two target goals present, one missing, and both held goals present.
-        if (fixture == 3) for (auto mod : {3u,4u,5u,6u})
+        if (shape == 3) for (auto mod : {3u,4u,5u,6u})
             PC_CHECK(pc_item_add_mod(&root, static_cast<pc_affix_side>(session->gen_type[mod]),
                 mod, session->primary_group[mod], 0, nullptr) == PC_RESULT_OK);
         for (unsigned proposal=blocker ? 3u : 2u; proposal<(blocker ? 4u : 3u); ++proposal) {
@@ -4438,6 +4753,31 @@ void run_solver_growth_tests(const bool blocker) {
                 std::nullopt, {}, false, {}, true);
             calc.set_solve_resource_caps(caps.max_discovered_states, caps.max_reforge_work,
                 false, caps.max_solver_owned_bytes);
+            if (blocker && shape == 3) {
+                const std::vector<std::uint32_t> word{
+                    registry.index_by_id.at("bench:mod9"),
+                    registry.index_by_id.at("exalt"),
+                    registry.index_by_id.at("remove_crafted_modifiers")};
+                const auto entry = calc.intern_item(root);
+                const auto attempt = execute_attempt(calc, word, entry);
+                PC_CHECK(attempt.supported && attempt.fully_legal);
+                PC_CHECK(attempt.expected_primitive_actions == 3);
+                PC_CHECK(attempt.expected_resources == aggregate_resources(registry, word));
+                auto weighted_task = execute_attempt_cooperatively(calc, word, {{entry, .125}});
+                while (!weighted_task.resume()) {}
+                const auto weighted = weighted_task.take_result();
+                weighted_task.reset();
+                PC_CHECK(weighted.supported && weighted.fully_legal);
+                PC_CHECK(weighted.expected_primitive_actions > .25 && weighted.expected_primitive_actions < .5);
+                PC_CHECK(weighted.expected_resources != attempt.expected_resources);
+                for (const auto& [key, quantity] : weighted.expected_resources)
+                    PC_CHECK(quantity > 0 && quantity < .25);
+                auto illegal = root;
+                PC_CHECK(pc_item_add_mod(&illegal, static_cast<pc_affix_side>(session->gen_type[7]),
+                    7, session->primary_group[7], 0, nullptr) == PC_RESULT_OK);
+                const auto refused = execute_attempt(calc, word, calc.intern_item(illegal));
+                PC_CHECK(!refused.fully_legal);
+            }
             PC_CHECK(product_completion_proposal_count(calc) == 3);
             const auto held = product_completion_held_side(calc, proposal);
             const auto variant = product_completion_proposal_variant(calc, proposal);
@@ -4472,7 +4812,7 @@ void run_solver_growth_tests(const bool blocker) {
             }
             const auto checked = evaluate_strategy(*prepared.strategy, eval);
             PC_CHECK(finder_evaluation_accepted(checked));
-            if (proposal == 2 || fixture == 2)
+            if (proposal == 2 || shape == 2)
                 PC_CHECK(checked.expected_consumption.contains("eldritch_exalt") && checked.expected_consumption.at("eldritch_exalt") > 0);
             PC_CHECK(checked.expected_consumption.contains("eldritch_annul") && checked.expected_consumption.at("eldritch_annul") > 0);
             if (proposal == 3) for (const auto key : {"exalt","scour","bench:mod9"})

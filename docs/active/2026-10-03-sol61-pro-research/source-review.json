@@ -1,0 +1,83 @@
+{
+  "schema": "sol61_eldritch_query_source_v1",
+  "timestamp_utc": "2026-10-03T21:48:11.651315+00:00",
+  "qualification": "UNQUALIFIED_SOURCE_ONLY",
+  "patch": "eldritch-query-r1-source-only.patch",
+  "patch_sha256": "44f5d927070362c03a450844e0efebfb123186f8a4b95b6a5c58fc27f80a848e",
+  "patch_bytes": 37191,
+  "base": "c263ed2475b5db7c6508c7155450fa04390c339c plus fixed-attempt-r2-source-only.patch; base content hashes below, no bad-commit dependency",
+  "apply_order": [
+    "fixed-attempt-r2-source-only.patch",
+    "eldritch-query-r1-source-only.patch"
+  ],
+  "exclude_commit": "66cca8f587f5eb85c91122b7c1b01e278bf312c5",
+  "base_normalized_sha256": {
+    "engine/src/solver_calc_types.hpp": "117d405395288397b57016b5c08e9faf116fcee66cbb1aa58024260336c8171b",
+    "engine/src/solver_options_automatic.cpp": "e1b26551e11472cfeb9f4136a5e001029566df5593951aa44ec11a2db09500e6",
+    "engine/src/solver_options_helpers.hpp": "c2be240a6ce437d9d5d3a63712a3e1456e65746ab16f816d58c582e207c0c2c0",
+    "engine/src/solver_selective_completion.cpp": "1a7bcd91f824e01c2c384a21a647799c232fcc8472489cf5f24c1b6433cdb24e",
+    "engine/src/solver_options_temporary.cpp": "707f1963336d85dd0da3ded8cbd0efa2c89994e72e05e3abb04206cc57f43fbd",
+    "engine/src/solver_compile_contracts.hpp": "79475c264abdb96730cfa19cefbb1e491819e6457b03b98b4a84f073ebd879cc",
+    "engine/src/solver_calc.cpp": "b2db77825881f9c685a613a306eb301e71874f98e3e0b14747e7dafbdf8b2a05",
+    "engine/src/solver_development_checkpoint.cpp": "5bff9251fa17d2641b9bac7c87c2484373bdda435d4b46b45c0f0c3fce82f0c4",
+    "engine/tests/test_solver_compile.cpp": "6644873ddc7d5407c53d3eb7fc213f1dad3eb6361afb795d84473c4425c73ac9",
+    "engine/tests/test_main.cpp": "4671e1f95d87d9c284408605019a41be50078f3dc0d15315e14e1f98c4a88471",
+    "engine/tests/tests.hpp": "f3ea2e1940385270cb39400900afd4f9f9d8ee2b5ddf8ce310a5f42f3a0e713f"
+  },
+  "working_normalized_sha256": {
+    "engine/src/solver_calc_types.hpp": "083c701e0b0308733ebe444b4fcba764f09aa7e31c77a09ebbce447242c6e55c",
+    "engine/src/solver_options_automatic.cpp": "e85c97e4d6ba591f4b00882864d2d9d7a60ab120b7a7788169c4a7f8523766a0",
+    "engine/src/solver_options_helpers.hpp": "575d705635d48d9c24543bbefd506180c3d1f83bc2ba621f7ac845cbbdbed15e",
+    "engine/src/solver_selective_completion.cpp": "82d274a7cacb4597fb060345dfabc1ff16c6b23b330f96ad1a8de26d1c93caa3",
+    "engine/src/solver_options_temporary.cpp": "de01cc4e553eb1d38b33ff17128c3007e978140adf86d5527616475d905cba59",
+    "engine/src/solver_compile_contracts.hpp": "7012de650f0b4f3ad7181c0abe601eb21f32fe7f70a27b2eef06c643147223a1",
+    "engine/src/solver_calc.cpp": "cc8660226e0692c90b577c97c719a3b6f202530d045538cd9f7c0b81591d6ebb",
+    "engine/src/solver_development_checkpoint.cpp": "302a0e3aa6a837a7dced7711ac87e0c3015a6d0ee35db7885ccdc46c586dd610",
+    "engine/tests/test_solver_compile.cpp": "3c3b1b2a9bc4e6537cb22e5b5a22026fc1a24bd64d083cffcf27572a6e45df15",
+    "engine/tests/test_main.cpp": "12f272c4608bee810b85dacce3c2d144853ec0f6259f207b911d6e408cd8151e",
+    "engine/tests/tests.hpp": "ba9b9a4cb42f29301e029f6e89484a5a98f4b3733230aebf61f02460fbf29e7d"
+  },
+  "checks": {
+    "explicit_file_diff_check": "passed",
+    "reverse_patch_check": "passed; no application performed",
+    "original_two_file_patch_hash": "unchanged",
+    "native_build": "not run; LOCAL held by CI",
+    "new_native_fixtures": "not run",
+    "new_policy_evaluations": "not run",
+    "WASM": "not rebuilt"
+  },
+  "test_selector": "--solver-admission-query-only",
+  "finite_fixtures": [
+    "52 state-boundary/cheap/query key identities; invalid side/action/query refusal",
+    "three carriers and all12 intent queries, query-first/full-first, native semantic words/resources/certificate obligations/all exact exits",
+    "direct-only negatives and disabled-family negatives",
+    "query resumption mismatch/cancel/no-publication and wrong-carrier native binding",
+    "telemetry-reset membership revocation",
+    "work ResourceDeferred and owned-memory refusal followed by same-query retry"
+  ],
+  "authority": "Complete requested finite query; never broader action-envelope closure. Original native evaluator, prices, goal, law, resource certificates and exact positive-entry validator unchanged.",
+  "accounting": "uint64 carrier-map key/allocation shape unchanged. Finite query mask is a lookup hint only, derived on checkpoint restore and cleared on solve reset. Existing sizeof(CalcContext), sizeof(batch), key string and cursor accounting own new fields. No new containers or supervisors.",
+  "ownership_proof": {
+    "unchanged_files": [
+      "engine/src/solver_solve_selective_completion.cpp",
+      "engine/src/solver_selective_completion.hpp",
+      "engine/src/solver_eval.cpp"
+    ],
+    "borrow": "Validator stores const StrategyPolicyEntryCertificate& into checker result().policy_entries. Completed checker remains live throughout Validating; source still reads cost then takes result after validator reset.",
+    "move_hazard": "take_result moves the output but does not free checker model. Moving the output after validator creation would leave its reference pointing at the moved-from census object; resetting checker would dangle it.",
+    "required_future_order": "Own the complete immutable root result before constructing validator, reset checker only after move, bind validator to stable owned census, retain that owner through validation and incumbent publication. Preserve complete provenance/resources/output/cost and aggregate accounting.",
+    "cleanup_now": "none; query patch changes no checker/result/census ownership"
+  },
+  "runtime_evidence_scope": "The99095.409160403797c/190entries/15570088work receipt qualifies pre-query diagnostic source only. Do not label it as a new-query run or normal published policy.",
+  "LOCAL": "CI integrator",
+  "owned_processes": [],
+  "protected_metadata": "untouched; no retry or repair",
+  "publication": "Hand these explicit-file patches and compact receipts to clean publication owner. Research branch must label unqualified; main only after qualification. No branch/commit created here.",
+  "quiet_window": {
+    "buffer_stop_heavy": "2026-10-03T23:45:00Z",
+    "no_heavy_start": "2026-10-04T00:00:00Z",
+    "no_heavy_end": "2026-10-04T05:00:00Z",
+    "timezone": "America/Vancouver"
+  },
+  "research_sessions": "Do not start now; provide refreshed evidence/questions closer to16:30-16:45PDT."
+}

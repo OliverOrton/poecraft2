@@ -56,6 +56,7 @@ void run_solver_joint_policy_continuation_tests();
 void run_solver_carrier_bound_tests();
 void run_solver_proof_pattern_tests();
 void run_solver_automatic_eldritch_tests();
+void run_solver_admission_query_tests();
 void run_solver_eldritch_side_fixture_tests();
 void run_solver_policy_refinement_tests();
 void run_solver_bounded_finish_tests();

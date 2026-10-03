@@ -370,6 +370,26 @@ std::string automatic_context_key(
     return out;
 }
 
+bool automatic_admission_query_matches_spec(
+        const AutomaticAdmissionQuery query, const FixedOptionSpec& spec,
+        const ActionRegistry& registry) {
+    if (!valid_automatic_admission_query(query))
+        throw std::invalid_argument("invalid automatic admission query");
+    if (query == AutomaticAdmissionQuery::Unrestricted) return true;
+    const auto intent = static_cast<std::uint8_t>(query) - 1;
+    const auto side = intent / 6 == 0 ? PC_SIDE_PREFIX : PC_SIDE_SUFFIX;
+    const auto action = (intent % 6) / 2;
+    const auto final_type = action == 0 ? ActionType::EldritchAnnul :
+        action == 1 ? ActionType::EldritchChaos : ActionType::EldritchExalt;
+    const auto final = registry.index_by_id.find(spec.action_id);
+    return spec.kind == FixedOptionKind::EldritchSideIntent &&
+        spec.automatic_kind == AutomaticCandidateKind::EldritchSide &&
+        spec.side == side && final != registry.index_by_id.end() &&
+        registry.actions.at(final->second).params.type == final_type &&
+        ((intent % 2) == 0 ||
+         (spec.setup_action_ids.empty() && spec.program_action_ids.empty()));
+}
+
 bool temporary_blocker_applies(
     const SessionImpl& session,
     const pc_item_state& carrier,
@@ -1672,6 +1692,17 @@ AttemptKernel execute_attempt(
     }
     AttemptKernel result = task.take_result();
     task.reset();
+    if (result.supported && result.fully_legal) {
+        /* This entry is one unit-mass attempt of a fixed word. Every paid
+         * step is supported and legal on every reached branch; there is no
+         * conditional skip or early goal exit. Primitive multiplicities,
+         * including repeated price keys, therefore give exact resources.
+         * Do not infer them by summing rounded branch masses. The cooperative
+         * entry-support overload retains its weighted expectations, and
+         * retry/conditional rewards are still owned by the enclosing kernel. */
+        result.expected_primitive_actions = static_cast<double>(program.size());
+        result.expected_resources = aggregate_resources(calc.registry(), program);
+    }
     return result;
 }
 
@@ -1971,7 +2002,9 @@ discover_automatic_imprint_options_cooperatively(
     const std::uint32_t state_id,
     AutomaticAdmissionLimits limits) {
     ImprintDiscoveryResult result;
-    if (!limits.consider_imprint_programs ||
+    if (!automatic_admission_query_allows_kind(
+            limits.query, AutomaticCandidateKind::Imprint) ||
+        !limits.consider_imprint_programs ||
         solver_automatic_candidate_disabled(
             calc.goal(), AutomaticCandidateKind::Imprint) ||
         solver_action_family_disabled(

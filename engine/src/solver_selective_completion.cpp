@@ -396,6 +396,11 @@ bool SelectiveCompletionProducer::advance_programme(
     const std::uint32_t max_work_items) {
     const std::uint32_t state = direct
         ? programme.ready : programme.source;
+    // Query only the programme intent this consumer already selects below.
+    // Temporary and protected variants retain their unrestricted admission.
+    admission_.query = !uses_protected_scour(variant_) && &programme != &blocker_
+        ? eldritch_admission_query(target_side_, programme.intended, direct)
+        : AutomaticAdmissionQuery::Unrestricted;
     StateLocalAutomaticBatch batch;
     if (!problem_.advance_state_local_automatic_candidates(
             state, admission_, batch,
@@ -850,6 +855,11 @@ bool SelectiveProgrammeEntryValidator::advance(
             (binding.intent != FinderProgramIntent::ExactOperator && !temporary && !missing_eldritch))
             throw StrategyEvalUnsupported("unsupported native programme occurrence");
         admission_.cheap_programs_only = protected_scour;
+        admission_.query = expected.option_kind == FixedOptionKind::EldritchSideIntent
+            ? eldritch_admission_query(expected.intended_side,
+                problem_.registry().actions.at(expected.primitive_program.back()).params.type,
+                expected.primitive_program.size() == 1)
+            : AutomaticAdmissionQuery::Unrestricted;
         if (state_ == kNoId) {
             state_ = calc_->intern_item(entry.item);
             pc_item_state reproduced;

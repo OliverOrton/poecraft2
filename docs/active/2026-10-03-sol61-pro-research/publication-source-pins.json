@@ -1,0 +1,80 @@
+{
+  "schema": "sol61_clean_pro_publication_v1",
+  "qualification": "UNQUALIFIED_SOURCE_ONLY",
+  "created_utc": "2026-10-03T22:05:16.655389+00:00",
+  "branch": "dot/pro-sol61-conquest-armour-20261003",
+  "parent_commit": "29d9e666b9d11dbe9ba58959f2598df9495dc49d",
+  "source_paths_normalized_sha256": {
+    "engine/src/solver_calc.cpp": "cc8660226e0692c90b577c97c719a3b6f202530d045538cd9f7c0b81591d6ebb",
+    "engine/src/solver_calc_types.hpp": "083c701e0b0308733ebe444b4fcba764f09aa7e31c77a09ebbce447242c6e55c",
+    "engine/src/solver_compile_contracts.hpp": "7012de650f0b4f3ad7181c0abe601eb21f32fe7f70a27b2eef06c643147223a1",
+    "engine/src/solver_development_checkpoint.cpp": "302a0e3aa6a837a7dced7711ac87e0c3015a6d0ee35db7885ccdc46c586dd610",
+    "engine/src/solver_options_automatic.cpp": "e85c97e4d6ba591f4b00882864d2d9d7a60ab120b7a7788169c4a7f8523766a0",
+    "engine/src/solver_options_helpers.hpp": "575d705635d48d9c24543bbefd506180c3d1f83bc2ba621f7ac845cbbdbed15e",
+    "engine/src/solver_options_temporary.cpp": "de01cc4e553eb1d38b33ff17128c3007e978140adf86d5527616475d905cba59",
+    "engine/src/solver_selective_completion.cpp": "82d274a7cacb4597fb060345dfabc1ff16c6b23b330f96ad1a8de26d1c93caa3",
+    "engine/tests/test_main.cpp": "a96ff70a2c1e41e5d0ecfbe30fba6c6007d9781c78e7d4621ff1ac3d64abc3f1",
+    "engine/tests/test_solver_compile.cpp": "3c3b1b2a9bc4e6537cb22e5b5a22026fc1a24bd64d083cffcf27572a6e45df15",
+    "engine/tests/tests.hpp": "c3bf0c184802fe22b2dbae580e98739102e3123e2410bbc45e4b78744ab45fb7"
+  },
+  "approved_patches": [
+    {
+      "filename": "fixed-attempt-r2-source-only.patch",
+      "sha256": "02faa1536932904af7bd8be3d383de35bf50bb75a4508c44619fc4d98be29535"
+    },
+    {
+      "filename": "eldritch-query-r1-source-only.patch",
+      "sha256": "44f5d927070362c03a450844e0efebfb123186f8a4b95b6a5c58fc27f80a848e"
+    }
+  ],
+  "owner_snapshot_context_differences": [
+    "engine/tests/test_main.cpp",
+    "engine/tests/tests.hpp"
+  ],
+  "preserved_main_context": "CI API-test selector guards and declarations",
+  "excluded_commit": "66cca8f587f5eb85c91122b7c1b01e278bf312c5",
+  "protected_entry": "Inherited from complete released baseline; not inspected or modified; original diagnostic checkout/index untouched.",
+  "publication_method": "New parented commit with explicit allowed file replacements only; no checkout or index operation.",
+  "receipts": {
+    "source-review.json": {
+      "original_filename": "eldritch-query-r1-source-review.json",
+      "sha256": "871de1f746486d5f9f7ef31dfa6af39c123104b99fe020981c0eebc84ee852cd",
+      "bytes": 6504,
+      "qualification_transferred_to_snapshot": false
+    },
+    "conquest-pre-query-summary.json": {
+      "original_filename": "blocker-service-r2-summary.json",
+      "sha256": "4f57fbfc6520f08444da6ce740bc6a53c1b42392d8b453c24914afcce9bb57f9",
+      "bytes": 2100,
+      "qualification_transferred_to_snapshot": false
+    },
+    "armour-first4-scalar-summary.json": {
+      "original_filename": "armour-first4-scalar-summary.json",
+      "sha256": "2299abc637c8075dca2085c5704cfde1348ee3fdd9843d4b2e7e7c8f44dcfd92",
+      "bytes": 4058,
+      "qualification_transferred_to_snapshot": false
+    },
+    "fixed-attempt-pre-query-results.json": {
+      "original_filename": "fixed-attempt-r2-qualification-results.json",
+      "sha256": "b757b8101c76e1865725dbd6fcd7a3619fe81da26b732f8ccf9f1cab3601bdd3",
+      "bytes": 1156,
+      "qualification_transferred_to_snapshot": false
+    }
+  },
+  "historical_evidence_qualification": "No historical receipt is transferred to this combined query-patch snapshot.",
+  "checks": {
+    "patch_hashes": "PASSED",
+    "patch_scope": "PASSED",
+    "patch_application_to_released_baseline": "PASSED",
+    "final_source_pins": "PASSED",
+    "receipt_json": "PASSED",
+    "credential_pattern_scan": "PASSED",
+    "native_build": "UNRUN",
+    "new_finite_fixtures": "UNRUN",
+    "new_policy_evaluations": "UNRUN",
+    "WASM": "UNRUN; inherited artifact does not match changed source",
+    "web": "UNRUN"
+  },
+  "production_proposal3_enabled": false,
+  "owned_heavy_processes": []
+}

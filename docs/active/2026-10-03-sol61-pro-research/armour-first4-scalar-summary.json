@@ -1,0 +1,127 @@
+[
+  {
+    "arm": "body-3p1s-clean",
+    "status": "bounded_feasible",
+    "cost": 31591.632275626907,
+    "expanded": 4320,
+    "stop": "requested_bounded_finish",
+    "cap_hit_mask": 0,
+    "service_status": "retained",
+    "service_checks": 1,
+    "service_failure": {},
+    "ops": [
+      "chaos",
+      "eldritch_annul",
+      "eldritch_chaos",
+      "eldritch_ichor"
+    ],
+    "phase_wall_ms": {
+      "registry_layout": 55.2759,
+      "solve": 120741.5061,
+      "compile": 0.6957,
+      "total": 121903.9313
+    },
+    "quality_outcome": "checked_alternative_delivered",
+    "financial_comparison": "no matched historical baseline for this exact case/source/cap identity",
+    "exact_execution_only": "properness/pricing validate retained graph; success1 is not a quality pass"
+  },
+  {
+    "arm": "boots-2p3s-clean",
+    "status": "refused_resource_cap",
+    "cost": 1317618779.3188865,
+    "expanded": 1,
+    "stop": "reforge_work_cap",
+    "cap_hit_mask": 16,
+    "service_status": "censored_parent_cap:max_reforge_work",
+    "service_checks": 0,
+    "service_failure": {
+      "phase": "generating",
+      "subphase": "",
+      "source_states": 16441,
+      "exact_states": 0,
+      "discovered_pairs": 0,
+      "stored_transitions": 0,
+      "checker_owned_bytes": 0,
+      "checker_peak_owned_bytes": 0,
+      "proposal_index": 0
+    },
+    "ops": [
+      "chaos"
+    ],
+    "phase_wall_ms": {
+      "registry_layout": 59.4147,
+      "solve": 3315.2619,
+      "compile": 0.6614,
+      "total": 3452.4764
+    },
+    "quality_outcome": "alternative_delivery_failed_retained_chaos_fallback",
+    "financial_comparison": "no matched historical baseline for this exact case/source/cap identity",
+    "exact_execution_only": "properness/pricing validate retained graph; success1 is not a quality pass"
+  },
+  {
+    "arm": "gloves-2p2s-dirty",
+    "status": "refused_resource_cap",
+    "cost": 17001491.39312384,
+    "expanded": 1,
+    "stop": "memory_cap",
+    "cap_hit_mask": 20,
+    "service_status": "censored_parent_cap:max_reforge_work",
+    "service_checks": 0,
+    "service_failure": {
+      "phase": "generating",
+      "subphase": "",
+      "source_states": 130317,
+      "exact_states": 0,
+      "discovered_pairs": 0,
+      "stored_transitions": 0,
+      "checker_owned_bytes": 0,
+      "checker_peak_owned_bytes": 0,
+      "proposal_index": 0
+    },
+    "ops": [
+      "chaos"
+    ],
+    "phase_wall_ms": {
+      "registry_layout": 57.7974,
+      "solve": 25945.5854,
+      "compile": 0.6517,
+      "total": 40045.6375
+    },
+    "quality_outcome": "alternative_delivery_failed_retained_chaos_fallback",
+    "financial_comparison": "no matched historical baseline for this exact case/source/cap identity",
+    "exact_execution_only": "properness/pricing validate retained graph; success1 is not a quality pass"
+  },
+  {
+    "arm": "helmet-3p2s-clean",
+    "status": "refused_resource_cap",
+    "cost": 1486315830.501568,
+    "expanded": 940,
+    "stop": "reforge_work_cap",
+    "cap_hit_mask": 16,
+    "service_status": "censored_capacity:solver exceeded max_solver_owned_bytes (841091155)",
+    "service_checks": 0,
+    "service_failure": {
+      "phase": "validating",
+      "subphase": "done",
+      "source_states": 78388,
+      "exact_states": 108417,
+      "discovered_pairs": 1416,
+      "stored_transitions": 760392,
+      "checker_owned_bytes": 97742116,
+      "checker_peak_owned_bytes": 129447404,
+      "proposal_index": 0
+    },
+    "ops": [
+      "chaos"
+    ],
+    "phase_wall_ms": {
+      "registry_layout": 79.5279,
+      "solve": 120134.2004,
+      "compile": 0.8853,
+      "total": 120455.9269
+    },
+    "quality_outcome": "alternative_delivery_failed_retained_chaos_fallback",
+    "financial_comparison": "no matched historical baseline for this exact case/source/cap identity",
+    "exact_execution_only": "properness/pricing validate retained graph; success1 is not a quality pass"
+  }
+]

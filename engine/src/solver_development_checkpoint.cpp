@@ -1022,8 +1022,13 @@ void CalcContext::load_development_solve_checkpoint(
     state_local_automatic_operator_indices_.insert(
         state_local_indices.begin(), state_local_indices.end());
     state_local_automatic_operators_.clear();
+    state_local_automatic_query_mask_ = 0;
     owned_state_local_operator_bytes_ = 0;
     for (auto& [state, values] : carrier_operators) {
+        const std::uint64_t query = state >> 33;
+        if (query >= kAutomaticAdmissionQueryCount)
+            throw std::runtime_error(
+                "solver development checkpoint invalid admission query");
         auto [entry, inserted] = state_local_automatic_operators_.emplace(
             state, std::move(values));
         if (!inserted) {
@@ -1031,6 +1036,8 @@ void CalcContext::load_development_solve_checkpoint(
                 "solver development checkpoint duplicate carrier admission");
         }
         account_state_local_operators(entry->second);
+        if (query != 0)
+            state_local_automatic_query_mask_ |= static_cast<std::uint16_t>(1u << query);
     }
     action_control_.automatic_options = static_cast<std::uint32_t>(
         std::count_if(

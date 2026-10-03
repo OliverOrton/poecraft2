@@ -1,0 +1,68 @@
+{
+  "candidate_cost": 99095.4091604038,
+  "current_released_policy_cost": 101311.35474896732,
+  "diagnostic_improvement_c": 2215.9455885635252,
+  "diagnostic_improvement_percent": 2.187262813782591,
+  "historical_law3_cost": 85970.67347138176,
+  "remaining_historical_gap_c": 13124.73568902204,
+  "root_exact": {
+    "phase": "root_exact",
+    "accepted": true,
+    "cost": 99095.4091604038,
+    "success_probability": 1,
+    "cost_complete": true,
+    "converged": true,
+    "failure": 0,
+    "stop": 0,
+    "not_applied": 0,
+    "no_edge": 0,
+    "unresolved": 0,
+    "entries": 190,
+    "positive": 190,
+    "elapsed_seconds": 2.1273945
+  },
+  "entry_validation": {
+    "status": "retained",
+    "checks": 1,
+    "validated": 190,
+    "census": 190,
+    "positive": 190,
+    "retained": true,
+    "work_used": 15570088,
+    "elapsed_seconds": 5.5846578
+  },
+  "native_peak_bytes": null,
+  "peak_measurement_note": "direct-service invocation did not update outer-step peak counter; raw0 is unmeasured, notzero. Existingaggregate1GiB guards remainedactive.",
+  "graph": {
+    "sha256": "c9335356b9e8450b514dc9786f693b95277c0df7ae654eae89904698ecc51886",
+    "nodes": 30,
+    "edges": 44,
+    "types": [
+      "bench",
+      "chaos",
+      "eldritch_annul",
+      "eldritch_chaos",
+      "eldritch_ember",
+      "eldritch_exalt",
+      "exalt",
+      "remove_crafted_modifiers"
+    ]
+  },
+  "selected_materials": {
+    "bench:HelenaMasterFireResist1": 1545.020443220351,
+    "eldritch_annul": 816.3308045663861,
+    "eldritch_chaos": 1091.8447791331728,
+    "exalt": 1545.020443220351,
+    "scour": 1545.0204432203504
+  },
+  "classification": "diagnostic checked feasibleupper; no normal search/publication/closure claim; importedhistorical graph isordinary executionreference",
+  "production_proposal_count": 3,
+  "enabled_proposal3": false,
+  "remaining_product_checks": [
+    "growth",
+    "protected-fill",
+    "metamod-recovery",
+    "imprint",
+    "freshBow/Ringpolicycontrols andWASM/product qualification ifactivated"
+  ]
+}

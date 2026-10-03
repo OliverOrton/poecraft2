@@ -2175,6 +2175,7 @@ void CalcContext::reset_solve_telemetry() {
         std::exchange(development_checkpoint_replay_pending_, false);
     if (!replaying_checkpoint) {
         state_local_automatic_operators_.clear();
+        state_local_automatic_query_mask_ = 0;
         state_local_automatic_operators_.rehash(0);
         owned_state_local_operator_bytes_ = 0;
         if (goal_.automatic_candidates) {

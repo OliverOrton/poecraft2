@@ -3,6 +3,7 @@
 #include "solver_model.hpp"
 #include "solver_cooperative_task.hpp"
 #include <functional>
+#include <stdexcept>
 
 namespace poecraft {
 namespace solver {
@@ -594,9 +595,65 @@ struct ActionControlSummary {
     std::uint32_t automatic_dependency_primitives = 0;
 };
 
+/* A finite constructive query, not an action-envelope closure claim. Values
+ * 1..12 encode side (2), final native action (3), and direct-only (2). Keeping
+ * the whole intent in this enum makes the carrier cache key collision-free. */
+enum class AutomaticAdmissionQuery : std::uint8_t {
+    Unrestricted = 0,
+    EldritchPrefixAnnul, EldritchPrefixAnnulDirect,
+    EldritchPrefixChaos, EldritchPrefixChaosDirect,
+    EldritchPrefixExalt, EldritchPrefixExaltDirect,
+    EldritchSuffixAnnul, EldritchSuffixAnnulDirect,
+    EldritchSuffixChaos, EldritchSuffixChaosDirect,
+    EldritchSuffixExalt, EldritchSuffixExaltDirect,
+};
+inline constexpr std::uint8_t kAutomaticAdmissionQueryCount = 13;
+static_assert(static_cast<std::uint8_t>(
+    AutomaticAdmissionQuery::EldritchSuffixExaltDirect) + 1 == kAutomaticAdmissionQueryCount);
+static_assert(kAutomaticAdmissionQueryCount <= 16);
+
+inline bool valid_automatic_admission_query(const AutomaticAdmissionQuery query) {
+    return static_cast<std::uint8_t>(query) < kAutomaticAdmissionQueryCount;
+}
+
+inline AutomaticAdmissionQuery eldritch_admission_query(
+        const std::int8_t side, const ActionType final_action,
+        const bool direct_only) {
+    if (side != PC_SIDE_PREFIX && side != PC_SIDE_SUFFIX)
+        throw std::invalid_argument("Eldritch admission query has invalid side");
+    std::uint8_t action = 0;
+    switch (final_action) {
+        case ActionType::EldritchAnnul: action = 0; break;
+        case ActionType::EldritchChaos: action = 1; break;
+        case ActionType::EldritchExalt: action = 2; break;
+        default: throw std::invalid_argument("Eldritch admission query has invalid action");
+    }
+    return static_cast<AutomaticAdmissionQuery>(
+        1 + (side == PC_SIDE_SUFFIX ? 6 : 0) + 2 * action + direct_only);
+}
+
+inline bool automatic_admission_query_allows_kind(
+        const AutomaticAdmissionQuery query, const AutomaticCandidateKind kind) {
+    if (!valid_automatic_admission_query(query))
+        throw std::invalid_argument("invalid automatic admission query");
+    return query == AutomaticAdmissionQuery::Unrestricted ||
+        kind == AutomaticCandidateKind::EldritchSide;
+}
+
+inline std::uint64_t automatic_admission_key(
+        const std::uint32_t state, const bool cheap_only,
+        const AutomaticAdmissionQuery query) {
+    if (!valid_automatic_admission_query(query))
+        throw std::invalid_argument("invalid automatic admission query");
+    return static_cast<std::uint64_t>(state) |
+        (static_cast<std::uint64_t>(cheap_only) << 32) |
+        (static_cast<std::uint64_t>(query) << 33);
+}
+
 struct AutomaticAdmissionLimits {
     /* Cheap and full families own distinct completion/cache obligations. */
     bool cheap_programs_only = false;
+    AutomaticAdmissionQuery query = AutomaticAdmissionQuery::Unrestricted;
     std::uint64_t max_state_action_rows = 0;
     std::uint64_t max_transitions = 0;
     std::uint64_t max_solver_owned_bytes = 0;
@@ -648,6 +705,8 @@ enum class StateLocalAutomaticBatchStatus : std::uint8_t {
 struct StateLocalAutomaticBatch {
     StateLocalAutomaticBatchStatus status =
         StateLocalAutomaticBatchStatus::Complete;
+    // Complete applies only to this query, not to a wider action envelope.
+    AutomaticAdmissionQuery query = AutomaticAdmissionQuery::Unrestricted;
     bool cached = false;
     /* Set only for ResourceDeferred. The candidate decision retains the
      * corresponding human-readable reason; these fields are the scheduling
@@ -851,8 +910,9 @@ class CalcContext {
         std::uint32_t state_id,
         const AutomaticAdmissionLimits& limits);
     /* Advance a retained carrier-local admission continuation. A false
-     * return means the envelope is still being prepared and must be resumed;
-     * no partial batch is published as complete. */
+     * return means the requested query is still being prepared and must be
+     * resumed; no partial batch is published as complete. Only an unrestricted
+     * query can certify the full requested cheap/full family envelope. */
     bool advance_state_local_automatic_candidates(
         std::uint32_t state_id,
         const AutomaticAdmissionLimits& limits,
@@ -1083,11 +1143,16 @@ class CalcContext {
     std::vector<std::uint32_t> candidate_operators_;
     std::size_t initial_operator_count_ = 0;
     std::size_t static_candidate_operator_count_ = 0;
-    /* Presence is a completeness certificate. Resource-deferred batches are
+    /* Presence certifies completion of this carrier/cheap/query identity,
+     * never completion of a broader query. Resource-deferred batches are
      * deliberately never inserted, so a later solve can safely retry the
-     * carrier with a larger allowance. */
+     * same request with a larger allowance. Key shape and map allocation sizes
+     * remain uint64_t; finite query values occupy bits33..36. */
     std::unordered_map<std::uint64_t, std::vector<std::uint32_t>>
         state_local_automatic_operators_;
+    // Lookup hint only; an exact carrier/query cache membership is mandatory.
+    // Derived from retained keys on checkpoint restore, not serialized anew.
+    std::uint16_t state_local_automatic_query_mask_ = 0;
     struct AutomaticTemplateBucketCheckpoint {
         std::uint64_t key = 0;
         std::size_t size = 0;

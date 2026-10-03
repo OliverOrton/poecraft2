@@ -67,13 +67,16 @@ enum class FinderProgramIntent : std::uint8_t {
 };
 struct FinderProgramBinding {
     // Both handles are local to the original CalcContext. The finder creates
-    // them through complete state-local automatic admission, never JSON.
+    // them through complete state-local native admission of the requested
+    // intent (possibly a constructive query), never JSON. Query completion
+    // grants no full automatic action-envelope closure.
     std::uint32_t operator_index = kNoId;
     std::uint32_t admitted_state = kNoId;
     std::uint32_t held_goal_mask = 0;
     // Compiler-owned upper proposal rule. Dynamic intent is rederived through
-    // complete native admission at each positive exact entry; action/resource
-    // identity remains fixed. No supplied graph can grant this authority.
+    // complete requested native admission at each positive exact entry;
+    // action/resource identity remains fixed and every selected kernel keeps
+    // its full outcome obligations. No supplied graph can grant authority.
     FinderProgramIntent intent = FinderProgramIntent::ExactOperator;
 };
 struct FinderControlNode {
