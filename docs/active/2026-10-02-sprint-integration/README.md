@@ -759,3 +759,27 @@ focused finite ordering tests, full unfiltered npm with explicit Chrome, and
 TypeScript on this reviewed follow-up. Record identities before running and
 release the local slot immediately after commands, before receipts/publication.
 `evaluation_cancel_lifetime_review` and its ignored receipt preserve this review.
+
+
+### Evaluation cancellation correction qualified
+
+Source532b2219 (production adapteraa19a2d8 unchanged) passes focused finite
+ordering checks in0.996s, full unfiltered npm in44.174s (37/37 smoke and every
+following file), and TypeScript in3.533s. Five controlled orderings cover abort
+before readiness/dispatch, queued success after progress abort, ordinary success,
+and native errors before/after abort. Duplicate terminal, stale progress and late
+abort controls pass. The real-WASM pre-cancelled request retains baseline handles,
+and all original six cancellation/time/handle iterations pass verbatim unchanged.
+
+Qualification uses installed Chrome152.0.7977.83 / Playwright1.58.2 with a fresh
+temporary profile and unchanged executable hash. It does not claim pinned-browser
+parity. Native/WASM472f644b, other request contracts, native errors and sole worker
+cleanup owner remain unchanged. All processes exit without survivors; local slot
+is released immediately before receipt work. Prior failed CI remains preserved.
+
+`evaluation_cancel_qualification` in [qualification.json](qualification.json)
+and `out/local-native-repair/evaluation-cancel-qualified.json` own exact evidence.
+Normal qualified publication is approved; actual remote and hosted terminal result
+are recorded separately in `out/local-native-repair/evaluation-cancel-delivery.json`.
+No solver recovery, Lock or other pending feature is integrated by this delivery.
+No local heavy capacity is held for publication or hosted CI.

@@ -1,3 +1,16 @@
+# Evaluation cancellation reply ordering qualified (2026-10-03)
+
+532b2219 qualifies unchanged adapter fixaa19a2d8: five finite ordering controls,
+full unfiltered Chrome npm (37/37 smoke/all following files), and TypeScript pass.
+Pre-cancelled real-WASM handle check and original six reject/time/handle iterations
+pass. Native errors, other requests, worker cleanup and native/WASM unchanged.
+No survivor; local slot released before receipts. Qualified normal publication is
+approved; actual remote/CI receipt is `out/local-native-repair/evaluation-cancel-delivery.json`.
+The [living integration record](docs/active/2026-10-02-sprint-integration/README.md)
+and `evaluation_cancel_qualification` own passed/failed/unrun evidence. Prior CI
+failure retained; pinned-browser parity locally unrun. Solver recovery/features
+stay separate; diagnostic can use local capacity.
+
 # Evaluation cancellation lifetime review complete (2026-10-03)
 
 Production aa19a2d8 adapter remains unchanged. Expanded finite cases cover all

@@ -2666,5 +2666,196 @@
     "owned_heavy_processes_remaining": 0,
     "no_install": true,
     "no_wasm_rebuild": true
+  },
+  "evaluation_cancel_qualification": {
+    "recorded_utc": "2026-10-03T09:18:31.367449+00:00",
+    "status": "Evaluation-only cancellation reply-ordering qualified by finite controls/full unfiltered Chrome npm/TypeScript",
+    "source": "532b22191487c737774c35b32f8f907dd8f5e1cd",
+    "production_fix": "aa19a2d8adf64707b247efa6a51c1750d5004a56",
+    "qualification": {
+      "started_utc": "2026-10-03T09:14:33.414414+00:00",
+      "source": "532b22191487c737774c35b32f8f907dd8f5e1cd",
+      "wasm_sha256": "472f644bed756caee538868b714e4d144989e9ec1990232f82562d2f80b7424f",
+      "runtime": {
+        "schema_version": 1,
+        "runtime_directory": "data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+        "manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+        "source_lock": "fixtures/repoe/production-source-manifest.json",
+        "economy": {
+          "mode": "bundled",
+          "index": "economy/league-index.json"
+        }
+      },
+      "smoke_filter": null,
+      "browser_channel": "chrome",
+      "playwright_version": "1.58.2",
+      "chrome_version": "152.0.7977.83",
+      "chrome_executable_sha256": "caf423e184f0bcefe2ee5bef40539a3c005c63beb44e3321c0834929a13af733",
+      "commands": [
+        {
+          "name": "focused",
+          "command": [
+            "cmd.exe",
+            "/d",
+            "/s",
+            "/c",
+            "npx tsx test/engine-client-transfer.test.ts"
+          ],
+          "watchdog_seconds": 120.0
+        },
+        {
+          "name": "npm",
+          "command": [
+            "cmd.exe",
+            "/d",
+            "/s",
+            "/c",
+            "npm test"
+          ],
+          "watchdog_seconds": 900.0
+        },
+        {
+          "name": "typescript",
+          "command": [
+            "cmd.exe",
+            "/d",
+            "/s",
+            "/c",
+            "npx tsc --noEmit"
+          ],
+          "watchdog_seconds": 300.0
+        }
+      ],
+      "profile": "Fresh temporary Playwright launch profile; no persistent/user profile",
+      "no_install": true,
+      "no_native_build": true,
+      "pinned_browser_parity": false,
+      "completed_utc": "2026-10-03T09:15:22.122833+00:00",
+      "results": [
+        {
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 22036,
+          "process_identity_token": "22036:134354924734155506",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 995.5821000039577,
+          "name": "focused",
+          "command": [
+            "cmd.exe",
+            "/d",
+            "/s",
+            "/c",
+            "npx tsx test/engine-client-transfer.test.ts"
+          ],
+          "source": "532b22191487c737774c35b32f8f907dd8f5e1cd",
+          "watchdog_seconds": 120.0,
+          "log": "out/local-native-repair/evaluation-cancel-focused.log",
+          "summary": [
+            "  ok - strategy graphs cross client/worker boundaries as transferable JSON bytes",
+            "  ok - evaluation cancellation ordering, native errors and terminal callback cleanup remain intact"
+          ],
+          "summaries": [
+            "  ok - evaluation cancellation ordering, native errors and terminal callback cleanup remain intact"
+          ],
+          "errors": []
+        },
+        {
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 53868,
+          "process_identity_token": "53868:134354924744117326",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 44173.51939994842,
+          "name": "npm",
+          "command": [
+            "cmd.exe",
+            "/d",
+            "/s",
+            "/c",
+            "npm test"
+          ],
+          "source": "532b22191487c737774c35b32f8f907dd8f5e1cd",
+          "watchdog_seconds": 900.0,
+          "log": "out/local-native-repair/evaluation-cancel-npm.log",
+          "summary": [
+            "# Subtest: artwork packaging rejects wrong runtime, dangling references and corrupt image bytes",
+            "ok 5 - artwork packaging rejects wrong runtime, dangling references and corrupt image bytes",
+            "  ---",
+            "  duration_ms: 4.621",
+            "  ...",
+            "1..5",
+            "# tests 5",
+            "# suites 0",
+            "# pass 5",
+            "# fail 0",
+            "# cancelled 0",
+            "# skipped 0",
+            "# todo 0",
+            "# duration_ms 78.5273"
+          ],
+          "summaries": [
+            "37/37 passed",
+            "  ok - evaluation cancellation ordering, native errors and terminal callback cleanup remain intact",
+            "Lock worker: paid preview, exact restore, failed import, Undo/Redo spend, context cleanup and native strand editing passed",
+            "Lock controls: selected-request preview, read-only numerical rolls and separate payment/commit passed",
+            "solver lab Calculator export tests passed",
+            "Edit history: snapshots, branching, recovery, grouping and limits passed",
+            "Workspace resources: atomic apply, Undo/Redo, memory, spend and stale/alias rejection passed",
+            "Craft spend: repeated quantities, unknown consumption, history trimming/branching and Harvest material recipes passed"
+          ],
+          "errors": []
+        },
+        {
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 73380,
+          "process_identity_token": "73380:134354925185861422",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 3532.6895001344383,
+          "name": "typescript",
+          "command": [
+            "cmd.exe",
+            "/d",
+            "/s",
+            "/c",
+            "npx tsc --noEmit"
+          ],
+          "source": "532b22191487c737774c35b32f8f907dd8f5e1cd",
+          "watchdog_seconds": 300.0,
+          "log": "out/local-native-repair/evaluation-cancel-typescript.log",
+          "summary": [],
+          "summaries": [],
+          "errors": []
+        }
+      ],
+      "chrome_executable_sha256_after": "caf423e184f0bcefe2ee5bef40539a3c005c63beb44e3321c0834929a13af733",
+      "chrome_executable_unchanged": true,
+      "owned_processes_remaining": 0
+    },
+    "case_count": 5,
+    "native_smoke": "Pre-cancelled handle check and original six reject/1000ms/handle iterations pass unchanged",
+    "preserves": "Native error replies, other request contracts and worker cleanup unchanged; no native/include/WASM diff",
+    "prior_failure": "Windows37109852631/job111165480624 on c00bb449: missing cancellation rejection1099;17 native/275 bindings passed",
+    "slot_release": "Immediate after all commands, before docs/publication; no survivor",
+    "unrun": [
+      "Pinned-browser parity locally",
+      "Exact-head post-publication hosted CI pending"
+    ],
+    "excluded": [
+      "Solver recovery and all pending feature integration",
+      "Installation/data/price refresh/deployment"
+    ]
   }
 }
