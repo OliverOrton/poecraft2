@@ -373,8 +373,9 @@ and Exarch tier1. Its goal adds the already-present family100 flat prefix to the
 prior four families, leaving only prefix4 missing (mask29 of required31).
 Factory normal-roll prefix0/1/2 are blocked by held group10; prefix3 is held,
 and prefix4/group13 is the sole rollable prefix. Veiled prefix8 is outside the
-normal random mask. Thus native direct Eldritch Exalt has a proper one-step
-completion with intended root/goal two-state closure. Save, query, replay and
+normal random mask. Thus the native direct Eldritch Exalt law has a proper one-step
+completion with one goal exit. This describes the primitive law; ordinary
+automatic admission may enlarge the retained coarse graph. Save, query, replay and
 malformed-load contexts all use this same five-goal fixture request. This is a
 changed synthetic checkpoint premise, not a changed frozen economic case.
 Calling `checkpoint_work.finish()` at line4714 performs the completed cache
@@ -391,3 +392,60 @@ Runtime and skipped dependent selectors remain unqualified. This review does
 not repeat the decoder audit or reopen the repaired dead-end sentinel. Queued
 review fixture/source pins are unchanged; CI holds LOCAL, and this task launches
 no build, test or solve.
+
+## Final paired fixture review: 862bd1b
+
+Inspected commit `862bd1b30eedcab61bfb1be5e01055005f9b7c16`, its actual test diff
+and proper-checkpoint-gate-request.json. Production source has no deb65256..862bd1b
+delta. All final fixture corrections are unrun; no LOCAL grant or heavy command
+for this reviewer. Native source still owns the save/cardinality/closure checks.
+
+The fresh-budget negative now uses a measured successful native Chaos control
+with exactly the same root, session, scope, prices and intent. It checks the
+explicit shared owner, pristine child state/operator/work counts, zero refused
+child work, unchanged owner debit/operators, preserved old query/full membership,
+and exact retry work/owner delta plus full native semantic equality. This retains
+and strengthens the prior negative, without charging valid warm-cache hits.
+
+At test lines4723-4778, the nonterminal checkpoint requires direct native
+applicability, one unit-probability goal exit, finished policy availability,
+matching cache dimensions and an actual successful native save before adding a
+query. Ordinary nonterminal expansion calls prepare_state_expansion with full
+automatic admission (`solver_solve_expand.cpp:593,729,3104`). The fixture therefore
+requires independently pre-existing full membership at lines4767-4769. Its typed
+query must be uncached, nonempty and add no states. Restore at lines4791-4801
+requires the exact nonempty typed vector, candidate availability, complete native
+semantic/resource/exit snapshots and the unchanged pre-save full vector/law.
+This is real programme membership coverage, not just matching a cached flag.
+Malformed checksummed nonempty members and fresh-context refusal/retry remain.
+
+At lines4860-4904, the query-only fixture starts from that actual native goal exit,
+with its own caller identity, fresh calculator, finished native coarse graph,
+cardinality and save prerequisites. Terminal expansion stops before admission
+(`solver_solve_expand.cpp:3084`). The empty typed query is explicitly published
+then saved/restored. Cache lookup occurs BEFORE goal short-circuit
+(`solver_options_automatic.cpp:793` versus822). A restore that manufactures q0
+would make the first unrestricted request cached=true, failing line4901 even at
+the terminal goal. Dropping the empty typed key fails line4898. An absent q0
+returns cached=false, publishes its own empty completion, and only its repeat
+returns cached=true. Thus the terminal case is a meaningful cache-completion
+namespace negative, not a vacuous check of an empty action vector.
+
+Boundary: these two fixtures do not establish nonempty query-only/nonterminal
+checkpoint restore separation; the nonterminal case already owns full membership.
+A hypothetical restore bug promoting ONLY nonempty queried keys to q0 could
+escape this paired negative. Existing nonterminal live query-only cases still
+require unrestricted cached=false before full admission (lines4514-4570), but
+that does not substitute for a nonterminal restore witness. Also, terminal goal
+closure is already trivial and cannot qualify broader nonterminal full-envelope
+or global exact authority. The owner's documentation explicitly limits this
+coverage to nonempty query/full replay plus empty query-only completion, which
+matches the actual assertions. No source production defect is established here.
+
+Recommendation: source premises are suitable for the declared bounded owner
+build/query/checkpoint/metamod batch after parent LOCAL. Successful runtime
+acceptance/refusal remains unqualified until that batch passes. Reusing the
+unchanged deb65256 native partial-held293 receipt is proportionate: its function,
+production source and frozen inputs are unchanged; this is not ordinary controller
+or every-entry/original-root economic qualification. Queued review fixtures,
+source hashes and commands remain unchanged.
