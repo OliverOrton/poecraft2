@@ -1,0 +1,160 @@
+{
+  "status": "SOURCE_ONLY_COMBINED_PRODUCT_CHECKPOINT",
+  "production_and_assertion_source": "5a00491c5a6e932a50ec7f40af4395b476a76786",
+  "branch": "dot/sol61-ui-recomb-integration-20261004",
+  "worktree": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-ui-recomb-integration-20261004",
+  "base_main": "29d9e666b9d11dbe9ba58959f2598df9495dc49d",
+  "merge_commit": "d0f5df2f1b51745563955d274757a9f93d373728",
+  "qualified_owner_handoffs": {
+    "recombination": "cfea56c0df744cd5fdc3a69db83a33acacbd76d1",
+    "ui": "637fcef462e01def3cdf54770a402db710242c67"
+  },
+  "assertion_source": {
+    "commit": "12f51631aef7b680ec2d8f3f09af2727f4a653fb",
+    "imported_files": [
+      "apps/web/test/integrated-builder-ui-checks.mjs",
+      "apps/web/test/static-host-smoke.mjs",
+      "apps/web/test/ui-continuity-checks.mjs",
+      "apps/web/test/ui-presentation-checks.mjs"
+    ],
+    "rendered": "unrun"
+  },
+  "native_source_unchanged_from_recombination": true,
+  "owner_editor_and_cache_unchanged_from_recombination": true,
+  "trees": {
+    "engine": "4d11a36e6a7a6d9852cb292aca3c2b46e8d07088",
+    "bindings/wasm": "c2d3f6af80e7b83c79e1cc94135ca5839c6b0715",
+    "apps/web/src/app": "ab7f4e121f2a775d0c0ce7e86a67dd573ef5b35e",
+    "apps/web/src/styles": "68830f3289324f30ff3c2459cf1074ce42706644"
+  },
+  "owner_wasm_build_source": "75bea4df792ec85d4fa855d33780b9a045704450",
+  "owner_wasm_test_source": "8f1ac866af68eee1d28e2ece4b3b582443b6d968",
+  "owner_native_qualification_source": "823657c0b67a793676e83285c4e05b85175a96ab",
+  "owner_receipt": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-recomb-builder-20261004\\out\\strategy-feeder\\sol61-transport-guard-fixture-20261004\\qualification-receipt.json",
+  "artifacts_sha256": {
+    "bindings/wasm/dist/poecraft_engine.wasm": "50c98f555d4ef9f6786c9a5fcfd138442a5d01ae1b3759b09712dbae059cdd9c",
+    "bindings/wasm/dist/poecraft_engine.mjs": "8ec20cf7c0f86cbad4c5d0638e0733da3110610cf02091c0807d4b87186d2b97"
+  },
+  "frozen_inputs_verified_at_combined_source": [
+    {
+      "path": "scripts/build-data-bundle.mjs",
+      "sha256": "013b3664b44adca64c6f16af2f6225f6853d6f1ecc6b04fc6a54262995b29ca2",
+      "bytes": 7653
+    },
+    {
+      "path": "apps/web/runtime.lock.json",
+      "sha256": "bafe2c54c2659348c8fa6836564b9300a9ffb0ac5f86d717302176b7239c0ad1",
+      "bytes": 380
+    },
+    {
+      "path": "data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d/manifest.json",
+      "sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+      "bytes": 5983
+    },
+    {
+      "path": "data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d/game-data.json",
+      "sha256": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e",
+      "bytes": 16914460
+    },
+    {
+      "path": "data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d/strings.json",
+      "sha256": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6",
+      "bytes": 6740473
+    },
+    {
+      "path": "fixtures/repoe/production-source-manifest.json",
+      "sha256": "320d92fe2b7292046431fc955b9a2a7be7079e8a05119abb8fc161c7a32180ca",
+      "bytes": 9367
+    },
+    {
+      "path": "apps/web/public/economy/league-index.json",
+      "sha256": "2d71a5a96a669ac835b6e5bc06750c12ef8e5af3d7d9966c43fec0c62e86a2cd",
+      "bytes": 6144
+    },
+    {
+      "path": "apps/web/public/game-assets/catalog.json",
+      "sha256": "dd5affbe6a73f208bcdbb54074f9ad983536ffcaddcb689089a350c2d2eaffb0",
+      "bytes": 853476
+    },
+    {
+      "path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+      "sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92",
+      "bytes": 141941
+    },
+    {
+      "path": "apps/web/public/economy/snapshots/9dece258da8894eb75cbb28115c89cca3149a03b885510e10ab6c22836dbc2fc.json",
+      "sha256": "f6f5d0ade010423d20303af6714cbf6ff5bd0f8af1f7f03dba6f603ff31442b6",
+      "bytes": 141469
+    },
+    {
+      "path": "apps/web/public/economy/snapshots/7da0b6fe6884582874c8e75bbcc19e2c9cf76388992a68d546f14c967a469702.json",
+      "sha256": "ec93341dff8f7b1b69209ae6fb5589f09d39c686ab824aca46c1ce3176fd4a31",
+      "bytes": 146419
+    },
+    {
+      "path": "apps/web/public/economy/snapshots/49d5d98e06d6271a6d799a7cee2b8c79f3b7d0319321ed9df90289033a6db615.json",
+      "sha256": "3a6c5f53c7e7e2b05c70fa75471a9f11f63a2ec2981b8e483a9bcbd618ea3ba2",
+      "bytes": 99258
+    },
+    {
+      "path": "apps/web/public/economy/snapshots/9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f.json",
+      "sha256": "9cae91c13f2c8a6bb06fe0d22487cfc77ca44983817a221de131e5fc3e72cb0e",
+      "bytes": 94189
+    },
+    {
+      "path": "apps/web/public/economy/snapshots/8feaa2c8e0ae609baace236430f00d9baef171e56ade19cfadaec83c5ad2527e.json",
+      "sha256": "95774f68dcb610e5669cf866d2d128bce62a1d204b75bfbb39278e29c22891ff",
+      "bytes": 93673
+    },
+    {
+      "path": "apps/web/public/economy/snapshots/6b0ef5a757e4adc23bd753f9d9f69a2f96ace9c9f4eddf5fddac1424b0973e5f.json",
+      "sha256": "51a7a77833a1d6ab629fe7b07bf8afd3f8952e8b2e931a1ea1f4be0ebcad2d2b",
+      "bytes": 104679
+    },
+    {
+      "path": "apps/web/public/economy/snapshots/494a62ac05535e4a2671acdb190c74327e4e50b2f403a3aed1d18edad73e29c9.json",
+      "sha256": "992b82f831976ffa6098a68f95e1c3a17ad1ab4f04dc7404f1a302c3599bd696",
+      "bytes": 99568
+    }
+  ],
+  "runtime_manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+  "product_metadata": {
+    "state": "not_generated",
+    "owner": "scripts/build-data-bundle.mjs",
+    "owner_blob": "0a0a534e5c1996024c5549877857925cd15ab4d7",
+    "requirement": "Generate through unchanged owner only after final adapter/test source is committed and a parent LOCAL batch is granted. Recheck all16 frozen inputs; do not copy another checkout build-info or hand-edit derived metadata."
+  },
+  "rendered_gate": {
+    "builder_contract_environment": "POECRAFT_UI_BUILDER_CONTRACT=resource-v1",
+    "legacy_default": "legacy-48",
+    "dedicated_AB_and_trace_helpers": "prepared, unrun, not automatically wired into ordinary full smoke"
+  },
+  "trace_adapter": {
+    "state": "absent",
+    "presentation_owner_path": "apps/web/src/app/components/pc-run-trace.ts",
+    "context_owner_path": "apps/web/src/app/components/pc-strategy-editor.tsx",
+    "native_preview_owner_path": "apps/web/src/app/item-preview.ts",
+    "shared_card_owner_path": "apps/web/src/app/components/pc-mod-list.tsx",
+    "resource_authority_path": "apps/web/src/app/engine-protocol.ts",
+    "required_context": "EngineClient, dataId, catalog, native base name lookup from existing editor; exact selected resource base_key/item_level/item/identity. Do not close global client/data."
+  },
+  "remaining": [
+    "Shared read-only trace card adapter and direct lifetime/error/stale-result checks",
+    "Complete actual native mixed-base and paid-feeder result/trace envelopes for rendered fixtures",
+    "Matching combined product metadata",
+    "Whole-product native, web/TypeScript and rendered integration checks",
+    "Hosted matching source CI",
+    "Separate CI14122ab1 corrected fixture/focused qualification"
+  ],
+  "whitespace": {
+    "conflict_files_diff_check": "passed",
+    "whole_merge_diff_check": "two inherited trailing spaces in unchanged OFL.txt licence text; exact licensed bytes retained"
+  },
+  "heavy_work_this_checkpoint": false,
+  "local_slot": "solver owner; not held here",
+  "publication": {
+    "main_merged": false,
+    "pushed": false,
+    "deployment": false
+  }
+}

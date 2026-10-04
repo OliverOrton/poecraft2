@@ -1,3 +1,15 @@
+# Combined product source checkpoint (2026-10-04)
+
+Isolated dot/sol61-ui-recomb-integration-20261004 combines R cfea56c0 and UI637fcef4
+at d0f5df2f; source5a00491c imports only UI12f51631 assertion files. Native/bindings,
+WASM50c98f55/MJS8ec20cf7 and16 frozen inputs match. Combined metadata/full product/
+rendered/hosted checks are unrun. CI14122ab1 is a separate checkout, not integrated.
+The [living integration record](docs/active/2026-10-04-sol61-product-integration/README.md)
+owns source pins, trace-card presentation/context paths and remaining gates. UI
+owns the requested read-only trace-card presentation; raw native receipt/cost/
+identity/navigation authority remains intact. Solver owns LOCAL; no heavy command,
+bundle generation, main publication, deploy or dev-server action ran here.
+
 # Combined recombination/Builder source checkpoint (2026-10-04)
 
 Isolated `dot/sol61-recomb-builder-20261004`, source `9736e766`, combines main
