@@ -814,3 +814,81 @@ checkpoint authority, or weighted helper.
   assigns LOCAL, use the canonical target and focused accounting cases first.
   Recovery's existing owned-path finite gates then check cross-consumer impact;
   public Finder/Current/WASM qualification remains separate. No test is run now.
+
+
+## Recovery finite-r6 review at 8984f7c8
+
+This is independent source/receipt review, not another native execution. The
+owner's actual commit8984f7c8076ea152fdd38857602c1ad97ab9fde3 changes only the
+prepared fixture, request and record; engine/src is byte-unchanged frombd3c5b3.
+All seven recorded source hashes match the working files and pinned commit.
+The two-job Tests build passed20.773s. Three serial native selectors passed:
+151 compound-refusal +233 four-positive-fixture +84 legacy-growth =468 checks,
+zero failures. All four supervisor receipts record exit0, no timeout/cancellation
+or survivor. Exact compact receipts are owner-finite-r6-*; original raw evidence
+is out/sol61-armour/finite-r6 in the owner's worktree. No heavy command ran here.
+
+R4/P2 capability/routing defect, high confidence, disabled private producer:
+solver_selective_completion.cpp:690-700 selects below-capacity Exalt from goal
+presence/count predicates without carrier-local native eligibility. The canonical
+compound carrier prefixes3/2, suffixes5/7 has modifier2's primary group13 and
+additional group10. A native per-pick positive ordering has mass
+0.00021919330543368763; independent complete original-root Chaos enumeration
+finds exact carrier mass0.017031484841614736 (test_solver_compile.cpp:5344-5386).
+Neither missing prefix goal is rollable. The composed controller nevertheless
+routes c20 to held-mask8 Exalt, with zero native intent members.
+
+The native operation is LEGAL and paid, not an action-not-applied failure:
+solver_calc.cpp:3139-3144 self-loops when its dominant-side add pool is empty.
+The actual setup+Exalt word has action/resource count2 and exit mass1, and every
+exact exit equals the setup-only item (test_solver_compile.cpp:5440-5484).
+Original-root evaluation has success0.79346875709748854 and unresolved
+0.20653124290250982, covering the carrier mass; not-applied probability is0.
+Root acceptance correctly refuses. The actual census contains99 entries and14
+refusals; validator construction correctly rejects it at
+solver_selective_completion.cpp:1065-1069. This does NOT establish complete
+entry-by-entry validation of the compound controller. No invented complete
+census, epsilon suppression, query widening or permission exception was used.
+
+The four positive private cases pass original-root evaluation and actual every-
+positive-entry validation, with145/145/145/79 entries. Their original-root native
+costs are282.224787,282.189717985,274.525596464,274.390726972. This qualifies those
+synthetic cases only, not the frozen Conquest request or whole consumer. The
+selected-owned audit change is valid: solver_calc.cpp:2858-2862 rejects only
+undercount; conservative excess8 is retained and printed. It is no measured
+memory saving or aggregate peak qualification. The earlier142-check/3-failure
+receipt remains preserved in the owner tree; the three premise corrections
+changed no production semantics or numerical thresholds.
+
+### Next candidate review obligations
+
+No generic routing correction exists at this commit; review its actual diff when
+parent supplies it. A repair must route the actual blocked positive carrier to a
+native-valid paid continuation and retain the original root, goal, scope, price,
+resource and exact occurrence identity. Do not reject every root whose families
+can conflict or remove only the unwanted reachable mass. Carrier-local eligibility
+must use canonical native blocking, including secondary groups and the exact
+post-setup item, rather than counts or family-presence proxies. Do not globally
+ban a no-immediate-goal-progress primitive: an independently admitted finite paid
+continuation may use such a step. Its complete native law and properness decide.
+
+Retain the exact compound native reachability and no-op law as controls. For a
+claimed repaired controller, require original-root acceptance, a genuinely
+complete actual census, and the SAME native validation for every positive entry,
+including tiny visits; no synthetic census or altered tolerance. Preserve full
+weighted entry/retry/conditional resource and cost expectations instead of
+substituting a fixed word's structural counts. All paid setup, cleanup, recovery
+and retries belong in that original-root evaluation. A retained native-programme
+word must be admitted at its own reached carrier. Local query completion never
+grants full-envelope closure. Cancellation and failed branches must preserve
+committed work and earlier checked incumbents.
+
+The two measured R2 accounting defects remain open. The prior correction plan
+and exact regressions remain the implementation handoff; they do not authorize
+recovery-owner production edits here. Current owned-path controls, Finder and
+unowned/authored entry validation remain distinct. Public producer activation,
+whole Current/Finder economics, frozen Bow4/Bow5/Ring/Amulet/armour controls,
+checkpoint replay/full closure, aggregate peak accounting and WASM remain held
+or separately unqualified. Recommend retaining this default-off research commit
+and its finite evidence; do not release the producer while this positive routing
+gap exists. Parent controls the next LOCAL grant; CI currently owns it.

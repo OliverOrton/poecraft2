@@ -1,0 +1,100 @@
+{
+  "source_commit": "8984f7c8076ea152fdd38857602c1ad97ab9fde3",
+  "created_utc": "2026-10-04T08:48:02.383908+00:00",
+  "declared_request_sha256": "e4583ea274f7aa450e3c6cc2fafa66eb858dc68a52afa1edda98f5b0f5942029",
+  "source_files_sha256": {
+    "engine/src/solver_selective_completion.hpp": "c35661b9449eb8caf6d6272a05aa78718fe282d457caefeea931cb3bc5c25c78",
+    "engine/src/solver_selective_completion.cpp": "74cb6f0391d1426cf9a832bb8863f1008e1bd49fe3861e972ac3bd5bb2184e65",
+    "engine/src/solver_development_checkpoint.cpp": "5fbd67b5f1f285f96c741a6713ec8292757b47371c52d7791724475e6dfd12a0",
+    "engine/tests/test_main.cpp": "5b7aeb7960961be15a130468a79de1c50bfb8f96b062467b7b2a9800546dfd1d",
+    "engine/tests/test_solver_compile.cpp": "b794944204112164e2e3c3bc1a873ffd668f3de90e5abe038f0eaeef6575e15e",
+    "engine/tests/test_solver_metamod_recovery.cpp": "5cae556520d62df2d52076e60178006b7398c6e4099cb844495b18cc92f7d9ce",
+    "engine/tests/tests.hpp": "5cbf8b6c24dac9a828399ef1e83c62ada645b8b9a790d8a656ff6d3723a5671f"
+  },
+  "machine": "KIDS",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "runtime_files_sha256": {
+    "manifest.json": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "strings.json": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6",
+    "game-data.json": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e"
+  },
+  "serial": true,
+  "compiler_jobs": 2,
+  "parent_LOCAL_grant": "renewed; routine fixture contract corrections authorized within finite gate",
+  "resource_qualification_hold": {
+    "reviewer_source": "f442b4d8",
+    "Finder_generation": "cap50 actual88=40ordinary+48automatic; reported40",
+    "unowned_entry_validator": "cap1 actual48 over six entries; exhausted shared-owner control refused with zero child work",
+    "disposition": "Do not fix or qualify Finder/accounting here; this is the bounded recovery semantic gate"
+  },
+  "outer_client_yield_contract": "120-second exec yields, retain same deterministic supervisor across any forced yields",
+  "phases": [
+    {
+      "phase": "build",
+      "command": {
+        "argv": [
+          "powershell",
+          "-NoProfile",
+          "-File",
+          "scripts/dev-engine.ps1",
+          "-Task",
+          "Tests",
+          "-Jobs",
+          "2"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004",
+        "host_watchdog_seconds": 600,
+        "host_reservation": {},
+        "identity_sha256": "1fd91f659b4cd7dcf0fc64dbec7477458207eb9277a8b3218ef3029cd3e563db"
+      }
+    },
+    {
+      "phase": "compound-blocker-rejection",
+      "command": {
+        "argv": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_engine_tests.exe",
+          "--solver-partial-held-compound-blocker-only"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004",
+        "host_watchdog_seconds": 180,
+        "host_reservation": {},
+        "identity_sha256": "4af25d951fd2639a2e0c6e9447ac7339c97e216cb04fc15cc6652cc95f3df06f"
+      }
+    },
+    {
+      "phase": "private-partial-held-recovery",
+      "command": {
+        "argv": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_engine_tests.exe",
+          "--solver-partial-held-recovery-only"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004",
+        "host_watchdog_seconds": 180,
+        "host_reservation": {},
+        "identity_sha256": "32680a9d28e71f0d40303cddee430641794bb284c0d5ef54b77ef4cdbda150b8"
+      }
+    },
+    {
+      "phase": "legacy-growth",
+      "command": {
+        "argv": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_engine_tests.exe",
+          "--solver-growth-only"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004",
+        "host_watchdog_seconds": 180,
+        "host_reservation": {},
+        "identity_sha256": "8337a91d53f8b0a4f71f19de3d81590938149f13b23b968eaa777cdd26556e32"
+      }
+    }
+  ],
+  "checkpoint": "HELD; no save/load selector in this batch",
+  "qualified_witness_reuse": {
+    "source": "deb65256",
+    "checks": 293,
+    "failures": 0,
+    "witness_function_bytes_unchanged": true,
+    "function_sha256": "2ba17bc1ff4579e9ced79129d6af80f6ae146f858d07b0fc8377bf3059bca66d"
+  },
+  "prior_failed_batch": "out/sol61-armour/finite-r5"
+}

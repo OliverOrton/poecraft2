@@ -1,0 +1,9 @@
+private recovery native accounting: fast=103971 audited=103963 conservative_excess=8
+private partial fixture=0 anchor=3 original_root_cost=282.224787 positive_entries=145 nodes=96 programs=20 owned=6886
+private recovery native accounting: fast=103971 audited=103963 conservative_excess=8
+private partial fixture=1 anchor=3 original_root_cost=282.189717985 positive_entries=145 nodes=96 programs=20 owned=6886
+private recovery native accounting: fast=103971 audited=103963 conservative_excess=8
+private partial fixture=2 anchor=4 original_root_cost=274.525596464 positive_entries=145 nodes=96 programs=20 owned=6886
+private recovery native accounting: fast=89081 audited=89073 conservative_excess=8
+private partial fixture=3 anchor=4 original_root_cost=274.390726972 positive_entries=79 nodes=84 programs=14 owned=6422
+private partial held recovery tests: 233 checks, 0 failures

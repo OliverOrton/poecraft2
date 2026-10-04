@@ -1,0 +1,61 @@
+{
+  "source_commit": "8984f7c8076ea152fdd38857602c1ad97ab9fde3",
+  "stages": [
+    {
+      "phase": "build",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 46720,
+      "process_identity_token": "46720:134355772824533286",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 20773.409200133756
+    },
+    {
+      "phase": "compound-blocker-rejection",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 61048,
+      "process_identity_token": "61048:134355773038396939",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 382.9820000100881
+    },
+    {
+      "phase": "private-partial-held-recovery",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 18296,
+      "process_identity_token": "18296:134355773038841499",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 203.46789993345737
+    },
+    {
+      "phase": "legacy-growth",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 81272,
+      "process_identity_token": "81272:134355773040884026",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 51.959099946543574
+    }
+  ],
+  "unrun": [],
+  "owned_processes": [],
+  "local_slot": "RELEASED at terminal batch result",
+  "finished_utc": "2026-10-04T08:48:24.140421+00:00"
+}

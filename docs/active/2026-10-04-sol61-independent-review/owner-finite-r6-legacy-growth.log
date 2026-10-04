@@ -1,0 +1,5 @@
+growth fixture=0 proposal=2 cost=4199.87381599 entries=16
+growth fixture=1 proposal=2 cost=4199.87381599 entries=16
+growth fixture=2 proposal=2 cost=20.01 entries=9
+growth fixture=3 proposal=2 cost=19.01 entries=8
+solver growth tests: 84 checks, 0 failures

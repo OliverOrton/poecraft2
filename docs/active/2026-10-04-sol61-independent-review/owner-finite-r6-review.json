@@ -1,0 +1,84 @@
+{
+  "review_kind": "source and owner-executed receipt review; no new command execution",
+  "source_commit": "8984f7c8076ea152fdd38857602c1ad97ab9fde3",
+  "production_unchanged_since": "bd3c5b3c1b54805d9469c41f75f2befa5cccb430",
+  "receipt_checks": {
+    "compound_refusal": 151,
+    "four_positive_private_fixtures": 233,
+    "legacy_growth": 84,
+    "total": 468,
+    "failures": 0
+  },
+  "source_pins": [
+    {
+      "path": "engine/src/solver_selective_completion.hpp",
+      "sha256": "c35661b9449eb8caf6d6272a05aa78718fe282d457caefeea931cb3bc5c25c78",
+      "receipt_and_commit_match": true
+    },
+    {
+      "path": "engine/src/solver_selective_completion.cpp",
+      "sha256": "74cb6f0391d1426cf9a832bb8863f1008e1bd49fe3861e972ac3bd5bb2184e65",
+      "receipt_and_commit_match": true
+    },
+    {
+      "path": "engine/src/solver_development_checkpoint.cpp",
+      "sha256": "5fbd67b5f1f285f96c741a6713ec8292757b47371c52d7791724475e6dfd12a0",
+      "receipt_and_commit_match": true
+    },
+    {
+      "path": "engine/tests/test_main.cpp",
+      "sha256": "5b7aeb7960961be15a130468a79de1c50bfb8f96b062467b7b2a9800546dfd1d",
+      "receipt_and_commit_match": true
+    },
+    {
+      "path": "engine/tests/test_solver_compile.cpp",
+      "sha256": "b794944204112164e2e3c3bc1a873ffd668f3de90e5abe038f0eaeef6575e15e",
+      "receipt_and_commit_match": true
+    },
+    {
+      "path": "engine/tests/test_solver_metamod_recovery.cpp",
+      "sha256": "5cae556520d62df2d52076e60178006b7398c6e4099cb844495b18cc92f7d9ce",
+      "receipt_and_commit_match": true
+    },
+    {
+      "path": "engine/tests/tests.hpp",
+      "sha256": "5cbf8b6c24dac9a828399ef1e83c62ada645b8b9a790d8a656ff6d3723a5671f",
+      "receipt_and_commit_match": true
+    }
+  ],
+  "receipt_sha256": {
+    "owner-finite-r6-request.json": "6e91a32190ff508d93c6197399047a9fe2236ad63b925c756437aba62f9f3f35",
+    "owner-finite-r6-completion.json": "7c18d5528ed54c598667f0551965c2b143694b68e480b7d56c6ed2a5d3c63d8d",
+    "owner-finite-r6-binary-identity.json": "862958dfd2215389a7ccf56c50f0bc47a861af72d339da75b2f472ee563a2a2a",
+    "owner-finite-r6-compound-blocker-rejection.log": "e17bbe382f530c9adb425c45d4c407547f04a358423e609829a1439ce75402f3",
+    "owner-finite-r6-private-partial-held-recovery.log": "75dea114cb1ed2cf8e645bf0535bfcf8da4b01e32149b70bd15f9f2e349f7e73",
+    "owner-finite-r6-legacy-growth.log": "2d13dd6fb1f8baac9d33037551aeab5df29427f31157a9d4f43f98b1136f7845"
+  },
+  "compound": {
+    "native_ordering_mass": 0.00021919330543368763,
+    "exact_original_root_carrier_mass": 0.017031484841614736,
+    "rollable_missing_prefix_mask": 0,
+    "native_word_no_progress_mass": 1,
+    "paid_word_actions": 2,
+    "intent_members": 0,
+    "original_root_success": 0.7934687570974885,
+    "original_root_unresolved": 0.20653124290250982,
+    "not_applied_probability": 0,
+    "census_entries": 99,
+    "census_refused_entries": 14,
+    "classification": "P2 capability/routing defect in disabled producer; root and incomplete-census rejection are sound safety evidence"
+  },
+  "positive_native_entries_by_fixture": [
+    145,
+    145,
+    145,
+    79
+  ],
+  "limits": [
+    "No independent rerun of owner selectors",
+    "Compound census rejected before entry-by-entry validation; not a complete-entry receipt",
+    "No recovery routing correction exists at this commit",
+    "Two measured accounting defects remain unrepaired",
+    "No public activation, full closure/checkpoint qualification, frozen economic cohort, aggregate peak saving or WASM approval"
+  ]
+}

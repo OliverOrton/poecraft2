@@ -19,6 +19,9 @@ No production correction is implemented. Minimal planned consumer paths:
 solver_finder.cpp/.hpp, solver_selective_completion.cpp/.hpp; narrow lifetime/
 effective-remainder helper in solver_calc_types.hpp/solver_calc.cpp. Keep owned
 Current behavior, committed debit, original request identities, query membership
-and incumbents. Parent assigns the implementer and any future LOCAL; recovery
-owner currently holds LOCAL. Default-off recoverybd3c5b3 remains source-reviewed
-only, compound-blocker refusal untested; no activation/closure/WASM approval.
+and incumbents. Parent assigns the implementer and any future LOCAL; CI currently owns LOCAL.
+Recovery8984f7c8 is source/owner-receipt reviewed:468/468 checks, including151
+compound-refusal checks and233 four-positive-fixture checks. The positive native
+compound carrier still routes to paid no-progress Exalt; root and incomplete
+census correctly refuse. Generic routing repair is pending actual source.
+No activation/closure/frozen-economic/WASM approval.
