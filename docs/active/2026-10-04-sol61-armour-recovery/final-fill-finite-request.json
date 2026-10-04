@@ -1,7 +1,7 @@
 {
   "schema": "sol61_final_side_fill_finite_request_v1",
-  "status": "SOURCE_ONLY; all new build/test/construction stages UNRUN; LOCAL belongs to parent CI/product gates",
-  "basis_commit": "f5ab312250bb8285fb3468fa9dfee6211da02ec6",
+  "status": "R1 build passed; adjacent reference route fixture stopped on unhandled terminal. Source-only diagnostic repair prepared; all remaining native gates and construction UNRUN. LOCAL released11:39:36UTC; resume requires parent reassignment.",
+  "basis_commit": "16b0cf1129500e9430292bf33c96cd8c33e958a0",
   "prior_qualified_source": "a585ec4666d7c83f1446e89e2f822261b72d4254",
   "source_files_sha256": {
     "engine/src/solver_compile.cpp": "35838754a73d7bc320c1265e12eed88a5fff32bc6bf5eb836ba881d6aeaea05a",
@@ -10,7 +10,7 @@
     "engine/src/solver_selective_completion.hpp": "bd4cf4c3fab6dec4123f052a7f38c35b749b97c8a6c18108bcf9f9a09424f411",
     "engine/benchmarks/solver_benchmark.cpp": "404cac99a69d067e8a290a32e5447f57f7ca08f1701f315dbeeca1644b7100eb",
     "engine/tests/test_main.cpp": "82a2aae41073c57633bad1647f5b1facf4c320596ed3ace802f0bfb32d4369b7",
-    "engine/tests/test_solver_compile.cpp": "e43940c7f38b0b1846f276c1e2b85f67e87727a3169e1d95e45ad2c76693a472",
+    "engine/tests/test_solver_compile.cpp": "11e44c7e4da82afd99d2485044a4ce54e69a6dc86bf99c8ab326b07f0bac7e4b",
     "engine/tests/tests.hpp": "f6d8cde9c553dd80a174c9b9081b4a29d7d314ec7d9ec91a295075337b2beb05",
     "engine/src/solver_calc.cpp": "41198cac24afe47b3c65fc07094b6fffa4138f5f69fb656e2339a2a52d3e34b1",
     "engine/src/solver_calc_types.hpp": "2035b3939d546fb868578b00ee86f358978cbac32d804a4b63a9e2f47fdadd02",
@@ -37,7 +37,7 @@
     }
   },
   "slots": {
-    "LOCAL": "NOT GRANTED for this batch; request after independent source review and parent CI release",
+    "LOCAL": "RELEASED at terminal R1 failure; explicit parent assignment required for revised finite batch",
     "compiler_jobs": 2,
     "execution": "serial, stop on first failure, existing isolated worker; fresh output only"
   },
@@ -173,5 +173,7 @@
     "WASM/browser/control cohort qualification",
     "main merge/push/deploy"
   ],
-  "independent_source_review": "3b45b7c839843ed69b8ce3d0a1cf21d6d93ebbd1: no fill-routing blocker at f5ab3122; added every-entry final-guard equivalence and suspended-cursor ownership coverage are still UNRUN"
+  "independent_source_review": "3b45b7c839843ed69b8ce3d0a1cf21d6d93ebbd1: no fill-routing blocker at f5ab3122; added every-entry final-guard equivalence and suspended-cursor ownership coverage are still UNRUN",
+  "prior_failed_gate": "final-fill-r1-summary.json: retained source16b0cf11/build identity, terminal exception and six unrun stages; no native source/caps/input changes",
+  "reference_route_gate": "P0 historical s3 Ember+EExalt/current c5 Chaos paid-route assertions remain strict. Adjacent three-held tier frames retain operation OR terminal metadata natively; require at least one historical plain Exalt frame. No terminal is relabelled as a paid word or financial comparison."
 }

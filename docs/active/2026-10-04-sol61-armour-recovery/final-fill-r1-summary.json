@@ -1,0 +1,93 @@
+{
+  "schema": "sol61_final_fill_gate_summary_v1",
+  "source_commit": "16b0cf1129500e9430292bf33c96cd8c33e958a0",
+  "status": "stopped_at_adjacent_reference_route_fixture; no native qualification or candidate established",
+  "stages": [
+    {
+      "phase": "build-tests",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 94184,
+      "process_identity_token": "94184:134355873633446445",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 210187.39859992638
+    },
+    {
+      "phase": "original-root-native-partial-and-three-held-history-witness",
+      "exit_code": 3221226505,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 32232,
+      "process_identity_token": "32232:134355875741613197",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 2692.5482999067754
+    }
+  ],
+  "unrun": [
+    "entry-budget-and-independent-accounting-observer-pair",
+    "same-request-paired-final-fill-sixteen-finite-roots",
+    "unchanged-eight-root-and-878-entry-control",
+    "legacy-blocker-native-consumer-control",
+    "build-benchmark",
+    "original-request-ordinary-generated-final-word-construction-only"
+  ],
+  "build_binary": {
+    "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_engine_tests.exe",
+    "sha256": "1f2ca7b7a43f27ea8388705933d07671a685c04c2312862480cbad2a7b8d32dd",
+    "source_commit": "16b0cf1129500e9430292bf33c96cd8c33e958a0"
+  },
+  "failure": "uncaught runtime_error: partial held carrier routed to terminal; buffered output did not identify reference graph/tier frame",
+  "source_only_repair": "retain strict original P0 paid-route gate; adjacent diagnostic frames report native operation/terminal dispositions instead of assuming both reference graphs always supply a paid word; historical plain-fill-frame assertion stays",
+  "native_source_change": false,
+  "input_price_cap_change": false,
+  "owned_processes": [],
+  "LOCAL_released_utc": "2026-10-04T11:39:36.517078+00:00",
+  "evidence": {
+    "out\\sol61-armour\\final-fill-r1\\build-tests.binary-identity.json": {
+      "sha256": "b62e439a97f97c40ca52f8784ff2abefa9f61c6c7be5219987595f638158db70",
+      "bytes": 263
+    },
+    "out\\sol61-armour\\final-fill-r1\\build-tests.log": {
+      "sha256": "9be83cebf24c5f4024410ea28b31e5f6f3171cedd504cdb9866e0dbff2097338",
+      "bytes": 7869
+    },
+    "out\\sol61-armour\\final-fill-r1\\build-tests.receipt.json": {
+      "sha256": "26290a4d957bab09c5db0fad8750e3c156f5df191b74af4cc9dcf27ac0b9c4dc",
+      "bytes": 316
+    },
+    "out\\sol61-armour\\final-fill-r1\\build-tests.started.json": {
+      "sha256": "27d10dcf8bfa8c25f370f62021b039a55e7d45d9fdf6f5777a5c5807fd7b75ab",
+      "bytes": 82
+    },
+    "out\\sol61-armour\\final-fill-r1\\completion.json": {
+      "sha256": "69285217809b031dd75ffa7aa88c960033075a68eef3f956dcd7d0c99a01e8d7",
+      "bytes": 1418
+    },
+    "out\\sol61-armour\\final-fill-r1\\original-root-native-partial-and-three-held-history-witness.log": {
+      "sha256": "e4aa3dbfec2736d13cd8d29e58a7939ebf05f40e05ad53426ed4952efc2c5fb8",
+      "bytes": 119
+    },
+    "out\\sol61-armour\\final-fill-r1\\original-root-native-partial-and-three-held-history-witness.receipt.json": {
+      "sha256": "abc84aee766a1e8cf31350fdf32afde5d033417be1b58f212cd4db112d02c3cd",
+      "bytes": 325
+    },
+    "out\\sol61-armour\\final-fill-r1\\original-root-native-partial-and-three-held-history-witness.started.json": {
+      "sha256": "3a3afe68e22721154997a649f2c62e057f1918e1c259bfc38e887ae6308bad2f",
+      "bytes": 82
+    },
+    "out\\sol61-armour\\final-fill-r1\\request.json": {
+      "sha256": "06b84bda621877f63516884d15bcb2a670d2bddb55317d73fea49b276c14dfd3",
+      "bytes": 15717
+    }
+  },
+  "next": "new source/output required to resume finite gate after parent LOCAL assignment; no unchanged repeat or cap increase",
+  "economic_qualification": false,
+  "complete_peak_qualification": false
+}

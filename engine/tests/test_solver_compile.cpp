@@ -5152,13 +5152,16 @@ void run_solver_partial_held_witness_tests(const char* artifact_dir) {
     const auto carrier_state = calc.intern_item(carrier);
     PC_CHECK(satisfied_goal_mask(calc.state(carrier_state)) == ((1u << 0) | (1u << 3)));
     PC_CHECK(!calc.is_goal_state(calc.state(carrier_state)));
-    const auto first_paid = [&](const StrategyImpl& strategy, const pc_item_state& routed_item) {
+    const auto first_paid = [&](const StrategyImpl& strategy, const pc_item_state& routed_item,
+            const bool include_terminal = false) {
         auto node = strategy.start_node;
         for (std::size_t step = 0; step <= strategy.nodes.size(); ++step) {
             const auto& current = strategy.nodes.at(node);
             if (current.kind == StrategyNodeKind::Operation) return node;
-            if (current.kind == StrategyNodeKind::Terminal)
+            if (current.kind == StrategyNodeKind::Terminal) {
+                if (include_terminal) return node;
                 throw std::runtime_error("partial held carrier routed to terminal");
+            }
             const auto edge = std::find_if(current.edges.begin(),current.edges.end(),
                 [&](const auto& candidate) { return candidate.is_default ||
                     evaluate_compiled_condition(candidate.condition,*session,routed_item); });
@@ -5204,6 +5207,9 @@ void run_solver_partial_held_witness_tests(const char* artifact_dir) {
         native_mass += exit.probability;
     }
     PC_CHECK(std::abs(native_mass-1.0) <= 1e-12);
+    std::printf("original partial held paid-route gate: historical=%s current=%s word_steps=2 exits=%zu mass=%.17g\n",
+        historical->nodes[old_route].id.c_str(),current->nodes[new_route].id.c_str(),attempt.entries.size(),native_mass);
+    std::fflush(stdout);
     // Adjacent final-side witness: exact original-root acquisition, followed
     // by native paid tier setup. Historical routing supplies diagnostic words,
     // never a control graph to the ordinary producer.
@@ -5236,9 +5242,13 @@ void run_solver_partial_held_witness_tests(const char* artifact_dir) {
         PC_CHECK(frame_word.supported && frame_word.fully_legal && frame_word.entries.size() == 1);
         if (!frame_word.supported || !frame_word.fully_legal || frame_word.entries.size() != 1) return;
         pc_item_state frame; PC_CHECK(calc.materialize(frame_word.entries.front().state,frame));
-        const auto historical_node = first_paid(*historical,frame);
-        const auto current_node = first_paid(*current,frame);
-        historical_plain_fill_frames += historical->nodes[historical_node].action.type == ActionType::Exalt;
+        // Unlike the frozen P0 paid-route assertion, an adjacent diagnostic
+        // frame may be outside a reference graph's represented routing ports.
+        // Retain that terminal disposition rather than inventing a paid word.
+        const auto historical_node = first_paid(*historical,frame,true);
+        const auto current_node = first_paid(*current,frame,true);
+        historical_plain_fill_frames += historical->nodes[historical_node].kind == StrategyNodeKind::Operation &&
+            historical->nodes[historical_node].action.type == ActionType::Exalt;
         const auto ordinary = registry.index_by_id.at("exalt");
         const auto word = execute_attempt(calc,{ordinary},frame_word.entries.front().state);
         PC_CHECK(word.supported && word.fully_legal && word.expected_primitive_actions == 1 &&
@@ -5250,11 +5260,14 @@ void run_solver_partial_held_witness_tests(const char* artifact_dir) {
             mass += exit.probability;
         }
         PC_CHECK(std::abs(mass-1) <= 1e-12);
-        std::printf("three held native witness: root_ordering_mass=%.17g tiers=%u,%u historical=%s/%u current=%s/%u plain_exalt_exits=%zu mass=%.17g\n",
+        std::printf("three held native witness: root_ordering_mass=%.17g tiers=%u,%u historical=%s/kind%u/action%d/terminal%d current=%s/kind%u/action%d/terminal%d plain_exalt_exits=%zu mass=%.17g\n",
             final_ordering_mass,frame.searing_exarch_tier,frame.eater_of_worlds_tier,
-            historical->nodes[historical_node].id.c_str(),static_cast<unsigned>(historical->nodes[historical_node].action.type),
-            current->nodes[current_node].id.c_str(),static_cast<unsigned>(current->nodes[current_node].action.type),
+            historical->nodes[historical_node].id.c_str(),static_cast<unsigned>(historical->nodes[historical_node].kind),
+            historical->nodes[historical_node].action_type,historical->nodes[historical_node].terminal_kind,
+            current->nodes[current_node].id.c_str(),static_cast<unsigned>(current->nodes[current_node].kind),
+            current->nodes[current_node].action_type,current->nodes[current_node].terminal_kind,
             word.entries.size(),mass);
+        std::fflush(stdout);
     }
     PC_CHECK(historical_plain_fill_frames > 0);
     std::printf("partial held native word: steps=2 exits=%zu mass=%.17g all_four_original_affixes_preserved\n",

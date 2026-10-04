@@ -5,13 +5,20 @@ and entry-time investigation. Private default-off final stages now preserve
 below-capacity target progress via requested/priced ordinary Exalt, exact native
 eligibility and existing blocker/paid cleanup paths. Paired native finite tests,
 historical-word witness, same-census ledger/full-scan observation pair and
-original-Conquest construction-only capture are prepared, all UNRUN. Reviewer
+original-Conquest construction-only capture are prepared. R1 native selector
+ran and stopped; later gates are UNRUN. Reviewer
 3b45b7c8 found no routing blocker atf5ab3122; source-only corrections now cover
 every final-side guard at every positive entry and ownership audits at suspended
 cursor checkpoints. Production observer/checker lifetime remain unchanged.
+R1 at16b0cf11 builds successfully but the adjacent historical-word selector
+throws on a reference terminal; six remaining stages are UNRUN. Source-only
+repair now records adjacent native operation/terminal dispositions while
+retaining strict P0 and historical plain-fill assertions. [R1 receipt](docs/active/2026-10-04-sol61-armour-recovery/final-fill-r1-summary.json)
+retains the failure; LOCAL released11:39:36UTC with no survivors. Revised test
+source needs fresh finite execution after parent slot reassignment.
 [Bounded request](docs/active/2026-10-04-sol61-armour-recovery/final-fill-finite-request.json)
-pins source/inputs; independent review first, LOCAL currently owned by CI/product
-gates. No new full Conquest run, cap increase or production activation.
+pins source/inputs; independent review3b45b7c8 retained; LOCAL released after R1
+fixture stop and needs parent reassignment. No new full Conquest run, cap increase or production activation.
 R11 remains diagnostic896765.8190299857, success1 but only968/12719 positive
 entries validated; no checked upper. Its150s covers the entire pipeline, without
 phase timing. Full recursive ownership scans occur after every entry cursor

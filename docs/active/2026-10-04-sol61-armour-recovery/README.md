@@ -699,3 +699,32 @@ The refreshed finite request pins the revised test source. All new stages remain
 UNRUN; LOCAL still belongs to CI/product gates. No observer switch, early checker
 release, policy run or cap increase has occurred. The next deliverable remains
 one bounded serial finite/construction batch after the parent grants LOCAL.
+
+## Final-fill R1: build passes; adjacent reference-route fixture stops
+
+Parent granted LOCAL for source16b0cf1129500e9430292bf33c96cd8c33e958a0.
+[Compact failure receipt](final-fill-r1-summary.json) retains source, binary,
+commands, logs and process identities. Two-job build passes in210.187s. First
+native selector stops in2.693s with an uncaught "partial held carrier routed to
+terminal" exception. Its buffered output did not identify graph/tier frame.
+The six dependent stages, including accounting/paired roots and construction,
+are UNRUN. No watchdog/cancellation/survivor; LOCAL released11:39:36UTC.
+
+The source-only fixture correction distinguishes the frozen P0 assertion from
+adjacent reference diagnostics. P0 remains strictly historicals3 Ember+EExalt
+versus currentc5 Chaos, with the native paid word/probability/resource gates.
+It now flushes that diagnostic before adjacent work. Adjacent three-held tier
+frames may report an operation OR terminal, retaining native node kind/action/
+terminal identifiers; a terminal is not invented into a paid reference word.
+The historical plain-fill-frame assertion remains. No production/native law,
+root/cost/entry acceptance, input/price/cap or candidate graph changed. This is
+not evidence that the historical graph supports all adjacent frames, and the
+new generated candidate remains unqualified. If the original P0 gate itself
+fails or no historical plain frame exists, the revised gate must stop honestly.
+
+The request pins the revised test source for a fresh bounded finite batch after
+parent LOCAL reassignment. Completed native engine build evidence remains tied
+to16b0cf11; test translation unit must rebuild for the changed diagnostic.
+Retain R1 failure, reuse compatible evidence, and do not repeat unchanged or
+increase budgets. No full Conquest evaluation, production observer switch,
+early checker release or complete aggregate peak claim occurs.
