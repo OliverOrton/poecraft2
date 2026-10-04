@@ -1,0 +1,132 @@
+{
+  "schema": "sol61_independent_review_finite_request_v1",
+  "created_utc": "2026-10-04T04:53:06.9842312Z",
+  "qualification": "SOURCE_PREPARED_UNCOMPILED_UNRUN",
+  "source_record_base_commit": "3ba16daf2b31e19bf852141c4a33d90221e712bc",
+  "production_base_commit": "2ce0a75b4e98b2c5fff59be60f269df745bd63bc",
+  "reviewed_owner_candidate": "deb65256ca687bfbf9d2c43bb39c0074ea363772",
+  "worktree": "C:/Users/Oliver/Documents/poecraft2-sol61-independent-review-20261004",
+  "source_workspace_bytes_sha256": {
+    "docs/active/2026-10-04-sol61-independent-review/review-native-witness.cpp": "3a0749171b5a449b25151b48ac1246e4b3dbdbae03c323cd594e3d01a8033c72",
+    "engine/tests/test_solver_compile.cpp": "2f1216d25698797ad39925dae9f37c4a4716ef58c3c19ac9cdc2ed5a5351f9e8",
+    "engine/tests/tests.hpp": "c3bf0c184802fe22b2dbae580e98739102e3123e2410bbc45e4b78744ab45fb7",
+    "engine/src/solver_finder.cpp": "d3526665f3cccf6025e3c0fcec603ed423f1e85d4f8bb68b473bdce2cbf2824b",
+    "engine/src/solver_finder.hpp": "b0a880ecefbaf7cfc328b9c7c66029d9406a3c3cdc8f51760751f92a5e5349cc",
+    "engine/src/solver_selective_completion.cpp": "82d274a7cacb4597fb060345dfabc1ff16c6b23b330f96ad1a8de26d1c93caa3",
+    "engine/src/solver_selective_completion.hpp": "99805c9087e5f68bdc989614cda5c5fd0dbc7a59cd1f8db9c5e60ae4692e6df8",
+    "engine/src/solver_options_helpers.hpp": "575d705635d48d9c24543bbefd506180c3d1f83bc2ba621f7ac845cbbdbed15e",
+    "engine/src/solver_options_automatic.cpp": "e85c97e4d6ba591f4b00882864d2d9d7a60ab120b7a7788169c4a7f8523766a0",
+    "engine/src/solver_calc.cpp": "cc8660226e0692c90b577c97c719a3b6f202530d045538cd9f7c0b81591d6ebb",
+    "engine/src/solver_reforge.cpp": "84b13f4a4420da71e6c240cef2aa4106caea2835ea57293b30701bcb558edc19",
+    "scripts/dev-engine.ps1": "d78492851a6dc5b9594a29a4dd07c48651dbf05970b6bd6f298f03517d388ec8",
+    "scripts/engine-build-common.ps1": "d91773e5d56c501ebeb8ae6a945d5c479f2e0b4087d978238daaf8aac71d8cb9",
+    "tools/ingest/poecraft_ingest/solver_worker.py": "d6ad4e455b15908873465327d6a9c36eddc1b32b83abce216bcb91926efee1b6"
+  },
+  "compiler_jobs_max": 2,
+  "serial": true,
+  "native_mode_watchdog_seconds": 45,
+  "native_continuation_bound": 40000,
+  "supervisor": "poecraft_ingest.solver_worker.run_isolated_process",
+  "output_directory": "out/sol61-independent-review",
+  "requires_frozen_runtime_artifact": false,
+  "local_slot": "REQUESTED; no review LOCAL grant; solver owner currently owns LOCAL",
+  "stages": [
+    {
+      "id": "build",
+      "command": [
+        "powershell",
+        "-NoProfile",
+        "-File",
+        "scripts/dev-engine.ps1",
+        "-Task",
+        "Engine",
+        "-Jobs",
+        "2"
+      ],
+      "host_watchdog_seconds": 600,
+      "allowed_exit_codes": [
+        0
+      ]
+    },
+    {
+      "id": "compile",
+      "command": [
+        "C:/msys64/ucrt64/bin/g++.exe",
+        "-O0",
+        "-std=c++20",
+        "-ffp-contract=off",
+        "-ffunction-sections",
+        "-fdata-sections",
+        "-static-libstdc++",
+        "-static-libgcc",
+        "-Iengine/include",
+        "-Iengine/src",
+        "-Ibuild/engine/generated",
+        "docs/active/2026-10-04-sol61-independent-review/review-native-witness.cpp",
+        "build/engine/libpoecraft_engine.a",
+        "-Wl,--gc-sections",
+        "-lPsapi",
+        "-o",
+        "out/sol61-independent-review/review-native-witness.exe"
+      ],
+      "host_watchdog_seconds": 180,
+      "allowed_exit_codes": [
+        0
+      ],
+      "compiler_jobs": 1
+    },
+    {
+      "id": "weighted",
+      "command": [
+        "out/sol61-independent-review/review-native-witness.exe",
+        "weighted",
+        "out/sol61-independent-review/weighted"
+      ],
+      "host_watchdog_seconds": 75,
+      "allowed_exit_codes": [
+        0,
+        1
+      ],
+      "predicted_source_only": "Contract-negative nonunit exits; unit controls/rewards must be inspected. No production nonunit reachability claim."
+    },
+    {
+      "id": "finder-generation",
+      "command": [
+        "out/sol61-independent-review/review-native-witness.exe",
+        "finder-generation",
+        "out/sol61-independent-review/finder-generation"
+      ],
+      "host_watchdog_seconds": 75,
+      "allowed_exit_codes": [
+        0,
+        1
+      ],
+      "predicted_source_only": "Ordinary plus automatic generation work exceeds cap50 and automatic work is absent from Finder report; actual product caller witness must establish reachability."
+    },
+    {
+      "id": "validator-budget",
+      "command": [
+        "out/sol61-independent-review/review-native-witness.exe",
+        "validator-budget",
+        "out/sol61-independent-review/validator-budget"
+      ],
+      "host_watchdog_seconds": 75,
+      "allowed_exit_codes": [
+        0,
+        1
+      ],
+      "predicted_source_only": "Unowned native validator consumes more than cap1 while shared exhausted owner refuses before execution. Real original-root census setup is mandatory."
+    }
+  ],
+  "stop": "Build/compiler failure, exit2 or unexpected exit, setup/identity disagreement, timeout or survivor. Preserve contract-negatives and inspect every assertion. Run each independent mode once; no unchanged-failure rerun.",
+  "exclusions": [
+    "production edits",
+    "owner fixture/selector edits",
+    "frozen artifact/data changes",
+    "whole Finder incumbent qualification",
+    "whole Current recovery/economic qualification",
+    "main merge or push",
+    "WASM/browser/Simulator",
+    "new supervisor or benchmark infrastructure"
+  ]
+}

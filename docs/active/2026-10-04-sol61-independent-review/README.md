@@ -181,3 +181,138 @@ original-root and every-positive-entry checks, preserved controls and matching
 WASM evidence from the owning integrator. Available for correction re-review;
 parent sends the next candidate and controls LOCAL. No production commit exists
 from this review.
+
+## Correction re-review: deb65256
+
+Parent supplied `deb65256ca687bfbf9d2c43bb39c0074ea363772` while the solver owner
+held LOCAL for its corrected qualification batch. This review inspected the
+actual `f038aa6f..deb65256` production and fixture diff read-only. No duplicate
+build or selector was run.
+
+The decoder correction at `solver_development_checkpoint.cpp:984-1025` addresses
+R1 at source level: low-word carrier, cheap bit and the full remaining query word
+are decoded separately. IDs >=13, reserved high bits, invalid carriers, out-of-range
+operators and duplicate cache keys are rejected before planner import. Queried
+membership must be a native Eldritch intent with the matching side/final action;
+a direct query permits only a one-action word, and nonempty cheap Eldritch
+membership is rejected. Empty legitimate cheap queries remain possible. This
+matches synthesis/query filtering. Query keys remain distinct from query0;
+restoring the query hint mask at line1072 cannot itself publish unrestricted
+membership. Existing coarse-graph validation is still required before import.
+No construction, debit, probability/resource recurrence, root binding or consumer
+activation code is changed by this correction.
+
+The committed-debit witness changes Exalt to Chaos (`test_solver_compile.cpp:4633`)
+after Exalt measured zero native reforge work. Assertions for positive debit,
+staged interruption, rollback without refund, retained prior membership,
+uncached retry and refusal before a new unit all remain. The checkpoint fixture
+adds exact modifier identity to both save/load calculators, retaining the same
+root/goal/action/prices, and now asserts no admission state growth at line4705.
+Its previous run failed the save cardinality precondition; it never measured
+loader refusal. R1's original diagnosis was an independent source proof.
+These fixture changes address preconditions rather than weakening acceptance.
+
+Checksummed malformed-key negatives at lines4743-4778 retain exact refusal
+reasons, unchanged fresh state/operator counts and successful valid-load retry.
+The fixed header checksum offset agrees with format7's magic, version/endian,
+nine uint32 layout sizes, payload length and checksum. Full native partial-held
+Ember1/Exalt checks at lines4983-5007 additionally bind two paid actions/resources,
+positive complete exit mass, preservation of all four incoming affixes and
+canonical below-tier blocking. Existing 1e-12 mass tolerance remains unchanged.
+This is native-word evidence only, not an original-root economic comparison.
+
+No new correctness finding was established in this narrow correction diff.
+Source recommendation: accept the narrow R1 correction for the owner's declared
+finite qualification; hold runtime/replay release until that batch passes.
+The owner-published f038aa6f routing25/25 receipt proves a positive native Chaos
+ordering (mass2.4457291281364614e-9, exact goal mask9) and native routing to
+historical s3 Ember/Exalt versus Current c5 Chaos. The query2701 receipt preserves
+six failures, not a passed gate. New word/decoder/negative tests at deb65256
+remain unrun by this reviewer and await the owner's result. Recovery construction,
+performance, full envelope, original-root economics, controls and WASM remain
+outside this correction qualification.
+
+## Isolated falsification fixtures prepared; request next review LOCAL
+
+The parent separately authorized source preparation for R2/R3. The only new code
+is [review-native-witness.cpp](review-native-witness.cpp), outside engine source,
+CMake and other owners' test selectors. It includes the existing finite
+`test_solver_compile.cpp` session factory and defines its own standalone main.
+Unused test entry points are discarded at link time; none is invoked. The
+[source-pinned batch request](review-batch-request.json) binds the compiler input
+bytes, unchanged production base2ce0a75b, three modes and exact command arrays.
+The source is **uncompiled and all three modes are unrun**. A parent LOCAL grant
+is required after the solver owner's active batch releases it.
+
+- `weighted`: enumerate `CalcContext::outcomes` separately for each exact positive
+  input, then directly sum entry_probability times every native exit. Compare
+  the cooperative helper's entire exit map, expected primitive count and resource
+  vector. Cases: unit deterministic control; weight0.125 deterministic Ember;
+  positive1e-18 Ember; two identical-signature Chaos entries totaling1 as control;
+  and two totaling0.125. The fixture-only Ember descriptor repeats a cost key to
+  verify multiplicity. Prices/data/mechanics are not edited. Unit controls and
+  dyadic scaling permit exact comparison; no production tolerance is changed.
+  Predicted baseline failure: nonunit exit mass becomes1 while rewards retain
+  entry mass. This tests a latent helper contract, not established production EV.
+- `finder-generation`: ordinary product `PolicyFinderWork` with its default
+  conditional grammar/eight-attempt promotion, original clean Rare root, exact
+  four-goal2+2 request and declared prices. Cap50; compare the actual calculator's
+  ordinary plus automatic committed work to Finder telemetry on each native
+  continuation until completion or the first overrun. Record full native telemetry,
+  then bounded-finish and cancel admission while borrowed prices remain alive.
+  Cancellation must not refund either ledger. This reaches the actual product
+  constructor; it does not fabricate the omitted-work counter or private owner.
+- `validator-budget`: construct the real retention controller, compile within
+  that original request, and obtain the complete accepted original-root native
+  result/census with actual positive visits and exact occurrence identities.
+  No visit scaling, fabricated census or predicate substitution. Revalidate every
+  positive entry with max_reforge_work1 and no owner (Finder's component invocation),
+  then compare the same immutable census/control/prices with an exhausted shared
+  owner whose single committed unit must stay charged and block the next unit.
+  Save the graph/census and report work/refusal separately. This is a component
+  witness using real reachable entries; it does not establish a constrained whole
+  Finder's incumbent or final accepted-policy behavior.
+
+The broader helper's production call-site review found ordinary Imprint extension
+seeded with unit mass; no production nonunit caller was established. The producer,
+Current and Finder tests have separate qualification. These fixtures do not
+re-open resolved completed-dead-end sentinels or the prior wrong-budget-owner
+fixture diagnosis. They do not run frozen economic cases or alter their semantics.
+
+Exact commands are recorded below and in the request; run only after parent LOCAL.
+Build is the existing canonical Engine target with two compiler jobs, followed by
+one standalone fixture compile. No full acceptance, Simulator, browser or WASM.
+Native modes run serially under existing `run_isolated_process`, not a new runner.
+Each mode has a45-second native deadline,40000 continuation bound and75-second host
+watchdog; build/compile host watchdogs are600/180 seconds. Persist raw output and
+existing process/survivor receipts. Exit0 means contract assertions passed,
+exit1 means a measured falsification needing inspection, and exit2 means setup
+or native refusal (no intended witness claim). The three independent modes each
+run once; an anticipated contract-negative is preserved and does not authorize
+an unchanged rerun. Stop the batch for setup/identity failure, timeout, survivor,
+or build/compiler failure. Read every failed assertion before disposition.
+
+```powershell
+powershell -NoProfile -File scripts/dev-engine.ps1 -Task Engine -Jobs 2
+C:/msys64/ucrt64/bin/g++.exe -O0 -std=c++20 -ffp-contract=off -ffunction-sections -fdata-sections -static-libstdc++ -static-libgcc -Iengine/include -Iengine/src -Ibuild/engine/generated docs/active/2026-10-04-sol61-independent-review/review-native-witness.cpp build/engine/libpoecraft_engine.a -Wl,--gc-sections -lPsapi -o out/sol61-independent-review/review-native-witness.exe
+out/sol61-independent-review/review-native-witness.exe weighted out/sol61-independent-review/weighted
+out/sol61-independent-review/review-native-witness.exe finder-generation out/sol61-independent-review/finder-generation
+out/sol61-independent-review/review-native-witness.exe validator-budget out/sol61-independent-review/validator-budget
+```
+
+Those are command vectors for the existing supervisor; do not launch them bare.
+From the isolated review worktree, set `PYTHONPATH=tools/ingest;bindings/python`,
+load the request, verify every listed SHA256 and call
+`run_isolated_process(command, watchdog_seconds=stage['host_watchdog_seconds'], cwd=Path.cwd())`
+for each stage in order. Save `result['output']` as a log and all other returned
+fields as its receipt under `out/sol61-independent-review`. Hash the resulting
+library/executable and persist source commit/compiler identity before running
+modes. The reviewed static link flags mirror native tests; `--gc-sections` drops
+uninvoked external test-suite references. Any link/setup failure is new evidence
+to diagnose, not permission to link fake test stubs or broaden the native batch.
+
+Request to parent: assign the next finite review-test LOCAL batch when available.
+Until that grant, continue candidate/evidence review source-only. Source-ready
+fixtures are not a qualification receipt or a production repair. Initial review
+findings and release limits above remain, except R1 is now corrected at source
+in deb65256 and pending the owner's corrected runtime gates.
