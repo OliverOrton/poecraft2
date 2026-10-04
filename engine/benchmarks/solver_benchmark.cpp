@@ -3243,8 +3243,17 @@ int check_generated_partial_root(poecraft::solver::CalcContext& calc,
     auto& parent = owner.calc;
     // Freeze the already observed generated policy in this named diagnostic,
     // not production dispatch or admission. Generic owner fixes must not change it.
-    if (finder_candidate_graph_hash(graph) != "2424103896900201902")
-        throw std::runtime_error("generated Conquest graph differs from pinned R8 candidate");
+    const auto expected_graph = args.partial_held_final_fill ?
+        "7602779656003707844" : "2424103896900201902";
+    if (finder_candidate_graph_hash(graph) != expected_graph)
+        throw std::runtime_error("generated Conquest graph differs from its finite-qualified candidate pin");
+    const auto checker_phase_began = Clock::now();
+    const auto generation_wall_ms = milliseconds(began,checker_phase_began);
+    Clock::time_point entry_phase_began{};
+    bool entry_phase_started = false;
+    double checker_wall_ms = 0,entry_wall_ms = 0;
+    std::uint64_t checker_steps = 0,entry_advances = 0;
+    std::uint64_t memory_observation_calls = 0,memory_observation_ns = 0,entry_live_observation_ns = 0;
     const auto output = fs::absolute(args.output);
     const auto details = fs::path(output.string()+".eval.json");
     if (fs::exists(details)) throw std::runtime_error("generated root check refuses existing details");
@@ -3273,8 +3282,13 @@ int check_generated_partial_root(poecraft::solver::CalcContext& calc,
             refinement::strategy_impl_owned_bytes(*strategy)+retained_word_bytes;
     };
     const auto memory = [&] {
+        const auto observation_began = Clock::now();
         const auto selected = outer(false)+(checker ? checker->live_owned_bytes() : 0)+
             (validator ? validator->estimated_owned_bytes() : 0);
+        const auto observed_ns = static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
+            Clock::now()-observation_began).count());
+        ++memory_observation_calls;memory_observation_ns += observed_ns;
+        if (validator) entry_live_observation_ns += observed_ns;
         peak_selected = std::max(peak_selected,selected);
         peak = std::max(peak,selected+reservation);
         if (selected+reservation >= limits.max_solver_owned_bytes)
@@ -3334,7 +3348,7 @@ int check_generated_partial_root(poecraft::solver::CalcContext& calc,
         checker = std::make_unique<StrategyEvalWork>(strategy,eval);
         charge_checker(); memory();
         while (!checker->progress().done && within_time()) {
-            checker->step(8); charge_checker(); memory();
+            ++checker_steps;checker->step(8); charge_checker(); memory();
         }
         charge_checker(); progress = checker->progress();
         if (!progress.done) {
@@ -3343,6 +3357,8 @@ int check_generated_partial_root(poecraft::solver::CalcContext& calc,
             status = "refused_exact_graph_check";
         } else {
             root_accepted = true; phase = "positive_entries";
+            entry_phase_began = Clock::now();entry_phase_started = true;
+            checker_wall_ms = milliseconds(checker_phase_began,entry_phase_began);
             auto allowance = limits;
             allowance.max_solver_owned_bytes = memory();
             allowance.max_reforge_work = parent.remaining_reforge_work_budget();
@@ -3352,7 +3368,7 @@ int check_generated_partial_root(poecraft::solver::CalcContext& calc,
                 calc,calc.shared_session(),control,checker->result().policy_entries,economy->prices,allowance);
             positive_entries = validator->positive_entries(); memory();
             while (!validator->done() && within_time()) {
-                validator->advance(1); memory();
+                ++entry_advances;validator->advance(1); memory();
             }
             validated_entries = validator->validated_entries();
             validation_work = validator->logical_work(); validation_active = validator->active_work();
@@ -3371,6 +3387,8 @@ int check_generated_partial_root(poecraft::solver::CalcContext& calc,
     } catch (const std::exception& error) {
         status = "rejected_error"; refusal = error.what();
     }
+    if (entry_phase_started) entry_wall_ms = milliseconds(entry_phase_began,Clock::now());
+    else checker_wall_ms = milliseconds(checker_phase_began,Clock::now());
     if (validator) {
         validated_entries = validator->validated_entries(); positive_entries = validator->positive_entries();
         validation_work = validator->logical_work(); validation_active = validator->active_work();
@@ -3406,6 +3424,12 @@ int check_generated_partial_root(poecraft::solver::CalcContext& calc,
         <<",\"case_request\":"<<json_of(specification)<<",\"economy_id\":"<<escape_json(economy->id)
         <<",\"construction_receipt\":"<<escape_json(output.string()+".construction.json")
         <<",\"graph_hash\":"<<escape_json(finder_candidate_graph_hash(graph))
+        <<",\"private_final_fill\":"<<(args.partial_held_final_fill?"true":"false")
+        <<",\"generation_wall_ms\":"<<generation_wall_ms<<",\"checker_wall_ms\":"<<checker_wall_ms
+        <<",\"entry_wall_ms\":"<<entry_wall_ms<<",\"checker_steps\":"<<checker_steps<<",\"entry_advances\":"<<entry_advances
+        <<",\"memory_observation_calls\":"<<memory_observation_calls<<",\"memory_observation_ns\":"<<memory_observation_ns
+        <<",\"entry_live_memory_observation_ns\":"<<entry_live_observation_ns
+        <<",\"aggregate_memory_observation_complete\":false"
         <<",\"root_accepted\":"<<(root_accepted?"true":"false")
         <<",\"all_positive_entries_accepted\":"<<(entries_accepted?"true":"false")
         <<",\"checked_feasible_upper\":"<<(complete?"true":"false")
@@ -7285,8 +7309,8 @@ Arguments parse_arguments(int argc, char** argv) {
             args.exact_strategy_evaluation_time_limit_seconds!=0 || args.goal_progress_gated_reforges)
             throw std::runtime_error("fixed-graph pair requires one Finder case, input/hash/output and no solve/verification diagnostic alterations");
     }
-    if (args.partial_held_final_fill && (!args.partial_held_construction_witness || args.partial_held_root_check))
-        throw std::runtime_error("private final fill requires construction-only witness; root experiment is not declared");
+    if (args.partial_held_final_fill && !args.partial_held_construction_witness && !args.partial_held_root_check)
+        throw std::runtime_error("private final fill requires its frozen construction or finite-qualified root check");
     if ((args.partial_held_construction_witness || args.partial_held_root_check) &&
         (args.case_id != "sol61-trace-conquest5-currentmodel-120" || args.output.empty() ||
          args.solver_mode != "current" || args.validate_only || args.action_layout_diagnostic ||

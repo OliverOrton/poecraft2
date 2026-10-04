@@ -1,0 +1,557 @@
+{
+  "schema": "sol61_generic_final_fill_candidate_summary_v1",
+  "status": "PASS_FINITE_AND_CONSTRUCTION_ONLY",
+  "source_commit": "6097f93d2e232c22c28b0a22339a22c59c062cc2",
+  "native_source_hashes": {
+    "engine/src/solver_compile.cpp": "35838754a73d7bc320c1265e12eed88a5fff32bc6bf5eb836ba881d6aeaea05a",
+    "engine/src/solver_compile_contracts.hpp": "b156eed5a8e3c13a1159365b0a3e4ccd6a50234927d07f3c9d506789409735f3",
+    "engine/src/solver_selective_completion.cpp": "8fff4ffb259400854b480bee06cef80b1242d1ba15ab233fe4f75e4f31d3d8b6",
+    "engine/src/solver_selective_completion.hpp": "bd4cf4c3fab6dec4123f052a7f38c35b749b97c8a6c18108bcf9f9a09424f411",
+    "engine/benchmarks/solver_benchmark.cpp": "404cac99a69d067e8a290a32e5447f57f7ca08f1701f315dbeeca1644b7100eb",
+    "engine/tests/test_main.cpp": "82a2aae41073c57633bad1647f5b1facf4c320596ed3ace802f0bfb32d4369b7",
+    "engine/tests/test_solver_compile.cpp": "b34458428eec7d01ed42689e7988e00c3d63d8d5845ebb91ce3552757c42faca",
+    "engine/tests/tests.hpp": "f6d8cde9c553dd80a174c9b9081b4a29d7d314ec7d9ec91a295075337b2beb05",
+    "engine/src/solver_calc.cpp": "41198cac24afe47b3c65fc07094b6fffa4138f5f69fb656e2339a2a52d3e34b1",
+    "engine/src/solver_calc_types.hpp": "2035b3939d546fb868578b00ee86f358978cbac32d804a4b63a9e2f47fdadd02",
+    "engine/src/solver_options_automatic.cpp": "e85c97e4d6ba591f4b00882864d2d9d7a60ab120b7a7788169c4a7f8523766a0",
+    "engine/src/solver_options_helpers.hpp": "575d705635d48d9c24543bbefd506180c3d1f83bc2ba621f7ac845cbbdbed15e"
+  },
+  "test_binary_reused": {
+    "source_commit": "675c2f06642a25338310a6d7bfc578e27d4cc153",
+    "sha256": "52a02bff5b1add79c527078d335310c26c1d538ad6676188537cb11ed7b99848",
+    "path": "build/engine/poecraft_engine_tests.exe",
+    "identity": "all twelve source files unchanged; reuse completed R3 build, exact binary checked before execution"
+  },
+  "benchmark_binary": {
+    "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_solver_benchmark.exe",
+    "sha256": "0c6ce764795f177a85ed953279600e7b363f7b747aa264f94d55d7f61277a77f",
+    "source_commit": "6097f93d2e232c22c28b0a22339a22c59c062cc2"
+  },
+  "historical_equivalence": "negative R3 preserved in explicit historical diagnostic; not a generic candidate gate and not relabelled passing",
+  "finite_checks": [
+    {
+      "phase": "entry-budget-and-independent-accounting-observer-pair",
+      "checks": 196,
+      "failures": 0
+    },
+    {
+      "phase": "same-request-paired-final-fill-sixteen-finite-roots",
+      "checks": 14036,
+      "failures": 0
+    },
+    {
+      "phase": "unchanged-eight-root-and-878-entry-control",
+      "checks": 6305,
+      "failures": 0
+    },
+    {
+      "phase": "legacy-blocker-native-consumer-control",
+      "checks": 171,
+      "failures": 0
+    }
+  ],
+  "total_checks": 20708,
+  "failures": 0,
+  "pairs": [
+    {
+      "fixture": 0,
+      "anchor_slot": 3,
+      "control_printed_cost": 282.224787,
+      "candidate_printed_cost": 214.752322377,
+      "printed_cost_precision": "native fixture12significant digits; no full-Conquest financial extrapolation",
+      "control_positive_entries": 145,
+      "candidate_positive_entries": 132,
+      "candidate_nodes": 108,
+      "candidate_programs": 20
+    },
+    {
+      "fixture": 1,
+      "anchor_slot": 3,
+      "control_printed_cost": 282.189717985,
+      "candidate_printed_cost": 214.717347269,
+      "printed_cost_precision": "native fixture12significant digits; no full-Conquest financial extrapolation",
+      "control_positive_entries": 145,
+      "candidate_positive_entries": 132,
+      "candidate_nodes": 108,
+      "candidate_programs": 20
+    },
+    {
+      "fixture": 2,
+      "anchor_slot": 4,
+      "control_printed_cost": 274.525596464,
+      "candidate_printed_cost": 203.760964031,
+      "printed_cost_precision": "native fixture12significant digits; no full-Conquest financial extrapolation",
+      "control_positive_entries": 145,
+      "candidate_positive_entries": 132,
+      "candidate_nodes": 108,
+      "candidate_programs": 20
+    },
+    {
+      "fixture": 3,
+      "anchor_slot": 4,
+      "control_printed_cost": 274.390726972,
+      "candidate_printed_cost": 203.626108405,
+      "printed_cost_precision": "native fixture12significant digits; no full-Conquest financial extrapolation",
+      "control_positive_entries": 79,
+      "candidate_positive_entries": 71,
+      "candidate_nodes": 96,
+      "candidate_programs": 14
+    },
+    {
+      "fixture": 4,
+      "anchor_slot": 3,
+      "control_printed_cost": 274.559625906,
+      "candidate_printed_cost": 206.582144477,
+      "printed_cost_precision": "native fixture12significant digits; no full-Conquest financial extrapolation",
+      "control_positive_entries": 105,
+      "candidate_positive_entries": 92,
+      "candidate_nodes": 108,
+      "candidate_programs": 20
+    },
+    {
+      "fixture": 5,
+      "anchor_slot": 3,
+      "control_printed_cost": 274.523961891,
+      "candidate_printed_cost": 206.546554486,
+      "printed_cost_precision": "native fixture12significant digits; no full-Conquest financial extrapolation",
+      "control_positive_entries": 105,
+      "candidate_positive_entries": 92,
+      "candidate_nodes": 108,
+      "candidate_programs": 20
+    },
+    {
+      "fixture": 6,
+      "anchor_slot": 3,
+      "control_printed_cost": 1058.41163574,
+      "candidate_printed_cost": 1042.07083688,
+      "printed_cost_precision": "native fixture12significant digits; no full-Conquest financial extrapolation",
+      "control_positive_entries": 77,
+      "candidate_positive_entries": 63,
+      "candidate_nodes": 108,
+      "candidate_programs": 20
+    },
+    {
+      "fixture": 7,
+      "anchor_slot": 3,
+      "control_printed_cost": 1058.40531371,
+      "candidate_printed_cost": 1042.06622119,
+      "printed_cost_precision": "native fixture12significant digits; no full-Conquest financial extrapolation",
+      "control_positive_entries": 77,
+      "candidate_positive_entries": 63,
+      "candidate_nodes": 108,
+      "candidate_programs": 20
+    }
+  ],
+  "paired_scope_prices": "Chaos100/Exalt.43/EChaos3/EAnnul2/EExalt1/Ember.07*tier/Ichor.11*tier; original clean five natural T1 goals",
+  "paired_positive_entries": {
+    "control": 878,
+    "candidate": 777,
+    "all_checked": true,
+    "every_missing_guard_native_equivalent_at_every_positive_entry": true
+  },
+  "unchanged_legacy": {
+    "roots": 8,
+    "entries": 878,
+    "costs_and_entry_counts_identical_to_prior_controls": true,
+    "blocker_checks": 171,
+    "all_pass": true
+  },
+  "exact_reuse_projection": {
+    "cases": 16,
+    "duplicates": 0,
+    "all_carrier_and_carrier_occurrence_counts_equal_positive_entries": true,
+    "new_cache_or_merged_entries": false
+  },
+  "ownership_observer_pair": [
+    {
+      "observer": "full",
+      "steps": 36,
+      "entries": 6,
+      "logical": 48,
+      "active": 48,
+      "observation_ns": 30900,
+      "advance_ns": 1236200,
+      "audited_ns": 42100,
+      "audits": 36,
+      "suspended_audits": 30,
+      "completed_audits": 6,
+      "validator_selected_peak": 159315,
+      "checker_retained": 1
+    },
+    {
+      "observer": "ledger",
+      "steps": 36,
+      "entries": 6,
+      "logical": 48,
+      "active": 48,
+      "observation_ns": 8100,
+      "advance_ns": 1211500,
+      "audited_ns": 47000,
+      "audits": 36,
+      "suspended_audits": 30,
+      "completed_audits": 6,
+      "validator_selected_peak": 159331,
+      "checker_retained": 1
+    }
+  ],
+  "observation_ns_saved_in_small_witness": 22800,
+  "ownership_disposition": "each36 checkpoints audited including30suspended+6completed; no detected selected-ledger undercount; exact48work/all6entries. One tiny witness, not robust aggregate timing/release/completepeak evidence; production observer and retained checker unchanged",
+  "construction": {
+    "kind": "partial_held_construction_witness_v1",
+    "case": "sol61-trace-conquest5-currentmodel-120",
+    "constructed": true,
+    "graph_hash": "7602779656003707844",
+    "route": "c21",
+    "held_mask": 8,
+    "ordering_mass": 2.4457291281364614e-09,
+    "native_word_mass": 1.0000000000000002,
+    "native_word_steps": 2,
+    "native_word_exits": 33,
+    "native_word_resources": {
+      "eldritch_ember:1": 1,
+      "eldritch_exalt": 1
+    },
+    "programme_occurrence_key": [
+      1,
+      1,
+      1,
+      0,
+      2,
+      16,
+      7521983798878432357,
+      3547273436276286815,
+      14,
+      7521983798878432357,
+      128008840570207,
+      0,
+      0,
+      0,
+      4294967295,
+      0,
+      0,
+      0,
+      8,
+      15,
+      0,
+      0,
+      0,
+      0,
+      2,
+      16,
+      7521983798878432357,
+      3547273436276286815,
+      4607182418800017408,
+      14,
+      7521983798878432357,
+      128008840570207,
+      4607182418800017408,
+      5064665311082596657,
+      1,
+      8
+    ],
+    "exact_carrier_key": [
+      8098432503581079089,
+      1,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2,
+      6,
+      114,
+      828,
+      0,
+      0,
+      0,
+      4294967295,
+      6,
+      137,
+      1746,
+      0,
+      0,
+      0,
+      4294967295,
+      2,
+      6,
+      14,
+      5771,
+      0,
+      0,
+      0,
+      4294967295,
+      6,
+      27,
+      1104,
+      0,
+      0,
+      0,
+      4294967295,
+      0,
+      0
+    ],
+    "goal_mask": 9,
+    "source_proposal_admitted_state": 2,
+    "source_operator_index": 194,
+    "generation_work": 233575,
+    "conservative_reserved_peak": 283828260,
+    "transient_reservation": 201589248,
+    "nodes": 108,
+    "programs": 20,
+    "private_final_fill": true,
+    "final_side_witness": {
+      "route": "c69",
+      "action": "exalt",
+      "held_goal_mask": 7,
+      "incoming_goal_mask": 15,
+      "positive_root_ordering_mass": 5.356873587015119e-09,
+      "exact_carrier_key": [
+        8098432503581079089,
+        1,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        3,
+        6,
+        114,
+        828,
+        0,
+        0,
+        0,
+        4294967295,
+        6,
+        132,
+        1745,
+        0,
+        0,
+        0,
+        4294967295,
+        6,
+        138,
+        1746,
+        0,
+        0,
+        0,
+        4294967295,
+        1,
+        6,
+        14,
+        5771,
+        0,
+        0,
+        0,
+        4294967295,
+        0,
+        0
+      ],
+      "native_word_mass": 0.9999999999999994,
+      "native_word_exits": 72,
+      "native_word_steps": 1,
+      "native_resources": {
+        "exalt": 1
+      },
+      "every_native_exit_preserves_all_four_goals": true
+    },
+    "original_root_acceptance": "unrun",
+    "every_positive_entry_acceptance": "unrun",
+    "economic_qualification": false,
+    "graph_sha256": "bedc2a4718e4622a301b0efd9159335fbe41db46f1b521c8d3bdac619249337a",
+    "graph_bytes": 39418,
+    "graph_path": "out\\sol61-armour\\generic-final-fill-r1\\final-fill-construction.json.strategy.json"
+  },
+  "memory_disposition": "283828260 reservation-inclusive construction observation is not complete aggregate peak or1GiB compliance proof; transient-overlap gap remains",
+  "full_conquest_root_or_entries": "UNRUN for new graph",
+  "consumer_retention_or_activation": false,
+  "Finder_or_WASM_qualification": false,
+  "stages": [
+    {
+      "phase": "entry-budget-and-independent-accounting-observer-pair",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 67312,
+      "process_identity_token": "67312:134355892670143298",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 34.72390002571046
+    },
+    {
+      "phase": "same-request-paired-final-fill-sixteen-finite-roots",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 2216,
+      "process_identity_token": "2216:134355892670498385",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 687.9621997941285
+    },
+    {
+      "phase": "unchanged-eight-root-and-878-entry-control",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 9996,
+      "process_identity_token": "9996:134355892677396038",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 372.2475999966264
+    },
+    {
+      "phase": "legacy-blocker-native-consumer-control",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 91592,
+      "process_identity_token": "91592:134355892681117466",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 113.67839993909001
+    },
+    {
+      "phase": "build-benchmark",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 83980,
+      "process_identity_token": "83980:134355892682273662",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 15476.901000132784
+    },
+    {
+      "phase": "original-request-ordinary-generated-final-word-construction-only",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 22100,
+      "process_identity_token": "22100:134355892841777059",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 909.2686998192221
+    }
+  ],
+  "unrun": [],
+  "owned_processes": [],
+  "LOCAL_released_utc": "2026-10-04T12:08:04.832537+00:00",
+  "evidence": {
+    "out\\sol61-armour\\generic-final-fill-r1\\build-benchmark.binary-identity.json": {
+      "sha256": "45dab3c5c464a3d82aa6103ac8e1bb40a3eefc5c2115aaea686a42328ee0d88c",
+      "bytes": 267
+    },
+    "out\\sol61-armour\\generic-final-fill-r1\\build-benchmark.log": {
+      "sha256": "21f4b1f3f132741efce059df0d4cec08a270b7c14248be972df370d607a72a31",
+      "bytes": 203
+    },
+    "out\\sol61-armour\\generic-final-fill-r1\\build-benchmark.receipt.json": {
+      "sha256": "967673cf8b57814ffc70e81554ffadcc5afa4ed2ceaf84df5ade72a3deacde9c",
+      "bytes": 316
+    },
+    "out\\sol61-armour\\generic-final-fill-r1\\build-benchmark.started.json": {
+      "sha256": "98365c67165e73443c67e993a182566e6ce4e6903c2d9adf538dd18a21c03c60",
+      "bytes": 82
+    },
+    "out\\sol61-armour\\generic-final-fill-r1\\completion.json": {
+      "sha256": "b51499ba9f72aa22358fcf974303c048d62a9f31b55d833e6272c0fcd9d18bf7",
+      "bytes": 2817
+    },
+    "out\\sol61-armour\\generic-final-fill-r1\\entry-budget-and-independent-accounting-observer-pair.log": {
+      "sha256": "2c59a7fe0b52c13f9bc8246d55580369a151d8f521213148fd87164ff1161b4d",
+      "bytes": 1476
+    },
+    "out\\sol61-armour\\generic-final-fill-r1\\entry-budget-and-independent-accounting-observer-pair.receipt.json": {
+      "sha256": "d7898983d5015f52d2410951aa667ad40cd7c154c0a815a10ca0bb6e8d4a1636",
+      "bytes": 315
+    },
+    "out\\sol61-armour\\generic-final-fill-r1\\entry-budget-and-independent-accounting-observer-pair.started.json": {
+      "sha256": "0899b808fea160f4f2bee65a20c629197aa9c56d9279485ec2e225fb1be58f17",
+      "bytes": 82
+    },
+    "out\\sol61-armour\\generic-final-fill-r1\\final-fill-construction.json": {
+      "sha256": "93f77ff7008a945ff725de213fbf7c11937f347740ed214e62f2e3f809d46de9",
+      "bytes": 1689
+    },
+    "out\\sol61-armour\\generic-final-fill-r1\\final-fill-construction.json.strategy.json": {
+      "sha256": "bedc2a4718e4622a301b0efd9159335fbe41db46f1b521c8d3bdac619249337a",
+      "bytes": 39418
+    },
+    "out\\sol61-armour\\generic-final-fill-r1\\legacy-blocker-native-consumer-control.log": {
+      "sha256": "a60b3925eb7eb9471fac527b00434564b68410991ac98faa6e77b3ccfc239e75",
+      "bytes": 504
+    },
+    "out\\sol61-armour\\generic-final-fill-r1\\legacy-blocker-native-consumer-control.receipt.json": {
+      "sha256": "5ac4b4145c01fd7eb10814ff767ff2dfa44e6d361ba8874fada9e2e204b12638",
+      "bytes": 316
+    },
+    "out\\sol61-armour\\generic-final-fill-r1\\legacy-blocker-native-consumer-control.started.json": {
+      "sha256": "84340b2ec2e2de94983daeac2dd3479a5a9d6c695c8517ffc4dd58a0744c3c5a",
+      "bytes": 82
+    },
+    "out\\sol61-armour\\generic-final-fill-r1\\original-request-ordinary-generated-final-word-construction-only.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "out\\sol61-armour\\generic-final-fill-r1\\original-request-ordinary-generated-final-word-construction-only.receipt.json": {
+      "sha256": "76a6fb4497b2f53017c8d2e0d6e2541e30ee3a0cb76313df5dfd92f771170e09",
+      "bytes": 315
+    },
+    "out\\sol61-armour\\generic-final-fill-r1\\original-request-ordinary-generated-final-word-construction-only.started.json": {
+      "sha256": "4cd1d881802bee0724bdcd4be2c51d289fd955dfac97bd5bbfa5a880f4120eb6",
+      "bytes": 82
+    },
+    "out\\sol61-armour\\generic-final-fill-r1\\request.json": {
+      "sha256": "36ffd0f656999b4b237ab58709d4cd5f4d0dff75f524dd2fe57068779a9687d6",
+      "bytes": 15931
+    },
+    "out\\sol61-armour\\generic-final-fill-r1\\same-request-paired-final-fill-sixteen-finite-roots.log": {
+      "sha256": "da21dcc10ad9521814171fec65728733659b60faf31f05e7bacdfc89f946188f",
+      "bytes": 20077
+    },
+    "out\\sol61-armour\\generic-final-fill-r1\\same-request-paired-final-fill-sixteen-finite-roots.receipt.json": {
+      "sha256": "b2d089a455fabfb210409368765eb0950e47fede56f7c9a76562a784befda1af",
+      "bytes": 313
+    },
+    "out\\sol61-armour\\generic-final-fill-r1\\same-request-paired-final-fill-sixteen-finite-roots.started.json": {
+      "sha256": "fa58c221a455328959385d0973028072018e90ff374d8fa35257d70630b01ea7",
+      "bytes": 80
+    },
+    "out\\sol61-armour\\generic-final-fill-r1\\unchanged-eight-root-and-878-entry-control.log": {
+      "sha256": "2a41a0ff2ce60d7a8d4170bc087b8589f7f3ff6f3b2a67161b057c0328d7d65e",
+      "bytes": 7391
+    },
+    "out\\sol61-armour\\generic-final-fill-r1\\unchanged-eight-root-and-878-entry-control.receipt.json": {
+      "sha256": "94a2b97883a1195ed9dd6320c64f3f063cd6c0df0d2f74a9d88b2799b49bf144",
+      "bytes": 313
+    },
+    "out\\sol61-armour\\generic-final-fill-r1\\unchanged-eight-root-and-878-entry-control.started.json": {
+      "sha256": "b5857553e4d76cfd858d6cbab64d74d9283e426aeaa2ed9d9bfa41c04aee919f",
+      "bytes": 80
+    }
+  }
+}

@@ -1,0 +1,158 @@
+{
+  "schema": "sol61_generic_final_fill_root_request_v1",
+  "status": "AUTHORIZED: ONE changed-candidate root/every-positive-entry invocation after finite20708checks0failures; build and root stages UNRUN",
+  "basis_commit": "6097f93d2e232c22c28b0a22339a22c59c062cc2",
+  "parent_LOCAL_grant": "CI released LOCAL after37identity controls+trace/no survivors. Parent explicitly grants ONE changed generic-final-fill Conquest root/all-entry check. Reviewer1d6c742f3bb61cd2ad71019b2b4f82fb0de25b90 approved20708checks/allpins and narrow old/new graph guards.",
+  "source_files_sha256": {
+    "engine/src/solver_compile.cpp": "35838754a73d7bc320c1265e12eed88a5fff32bc6bf5eb836ba881d6aeaea05a",
+    "engine/src/solver_compile_contracts.hpp": "b156eed5a8e3c13a1159365b0a3e4ccd6a50234927d07f3c9d506789409735f3",
+    "engine/src/solver_selective_completion.cpp": "8fff4ffb259400854b480bee06cef80b1242d1ba15ab233fe4f75e4f31d3d8b6",
+    "engine/src/solver_selective_completion.hpp": "bd4cf4c3fab6dec4123f052a7f38c35b749b97c8a6c18108bcf9f9a09424f411",
+    "engine/benchmarks/solver_benchmark.cpp": "2903cf7105e185648afd2413370a2b80a44859a11eba07a470c293b41517e37c",
+    "engine/tests/test_main.cpp": "82a2aae41073c57633bad1647f5b1facf4c320596ed3ace802f0bfb32d4369b7",
+    "engine/tests/test_solver_compile.cpp": "b34458428eec7d01ed42689e7988e00c3d63d8d5845ebb91ce3552757c42faca",
+    "engine/tests/tests.hpp": "f6d8cde9c553dd80a174c9b9081b4a29d7d314ec7d9ec91a295075337b2beb05",
+    "engine/src/solver_calc.cpp": "41198cac24afe47b3c65fc07094b6fffa4138f5f69fb656e2339a2a52d3e34b1",
+    "engine/src/solver_calc_types.hpp": "2035b3939d546fb868578b00ee86f358978cbac32d804a4b63a9e2f47fdadd02",
+    "engine/src/solver_options_automatic.cpp": "e85c97e4d6ba591f4b00882864d2d9d7a60ab120b7a7788169c4a7f8523766a0",
+    "engine/src/solver_options_helpers.hpp": "575d705635d48d9c24543bbefd506180c3d1f83bc2ba621f7ac845cbbdbed15e"
+  },
+  "runtime_files_sha256": {
+    "manifest.json": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "strings.json": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6",
+    "game-data.json": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e"
+  },
+  "conquest_inputs": {
+    "docs/active/2026-10-03-sol61-recovery/qualification/law3/cases/conquest5-product.json": {
+      "sha256": "49bc43f7fa8616ab0f798d8e5c5a2e0c3e79342a51a1636446f2d80e65147642",
+      "bytes": 7942
+    },
+    "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json": {
+      "sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92",
+      "bytes": 141941
+    },
+    "docs/active/2026-10-04-sol61-armour-recovery/conquest-construction-manifest.json": {
+      "sha256": "9cdfc766842410dfac2c4aaa7a0e96342cf724cd7cea5dcf633293661d3c7607",
+      "bytes": 1125
+    }
+  },
+  "candidate_graph": {
+    "fnv1a64": "7602779656003707844",
+    "sha256": "bedc2a4718e4622a301b0efd9159335fbe41db46f1b521c8d3bdac619249337a",
+    "bytes": 39418,
+    "nodes": 108,
+    "programs": 20,
+    "identity": "regenerate from exact original problem/control bindings; compare complete bytes/semantic occurrence provenance before checking, never import capturedgraph"
+  },
+  "old_control_diagnostic_only": {
+    "receipt": "conquest-root-r11-summary.json",
+    "source": "a585ec4666d7c83f1446e89e2f822261b72d4254",
+    "graph_fnv1a64": "2424103896900201902",
+    "graph_sha256": "7f2c12941904762444da1ecf95ef77f8456e2ab170cd74465c5aba50bbd4461e",
+    "root_cost": 896765.8190299857,
+    "root_converged_success_one": true,
+    "all_positive_entries_accepted": false,
+    "entries_validated": 968,
+    "entries_total": 12719,
+    "reuse_scope": "fully identified original-root cost/resource diagnostic only; unchanged native evaluation laws/prices/input/graph arithmetic; not a qualified upper, matched-source speed/memory or all-entry performance control",
+    "no_repeat": "do not rerun unchanged failed R11 to get green or reconstruct its diagnostics"
+  },
+  "finite_qualification": "generic-final-fill-r1-summary.json; source6097f93d;20708checks0failures; original-root constructiononly graph7602779656003707844/bedc2a4718e4622a301b0efd9159335fbe41db46f1b521c8d3bdac619249337a",
+  "slots": {
+    "LOCAL": "explicit parent one-case grant; release immediately at terminal result BEFORE documentation",
+    "compiler_jobs": 2,
+    "execution": "serial existing isolated supervisor, stop on failure/cancel/watchdog/survivor"
+  },
+  "owner": "scripts/dev-engine.ps1 and existing native root diagnostic/poecraft_ingest.solver_worker.run_isolated_process; no new supervisor",
+  "stages": [
+    {
+      "phase": "build-benchmark",
+      "argv": [
+        "powershell",
+        "-NoProfile",
+        "-File",
+        "scripts/dev-engine.ps1",
+        "-Task",
+        "Benchmark",
+        "-Jobs",
+        "2"
+      ],
+      "host_watchdog_seconds": 600
+    },
+    {
+      "phase": "generated-final-fill-original-root-and-all-entries",
+      "argv": [
+        "build/engine/poecraft_solver_benchmark.exe",
+        "--artifact",
+        "data/compiled/current",
+        "--corpus",
+        "docs/active/2026-10-04-sol61-armour-recovery/conquest-construction-manifest.json",
+        "--case",
+        "sol61-trace-conquest5-currentmodel-120",
+        "--partial-held-root-check",
+        "--partial-held-final-fill",
+        "--output",
+        "<fresh batch>/generic-final-fill-root.json"
+      ],
+      "host_watchdog_seconds": 165
+    }
+  ],
+  "unchanged_protocol": {
+    "requested_seconds": 120,
+    "final_exact_allowance_seconds": 30,
+    "native_deadline_seconds": 150,
+    "host_watchdog_seconds": 165,
+    "checker_step_work_items": 8,
+    "entry_step_work_items": 1,
+    "aggregate_logical_work_cap": 50000000,
+    "aggregate_owned_bytes_cap": 1073741824,
+    "rows": 1215000,
+    "transitions": 10000000,
+    "economic_restart": false,
+    "limits": "preserve full original file and resolved owner.options discovery/checker/output caps; record all resolutions",
+    "epsilon": 1e-12,
+    "acceptance_probability_tolerance": 1e-09,
+    "resources": "exact quantities, no resource epsilon or weighted structural overwrite"
+  },
+  "original_root": {
+    "case": "sol61-trace-conquest5-currentmodel-120",
+    "case_bytes_sha256": "49bc43f7fa8616ab0f798d8e5c5a2e0c3e79342a51a1636446f2d80e65147642",
+    "runtime_files_sha256": {
+      "manifest.json": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+      "strings.json": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6",
+      "game-data.json": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e"
+    },
+    "inputs": {
+      "docs/active/2026-10-03-sol61-recovery/qualification/law3/cases/conquest5-product.json": {
+        "sha256": "49bc43f7fa8616ab0f798d8e5c5a2e0c3e79342a51a1636446f2d80e65147642",
+        "bytes": 7942
+      },
+      "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json": {
+        "sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92",
+        "bytes": 141941
+      },
+      "docs/active/2026-10-04-sol61-armour-recovery/conquest-construction-manifest.json": {
+        "sha256": "9cdfc766842410dfac2c4aaa7a0e96342cf724cd7cea5dcf633293661d3c7607",
+        "bytes": 1125
+      }
+    },
+    "model": "owner-approved law3/solvercontract5/certificate3, frozenAllflame/baseoverride5, originalemptyrareilvl86/tiers/goals/scope; no inferred defaults/price changes"
+  },
+  "source_delta": "benchmark only: admit new finite-qualified graph pin only with private final fill; preserve old control graph pin and frozen-case/no-other-treatments guards; add phase/observation counters, no semantics/budget/lifetime/production observer changes",
+  "checker_ownership": "checker and complete immutable census remain owned until every-entry validator is destroyed; no early release or stable-result transfer",
+  "acceptance": "native original-root acceptance AND every strictly positive native-programme entry; tiny positive entries retained; no public incumbent/Current/Finder activation; no lower or closure authority",
+  "measurement": "generation/checker/entry phase elapsed, checkpoint counts, full production memory observation time, work/census/refusal/probabilities/resources and complete graph identity; sampled selected/reservation memory remains NOT complete aggregate peak/cap proof",
+  "comparison": "R11 diagnostic original-root price/resource reference only; not qualified upper or matched-source runtime/memory/all-entry control. Historical reference supplied85970.67347138176; historical plain-fill reconstruction remains negative.",
+  "stop_on": "native semantic/resource/goal/scope/input/graph/debit/positive-entry disagreement, caps/time/watchdog or lost incumbent; retain remainingentry counts and cleanup; no droppedtinyentries, cap increase, unbounded grammar expansion or unchanged rerun",
+  "exclusions": [
+    "production Current/Finder activation",
+    "imported historical controller",
+    "proposal3 activation",
+    "approximate state merging or omitted entries",
+    "Finder generation/scoped-owner lifecycle repair",
+    "early checker release",
+    "WASM/browser/control cohort qualification",
+    "main merge/push/deploy"
+  ],
+  "after_result": "Immediately final-message parent with LOCAL release UTC/no-survivor/cost/root and entry completion/refusal/phase/source/binary/artifact receipts BEFORE drafting docs. No repeat of incomplete or failed result."
+}
