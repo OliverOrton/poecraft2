@@ -4629,6 +4629,7 @@ void run_solver_admission_query_tests() {
     CalcContext interleaved(session,goal,registry,{chaos});
     interleaved.set_reforge_work_budget_owner(&interleaved_owner);
     const auto interleaved_state = interleaved.intern_item(root);
+    const auto pristine_operator_count = interleaved.operators().size();
     auto committed_request = limits;
     committed_request.query = eldritch_admission_query(PC_SIDE_PREFIX,ActionType::EldritchChaos,false);
     const auto committed = interleaved.admit_state_local_automatic_candidates(interleaved_state,committed_request);
@@ -4636,6 +4637,12 @@ void run_solver_admission_query_tests() {
     const auto committed_operators = interleaved.operators().size();
     const auto committed_work = interleaved_owner.telemetry().reforge_logical_work_v1;
     PC_CHECK(committed_work > 0 && !committed.admitted_operators.empty());
+    // This successful fresh-context control uses the identical carrier,
+    // scope, prices and intent as the later exhausted context. Its native
+    // work is measured before exhausting the owner, rather than inferred
+    // from an uncached query key or a paid primitive resource.
+    PC_CHECK(!committed.cached);
+    PC_CHECK(committed.phases.reforge_logical_work_v1 == committed_work);
     StateLocalAutomaticBatch interrupted;
     bool completed_full = false;
     bool staged = false;
@@ -4657,38 +4664,72 @@ void run_solver_admission_query_tests() {
     PC_CHECK(!full_retry.cached);
     PC_CHECK(interleaved_owner.telemetry().reforge_logical_work_v1 > interrupted_work);
     PC_CHECK(interleaved.admit_state_local_automatic_candidates(interleaved_state,limits).cached);
-    // Refuse a different uncached intent after the same owner has committed
-    // native work. The completed query/full memberships survive the refusal;
-    // increasing the allowance permits a new uncached, correctly charged try.
-    auto exhausted_carrier = root; exhausted_carrier.eater_of_worlds_tier = 1;
-    const auto exhausted_state = interleaved.intern_item(exhausted_carrier);
-    auto exhausted_request = limits;
-    exhausted_request.query = eldritch_admission_query(PC_SIDE_SUFFIX,ActionType::EldritchChaos,true);
+    // Recreate the measured fresh-context control after the shared owner
+    // has committed query/full work. The original completed memberships
+    // must survive; the new context has no admission or kernel cache to use.
+    CalcContext exhausted(session,goal,registry,{chaos});
+    exhausted.set_reforge_work_budget_owner(&interleaved_owner);
+    const auto exhausted_state = exhausted.intern_item(root);
+    const auto exhausted_request = committed_request;
+    PC_CHECK(exhausted.reforge_work_budget_owner() == &interleaved_owner);
+    PC_CHECK(exhausted.state_count() == 1 &&
+        exhausted.operators().size() == pristine_operator_count);
+    PC_CHECK(exhausted.telemetry().automatic_admission_reforge_logical_work_v1 == 0 &&
+        exhausted.telemetry().reforge_logical_work_v1 == 0);
     const auto debit_before_refusal = interleaved_owner.telemetry().reforge_logical_work_v1;
-    const auto operators_before_refusal = interleaved.operators().size();
+    const auto operators_before_refusal = exhausted.operators().size();
     interleaved_owner.set_solve_resource_caps(100000,debit_before_refusal,false);
     bool post_commit_refused = false;
-    try { (void)interleaved.admit_state_local_automatic_candidates(exhausted_state,exhausted_request); }
+    try { (void)exhausted.admit_state_local_automatic_candidates(exhausted_state,exhausted_request); }
     catch (const SolverResourceLimit& limit) { post_commit_refused = limit.cap_name() == "max_reforge_work"; }
     PC_CHECK(post_commit_refused);
-    PC_CHECK(interleaved.operators().size() == operators_before_refusal);
+    PC_CHECK(exhausted.operators().size() == operators_before_refusal);
     PC_CHECK(interleaved_owner.telemetry().reforge_logical_work_v1 == debit_before_refusal);
+    PC_CHECK(exhausted.telemetry().automatic_admission_reforge_logical_work_v1 == 0 &&
+        exhausted.telemetry().reforge_logical_work_v1 == 0);
     interleaved_owner.set_solve_resource_caps(100000,100000000,false);
     PC_CHECK(interleaved.admit_state_local_automatic_candidates(interleaved_state,committed_request).cached);
-    const auto exhaustion_retry = interleaved.admit_state_local_automatic_candidates(exhausted_state,exhausted_request);
+    PC_CHECK(interleaved.admit_state_local_automatic_candidates(interleaved_state,limits).cached);
+    const auto exhaustion_retry = exhausted.admit_state_local_automatic_candidates(exhausted_state,exhausted_request);
     PC_CHECK(!exhaustion_retry.cached && !exhaustion_retry.admitted_operators.empty());
     PC_CHECK(interleaved_owner.telemetry().reforge_logical_work_v1 > debit_before_refusal);
-
+    PC_CHECK(exhaustion_retry.phases.reforge_logical_work_v1 == committed_work);
+    PC_CHECK(interleaved_owner.telemetry().reforge_logical_work_v1 -
+        debit_before_refusal == committed_work);
+    compare(committed_semantics,snapshot(exhausted,exhausted_state,exhaustion_retry));
+    std::printf("post-commit budget prerequisite: fresh_control_work=%llu spent_owner=%llu retry_work=%llu\n",
+        static_cast<unsigned long long>(committed_work),
+        static_cast<unsigned long long>(debit_before_refusal),
+        static_cast<unsigned long long>(exhaustion_retry.phases.reforge_logical_work_v1));
 
     // A completed typed membership round-trips through the existing coarse
     // checkpoint without creating completion for the unrestricted envelope.
-    // The one enabled primitive has the same law as the chosen direct intent,
-    // so the completed coarse graph already owns all its native exact exits.
+    // A proper clean completion gives the nonempty replay/malformed-member
+    // witness. Ordinary expansion also admits the unrestricted envelope;
+    // the query-only absence obligation has a separate terminal carrier below.
     auto checkpoint_root = root; checkpoint_root.searing_exarch_tier = 1;
+    PC_CHECK(pc_item_remove_at(&checkpoint_root,PC_SIDE_SUFFIX,1) == PC_RESULT_OK);
+    PC_CHECK(pc_item_add_mod(&checkpoint_root,PC_SIDE_SUFFIX,6,
+        session->primary_group[6],0,nullptr) == PC_RESULT_OK);
+    auto checkpoint_goal = goal;
+    GoalSlot flat; flat.family_id = session->family_id[0]; flat.min_tier = 1;
+    checkpoint_goal.slots.push_back(flat);
     const auto direct_exalt = registry.index_by_id.at("eldritch_exalt");
-    CalcContext saved(session,goal,registry,{direct_exalt},false,false,true,
+    CalcContext saved(session,checkpoint_goal,registry,{direct_exalt},false,false,true,
         std::nullopt,{},false,{},true);
     const auto saved_state = saved.intern_item(checkpoint_root);
+    // Establish native applicability and proper one-step closure before solve.
+    const auto& direct_law = saved.outcomes(saved_state,direct_exalt);
+    const bool proper_direct = direct_law.supported && direct_law.applicable &&
+        direct_law.entries.size() == 1 && direct_law.choice_groups.empty() &&
+        direct_law.entries.front().probability == 1.0 &&
+        saved.is_goal_state(saved.state(direct_law.entries.front().state));
+    PC_CHECK(!saved.is_goal_state(saved.state(saved_state)) && proper_direct);
+    if (!proper_direct) return;
+    pc_item_state terminal_carrier;
+    const bool native_terminal = saved.materialize(direct_law.entries.front().state,terminal_carrier);
+    PC_CHECK(native_terminal);
+    if (!native_terminal) return;
     SolveOptions checkpoint_caps;
     checkpoint_caps.max_states = checkpoint_caps.max_discovered_states = 10000;
     checkpoint_caps.max_expanded_states = 10000;
@@ -4698,15 +4739,44 @@ void run_solver_admission_query_tests() {
     for (unsigned step = 0; step < 40000 && !checkpoint_work.progress().done; ++step)
         checkpoint_work.step(8);
     PC_CHECK(checkpoint_work.progress().done);
+    if (!checkpoint_work.progress().done) return;
+    const auto checkpoint_result = checkpoint_work.finish();
+    PC_CHECK(checkpoint_result.policy_available);
+    const auto cache = saved.solve_transition_cache();
+    const bool native_cardinality = cache &&
+        cache->discovered_states == saved.state_count() &&
+        cache->expanded.size() == saved.state_count() &&
+        cache->state_rows.size() == saved.state_count();
+    PC_CHECK(native_cardinality);
+    std::printf("query checkpoint preflight: states=%zu cache_states=%u expanded=%zu row_spans=%zu policy=%u\n",
+        static_cast<std::size_t>(saved.state_count()),cache ? cache->discovered_states : 0,
+        cache ? cache->expanded.size() : 0,cache ? cache->state_rows.size() : 0,
+        checkpoint_result.policy_available ? 1u : 0u);
+    if (!native_cardinality || !checkpoint_result.policy_available) return;
+    const auto path = std::filesystem::temp_directory_path() / "poecraft-eldritch-query-membership.pcsg";
+    bool native_save_ready = false;
+    try {
+        // Exercise all native row/arena/closure checks before adding the query.
+        saved.save_development_solve_checkpoint(path.string(),"eldritch-query-native-fixture-v1");
+        native_save_ready = true;
+    } catch (const std::exception& error) {
+        std::printf("query checkpoint prerequisite: %s\n",error.what());
+    }
+    PC_CHECK(native_save_ready);
+    if (!native_save_ready) return;
+    const auto full_before_query = saved.admit_state_local_automatic_candidates(saved_state,limits);
+    PC_CHECK(full_before_query.cached);
+    if (!full_before_query.cached) return;
     auto checkpoint_query = limits;
     checkpoint_query.query = eldritch_admission_query(PC_SIDE_PREFIX,ActionType::EldritchExalt,true);
     const auto checkpoint_states = saved.state_count();
     const auto saved_query = saved.admit_state_local_automatic_candidates(saved_state,checkpoint_query);
     PC_CHECK(saved.state_count() == checkpoint_states);
     PC_CHECK(!saved_query.cached && !saved_query.admitted_operators.empty());
-    const auto path = std::filesystem::temp_directory_path() / "poecraft-eldritch-query-membership.pcsg";
+    if (saved.state_count() != checkpoint_states || saved_query.cached ||
+        saved_query.admitted_operators.empty()) return;
     bool checkpoint_loaded = false;
-    CalcContext replay(session,goal,registry,{direct_exalt},false,false,true,
+    CalcContext replay(session,checkpoint_goal,registry,{direct_exalt},false,false,true,
         std::nullopt,{},false,{},true);
     try {
         saved.save_development_solve_checkpoint(path.string(),"eldritch-query-native-fixture-v1");
@@ -4716,12 +4786,15 @@ void run_solver_admission_query_tests() {
         std::printf("query checkpoint witness: %s\n",error.what());
     }
     PC_CHECK(checkpoint_loaded);
+    if (!checkpoint_loaded) return;
     if (checkpoint_loaded) {
         const auto loaded_query = replay.admit_state_local_automatic_candidates(saved_state,checkpoint_query);
         PC_CHECK(loaded_query.cached && loaded_query.admitted_operators == saved_query.admitted_operators);
         compare(snapshot(saved,saved_state,saved_query),snapshot(replay,saved_state,loaded_query));
         const auto loaded_full = replay.admit_state_local_automatic_candidates(saved_state,limits);
-        PC_CHECK(!loaded_full.cached && loaded_full.query == AutomaticAdmissionQuery::Unrestricted);
+        PC_CHECK(loaded_full.cached && loaded_full.query == AutomaticAdmissionQuery::Unrestricted);
+        PC_CHECK(loaded_full.admitted_operators == full_before_query.admitted_operators);
+        compare(snapshot(saved,saved_state,full_before_query),snapshot(replay,saved_state,loaded_full));
         PC_CHECK(replay.admit_state_local_automatic_candidates(saved_state,limits).cached);
         for (const auto index : loaded_query.admitted_operators)
             PC_CHECK(replay.is_candidate_operator_admitted_for_state(saved_state,index));
@@ -4761,7 +4834,7 @@ void run_solver_admission_query_tests() {
             }
             std::copy_n(reinterpret_cast<const char*>(&checksum),sizeof(checksum),changed.begin()+checksum_offset);
             { std::ofstream output(bad_path,std::ios::binary); output.write(changed.data(),changed.size()); }
-            CalcContext invalid(session,goal,registry,{direct_exalt},false,false,true,
+            CalcContext invalid(session,checkpoint_goal,registry,{direct_exalt},false,false,true,
                 std::nullopt,{},false,{},true);
             const auto initial_operators = invalid.operators().size();
             bool refused_key = false;
@@ -4778,6 +4851,57 @@ void run_solver_admission_query_tests() {
         PC_CHECK(!bad_remove_error);
     }
     std::error_code remove_error;
+    std::filesystem::remove(path,remove_error);
+    PC_CHECK(!remove_error);
+
+    // A terminal carrier gives a native completed coarse graph without any
+    // ordinary expansion admission: expand_one_unit stops at the goal first.
+    // Its completed empty query must round-trip without manufacturing full
+    // completion. This retains the absence assertion under its actual premise.
+    CalcContext query_only(session,checkpoint_goal,registry,{direct_exalt},false,false,true,
+        std::nullopt,{},false,{},true);
+    const auto query_only_state = query_only.intern_item(terminal_carrier);
+    PC_CHECK(query_only.is_goal_state(query_only.state(query_only_state)));
+    SolveWork terminal_work(query_only,terminal_carrier,prices,checkpoint_caps);
+    for (unsigned step = 0; step < 40000 && !terminal_work.progress().done; ++step)
+        terminal_work.step(8);
+    PC_CHECK(terminal_work.progress().done);
+    if (!terminal_work.progress().done) return;
+    const auto terminal_result = terminal_work.finish();
+    PC_CHECK(terminal_result.policy_available);
+    const auto terminal_cache = query_only.solve_transition_cache();
+    const bool terminal_cardinality = terminal_cache &&
+        terminal_cache->discovered_states == query_only.state_count() &&
+        terminal_cache->expanded.size() == query_only.state_count() &&
+        terminal_cache->state_rows.size() == query_only.state_count();
+    PC_CHECK(terminal_cardinality);
+    if (!terminal_cardinality || !terminal_result.policy_available) return;
+    bool terminal_save_ready = false;
+    try {
+        query_only.save_development_solve_checkpoint(path.string(),"eldritch-query-only-fixture-v1");
+        terminal_save_ready = true;
+    } catch (const std::exception& error) {
+        std::printf("query-only checkpoint prerequisite: %s\n",error.what());
+    }
+    PC_CHECK(terminal_save_ready);
+    if (!terminal_save_ready) return;
+    const auto terminal_states = query_only.state_count();
+    const auto empty_query = query_only.admit_state_local_automatic_candidates(query_only_state,checkpoint_query);
+    PC_CHECK(!empty_query.cached && empty_query.admitted_operators.empty());
+    PC_CHECK(query_only.state_count() == terminal_states);
+    query_only.save_development_solve_checkpoint(path.string(),"eldritch-query-only-fixture-v1");
+    CalcContext query_only_replay(session,checkpoint_goal,registry,{direct_exalt},false,false,true,
+        std::nullopt,{},false,{},true);
+    query_only_replay.load_development_solve_checkpoint(path.string(),"eldritch-query-only-fixture-v1");
+    const auto restored_empty_query = query_only_replay.admit_state_local_automatic_candidates(
+        query_only_state,checkpoint_query);
+    PC_CHECK(restored_empty_query.cached && restored_empty_query.admitted_operators.empty());
+    const auto full_after_query_restore = query_only_replay.admit_state_local_automatic_candidates(
+        query_only_state,limits);
+    PC_CHECK(!full_after_query_restore.cached &&
+        full_after_query_restore.query == AutomaticAdmissionQuery::Unrestricted &&
+        full_after_query_restore.admitted_operators.empty());
+    PC_CHECK(query_only_replay.admit_state_local_automatic_candidates(query_only_state,limits).cached);
     std::filesystem::remove(path,remove_error);
     PC_CHECK(!remove_error);
 

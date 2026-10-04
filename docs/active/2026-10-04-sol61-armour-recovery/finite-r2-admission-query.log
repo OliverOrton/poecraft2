@@ -1,0 +1,9 @@
+mixed admission witness: typed_work=0 full_work=92 typed_decisions=1 full_decisions=7
+FAIL C:/Users/Oliver/Documents/poecraft2-sol61-armour-20261004/engine/tests/test_solver_compile.cpp:4673: post_commit_refused
+FAIL C:/Users/Oliver/Documents/poecraft2-sol61-armour-20261004/engine/tests/test_solver_compile.cpp:4674: interleaved.operators().size() == operators_before_refusal
+FAIL C:/Users/Oliver/Documents/poecraft2-sol61-armour-20261004/engine/tests/test_solver_compile.cpp:4679: !exhaustion_retry.cached && !exhaustion_retry.admitted_operators.empty()
+FAIL C:/Users/Oliver/Documents/poecraft2-sol61-armour-20261004/engine/tests/test_solver_compile.cpp:4680: interleaved_owner.telemetry().reforge_logical_work_v1 > debit_before_refusal
+query checkpoint witness: invalid solver development checkpoint graph: state cardinality mismatch
+FAIL C:/Users/Oliver/Documents/poecraft2-sol61-armour-20261004/engine/tests/test_solver_compile.cpp:4718: checkpoint_loaded
+admission budget fixture: unowned_automatic=60 unowned_ordinary=0 shared_refused_at=1 shared_after_retry=61
+solver admission query tests: 2714 checks, 5 failures

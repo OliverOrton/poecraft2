@@ -1,0 +1,98 @@
+{
+  "schema": "sol61_armour_finite_gate_v1",
+  "source_commit": "deb65256ca687bfbf9d2c43bb39c0074ea363772",
+  "binary": {
+    "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_engine_tests.exe",
+    "sha256": "8e13142d5191932089c79e0102f112a5c5c0336cba5cd243cece203e2fb64cd3"
+  },
+  "stages": [
+    {
+      "phase": "build",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 25420,
+      "process_identity_token": "25420:134355626973872915",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 19852.141299983487
+    },
+    {
+      "phase": "partial-held-witness",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 89756,
+      "process_identity_token": "89756:134355627178010532",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 567.989399889484
+    },
+    {
+      "phase": "admission-query",
+      "exit_code": 1,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 53980,
+      "process_identity_token": "53980:134355627180949811",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 59.88959991373122
+    }
+  ],
+  "unrun": [
+    "checkpoint",
+    "metamod-recovery"
+  ],
+  "owned_processes": [],
+  "local_slot": "RELEASED immediately at terminal result",
+  "partial_held": {
+    "checks": 293,
+    "failures": 0,
+    "ordering_mass": 2.4457291281364614e-09,
+    "native_word_steps": 2,
+    "native_word_exits": 33,
+    "native_word_mass": 1.0000000000000002,
+    "acceptance_tolerance": 1e-12,
+    "all_four_incoming_affixes_preserved": true,
+    "below_tier_hybrid_blocks_T1_same_family": true,
+    "qualification": "Native exact carrier reachability, saved-graph routing, legal full Ember1/Exalt law, exact resources/actions and complete positive exits. Ordinary generated controller and original-root economic recovery remain unqualified."
+  },
+  "query": {
+    "checks": 2714,
+    "failures": 5,
+    "failure_lines": [
+      "FAIL C:/Users/Oliver/Documents/poecraft2-sol61-armour-20261004/engine/tests/test_solver_compile.cpp:4673: post_commit_refused",
+      "FAIL C:/Users/Oliver/Documents/poecraft2-sol61-armour-20261004/engine/tests/test_solver_compile.cpp:4674: interleaved.operators().size() == operators_before_refusal",
+      "FAIL C:/Users/Oliver/Documents/poecraft2-sol61-armour-20261004/engine/tests/test_solver_compile.cpp:4679: !exhaustion_retry.cached && !exhaustion_retry.admitted_operators.empty()",
+      "FAIL C:/Users/Oliver/Documents/poecraft2-sol61-armour-20261004/engine/tests/test_solver_compile.cpp:4680: interleaved_owner.telemetry().reforge_logical_work_v1 > debit_before_refusal",
+      "FAIL C:/Users/Oliver/Documents/poecraft2-sol61-armour-20261004/engine/tests/test_solver_compile.cpp:4718: checkpoint_loaded"
+    ],
+    "committed_Chaos_work_assertion": "PASSED",
+    "staged_cancellation_and_committed_membership": "PASSED",
+    "uncached_query_can_reuse_kernel_without_work": "Unchanged shared-owner debit plus published operator; the four exhaustion assertions failed. This is not evidence of executed over-budget native work.",
+    "checkpoint": "Query admission did not grow live state cardinality (assertion passed), but save still rejected the completed dirty-dead-end solve cache as incompatible. Load remains unexercised."
+  },
+  "failure_classification": {
+    "finite_r1_committed_work": "Invalid fixture premise: Exalt performs no reforge work, despite its paid resource cost. Corrected to Chaos; that assertion passes at finite-r2.",
+    "finite_r1_and_r2_four_exhaustion_assertions": "Invalid fixture premise: uncached query membership was treated as uncached native kernel work. Known native laws may be reused with zero new work. New fixture uses fresh context with same problem/prices and already-used shared owner, asserting old memberships survive.",
+    "finite_r1_and_r2_checkpoint_loaded": "Save correctly refused incompatible cache cardinality before load. This did not reproduce the separate query-key loader defect. Preparation now uses a stricter five-goal proper clean completion and validates policy/cache preconditions; that preparation remains unrun. Underlying incompatible dirty-dead-end cache cause is not diagnosed as a public product defect.",
+    "production_source_defect": "Reviewer3ba16daf source-proves introduced nonzero-query load guard refusal. The narrow deb65256 repair compiles, but its valid round-trip and malformed-member acceptance/refusal remain unqualified until a valid save fixture executes."
+  },
+  "raw_artifacts": {
+    "out/sol61-armour/finite-r2/request.json": "5ef2cce1fc846636dd40a49d8a2d19382db7e7782850ba76b21251c0858b3798",
+    "out/sol61-armour/finite-r2/build.log": "dcbd95d4d7db28ad9fad0f489215828c899f45e4820766bc5201475f583dfd95",
+    "out/sol61-armour/finite-r2/build.receipt.json": "36ea0d7121c22e3ececcf53fcfca24bd33a9bc3da084dd6f4718dfe563784918",
+    "out/sol61-armour/finite-r2/partial-held-witness.log": "6f30b0e6317970ef13d99f9204bad6050ec59f1770de786a815488e18b971dc2",
+    "out/sol61-armour/finite-r2/partial-held-witness.receipt.json": "680065b9e781d8e5a26c190ba702bc0b1fce68c210c1937e88b14fb349eac71f",
+    "out/sol61-armour/finite-r2/admission-query.log": "862923aa0409be8c9ca9133cef3d7c178db6bd0fec51aca537dab889fbeb7ba3",
+    "out/sol61-armour/finite-r2/admission-query.receipt.json": "fc28f10347bd476355a556c070531f97043fcecefe2170b7aaea710c002b0993",
+    "out/sol61-armour/finite-r2/completion.json": "de4918338e84e7187ed0a0907ecdf54804aa5a8116af699652f1ae18be665e02"
+  }
+}

@@ -1,14 +1,16 @@
-# Armour finite gate: native witness passes; query correction prepared (2026-10-04)
+# Armour native witness passes; corrected finite fixtures prepared (2026-10-04)
 
-Isolated `dot/sol61-armour-recovery-20261004` ran finite gates at `f038aa6f`:
-two-job Tests build passes, partial-held native routing25/25 passes, query2701
-fails six new-fixture assertions. Raw failures and exact key/mass are preserved
-in the [living programme](docs/active/2026-10-04-sol61-armour-recovery/README.md).
-LOCAL released immediately; no survivors. Corrected debit/save preconditions,
-reviewer-proven query-key decoder repair, malformed restore negatives and full
-native Ember/Exalt obligations are source-prepared, unrun. Next parent grant:
-bounded corrected finite batch plus existing checkpoint/metamod controls.
-Route/lifetime changes and timed policies remain held. Main publication is CI-owned.
+Isolated dot/sol61-armour-recovery-20261004: deb65256 rebuild passes,
+full native partial-held witness293/293 passes; query2714 fails five assertions.
+Original f038aa6f query2701/six failures remain preserved and classified in the
+[living programme](docs/active/2026-10-04-sol61-armour-recovery/README.md).
+Both LOCAL grants released immediately, no survivors. No timed policy run.
+Source-only corrections recreate the measured fresh context against the spent
+shared owner with exact retry debit/semantics, and pair proper clean completion
+query/full replay with a terminal-root query-only checkpoint. Native cardinality
+and save prerequisites must pass first. Request final source review and bounded
+query/checkpoint/metamod gate when LOCAL is available; runtime remains unqualified.
+Controller/result ownership are held; CI alone owns main publication.
 
 # Qualified solver CI repair (2026-10-03)
 

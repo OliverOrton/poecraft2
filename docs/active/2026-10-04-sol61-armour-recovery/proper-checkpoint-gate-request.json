@@ -1,0 +1,64 @@
+{
+  "schema": "sol61_armour_corrected_finite_gate_request_v1",
+  "base_commit": "deb65256ca687bfbf9d2c43bb39c0074ea363772",
+  "created_utc": "2026-10-04T05:00:39.525877+00:00",
+  "qualification": "SOURCE_PREPARED_UNRUN_FINAL_PAIRED_FIXTURE_REVIEW_REQUESTED",
+  "source_files_sha256": {
+    "engine/src/solver_development_checkpoint.cpp": "5fbd67b5f1f285f96c741a6713ec8292757b47371c52d7791724475e6dfd12a0",
+    "engine/tests/test_solver_compile.cpp": "eb0662f6b45fbb5e8f8afce7d917c5e2dfba9a6b805a40e00084812443e9cdd7",
+    "engine/tests/test_main.cpp": "25d53853b5877cba993ba36bcf417b227adef42ad5760cdf8ec232b6c18bfa94",
+    "engine/tests/tests.hpp": "f996892603d40071ecd2d5dea3a8ceea4e01892b11d84f5daab567b555d2914f"
+  },
+  "compiler_jobs": 2,
+  "serial": true,
+  "build_host_watchdog_seconds": 600,
+  "tests": [
+    {
+      "args": [
+        "--solver-admission-query-only"
+      ],
+      "host_watchdog_seconds": 180
+    },
+    {
+      "args": [
+        "--solver-checkpoint-only",
+        "data/compiled/current"
+      ],
+      "host_watchdog_seconds": 180
+    },
+    {
+      "args": [
+        "--solver-metamod-recovery-only",
+        "data/compiled/current"
+      ],
+      "host_watchdog_seconds": 180
+    }
+  ],
+  "caps_preserved_from": "source-audit.json finite_batch_request",
+  "runtime_manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+  "supervisor": "poecraft_ingest.solver_worker.run_isolated_process",
+  "stop": "First failed gate, identity disagreement, timeout or survivor; preserve before diagnosis. No timed policy runs or automatic retries.",
+  "local_slot": "REQUESTED for next available parent grant; UI owns LOCAL now",
+  "rationale": "A measured fresh-context Chaos positive control establishes required uncached work before recreating it against the debited shared owner. Checkpoint fixtures first validate direct one-step clean closure, finish(), cardinality and native save; nonempty query/full membership is restored exactly, while a separate native terminal-root query-only checkpoint retains the unrestricted-uncached assertion. All malformed membership, debit, rollback, retry and semantic comparisons remain.",
+  "review_request": {
+    "question": "Verify the final paired checkpoint state/membership assumptions and measured fresh-owner budget premise before granting its bounded runtime batch.",
+    "prior_review": "f8888ff46052dfc8acab6892395dfc1f8c5967cd reviewed former fixture76036f7c; this final paired source is a further unrun change.",
+    "source_pins": [
+      "engine/src/solver_solve_expand.cpp:593,729,3104 ordinary nonterminal expansion requests unrestricted admission",
+      "engine/src/solver_solve_expand.cpp:3084 terminal root exits before ordinary admission",
+      "engine/src/solver_options_automatic.cpp:793 carrier/query cached membership",
+      "engine/src/solver_options_automatic.cpp:822 completed empty terminal query publication",
+      "engine/src/solver_calc.cpp:2236 pre-execution shared-owner work refusal",
+      "engine/src/solver_development_checkpoint.cpp:605 native cardinality/closure/row invariants"
+    ],
+    "held_obligations": [
+      "Nonempty query/full replay preserves complete native semantics",
+      "Terminal query-only restoration does not set unrestricted completion",
+      "Malformed query membership rejected before context mutation",
+      "Refusal/retry preserves committed debit and exact work"
+    ]
+  },
+  "reuse": {
+    "partial_held_witness": "finite-r2-summary.json at deb65256:293 checks,0 failures; witness source and frozen inputs unchanged"
+  }
+}
