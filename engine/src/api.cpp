@@ -2083,6 +2083,22 @@ pc_result pc_simulator_example_query(
     return PC_RESULT_OK;
 }
 
+pc_result pc_simulator_example_resources_json(
+    pc_simulator_handle simulator, int32_t terminal_kind, uint32_t example_index,
+    const char** out_resources_json, pc_error_info* out_error) {
+    if (!out_resources_json) { set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null resources output"); return PC_RESULT_INVALID_ARGUMENT; }
+    *out_resources_json = nullptr;
+    pc_simulation_example checked{};
+    const auto result = pc_simulator_example_query(simulator, terminal_kind, example_index, &checked, out_error);
+    if (result != PC_RESULT_OK) return result;
+    const auto& examples = terminal_kind == PC_TERMINAL_SUCCESS ? simulator->impl->success_examples : simulator->impl->failure_examples;
+    uint32_t seen = 0;
+    for (const auto& example : examples) if (example.terminal_kind == terminal_kind && seen++ == example_index) {
+        *out_resources_json = example.resources_json.c_str(); clear_error(out_error); return PC_RESULT_OK;
+    }
+    set_error(out_error, PC_RESULT_NOT_FOUND, "example index out of range"); return PC_RESULT_NOT_FOUND;
+}
+
 pc_result pc_simulator_failure_summary_query(
     pc_simulator_handle simulator,
     pc_failure_summary_entry* entries,

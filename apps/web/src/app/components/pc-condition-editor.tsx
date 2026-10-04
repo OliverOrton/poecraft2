@@ -16,10 +16,12 @@ import {
     defaultLeafCondition,
     parseConditionTree,
 } from "../strategy-model";
+import type { BaseInfo } from "../engine-protocol";
 import type { ModifierFamilyOption } from "../modifier-options";
 import "./pc-modifier-picker";
 
 const LEAF_LABELS: Record<string, string> = {
+    base_is: "Actual base",
     has_mod_family: "Has modifier",
     item_flag: "Item flag",
     eldritch_tier: "Eldritch tier",
@@ -67,6 +69,7 @@ export class PcConditionEditor extends HTMLElement {
     private edge: StrategyEdge | null = null;
     private root: ConditionGroupNode = emptyRoot();
     private modifierFamilies: ModifierFamilyOption[] = [];
+    private bases: BaseInfo[] = [];
     private jsonError = "";
     private jsonDraft = "";
     private jsonOpen = false;
@@ -81,6 +84,7 @@ export class PcConditionEditor extends HTMLElement {
         this.jsonDraft = JSON.stringify(this.currentCondition(), null, 2);
         this.render();
     }
+    setBases(bases: BaseInfo[]): void { this.bases = bases; this.render(); }
     setModifierFamilies(options: ModifierFamilyOption[]): void { this.modifierFamilies = options; this.render(); }
 
     private render(): void {
@@ -217,6 +221,10 @@ export class PcConditionEditor extends HTMLElement {
                 </select>
             </label>;
         }
+        if (condition.type === "base_is") return <label className="pc-field"><span>Actual output base</span>
+            <select aria-label="Actual output base" value={String(condition.base_key ?? "")}
+                onChange={event => set("base_key", event.target.value)}><option value="">Choose base</option>
+                {this.bases.map(base => <option key={base.path} value={base.path}>{base.name}</option>)}</select></label>;
         if (RANGE_TYPES.has(condition.type) || condition.type === "eldritch_tier") {
             const eldritch = condition.type === "eldritch_tier";
             const min = condition.min ?? (eldritch ? 1 : condition.value ?? condition.count ?? 0);

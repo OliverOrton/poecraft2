@@ -171,3 +171,98 @@ class FeederBindingTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "output contract"):
             with self.session.compile_strategy(document):
                 self.fail("native compiler accepted a missing pinned output contract")
+
+    def test_named_child_pair_output_and_additive_example_inventory(self):
+        # The child has two paid source dots and a selected named pair output.
+        # Its fixed root stays normal: accepting that root would fail this test.
+        parent = paid_parent(output_rarity="rare")
+        child = json.loads(parent["resources"][0]["feeder"]["document_json"])
+        rare = {"base_key": BASE, "item_level": 86, "rarity": "rare"}
+        child["resources"] = [
+            {"id": slot, "base_state": rare, "acquisition_price_key": f"resource:{slot}"}
+            for slot in ("a", "b", "out")
+        ]
+        child["nodes"] = [
+            {"id": "start", "kind": "start"},
+            *({"id": slot, "kind": "operation", "source_only": True,
+               "operation": {"type": "acquire_resource", "params": {"resource_id": slot}}}
+              for slot in ("a", "b")),
+            {"id": "pair", "kind": "operation", "operation": {
+                "type": "recombination", "params": {"input_a": "current", "input_b": "", "output": "out"}}},
+            {"id": "end", "kind": "terminal", "terminal": "success"},
+        ]
+        child["edges"] = [
+            {"id": "entry", "from": "start", "to": "pair", "kind": "control", "to_port": "input_a"},
+            *({"id": f"supply-{slot}", "from": slot, "to": "pair", "kind": "item", "to_port": f"input_{slot}"}
+              for slot in ("a", "b")),
+            {"id": "done", "from": "pair", "to": "end", "condition": {"type": "rarity_is", "rarity": "rare"}},
+        ]
+        child["output_contracts"][0]["resource_id"] = "out"
+        parent["resources"][0]["feeder"]["document_json"] = json.dumps(child)
+        with load_economy({"version": "v1", "prices": {
+                "resource:feeder": 7, "resource:a": 4, "resource:b": 5,
+                "recombination:gold": 999, "recombination:dust": 999}}) as economy:
+            with self.session.compile_strategy(parent) as strategy:
+                with strategy.create_simulator(economy) as simulator:
+                    result = simulator.run(SimulationOptions(target_runs=1, seed=42,
+                        max_actions_per_run=10, retained_trace_count=1, max_trace_entries=30))
+        self.assertEqual(result.summary["success_count"], 1)
+        self.assertEqual(result.summary["total_actions"], 4)
+        self.assertEqual(result.summary["known_total_cost"], 16)
+        self.assertEqual(result.summary["cost_status"], "incomplete")
+        trace_output = result.traces[0].entries[-1].resources[0]
+        self.assertEqual(trace_output["item"]["rarity"], 2)
+        self.assertTrue(trace_output["feeder"]["output_accepted"])
+        self.assertFalse(trace_output["feeder"]["cost_complete"])
+        self.assertEqual(trace_output["feeder"]["returned_resource_id"], "out")
+        self.assertEqual(trace_output["feeder"]["child_resources"][2]["identity"], "recomb/pair/1")
+        self.assertEqual(result.success_examples[0].resources[0], trace_output)
+
+    def test_two_paid_ports_mixed_base_example_and_unknown_station_cap(self):
+        other = "Metadata/Items/Armours/BodyArmours/BodyInt16"
+        document = paid_parent()
+        document["resources"] = [
+            {"id": "a", "base_state": {"base_key": BASE, "item_level": 86, "rarity": "rare"}, "acquisition_price_key": "resource:a"},
+            {"id": "b", "base_state": {"base_key": other, "item_level": 60, "rarity": "rare"}, "acquisition_price_key": "resource:b"},
+            {"id": "out", "base_state": document["base_state"], "acquisition_price_key": "resource:out"},
+        ]
+        document["nodes"] = [
+            {"id": "start", "kind": "start"},
+            *({"id": slot, "kind": "operation", "source_only": True,
+               "operation": {"type": "acquire_resource", "params": {"resource_id": slot}}}
+              for slot in ("a", "b")),
+            {"id": "pair", "kind": "operation", "operation": {"type": "recombination", "params": {"input_a": "current", "input_b": "", "output": "out"}}},
+            {"id": "same", "kind": "terminal", "terminal": "success"},
+            {"id": "other", "kind": "terminal", "terminal": "success"},
+        ]
+        document["edges"] = [
+            {"id": "entry", "from": "start", "to": "pair", "to_port": "input_a"},
+            *({"id": f"supply-{slot}", "from": slot, "to": "pair", "kind": "item", "to_port": f"input_{slot}"}
+              for slot in ("a", "b")),
+            {"id": "same", "from": "pair", "to": "same", "priority": 0, "condition": {"type": "base_is", "base_key": BASE}},
+            {"id": "other", "from": "pair", "to": "other", "priority": 1, "is_default": True},
+        ]
+        with load_economy({"version": "v1", "prices": {"resource:a": 4, "resource:b": 5}}) as economy:
+            with self.session.compile_strategy(document) as strategy:
+                for cost_cap in (0, 10000):
+                    with self.subTest(cost_cap=cost_cap), strategy.create_simulator(economy) as simulator:
+                        result = simulator.run(SimulationOptions(target_runs=1, seed=42,
+                            max_actions_per_run=10, max_cost_per_run=cost_cap,
+                            retained_trace_count=1, max_trace_entries=30))
+                        if cost_cap:
+                            self.assertEqual(result.summary["missing_price_run_count"], 1)
+                            self.assertEqual(result.summary["total_actions"], 0)
+                            self.assertEqual(result.summary["known_total_cost"], 0)
+                            continue
+                        self.assertEqual(result.summary["success_count"], 1)
+                        self.assertEqual(result.summary["total_actions"], 3)
+                        self.assertEqual(result.summary["known_total_cost"], 9)
+                        self.assertEqual(result.summary["cost_status"], "incomplete")
+                        example = result.success_examples[0]
+                        actual = example.resources[2]
+                        self.assertEqual(actual["item_level"], 75)
+                        self.assertEqual(actual["item"]["rarity"], 2)  # Session level is the resource envelope above.
+                        self.assertEqual(actual["lifecycle"], 0)
+                        self.assertEqual(actual["identity"], "recomb/pair/1")
+                        self.assertEqual([resource["lifecycle"] for resource in example.resources[:2]], [1, 1])
+                        self.assertEqual(example.terminal_node_id, "same" if actual["base_key"] == BASE else "other")

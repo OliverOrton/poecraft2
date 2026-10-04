@@ -1,5 +1,34 @@
 # Feeder-first Strategy Builder programme
 
+
+## Pro branch review checkpoint (2026-10-03)
+
+Review branch `dot/strategy-feeder-20261003`, built from published
+`4ad4058086cbaa766a7178aad7ac5625eb8772a8`. Implementation/artifact checkpoint
+`1deff4d127d83a9bb891949f6e527a6b8b61ad46` contains matching native, DLL, Python,
+WASM, web and final TypeScript evidence. The
+[bounded qualification receipt](itemflow-qualification-pause.json) is current;
+the earlier source receipt is a historical, unqualified snapshot.
+
+**Builder component qualification passed:** the parent-selected final renderer
+retry passed 122 assertions and the real 1,000-run native worker check. Earlier
+fixture failures are retained. Captured screenshot visual review remains Oliver's;
+full product-server rendering is unrun. The branch remains qualified against
+`4ad40580`; published solver main `29d9e666` is not merged or jointly qualified
+here. This branch extends no exact inventory authority, exclusive admission,
+profit solver or game-exact probability law.
+
+Committed evidence is limited to source/tests, the matching release WASM and
+compact repository-relative receipts. Bulk logs, native DLL, temporary renderer
+fixtures, screenshots and local browser data remain outside Git. Protected
+root `0` was not read, edited or staged. The integration owner is authorized to
+publish this review branch; this scope does not push or merge into main.
+
+The final retry closed Chrome and released LOCAL at 21:48:34.2794359 UTC with no
+owned survivors. No queued autorun exists. Respect the October 3 America/Vancouver
+wind-down at 16:45 and quiet window 17:00-22:00; resumption requires a parent grant
+after that window.
+
 Oliver resumed this prepared scope at 2026-10-03 04:00 UTC. This fresh execution
 uses isolated sibling `C:/Users/Oliver/Documents/poecraft2-strategy-feeder`, branch
 `dot/strategy-feeder-20261003`. Baseline local HEAD, cached origin/main and
@@ -169,3 +198,127 @@ held. Broad failed-child recovery routing, configured cluster feeders, a concurr
 multitrack scheduler and profit solving are excluded. The future profit objective
 remains highest matching goal sale value and expected net profit/investment, with
 unknown costs incomplete and no assumed salvage/resale values.
+
+## Resumed typed-port execution (2026-10-03; SOURCE ONLY)
+
+Oliver selected functional two-input/one-output Recombination and output-only
+donor/feeder blocks. This continuation preserves the same programme, earlier
+qualification, process handles and spent budgets. The optional Item source
+umbrella remains a proposal; existing Donor item/Saved feeder names are retained.
+No new research programme, supervisor or experiment allowance was introduced.
+
+Local source `6fe9e9d3` adds the typed board connections, native sequential paid
+dependency execution, actual-session atomic pair outputs, explicit recycling,
+actual-base conditions and selected named child outputs described in the
+[product contract](../../product/strategies.md#typed-builder-item-flow-component-qualified-combined-integration-pending).
+Receipts retain nested child inventories and actual failure outputs. The new
+additive C query exposes terminal resource JSON to Python/WASM examples; public
+struct layouts and existing facade exports are unchanged. Matching artifacts
+are nevertheless required. Unknown station costs stay incomplete and capped
+requests refuse before dependency purchase, even with arbitrary supplied quotes.
+
+The branch first aligned published feeder main72448dea in e252515c. Final
+read-only remote recheck found published Calculator fix
+`d29d0682648ecc24cf83aa4284f4b3791fb05793`; AGENTS is unchanged. Merge
+`6939fa8bc24c969fbb6316adf9a1d945ea6988f3` imports that qualified baseline
+into the isolated branch without conflicts or normal-checkout edits. Final
+source `06206b06380990e3c5f6fec28645cda0ad4cb862` aligns active snapshots with
+successful ordinary/current actions and rejects missing focused-selector
+artifact arguments explicitly. The
+[item-flow source receipt](itemflow-source-checkpoint.json) owns exact source
+trees, inherited artifact identities, prepared cases and held checks.
+
+Only whitespace review and Python AST syntax parsing ran. Native tests/builds,
+shared DLL/Python execution, web suites, TypeScript, matching WASM and rendered
+review are **UNRUN** for this continuation. The native focused selector
+`--strategy-recombination-only` prepares the approved 1,000-run paid-child pair
+witness plus finite cap/failure/recycling/port-refusal cases. Existing model and
+real-worker feeder suites now prepare connector/reconnect/history, 1,000 pairs,
+mixed-base routing/examples, failure, limits and recycling. Python prepares
+named child pair outputs and mixed-base resource examples against a fresh DLL.
+These are prepared acceptance, not passing evidence.
+
+The parent has not granted this continuation the LOCAL heavy slot. No compiler,
+test runner, WASM builder, browser or dev server was launched, no slot was held,
+and there are no owned heavy survivors to release. Later qualification must be
+serialized by the parent, with at most two compiler jobs, the unchanged frozen
+runtime and no solver/economic runs or allowance expansion. The retained WASM
+0b800f57/MJS23c405b9 belong to the earlier qualification and **do not match this
+new source**.
+
+The existing qualified ordinary-rare pair API owns selection and full Apply.
+Recombination owner's newer source-only normal/magic admission and bounded
+solver are not imported. Fancy blocking/category/exclusive/joint-law work stays
+with that owner; this Builder scope retains current kernel refusals and makes no
+game-exact odds claim. Exact inventory evaluation, generic arbitrary-session
+currency crafting, concurrent scheduling, profit solving and broad failed-child
+recovery routing remain outside this continuation. No canonical data, economy,
+protected root0, normal checkout, npm dev process or published state was changed.
+
+Next step: parent grants the serialized qualification slot for this exact source,
+then native/header/DLL and affected Python checks, source-matched WASM, focused
+model/worker acceptance and final web/TypeScript run. Rendered review remains
+Oliver's unless separately selected. All commits stay local for designated
+integration owner; no independent main merge,
+push or deployment is authorized here.
+
+## Matching qualification; priority pause (2026-10-03; historical)
+
+Parent granted LOCAL after18:27:31 and selected published4ad40580. Merge
+b032faeb preserved Lock/Calculator and both HANDOFF entries. Source d3889277
+has engine8d8551d6 and web493ad965; native/header build,105 pair checks,300 feeder
+checks, actual DLL226334d4, focused Python, matching WASM816efea6/MJS23c405b9,
+unfiltered npm37/37 plus all suites, focused layout and final TypeScript pass.
+The Python item-body/session-envelope fixture was corrected in dfcadae3 and
+its failed case rechecked; seven unchanged passing cases are reused. Two final
+web type errors were repaired in d3889277; native/facade bytes are unchanged.
+
+Rendered normal mouse A/B connections, source-only ports, reconnect/Undo and
+condition authoring reached the actual Run N browser worker. Its1,000-run
+success/action/cost/completeness assertions passed; the fixture then incorrectly
+read terminal_node_id on a trace entry, whose field is node_id. The earlier
+fixture omitted adding a condition row. Both failures are retained; full rendered
+acceptance and screenshot review remain INCOMPLETE, with no product-server claim.
+
+At the parent's explicit solver-delivery priority pause, no new heavy command
+was launched. **LOCAL released2026-10-03T19:14:35.8221843Z**, all commands ended,
+browser finally closed, owned-process snapshot empty. The
+[qualification/pause receipt](itemflow-qualification-pause.json) owns exact
+artifacts, failed/reused checks and remaining work; bulk logs/fixtures/screenshots
+stay in out/strategy-feeder. Resume rendered correction/acceptance only if the
+parent selects it and grants the slot. Native/web evidence is preserved; no
+solver experiment, data/economy refresh, dev restart, push or deployment occurred.
+
+
+## Final controlled rendered acceptance (2026-10-03)
+
+After solver delivery the parent granted LOCAL for one prepared fixture retry,
+bounded to a 300-second native-worker wait. The sole fixture correction changed
+the retained trace entry's field from `terminal_node_id` to `node_id`; terminal
+examples keep `terminal_node_id`. Product source, every assertion, native/WASM
+bytes and the fixed 1,000-run witness were preserved. No latest-main merge, new
+feature, rebuild or extra suite was performed.
+
+The Chrome DOM fixture ran 21:47:07.902-21:48:06.869 UTC and passed **122 assertions**
+with zero page errors. Normal physical mouse gestures connected paid donor A and
+pinned feeder B, verified the visible Start entry and bound inspectors, reconnected
+and undid an invalid duplicate input, and persisted the actual-base condition.
+Actual UI Run N called the source-matched native worker: **1,000 successes,
+4,000 actions, 13,000 known cost**, with missing station costs correctly incomplete
+on all runs. Retained trace assertions checked real item level 75, actual-base
+routing, two consumed inputs and one live output. The trace DOM showed actual
+output, resource inventory and incomplete cost. Both prior renderer fixture
+failures remain in bulk evidence and the compact receipt.
+
+Chrome finally closed; **LOCAL released 2026-10-03T21:48:34.2794359Z**, with an empty
+owned-process snapshot. Port and trace screenshots were captured and hashed;
+Oliver's visual review is unrun. This is controlled Builder rendering and actual
+worker acceptance, not full product-server qualification. The
+[current compact receipt](itemflow-qualification-pause.json) pins exact evidence.
+Bulk fixtures/logs/screenshots stay outside Git.
+
+Next concrete step: integration owner publishes the local review branch and
+combines it with solver main `29d9e666` under its own qualification. The engine
+and web trees remain 8d8551d6/493ad965; matching WASM remains 816efea6. No combined
+latest-main qualification is claimed. Exact inventory, fancy pair laws, profit
+solving and concurrent scheduling remain held. No heavy slot is held or queued.

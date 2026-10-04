@@ -59,6 +59,8 @@ export interface StrategyNode {
     kind: StrategyNodeKind;
     name?: string;
     operation?: StrategyOperation;
+    /** Paid dependency source, excluded from the sequential control path. */
+    source_only?: boolean;
     terminal?: TerminalKind;
     reason?: string;
     position: StrategyPosition;
@@ -94,6 +96,10 @@ export type StrategyCondition = {
 
 export interface StrategyEdge {
     id: string;
+    /** Omitted legacy edges retain sequential control semantics. */
+    kind?: "control" | "item";
+    from_port?: string;
+    to_port?: string;
     from: string;
     to: string;
     priority: number;
@@ -114,6 +120,7 @@ export type ConditionGroupMode = "all" | "any" | "at_least";
 
 /** Atomic, non-composite condition types the builder offers as leaves. */
 export const LEAF_CONDITION_TYPES = [
+    "base_is",
     "has_mod_family",
     "item_flag",
     "eldritch_tier",
@@ -152,6 +159,7 @@ const COMPOSITE_TYPES = new Set([
 
 export function defaultLeafCondition(type: string): StrategyCondition {
     switch (type) {
+        case "base_is": return {type, base_key: ""};
         case "has_mod_family":
             return { type, family_mod_key: "", min_tier: 1 };
         case "item_flag":
@@ -274,6 +282,8 @@ export interface StrategyOutputContract {
     name?: string;
     /** Checked against the actual native output session, as well as the predicate. */
     base_key: string;
+    /** Defaults to the child's fixed current item; explicit slots keep actual sessions. */
+    resource_id?: string;
     predicate: StrategyCondition;
 }
 
@@ -331,7 +341,7 @@ export function pinStrategyFeeder(
 }
 
 /** Resource port assignments are explicit slot names alongside control-flow edges. */
-export function strategyResourcePorts(node: StrategyNode): {inputs: string[]; outputs: string[]} {
+export function strategyResourcePorts(node: StrategyNode, document?: StrategyDocument): {inputs: string[]; outputs: string[]} {
     const params = node.operation?.params ?? {};
     const text = (key: string) => typeof params[key] === "string" ? params[key] as string : "?";
     switch (node.operation?.type) {
@@ -339,9 +349,56 @@ export function strategyResourcePorts(node: StrategyNode): {inputs: string[]; ou
         case "move_resource": return {inputs: [text("from")], outputs: [text("to")]};
         case "discard_resource": return {inputs: [text("resource_id")], outputs: []};
         case "awakener": return {inputs: [String((params.roles as {donor?: string})?.donor ?? "?"), "current"], outputs: ["current"]};
-        case "recombination": return {inputs: [text("input_a"), text("input_b")], outputs: [text("output")]};
+        case "recombination": {
+            const bound = document ? strategyRecombinationBindings(document, node) : {input_a: text("input_a"), input_b: text("input_b"), output: text("output")};
+            return {inputs: [bound.input_a, bound.input_b], outputs: [bound.output]};
+        }
         default: return {inputs: [], outputs: []};
     }
+}
+
+export interface StrategyConnector { id: string; label: string; y: number }
+/** Recombination has exactly two input dots and one output; sources have output only. */
+export function strategyNodeConnectors(node: StrategyNode): {inputs: StrategyConnector[]; outputs: StrategyConnector[]} {
+    const inputs = node.source_only ? [] : node.operation?.type === "recombination"
+        ? [{id: "input_a", label: "Item A / execution", y: 36}, {id: "input_b", label: "Item B", y: 78}]
+        : [{id: "input", label: "Input", y: 54}];
+    return {inputs, outputs: node.kind === "terminal" ? [] : [{id: "output", label: node.source_only ? "Paid item output" : "Output", y: 54}]};
+}
+export function strategyOutputSlot(node: StrategyNode): string {
+    return strategyResourcePorts(node).outputs[0] ?? "current";
+}
+/** Shared by initial connections and reconnects; editing does not execute anything. */
+export function strategyConnection(document: StrategyDocument, from: string, to: string, toPort?: string): Pick<StrategyEdge, "kind" | "from_port" | "to_port"> {
+    const source = document.nodes.find(node => node.id === from), target = document.nodes.find(node => node.id === to);
+    if (!source || !target || !strategyNodeConnectors(source).outputs.length || target.source_only)
+        throw new Error("Connect an output to an available input dot.");
+    const port = toPort ?? strategyNodeConnectors(target).inputs[0]?.id;
+    if (!strategyNodeConnectors(target).inputs.some(input => input.id === port)) throw new Error("Choose an available input dot.");
+    const item = source.source_only || port === "input_b";
+    if (item && (target.operation?.type !== "recombination" || !["input_a", "input_b"].includes(port!)))
+        throw new Error("Paid sources supply a Recombination A or B item input.");
+    if (item && !source.source_only && !["recombination", "move_resource"].includes(source.operation?.type ?? ""))
+        throw new Error("The B input needs a paid source or a real resource output.");
+    return {kind: item ? "item" : "control", from_port: "output", to_port: port};
+}
+export function strategyRecombinationBindings(document: StrategyDocument, node: StrategyNode): {input_a: string; input_b: string; output: string} {
+    const params = node.operation?.params ?? {};
+    const slot = (port: string, fallback: string) => {
+        const edge = document.edges.find(edge => edge.kind === "item" && edge.to === node.id && edge.to_port === port);
+        const source = edge && document.nodes.find(source => source.id === edge.from);
+        return source ? strategyOutputSlot(source) : String(params[port] ?? fallback);
+    };
+    return {input_a: slot("input_a", "current"), input_b: slot("input_b", ""), output: String(params.output ?? "")};
+}
+
+/** Persist a visible entry when wiring a paid source onto an otherwise blank path. */
+export function strategySourceEntryEdge(document: StrategyDocument, edge: StrategyEdge): StrategyEdge | undefined {
+    if (edge.kind !== "item" || !document.nodes.some(node => node.id === edge.from && node.source_only)) return;
+    const start = document.nodes.find(node => node.id === document.start_node_id && node.kind === "start");
+    if (!start || document.edges.some(other => other.from === start.id && other.kind !== "item")) return;
+    return {id: nextGraphId("edge", document.edges.map(other => other.id)), from: start.id, to: edge.to,
+        ...strategyConnection(document, start.id, edge.to, "input_a"), priority: 0, condition: {type: "always"}};
 }
 
 function validateStrategyResources(strategy: StrategyDocument, issues: StrategyValidationIssue[]): void {
@@ -379,10 +436,14 @@ function validateStrategyResources(strategy: StrategyDocument, issues: StrategyV
         for (const contract of contracts) {
             if (!contract.id || contractIds.has(contract.id) || !contract.base_key || !contract.predicate?.type) fail("Output contracts require unique IDs, actual base identity and a predicate.");
             contractIds.add(contract.id);
+            if (!ids.has(contract.resource_id ?? "current")) fail("Output contract references an undeclared slot.");
             validateCondition(contract.predicate, {id: contract.id, from: "", to: "", priority: 0}, issues);
         }
         for (const node of document.nodes) {
             const op = node.operation;
+            if (node.source_only !== undefined && (typeof node.source_only !== "boolean" ||
+                (node.source_only && (node.kind !== "operation" || !["invoke_feeder", "acquire_resource"].includes(op?.type ?? "")))))
+                fail("Output-only sources must be paid acquisition or feeder operations.", node.id);
             if (!op) continue;
             const params = op.params ?? {};
             if (["invoke_feeder", "acquire_resource", "discard_resource"].includes(op.type)) {
@@ -393,10 +454,11 @@ function validateStrategyResources(strategy: StrategyDocument, issues: StrategyV
                 if (op.type === "acquire_resource" && resource?.feeder) fail("Run the feeder to acquire its paid starting item and execute the child.", node.id);
             }
             if (op.type === "move_resource" && (!ids.has(String(params.from)) || !ids.has(String(params.to)) || params.from === params.to)) fail("Move requires distinct declared source and destination slots.", node.id);
+            if (node.source_only && !["invoke_feeder", "acquire_resource"].includes(op.type)) fail("Output-only sources acquire a paid item or run a pinned feeder.", node.id);
             if (op.type === "recombination") {
-                if (!ids.has(String(params.input_a)) || !ids.has(String(params.input_b)) || !ids.has(String(params.output)) || params.input_a === params.input_b)
-                    fail("Recombination needs two distinct input slots and an explicit output slot.", node.id);
-                issues.push({severity: "warning", code: "recombination-held", message: "Builder recombination execution waits for resource-slot integration of the qualified native pair Apply.", nodeId: node.id});
+                const bindings = strategyRecombinationBindings(document, node);
+                if (!ids.has(bindings.input_a) || !ids.has(bindings.input_b) || !ids.has(bindings.output) || bindings.output === "current" || bindings.input_a === bindings.input_b)
+                    fail("Recombination needs two distinct input slots and a named output slot preserving the actual session.", node.id);
             }
         }
     };
@@ -705,7 +767,7 @@ export function operationLabel(
         case "move_resource": return `Move ${stringParam(params, "from") || "?"} → ${stringParam(params, "to") || "?"}`;
         case "discard_resource": return `Discard ${stringParam(params, "resource_id") || "choose slot"}`;
         case "acquire_resource": return `Acquire ${stringParam(params, "resource_id") || "donor"}`;
-        case "recombination": return "Recombine pair (Builder held)";
+        case "recombination": return "Recombine pair";
         case "restart":
             return "Restart · fresh base";
         case "bestiary:imprint":
@@ -823,6 +885,7 @@ export function conditionLabel(condition?: StrategyCondition, fallback = ""): st
                   ? `has${fractured}${crafted} modifier${tier}`
                   : "has modifier";
         }
+        case "base_is": return `base is ${String(condition.base_key ?? "?").split("/").at(-1)}`;
         case "rarity_is":
             return `rarity is ${condition.rarity ?? "?"}`;
         case "open_prefix_count":
@@ -957,7 +1020,7 @@ function wrapLabelText(
 
 /** Empty authored text is automatic; non-empty text is a manual override. */
 export function automaticStrategyEdgeLabel(edge: StrategyEdge): string {
-    return conditionLabel(edge.condition);
+    return edge.kind === "item" ? `item to ${edge.to_port === "input_b" ? "B" : "A"}` : conditionLabel(edge.condition);
 }
 
 export function strategyEdgeLabel(edge: StrategyEdge): string {
@@ -1185,6 +1248,20 @@ export function validateStrategy(
                 edgeId: edge.id,
             });
         }
+        if (edge.kind === "item") {
+            try {
+                if (edge.from_port && edge.from_port !== "output") throw new Error("Unknown output connector.");
+                if (strategyConnection(strategy, edge.from, edge.to, edge.to_port).kind !== "item") throw new Error("Invalid item connector.");
+                if (edge.is_default || (edge.condition?.type && edge.condition.type !== "always")) throw new Error("Item supply uses the consumer's output conditions.");
+                if (strategy.edges.some(other => other.id !== edge.id && other.kind === "item" && other.to === edge.to && other.to_port === edge.to_port)) throw new Error("An item input may have only one supply edge.");
+            } catch (error) { issues.push({severity: "error", code: "item-connection", message: String(error instanceof Error ? error.message : error), edgeId: edge.id}); }
+            continue;
+        }
+        if ((edge.from_port && edge.from_port !== "output") ||
+            (edge.to_port && !strategyNodeConnectors(to).inputs.some(port => port.id === edge.to_port)))
+            issues.push({severity: "error", code: "connector", message: "Edge uses an unavailable connector.", edgeId: edge.id});
+        if (edge.kind && edge.kind !== "control") issues.push({severity: "error", code: "edge-kind", message: "Unknown edge kind.", edgeId: edge.id});
+        if (from.source_only || to.source_only || edge.to_port === "input_b") issues.push({severity: "error", code: "control-connection", message: "Control edges cannot enter/leave paid sources or enter the B item input.", edgeId: edge.id});
         let fromEdges = outgoing.get(edge.from);
         if (!fromEdges) {
             fromEdges = [];
@@ -1202,7 +1279,7 @@ export function validateStrategy(
 
     for (const node of strategy.nodes) {
         const edges = outgoing.get(node.id) ?? [];
-        if (node.kind !== "terminal" && edges.length === 0) {
+        if (node.kind !== "terminal" && !node.source_only && edges.length === 0) {
             issues.push({
                 severity: "warning",
                 code: "dead-end",
@@ -1222,7 +1299,7 @@ export function validateStrategy(
 
     const reachable = walkForward(strategy.start_node_id, outgoing);
     for (const node of strategy.nodes) {
-        if (!reachable.has(node.id)) {
+        if (!reachable.has(node.id) && !(node.source_only && strategy.edges.some(edge => edge.kind === "item" && edge.from === node.id && reachable.has(edge.to)))) {
             issues.push({
                 severity: "warning",
                 code: "unreachable",
@@ -1314,6 +1391,7 @@ function validateCondition(
          */
         "observation_signature",
         "rarity_is",
+        "base_is",
         "open_prefix_count",
         "open_suffix_count",
         "prefix_count_range",
@@ -1379,6 +1457,7 @@ function validateCondition(
             edgeId: edge.id,
         });
     }
+    if (condition.type === "base_is" && !condition.base_key) issues.push({severity: "error", code: "condition-base", message: `${edge.id} needs an actual base key.`, edgeId: edge.id});
     if (condition.type === "rarity_is" && !condition.rarity) {
         issues.push({
             severity: "error",

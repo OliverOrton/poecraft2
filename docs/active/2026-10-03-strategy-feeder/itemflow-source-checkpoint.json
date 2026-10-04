@@ -1,0 +1,80 @@
+{
+  "status": "source_checkpoint_unqualified",
+  "programme": "feeder-first Strategy Builder; typed item flow continuation",
+  "branch": "dot/strategy-feeder-20261003",
+  "last_verified_remote_main": "d29d0682648ecc24cf83aa4284f4b3791fb05793",
+  "source_head": "06206b06380990e3c5f6fec28645cda0ad4cb862",
+  "source_commits": [
+    "e252515cfe7c25a162e630c9b7cc19e60b326def",
+    "6fe9e9d3018a768126e0e3c4362eceda569759e6",
+    "6939fa8bc24c969fbb6316adf9a1d945ea6988f3",
+    "06206b06380990e3c5f6fec28645cda0ad4cb862"
+  ],
+  "trees": {
+    "engine": "378b3e7ce255490d36afcaa6dd015647671f679b",
+    "apps/web": "dcfbee41df58bf351ae0767dacabca2ae17f2b12",
+    "bindings/python": "f8bc12ffda86efa62f5476fce42c97ef089a8b92",
+    "bindings/wasm": "e079aebe6763ffdd7a0f52936d164b86337fe69f"
+  },
+  "inherited_unmatched_artifacts": {
+    "wasm_sha256": "0b800f57410841ebf7efe7ab658ff1c93cfcdb67467ae3ea001c9d6730198f32",
+    "mjs_sha256": "23c405b984e19595b4007259d8d45fe713ea31a534c091c2ef9433ffbe2f1363"
+  },
+  "frozen_runtime_manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+  "checks_run": [
+    "git diff --check",
+    "Python ast.parse of binding and feeder acceptance source only"
+  ],
+  "checks_unrun": [
+    "native tests/header/DLL",
+    "Python binding acceptance",
+    "WASM rebuild",
+    "web focused/full tests",
+    "TypeScript",
+    "rendered UI"
+  ],
+  "prepared_acceptance": {
+    "native": "--strategy-recombination-only <frozen artifact>",
+    "model": "apps/web/test/strategy-feeder.test.ts",
+    "worker": "apps/web/test/engine-feeder.test.ts",
+    "python": "bindings/python/tests/test_strategy_feeder.py"
+  },
+  "slot": {
+    "held": false,
+    "owned_heavy_processes": [],
+    "grant_pending": true,
+    "compiler_job_limit": 2
+  },
+  "interfaces": {
+    "paid_source_flag": "source_only:true; operation acquire_resource/invoke_feeder",
+    "edges": "kind: control/item; from_port:output; to_port:input_a/input_b/input",
+    "pair_output": "named real resource with explicit native output_session; 2 consumed / 1 created",
+    "child_output_contract": "optional resource_id, default current",
+    "c_api_additive_query": "pc_simulator_example_resources_json",
+    "exact_inventory": "refused",
+    "station_costs": "unknown, incomplete; cost cap refuses before dependency purchase"
+  },
+  "exclusions": [
+    "no subagents",
+    "no solver/economy experiments",
+    "no new pair law or blocking admission",
+    "no native normal/magic admission import",
+    "no generic arbitrary-session crafting",
+    "no concurrent scheduler/profit solver",
+    "no data/economy refresh",
+    "no npm dev restart",
+    "no normal-checkout edit",
+    "no main merge/push/deploy"
+  ],
+  "bounded_qualification_plan": [
+    "Serial native test/header and actual shared DLL build using existing owners, max 2 compiler jobs",
+    "Focused native --strategy-recombination-only (1000 pair trials + finite caps/failure/recycle/port refusals), and affected feeder owner controls",
+    "Focused Python test_strategy_feeder acceptance with the exact newly built DLL and frozen runtime",
+    "Source-matched WASM build, all compiler/linker/Binaryen workers capped at 2",
+    "One final npm test covers strategy-feeder/engine-feeder and affected model/history/resources/layout/Calculator controls, followed by npx tsc --noEmit; focused repair/rechecks only for failures",
+    "No solver/economic comparisons; no budget expansion; rendered review only if separately selected"
+  ],
+  "worktree_kind": "isolated_sibling",
+  "historical_snapshot": true,
+  "latest_qualification_receipt": "itemflow-qualification-pause.json"
+}

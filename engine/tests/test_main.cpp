@@ -131,6 +131,12 @@ int main(int argc, char** argv) {
                     pctest::g_checks, pctest::g_failures);
         return pctest::g_failures == 0 ? 0 : 1;
     }
+    if (argc > 1 && std::string(argv[1]) == "--strategy-recombination-only") {
+        if (argc < 3) { std::fprintf(stderr, "Builder recombination tests require an artifact directory\n"); return 2; }
+        run_builder_recombination_tests(argv[2]);
+        std::printf("Builder recombination tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     if (argc > 1 && std::string(argv[1]) == "--strategy-feeder-only") {
         const char* artifact_dir = argc > 2 ? argv[2] : nullptr;
         if (!artifact_dir) { std::fprintf(stderr, "strategy feeder tests require an artifact directory\n"); return 2; }

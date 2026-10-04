@@ -253,6 +253,17 @@ pc_result pc_simulator_example_query(
     pc_simulation_example* out_example,
     pc_error_info* out_error);
 
+/* Resource examples contain their actual stable-key items, session base/level,
+ * output marker and receipts. Fixed example.item remains the root current item.
+ * The returned string belongs to the simulator; copy it before the next run/destroy.
+ * Additive query: no existing public struct or ABI layout changes. */
+pc_result pc_simulator_example_resources_json(
+    pc_simulator_handle simulator,
+    int32_t terminal_kind,
+    uint32_t example_index,
+    const char** out_resources_json,
+    pc_error_info* out_error);
+
 pc_result pc_simulator_failure_summary_query(
     pc_simulator_handle simulator,
     pc_failure_summary_entry* entries,

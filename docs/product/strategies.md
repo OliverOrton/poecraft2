@@ -254,7 +254,8 @@ evidence-held currencies refuse compilation with their missing-law reason.
 The [living feeder record](../active/2026-10-03-strategy-feeder/README.md) and its
 receipt own exact source/artifact identities, acceptance and exclusions. Integration
 and publication belong to the designated owner; rendered Builder review remains
-with Oliver. Shared-DLL/Python feeder acceptance is unrun. Current and Finder producers are unchanged;
+with Oliver. Matching shared-DLL and scoped Python feeder acceptance now pass.
+Current and Finder producers are unchanged;
 this is authored Simulator/Builder work and extends no exact solver authority.
 
 An optional `output_contracts` array names up to 32 contracts, each with `id`,
@@ -309,12 +310,65 @@ contracts with the existing condition editor, and shows explicit item ports on
 the board. Save/import, clone and draft Undo/Redo preserve the complete reference.
 No crafting interpreter or probability law is added to TypeScript.
 
-`recombination` nodes can store `input_a`, `input_b` and `output` slot assignments,
-but Builder compilation deliberately refuses them pending resource-slot integration
-of the pair owner's qualified full Apply. The native pair contract consumes both inputs and creates one
-new item with the explicit native A/B `output_session`; no receiver-index
-reinterpretation is permitted. Mixed-base outputs require conditions over their
-actual session. All inventory/feeder/recycling graphs remain refused by exact
-Calculator evaluation pending its complete inventory kernel and properness
-contract. There is no profit objective, resale pricing, salvage assumption or
-dedicated profit/recombination solver in this source checkpoint.
+### Typed Builder item flow (component qualified; combined integration pending)
+
+Recombination has two input dots (`input_a`, `input_b`) and one `output` dot.
+New Donor item and Saved feeder blocks set `source_only: true`: they have only
+an output dot and execute as paid dependencies when a consumer is reached.
+Existing acquire/invoke nodes without that flag retain sequential control flow.
+This is a sequential resource runner, not a concurrent multitrack scheduler.
+
+Edges accept `kind: "control" | "item"`, `from_port: "output"` and `to_port`.
+Omitted edge kind preserves legacy control semantics. A source-to-A/B connection
+is an item supply; a real Recombination/move output can supply B. Each item input
+has at most one supply, and supply edges have no routing conditions. The control
+path enters A and requests paid sources sequentially A then B under the parent's
+limits. The editor adds a visible Start-to-A entry when the first paid source is
+connected and Start has no control path; that persisted edit shares Undo/Redo.
+It preserves an existing Start path. Connected slot assignments come from their
+edges, and the inspector displays those bindings rather than editable fallbacks.
+
+The native runner delegates to the pair owner's existing atomic transaction:
+distinct live identities are consumed and one fresh identity is created in a
+named output slot with its real A/B `output_session` and full tier/roll-preserving
+item. The output may replace a consumed input slot; an unrelated live output
+slot refuses. A pair output carried along a control edge into another pair's A
+is the same real item. A self-loop therefore recycles the actual output while a
+source at B performs another independently paid invocation. No implicit purchase,
+free reuse or resurrection occurs. Ordinary rare inputs are the current kernel
+scope; special/exclusive admission and unresolved joint laws remain refused.
+The separate recombination programme owns all selection/weight/blocking laws.
+
+Output conditions and routers carrying that output evaluate against its actual
+session. `base_is` tests a known actual base; other native predicates remain
+subject to their represented session scope. Conditions requiring modifier keys
+outside the initial compilation session may still refuse. A move into `current`
+continues to require the original compiled session mapping; generic crafting of
+arbitrary mixed-base slot outputs is not admitted by this change.
+
+Output contracts optionally select `resource_id` (default `current`). Feeder
+acceptance checks that selected child's actual live item/session and predicate.
+Receipts preserve the child's terminal inventory and selected resource ID,
+including failed paid attempts. Traces and retained examples expose full
+stable-key resource items, identities, acquisition counts, active output markers
+and receipts. The additive `pc_simulator_example_resources_json` query returns
+simulator-owned JSON to copy before its next run/destroy; existing `example.item`
+remains the fixed root current item. Python and the existing WASM result facade
+decode the additional inventory without changing public struct layouts.
+
+Station gold/dust amounts are unknown. Arbitrary economy keys cannot make them
+complete or invent a material quantity. Pair results report incomplete costs,
+and cost-capped requests refuse before acquiring dependencies. All inventory,
+feeder and recycling graphs remain refused by exact Calculator evaluation until
+its own complete inventory kernel and properness contract exists. There is no
+profit objective, resale price, salvage assumption or dedicated profit solver in
+this scope. Future profit remains highest matching goal sale value and expected
+net profit/investment, without guessed salvage.
+
+Matching native/header/DLL, focused Python, WASM, full web and final TypeScript
+acceptance pass. The final controlled Chrome Builder fixture passed 122 assertions
+and actual UI/native-worker Run N 1000; prior fixture failures are retained.
+Oliver owns screenshot visual review, and full product-server rendering remains
+unrun. The living feeder record pins this component's 4ad40580 baseline; integration
+with later solver main 29d9e666 requires its own combined qualification. No exact
+inventory or broader pair-law authority is promoted.

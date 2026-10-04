@@ -263,8 +263,10 @@ export interface SimulationSummary {
 
 export interface StrategyTraceEntry {
     resources?: Array<{resource_id: string; acquisitions: number; lifecycle: number; memory_strands: number;
-        identity?: string; base_key?: string; item_level?: number; item?: unknown;
-        feeder?: {strategy_id: string; revision: string; output_contract_id: string; terminal_kind: number;
+        identity?: string; base_key?: string; item_level?: number; item?: unknown; active_output?: boolean;
+        recombination?: {model_id: string; carrier: number; input_a: string; input_b: string; output_identity: string;
+            gold_cost_complete: false; dust_cost_complete: false; game_odds_estimated: true};
+        feeder?: {returned_resource_id?: string; child_resources?: StrategyTraceEntry["resources"]; strategy_id: string; revision: string; output_contract_id: string; terminal_kind: number;
             failure_reason: number; terminal_node_id: string; detail: string; actions: number;
             known_cost: number; child_known_cost: number; acquisition_price_key: string;
             acquisition_cost_complete: boolean; cost_complete: boolean; output_accepted: boolean};
@@ -288,6 +290,7 @@ export interface StrategyTrace {
 }
 
 export interface SimulationExample {
+    resources?: StrategyTraceEntry["resources"];
     terminal_kind: "success" | "failure" | "stop";
     failure_reason: number;
     terminal_node_id: string;

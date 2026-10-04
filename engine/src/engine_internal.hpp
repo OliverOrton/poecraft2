@@ -997,6 +997,8 @@ struct CompiledObservationProgram;
 }
 }
 
+namespace json { struct Value; }
+
 struct CompiledCondition {
     ConditionKind kind = ConditionKind::Always;
     std::uint32_t group_id = std::numeric_limits<std::uint32_t>::max();
@@ -1033,6 +1035,8 @@ struct StrategyEdge {
     bool is_default = false;
     std::uint32_t source_order = 0;
     CompiledCondition condition;
+    std::shared_ptr<const json::Value> condition_source;
+    std::string input_resource_id; // Item carried by an explicit control connector.
     /* Non-executable S8.4 accounting vocabulary. These tags never
      * participate in routing or action application; they only classify the
      * exact traversal mass already produced by the evaluator. */
@@ -1067,10 +1071,13 @@ inline constexpr int kStrategyMultiItemOperation = 1004;
 inline constexpr int kStrategyInvokeFeederOperation = 1100;
 inline constexpr int kStrategyMoveResourceOperation = 1101;
 inline constexpr int kStrategyDiscardResourceOperation = 1102;
+inline constexpr int kStrategyRecombinationOperation = 1103;
 struct StrategyImpl;
 struct StrategyOutputContract {
     std::string id;
     std::string base_key;
+    std::string resource_id = "current";
+    std::shared_ptr<const json::Value> predicate_source;
     CompiledCondition predicate;
 };
 
@@ -1081,6 +1088,11 @@ struct StrategyNode {
     int action_type = -1;
     std::string resource_id;
     std::string source_resource_id;
+    std::string second_resource_id;
+    bool source_only = false;
+    // Item-supply edges bind slots; paid sources are invoked sequentially on demand.
+    std::array<std::uint32_t, 2> input_sources{UINT32_MAX, UINT32_MAX};
+    std::array<std::string, 2> input_edges;
     std::uint32_t bestiary_action_index =
         std::numeric_limits<std::uint32_t>::max();
     std::vector<std::string> price_keys;
@@ -1170,6 +1182,7 @@ struct SimulationExampleInternal {
     double known_total_cost = 0.0;
     bool cost_complete = true;
     pc_item_state item{};
+    std::string resources_json = "[]";
 };
 
 struct FailureSummaryInternal {

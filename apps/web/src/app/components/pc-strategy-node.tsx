@@ -5,15 +5,18 @@ import { GameIcon } from "./pc-game-icon";
 import {
     StrategyLabelContext,
     StrategyNode,
+    StrategyDocument,
     StrategyValidationIssue,
     operationLabel,
     strategyNodeLabel,
     strategyResourcePorts,
+    strategyNodeConnectors,
 } from "../strategy-model";
 import { StrategyNodeAnnotation } from "../strategy-eval-presentation";
 
 export interface StrategyNodeView {
     node: StrategyNode;
+    document?: StrategyDocument;
     selected: boolean;
     active: boolean;
     taken: boolean;
@@ -75,7 +78,8 @@ export class PcStrategyNode extends HTMLElement {
                     ? "Condition router"
                     : "Initial item state";
 
-        const ports = strategyResourcePorts(node);
+        const ports = strategyResourcePorts(node, this.view.document);
+        const connectors = strategyNodeConnectors(node);
         const operation = node.operation;
         const materialKey = operation?.type === "essence" ? operation.params?.essence_key : undefined;
         const material = labelContext?.catalog?.essences.find(entry => entry.key === materialKey);
@@ -83,12 +87,13 @@ export class PcStrategyNode extends HTMLElement {
             ? "influence:" + operation.params.influence : "action:" + operation?.type;
 
         const emit = (name: string, detail: unknown) => this.dispatchEvent(new CustomEvent(name, {bubbles: true, detail}));
-        const startPointer = (name: string, event: ReactPointerEvent) => {
+        const startPointer = (name: string, event: ReactPointerEvent, port?: string) => {
             event.preventDefault(); event.stopPropagation();
-            emit(name, {id: node.id, clientX: event.clientX, clientY: event.clientY});
+            emit(name, {id: node.id, port, clientX: event.clientX, clientY: event.clientY});
         };
         renderReact(this, <>
-            <button className="pc-node-port pc-node-input" title="Connect here" aria-label="Input" />
+            {connectors.inputs.map(port => <button key={port.id} className="pc-node-port pc-node-input" data-port-id={port.id}
+                style={{top: port.y - 7}} title={port.label} aria-label={port.label} />)}
             <div className="pc-node-header" onPointerDown={event => startPointer("strategy-node-drag-start", event)}>
                 <span className="pc-node-kind">{node.kind}</span>
                 <span className="pc-node-header-detail">
@@ -105,8 +110,9 @@ export class PcStrategyNode extends HTMLElement {
                 {!!ports.inputs.length && <div>Items in: {ports.inputs.join(" + ")}</div>}
                 {!!ports.outputs.length && <div>Item out: {ports.outputs.join(" + ")}</div>}
             </div>}
-            {node.kind !== "terminal" && <button className="pc-node-port pc-node-output" title="Drag to connect" aria-label="Output"
-                onPointerDown={event => startPointer("strategy-connect-start", event)} />}
+            {connectors.outputs.map(port => <button key={port.id} className="pc-node-port pc-node-output" data-port-id={port.id}
+                style={{top: port.y - 7}} title={port.label + " — drag to connect"} aria-label={port.label}
+                onPointerDown={event => startPointer("strategy-connect-start", event, port.id)} />)}
         </>);
         this.onpointerdown = event => {
             if ((event.target as HTMLElement).closest(".pc-node-port, .pc-node-header")) return;

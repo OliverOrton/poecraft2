@@ -1,0 +1,104 @@
+{
+  "status": "qualified_component_local",
+  "released_utc": "2026-10-03T21:48:34.2794359Z",
+  "slot_held": false,
+  "source_head": "d3889277112ff3335747b17d250343dfb1747915",
+  "native_pair": "105 checks, 0 failures",
+  "native_feeder": "300 checks, 0 failures",
+  "dll_sha256": "226334d4dd4a8c42e2718d16a357d12c0f3bdf3b0bb110deb548d7f3cd291007",
+  "python": "7 unchanged cases passed; corrected mixed-base case passed",
+  "wasm_sha256": "816efea6efc0bccebab775b5f562c576b2a18607f5ca7e566365bac530baa27e",
+  "mjs_sha256": "23c405b984e19595b4007259d8d45fe713ea31a534c091c2ef9433ffbe2f1363",
+  "web": "full npm 37/37 smoke and all suites passed",
+  "typescript": "final passed after two source type corrections; layout recheck passed",
+  "rendered": "PASSED: 122 controlled Chrome DOM assertions, normal A/B connections, reconnect/Undo, persisted conditions and real native worker Run N 1000; no page errors; browser closed",
+  "browser_closed": true,
+  "owned_processes": [],
+  "remaining": [
+    "Integration owner combines with published 29d9e666b9d11dbe9ba58959f2598df9495dc49d and qualifies the changed combined source/artifact",
+    "Oliver owns visual review of the captured port and trace screenshots; that review is unrun"
+  ],
+  "engine_tree": "8d8551d60ca4d71f20a496d85154a4de89a75161",
+  "web_tree": "493ad965020420c9f11bc63a6e1973fc02e358bc",
+  "baseline": "4ad4058086cbaa766a7178aad7ac5625eb8772a8",
+  "failed_checks_retained": [
+    "itemflow-python.log: item-level fixture assumption; failed case rechecked successfully",
+    "itemflow-typecheck.log: two source type errors; repaired, layout/final TS passed",
+    "itemflow-rendered-first-failure.json: add-condition fixture step omitted",
+    "itemflow-rendered-second-failure.json: trace node_id fixture assumption after 1000-run summary passed"
+  ],
+  "bulk_evidence_directory": "out/strategy-feeder",
+  "matching_wasm_bytes": 8612728,
+  "local_checkpoint_commit": "1deff4d127d83a9bb891949f6e527a6b8b61ad46",
+  "review_disposition": "Qualified Builder component ready for review branch publication by the integration owner; latest-main combined qualification is not transferred",
+  "quiet_window": {
+    "timezone": "America/Vancouver",
+    "date": "2026-10-03",
+    "wind_down": "16:45",
+    "start": "17:00",
+    "end": "22:00",
+    "resumption": "No queued autorun; parent grant required after the window"
+  },
+  "prior_priority_pause": {
+    "status": "paused_for_priority_solver_delivery",
+    "released_utc": "2026-10-03T19:14:35.8221843Z",
+    "rendered": "INCOMPLETE: actual normal connections/reconnect/Undo and real Run N 1000 summary assertions reached; fixture expected terminal_node_id on trace instead of node_id; browser finally closed"
+  },
+  "rendered_acceptance": {
+    "checkout_head": "cf66ba743295c362a467fd7a512587d4db7997eb",
+    "scope": "Controlled Chrome DOM/React boot with actual source-matched native WASM worker; full product-server rendering remains unrun",
+    "started_utc": "2026-10-03T21:47:07.902Z",
+    "run_started_utc": "2026-10-03T21:47:09.868Z",
+    "completed_utc": "2026-10-03T21:48:06.869Z",
+    "worker_wait_limit_ms": 300000,
+    "assertions": 122,
+    "page_errors": [],
+    "summary": {
+      "completed_runs": 1000,
+      "success_count": 1000,
+      "failure_count": 0,
+      "stop_count": 0,
+      "total_actions": 4000,
+      "action_limit_count": 0,
+      "cost_limit_count": 0,
+      "step_limit_count": 0,
+      "no_matching_edge_count": 0,
+      "action_not_applied_count": 0,
+      "missing_price_run_count": 1000,
+      "costed_action_count": 3000,
+      "missing_price_action_count": 1000,
+      "known_total_cost": 13000,
+      "cost_status": "incomplete",
+      "seed": 62667494,
+      "target_runs": 1000
+    },
+    "fixture_correction": "Only last.terminal_node_id -> last.node_id on retained trace entries; example terminal_node_id unchanged; all assertions retained",
+    "fixture_sha256": "3396155282359db281070802eae5bfefa021289c2364c3ca779116d552a3331a",
+    "launcher_sha256": "0493a30f8a8abd739978564a05a4f5d024914a67124f670abcd379cf6c9aa5e6",
+    "bundle_sha256": "de93973175ca466f11ce83c0c6ae3bed22a4a8a29e18708a301070618047902f",
+    "worker_sha256": "0ca324e32701f8658fbba0085a0e5d4a5c4b517b71a1e4c6ba7c5326ae05b40b",
+    "receipt": {
+      "path": "out/strategy-feeder/itemflow-rendered.json",
+      "sha256": "5152c0b382ca87fbbcce439d737a0a544469c7c788e283be03415505a774a214"
+    },
+    "log": {
+      "path": "out/strategy-feeder/itemflow-rendered-qualified.log",
+      "sha256": "e37ef7908a3a74c6579b44ab93b04b59884a317c114e95e4ede8976b4d48bee3"
+    },
+    "screenshots": [
+      {
+        "phase": "ports",
+        "path": "out/strategy-feeder/itemflow-ports.png",
+        "sha256": "286ce59d25c373829ccd0a8d370af1d73f5678fd94745d9334f1f259cea64d61"
+      },
+      {
+        "phase": "trace",
+        "path": "out/strategy-feeder/itemflow-trace.png",
+        "sha256": "d744021282f9122542bb0bbb9c72714bcb8cea1749133dc6a50af99f2f5f8420"
+      }
+    ],
+    "visual_review": "Unrun; owned by Oliver",
+    "browser_closed": true,
+    "owned_processes": []
+  }
+}

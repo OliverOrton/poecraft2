@@ -3,6 +3,7 @@ import {
     StrategyLabelContext,
     StrategyValidationIssue,
     StrategyViewport,
+    strategyNodeConnectors,
 } from "../strategy-model";
 import { PcEdgeLayer } from "./pc-edge-layer";
 import { PcStrategyNode } from "./pc-strategy-node";
@@ -71,7 +72,8 @@ export class PcStrategyBoard extends HTMLElement {
           }
         | null = null;
     private connectingFrom: string | null = null;
-    private reconnecting: {id: string; endpoint: "from" | "to"; anchor: string} | null = null;
+    private connectingPort = "output";
+    private reconnecting: {id: string; endpoint: "from" | "to"; anchor: string; anchorPort?: string} | null = null;
     private annotations: StrategyBoardAnnotations | null = null;
     private labelContext: StrategyLabelContext = {};
     private renderLargeBoard = false;
@@ -261,6 +263,7 @@ export class PcStrategyBoard extends HTMLElement {
             ).detail;
             this.cancelConnection();
             this.connectingFrom = detail.id;
+            this.connectingPort = (event as CustomEvent<{port?: string}>).detail.port ?? "output";
             const point = this.clientToGraph(detail.clientX, detail.clientY);
             this.edgeLayer.setPreview({ anchor: detail.id, endpoint: "to", ...point });
             this.bindConnection();
@@ -271,8 +274,8 @@ export class PcStrategyBoard extends HTMLElement {
             if (!edge) return;
             this.cancelConnection();
             const anchor = detail.endpoint === "from" ? edge.to : edge.from;
-            this.reconnecting = {id: edge.id, endpoint: detail.endpoint, anchor};
-            this.edgeLayer.setPreview({anchor, endpoint: detail.endpoint, ...this.clientToGraph(detail.clientX, detail.clientY)});
+            this.reconnecting = {id: edge.id, endpoint: detail.endpoint, anchor, anchorPort: detail.endpoint === "from" ? edge.to_port : edge.from_port};
+            this.edgeLayer.setPreview({anchor, anchorPort: this.reconnecting.anchorPort, endpoint: detail.endpoint, ...this.clientToGraph(detail.clientX, detail.clientY)});
             this.bindConnection();
         });
     }
@@ -337,18 +340,26 @@ export class PcStrategyBoard extends HTMLElement {
     private readonly endConnect = (event: PointerEvent): void => {
         const reconnecting = this.reconnecting;
         const from = this.connectingFrom;
+        const fromPort = this.connectingPort;
         this.cancelConnection();
-        const target = document.elementFromPoint(event.clientX, event.clientY)?.closest<PcStrategyNode>("pc-strategy-node");
+        const hit = document.elementFromPoint(event.clientX, event.clientY);
+        const target = hit?.closest<PcStrategyNode>("pc-strategy-node");
         const nodeId = target?.dataset.nodeId;
         if (!nodeId) return; // Empty drops leave the original edge intact.
+        const targetNode = this.strategy?.nodes.find(node => node.id === nodeId);
+        if (!targetNode) return;
+        const inputs = strategyNodeConnectors(targetNode).inputs;
+        const port = hit?.closest<HTMLElement>("[data-port-id]")?.dataset.portId;
+        const toPort = port ?? inputs[0]?.id;
+        if (reconnecting?.endpoint !== "from" && !inputs.some(input => input.id === toPort)) return;
         if (reconnecting) {
             // Terminals have no output port. Otherwise keep the same graph validation as new edges.
             if (reconnecting.endpoint === "from" && this.strategy?.nodes.find(node => node.id === nodeId)?.kind === "terminal") return;
             this.dispatchEvent(new CustomEvent("strategy-edge-reconnect", {
-                bubbles: true, detail: {id: reconnecting.id, endpoint: reconnecting.endpoint, nodeId},
+                bubbles: true, detail: {id: reconnecting.id, endpoint: reconnecting.endpoint, nodeId, port: reconnecting.endpoint === "from" ? (port ?? "output") : toPort},
             }));
         } else if (from) {
-            this.dispatchEvent(new CustomEvent("strategy-edge-create", {bubbles: true, detail: {from, to: nodeId}}));
+            this.dispatchEvent(new CustomEvent("strategy-edge-create", {bubbles: true, detail: {from, to: nodeId, fromPort, toPort}}));
         }
     };
 
@@ -424,6 +435,7 @@ export class PcStrategyBoard extends HTMLElement {
                 ) as PcStrategyNode;
                 element.setView({
                     node,
+                    document: this.strategy ?? undefined,
                     selected:
                         this.selection?.kind === "node" &&
                         this.selection.id === node.id,

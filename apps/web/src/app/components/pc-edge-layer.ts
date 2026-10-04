@@ -1,13 +1,18 @@
 import {
     StrategyEdge,
+    StrategyEdgeCardPresentation,
     StrategyNode,
     strategyEdgeCardPresentation,
     strategyEdgeLabel,
+    strategyNodeConnectors,
 } from "../strategy-model";
 import { StrategyEdgeAnnotation } from "../strategy-eval-presentation";
 
 export const NODE_WIDTH = 210;
 const PORT_Y = 54;
+function inputPortY(node: StrategyNode, edge: StrategyEdge): number {
+    return strategyNodeConnectors(node).inputs.find(port => port.id === edge.to_port)?.y ?? PORT_Y;
+}
 const CHAR_WIDTH = 6.1;
 const CARD_ROW_HEIGHT = 19;
 const CARD_HEADER_HEIGHT = 27;
@@ -105,7 +110,7 @@ function edgeCardLayout(
     edge: StrategyEdge,
     annotation: StrategyEdgeAnnotation | undefined,
 ): EdgeCardLayout {
-    const presentation = strategyEdgeCardPresentation(edge);
+    const presentation: StrategyEdgeCardPresentation = edge.kind === "item" ? {title: strategyEdgeLabel(edge), header: "", compact: true, manual: Boolean(edge.label), rows: [{kind: "leaf" as const, label: strategyEdgeLabel(edge), depth: 0}]} : strategyEdgeCardPresentation(edge);
     const annotationHeight = annotation ? CARD_ANNOTATION_HEIGHT : 0;
     const headerHeight = presentation.header ? CARD_HEADER_HEIGHT : 0;
     const widestText = Math.max(
@@ -211,7 +216,7 @@ function edgeRanks(
     return ranks;
 }
 
-interface EdgePreview { anchor: string; endpoint: "from" | "to"; x: number; y: number }
+interface EdgePreview { anchor: string; anchorPort?: string; endpoint: "from" | "to"; x: number; y: number }
 
 export class PcEdgeLayer extends HTMLElement {
     private view: EdgeLayerView = {
@@ -292,7 +297,7 @@ export class PcEdgeLayer extends HTMLElement {
         const anchor = preview && this.view.nodes.find(node => node.id === preview.anchor);
         if (!preview || !anchor) return null;
         const moving = {x: preview.x, y: preview.y};
-        const fixed = {x: anchor.position.x + (preview.endpoint === "to" ? NODE_WIDTH : 0), y: anchor.position.y + PORT_Y};
+        const fixed = {x: anchor.position.x + (preview.endpoint === "to" ? NODE_WIDTH : 0), y: anchor.position.y + (preview.endpoint === "from" ? strategyNodeConnectors(anchor).inputs.find(port => port.id === preview.anchorPort)?.y ?? PORT_Y : PORT_Y)};
         return chainPath(preview.endpoint === "to" ? [fixed, moving] : [moving, fixed]);
     }
 
@@ -308,7 +313,7 @@ export class PcEdgeLayer extends HTMLElement {
         const to = edge && this.view.nodes.find(node => node.id === edge.to);
         if (edge && from && to) paths.push(`<g data-edge-id="${escapeAttribute(edge.id)}" class="pc-edge-handles">
             <circle class="pc-edge-handle" data-edge-end="from" cx="${from.position.x + NODE_WIDTH + 18}" cy="${from.position.y + PORT_Y}" r="7"><title>Drag to change source</title></circle>
-            <circle class="pc-edge-handle" data-edge-end="to" cx="${to.position.x - 18}" cy="${to.position.y + PORT_Y}" r="7"><title>Drag to change destination</title></circle>
+            <circle class="pc-edge-handle" data-edge-end="to" cx="${to.position.x - 18}" cy="${to.position.y + inputPortY(to, edge)}" r="7"><title>Drag to change destination</title></circle>
         </g>`);
         const markerDefs = RANK_MARKERS.map(
             ([key, color]) => `<marker id="pc-edge-arrow-${key}" markerWidth="7" markerHeight="7"
@@ -347,7 +352,7 @@ export class PcEdgeLayer extends HTMLElement {
                 x1: from.position.x + NODE_WIDTH,
                 y1: from.position.y + PORT_Y,
                 x2: to.position.x,
-                y2: to.position.y + PORT_Y,
+                y2: to.position.y + inputPortY(to, edge),
             };
             const kind: EdgeRenderItem["kind"] =
                 from.id === to.id
@@ -382,6 +387,7 @@ export class PcEdgeLayer extends HTMLElement {
                 : `is-rank-${rankInfo.rank}`;
             const classes = [
                 "pc-edge-path",
+                edge.kind === "item" ? "is-item-supply" : "",
                 rankClass,
                 selected ? "is-selected" : "",
                 taken ? "is-taken" : "",
@@ -463,7 +469,7 @@ export class PcEdgeLayer extends HTMLElement {
                 x1: from.position.x + NODE_WIDTH,
                 y1: from.position.y + PORT_Y,
                 x2: to.position.x,
-                y2: to.position.y + PORT_Y,
+                y2: to.position.y + inputPortY(to, edge),
             };
             const kind: EdgeRenderItem["kind"] =
                 from.id === to.id
@@ -526,6 +532,7 @@ export class PcEdgeLayer extends HTMLElement {
                 : `is-rank-${rankInfo.rank}`;
             const classes = [
                 "pc-edge-path",
+                edge.kind === "item" ? "is-item-supply" : "",
                 rankClass,
                 selected ? "is-selected" : "",
                 taken ? "is-taken" : "",

@@ -982,6 +982,10 @@ _lib.pc_simulator_example_query.argtypes = [
     ct.POINTER(_ErrorInfo),
 ]
 _lib.pc_simulator_example_query.restype = ct.c_int32
+_lib.pc_simulator_example_resources_json.argtypes = [
+    _handle, ct.c_int32, ct.c_uint32, ct.POINTER(ct.c_char_p), ct.POINTER(_ErrorInfo),
+]
+_lib.pc_simulator_example_resources_json.restype = ct.c_int32
 _lib.pc_simulator_failure_summary_query.argtypes = [
     _handle,
     ct.POINTER(_FailureSummaryEntry),
@@ -1341,6 +1345,7 @@ class SimulationExample:
     known_total_cost: float
     cost_complete: bool
     item: "Item"
+    resources: tuple[dict[str, object], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -2335,6 +2340,9 @@ class Simulator(_OwnedHandle):
                 ),
                 error,
             )
+            resources_json = ct.c_char_p()
+            _check(_lib.pc_simulator_example_resources_json(
+                self._handle, kind, index, ct.byref(resources_json), ct.byref(error)), error)
             examples.append(
                 SimulationExample(
                     _TERMINAL_NAMES[native.terminal_kind],
@@ -2344,6 +2352,7 @@ class Simulator(_OwnedHandle):
                     native.known_total_cost,
                     bool(native.cost_complete),
                     Item(self._session, _copy_item_state(native.item)),
+                    tuple(json.loads(_decode(resources_json.value) or "[]")),
                 )
             )
         return tuple(examples)
