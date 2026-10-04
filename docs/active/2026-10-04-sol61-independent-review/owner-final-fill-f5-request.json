@@ -1,0 +1,176 @@
+{
+  "schema": "sol61_final_side_fill_finite_request_v1",
+  "status": "SOURCE_ONLY; all new build/test/construction stages UNRUN; LOCAL belongs to parent CI/product gates",
+  "basis_commit": "293be87e7375228c577b3f2d875702fd91ca9174",
+  "prior_qualified_source": "a585ec4666d7c83f1446e89e2f822261b72d4254",
+  "source_files_sha256": {
+    "engine/src/solver_compile.cpp": "35838754a73d7bc320c1265e12eed88a5fff32bc6bf5eb836ba881d6aeaea05a",
+    "engine/src/solver_compile_contracts.hpp": "b156eed5a8e3c13a1159365b0a3e4ccd6a50234927d07f3c9d506789409735f3",
+    "engine/src/solver_selective_completion.cpp": "8fff4ffb259400854b480bee06cef80b1242d1ba15ab233fe4f75e4f31d3d8b6",
+    "engine/src/solver_selective_completion.hpp": "bd4cf4c3fab6dec4123f052a7f38c35b749b97c8a6c18108bcf9f9a09424f411",
+    "engine/benchmarks/solver_benchmark.cpp": "404cac99a69d067e8a290a32e5447f57f7ca08f1701f315dbeeca1644b7100eb",
+    "engine/tests/test_main.cpp": "82a2aae41073c57633bad1647f5b1facf4c320596ed3ace802f0bfb32d4369b7",
+    "engine/tests/test_solver_compile.cpp": "6e75b492250fca2d156193e80565aabfc8aa74b6895d0213e0db8445ea888737",
+    "engine/tests/tests.hpp": "f6d8cde9c553dd80a174c9b9081b4a29d7d314ec7d9ec91a295075337b2beb05",
+    "engine/src/solver_calc.cpp": "41198cac24afe47b3c65fc07094b6fffa4138f5f69fb656e2339a2a52d3e34b1",
+    "engine/src/solver_calc_types.hpp": "2035b3939d546fb868578b00ee86f358978cbac32d804a4b63a9e2f47fdadd02",
+    "engine/src/solver_options_automatic.cpp": "e85c97e4d6ba591f4b00882864d2d9d7a60ab120b7a7788169c4a7f8523766a0",
+    "engine/src/solver_options_helpers.hpp": "575d705635d48d9c24543bbefd506180c3d1f83bc2ba621f7ac845cbbdbed15e"
+  },
+  "runtime_files_sha256": {
+    "manifest.json": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "strings.json": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6",
+    "game-data.json": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e"
+  },
+  "conquest_inputs": {
+    "docs/active/2026-10-03-sol61-recovery/qualification/law3/cases/conquest5-product.json": {
+      "sha256": "49bc43f7fa8616ab0f798d8e5c5a2e0c3e79342a51a1636446f2d80e65147642",
+      "bytes": 7942
+    },
+    "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json": {
+      "sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92",
+      "bytes": 141941
+    },
+    "docs/active/2026-10-04-sol61-armour-recovery/conquest-construction-manifest.json": {
+      "sha256": "9cdfc766842410dfac2c4aaa7a0e96342cf724cd7cea5dcf633293661d3c7607",
+      "bytes": 1125
+    }
+  },
+  "slots": {
+    "LOCAL": "NOT GRANTED for this batch; request after independent source review and parent CI release",
+    "compiler_jobs": 2,
+    "execution": "serial, stop on first failure, existing isolated worker; fresh output only"
+  },
+  "owner": "scripts/dev-engine.ps1, existing native explicit selectors/construction witness, poecraft_ingest.solver_worker.run_isolated_process; no new supervisor",
+  "stages": [
+    {
+      "phase": "build-tests",
+      "argv": [
+        "powershell",
+        "-NoProfile",
+        "-File",
+        "scripts/dev-engine.ps1",
+        "-Task",
+        "Tests",
+        "-Jobs",
+        "2"
+      ],
+      "host_watchdog_seconds": 600
+    },
+    {
+      "phase": "original-root-native-partial-and-three-held-history-witness",
+      "argv": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-partial-held-witness-only",
+        "data/compiled/current"
+      ],
+      "host_watchdog_seconds": 180
+    },
+    {
+      "phase": "entry-budget-and-independent-accounting-observer-pair",
+      "argv": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-entry-budget-only"
+      ],
+      "host_watchdog_seconds": 180
+    },
+    {
+      "phase": "same-request-paired-final-fill-sixteen-finite-roots",
+      "argv": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-partial-held-final-fill-only"
+      ],
+      "host_watchdog_seconds": 180
+    },
+    {
+      "phase": "unchanged-eight-root-and-878-entry-control",
+      "argv": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-partial-held-guarded-only"
+      ],
+      "host_watchdog_seconds": 180
+    },
+    {
+      "phase": "legacy-blocker-native-consumer-control",
+      "argv": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-blocker-growth-only"
+      ],
+      "host_watchdog_seconds": 180
+    },
+    {
+      "phase": "build-benchmark",
+      "argv": [
+        "powershell",
+        "-NoProfile",
+        "-File",
+        "scripts/dev-engine.ps1",
+        "-Task",
+        "Benchmark",
+        "-Jobs",
+        "2"
+      ],
+      "host_watchdog_seconds": 600
+    },
+    {
+      "phase": "original-request-ordinary-generated-final-word-construction-only",
+      "argv": [
+        "build/engine/poecraft_solver_benchmark.exe",
+        "--artifact",
+        "data/compiled/current",
+        "--corpus",
+        "docs/active/2026-10-04-sol61-armour-recovery/conquest-construction-manifest.json",
+        "--case",
+        "sol61-trace-conquest5-currentmodel-120",
+        "--partial-held-construction-witness",
+        "--partial-held-final-fill",
+        "--output",
+        "<fresh batch>/final-fill-construction.json"
+      ],
+      "host_watchdog_seconds": 165
+    }
+  ],
+  "finite_fill_pair": {
+    "controls": "same eight nonuniform-weight native fixtures, both orientations/anchors/tier contexts and secondary-group blockers; explicit requested Chaos and Exalt in BOTH arms",
+    "scope_prices": "Chaos100/Exalt.43/EChaos3/EAnnul2/EExalt1/Ember.07*tier/Ichor.11*tier; original clean five natural T1 goals",
+    "treatment": "private default-off final-stage ordinary Exalt below target capacity with positive target progress and exact missing-goal eligibility; existing full-capacity Annul and zero-progress reroll retained",
+    "caps": {
+      "max_discovered_states": 10000,
+      "max_expanded_states": 10000,
+      "max_rows": 100000,
+      "max_transitions": 1000000,
+      "max_reforge_work": 1000000,
+      "max_owned_bytes": 268435456,
+      "economic_restart": false
+    },
+    "acceptance": "exact original-root root acceptance and every strictly positive native-programme entry; all ordinary Exalt exits preserve full held goals and incoming target progress; paid full-miss Annul cleanup; unrequested/unpriced fill refuses; blocker guard equivalence retained; print exact potential reuse classes without dropping entries",
+    "comparisons": "report each same-request control/treatment root cost and entry count; old Chaos-only receipts are legacy controls, not price/scope-matched financial controls; stop on semantic/cap/identity refusal rather than manufacturing acceptance"
+  },
+  "accounting_pair": {
+    "identity": "same existing six-entry accepted immutable census, control/root/goals/scope/prices/limits and retained checker in both observers",
+    "observers": "full current calculate_owned_bytes after each checkpoint versus existing incremental fast ledger; full audit at each completed entry in both arms",
+    "gate": "same checkpoint count, all six positive entries, exact48 logical and identical active work; fast selected bytes must never undercount audited selected bytes at these finite boundaries",
+    "measure": "checkpoint/entry counts, observation/advance/audit nanoseconds and validator-selected peak; not complete aggregate peak or robust performance evidence",
+    "production": "current consumers remain on full calculation; no result transfer, early checker release, extra caching certificate or saved authority"
+  },
+  "construction_only": {
+    "original_request": "case49bc43f7 and frozen Allflame economy/base5; original empty rare ilvl86 root, all five clean natural T1 goals, same resolved product envelope/tier frames/caps",
+    "semantic_witness": "native positive original Chaos ordering to three held T1 prefixes plus T1 PDR; ordinary generated dispatch selects requested priced Exalt, complete one-action native law preserves all four incoming goals; retain original partial-held route/word too",
+    "identity": "capture new complete graph bytes/hash/word/resources/key and generation work; R8 oldgraph remains2424103896900201902, not the new treatment pin",
+    "native_deadline_seconds": 120,
+    "memory": "existing conservative selected/reservation observations retain incomplete transient-overlap qualification; no complete1GiB proof claimed",
+    "forbidden": "CLI rejects --partial-held-final-fill without construction-only selector or together with --partial-held-root-check; original-root/every-entry/economic gates for the full Conquest policy remain UNRUN"
+  },
+  "next_decision": "review and execute finite batch only when parent grants LOCAL. Any actual Conquest root experiment needs a new finite-qualified graph/request identity and separate causal plan. Do not repeat R11 or increase caps.",
+  "stop_on": "first semantic/resource/identity/under-count/work-debit/positive-entry discrepancy, native or host deadline, or survivor; preserve failure and clean process receipts; no retries for green",
+  "exclusions": [
+    "production Current/Finder activation",
+    "imported historical controller",
+    "proposal3 activation",
+    "approximate state merging or omitted entries",
+    "Finder generation/scoped-owner lifecycle repair",
+    "early checker release",
+    "WASM/browser/control cohort qualification",
+    "main merge/push/deploy"
+  ]
+}

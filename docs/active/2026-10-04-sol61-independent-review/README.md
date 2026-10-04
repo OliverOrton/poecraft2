@@ -1080,3 +1080,57 @@ checker release work remain open. Default-off recovery finite R8 qualification
 is unchanged. Source-only recommendation: retain candidate for its requested
 finite gate; hold public activation, final frozen controls, complete aggregate
 peak claims, closure and WASM.
+
+
+## Final-stage ordinary fill and measurement source review
+
+Reviewed immutablef5ab312250bb8285fb3468fa9dfee6211da02ec6 against293be87e;12
+prepared source pins and3 frozen case/economy/manifest pins match Git blobs.
+Scoped native diff whitespace check passed. No reviewer native command, fixture
+or production edit; CI holds LOCAL. Records:final-fill-f5-source-review.json and
+owner-final-fill-f5-request.json. Since reviewed9c, the only earlier production
+delta preserves a named automatic-admission resource refusal instead of losing
+its cap identity; reported R9/R10/R11 native results were not re-reviewed here.
+
+No new fill-routing blocker demonstrated. Default-false fill applies only to
+final stages2/3, requiring3 held/2 target/all five goals. Scope fixes rare cap3,
+unique natural families, exact original empty root and clean terminal, so the
+three held tests establish a full other side. Requested/enabled/nonsynthetic
+ordinary Exalt requires every native cost key priced and legal proposal; exact
+missing-goal native positive membership/canonical blocker/capacity guard selects
+it below capacity with target progress. Existing early persistent-blocker escape
+to paid original acquisition and full-capacity paid Annul remain. Every fill
+returns to exact clean goal checking; every native programme outcome returns to
+central dispatch. No structural count overwrites weighted root costs/resources.
+
+R7/P3 finite coverage limit, communicated promptly: treatment has4 rollability
+nodes, but test_solver_compile5810-5830 selects only the first growth-side node
+for all-positive-entry native equivalence. The new two-goal final-side nodes are
+counted, not included in that comparison. Named Exalt/cleanup word enumeration
+checks selected carriers. Extend the existing guard check across both sides/all
+new nodes before claiming every-entry native guard equivalence. No production
+routing failure is demonstrated; bounded diagnostics may retain this limit.
+
+R8/P3 measurement limit, communicated promptly: ownership observer pair6032-6053
+uses identical fresh validators, accepted6-entry census, scope/prices/caps and
+retained checker, requiring48 work/identical active units and checkpoint count.
+It records observation/advance/audit timings separately, but independently audits
+only completed entries. A suspended native cursor is not reconciled by this added
+pair at its live boundary. Before switching the hot path, add that named ledger/
+full boundary evidence and keep audit time separate. Production full estimator
+is unchanged. One fixed-order finite pair is no robust performance evidence or
+complete aggregate peak certificate; prior R6 qualification stays open.
+
+Exact carrier/occurrence reuse projection skips or merges no entries. Paired
+fill arms share explicit Chaos+Exalt scope and Exalt.43 price; legacy Chaos-only
+controls remain separate. CLI permits new flag only for construction capture and
+rejects full-root evaluation. No historical graph import or Conquest rerun is
+prepared. New complete graph gets its own pin, preserving old R8 identity.
+
+Parent-reported R11 cost896765.82/root success1 with968/12719 entry validation
+is incomplete economic evidence.150s covers the entire pipeline;1.884M native
+logical units are not CPU time. Ownership scans and final EldritchChaos cost are
+causal leads, not demonstrated savings. Recommendation: prepared serial finite
+gate is reasonable under parent LOCAL, with R7/R8 limits retained or amended.
+Hold Current/Finder activation, fast-observer switch, complete peak authority,
+full Conquest root/every-entry economics, final frozen cohort and WASM.

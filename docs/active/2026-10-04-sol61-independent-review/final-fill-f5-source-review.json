@@ -1,0 +1,169 @@
+{
+  "schema": "sol61_independent_final_fill_source_review_v1",
+  "candidate_commit": "f5ab312250bb8285fb3468fa9dfee6211da02ec6",
+  "diff_basis": "293be87e7375228c577b3f2d875702fd91ca9174",
+  "evidence_class": "SOURCE REVIEW ONLY; all new build/test/construction stages unrun by reviewer; CI owns LOCAL",
+  "prepared_request_sha256": "1c7085bd81ac146558dece04c0bedd15d15aaf1ee7531190e4bf575df1211222",
+  "source_pins": {
+    "engine/src/solver_compile.cpp": {
+      "sha256": "35838754a73d7bc320c1265e12eed88a5fff32bc6bf5eb836ba881d6aeaea05a",
+      "bytes": 243669
+    },
+    "engine/src/solver_compile_contracts.hpp": {
+      "sha256": "b156eed5a8e3c13a1159365b0a3e4ccd6a50234927d07f3c9d506789409735f3",
+      "bytes": 8341
+    },
+    "engine/src/solver_selective_completion.cpp": {
+      "sha256": "8fff4ffb259400854b480bee06cef80b1242d1ba15ab233fe4f75e4f31d3d8b6",
+      "bytes": 71286
+    },
+    "engine/src/solver_selective_completion.hpp": {
+      "sha256": "bd4cf4c3fab6dec4123f052a7f38c35b749b97c8a6c18108bcf9f9a09424f411",
+      "bytes": 8715
+    },
+    "engine/benchmarks/solver_benchmark.cpp": {
+      "sha256": "404cac99a69d067e8a290a32e5447f57f7ca08f1701f315dbeeca1644b7100eb",
+      "bytes": 397340
+    },
+    "engine/tests/test_main.cpp": {
+      "sha256": "82a2aae41073c57633bad1647f5b1facf4c320596ed3ace802f0bfb32d4369b7",
+      "bytes": 22877
+    },
+    "engine/tests/test_solver_compile.cpp": {
+      "sha256": "6e75b492250fca2d156193e80565aabfc8aa74b6895d0213e0db8445ea888737",
+      "bytes": 438492
+    },
+    "engine/tests/tests.hpp": {
+      "sha256": "f6d8cde9c553dd80a174c9b9081b4a29d7d314ec7d9ec91a295075337b2beb05",
+      "bytes": 4274
+    },
+    "engine/src/solver_calc.cpp": {
+      "sha256": "41198cac24afe47b3c65fc07094b6fffa4138f5f69fb656e2339a2a52d3e34b1",
+      "bytes": 160031
+    },
+    "engine/src/solver_calc_types.hpp": {
+      "sha256": "2035b3939d546fb868578b00ee86f358978cbac32d804a4b63a9e2f47fdadd02",
+      "bytes": 66035
+    },
+    "engine/src/solver_options_automatic.cpp": {
+      "sha256": "e85c97e4d6ba591f4b00882864d2d9d7a60ab120b7a7788169c4a7f8523766a0",
+      "bytes": 131533
+    },
+    "engine/src/solver_options_helpers.hpp": {
+      "sha256": "575d705635d48d9c24543bbefd506180c3d1f83bc2ba621f7ac845cbbdbed15e",
+      "bytes": 128368
+    }
+  },
+  "frozen_inputs": {
+    "docs/active/2026-10-03-sol61-recovery/qualification/law3/cases/conquest5-product.json": {
+      "sha256": "49bc43f7fa8616ab0f798d8e5c5a2e0c3e79342a51a1636446f2d80e65147642",
+      "bytes": 7942
+    },
+    "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json": {
+      "sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92",
+      "bytes": 141941
+    },
+    "docs/active/2026-10-04-sol61-armour-recovery/conquest-construction-manifest.json": {
+      "sha256": "9cdfc766842410dfac2c4aaa7a0e96342cf724cd7cea5dcf633293661d3c7607",
+      "bytes": 1125
+    }
+  },
+  "verified": "12 source pins and3 frozen case/economy/manifest pins verified against immutable commit; native scoped git diff --check passed",
+  "prior_source_gap": "Only intervening production delta since9c is preservation of a named automatic-admission resource refusal (selective_completion:1257-1263); prior native R9/R10/R11 receipts were owner/parent reported, not independently rerun or reviewed in this cut.",
+  "routing_observations": [
+    {
+      "claim": "Private flag defaults false and applies only to final stages2/3; production proposal count/Current/Finder activation do not change.",
+      "references": [
+        "engine/src/solver_selective_completion.hpp:131-135",
+        "engine/src/solver_selective_completion.cpp:943-953"
+      ]
+    },
+    {
+      "claim": "Gate requires full three held/two target/all goals. Scoped private capability requires fixed rare cap3, five unique natural family goals, exact empty original root and clean terminal. Three held family tests imply three distinct occupied affixes.",
+      "references": [
+        "engine/src/solver_selective_completion.cpp:252-258",
+        "engine/src/solver_selective_completion.cpp:828-868",
+        "engine/src/solver_selective_completion.cpp:613-616"
+      ]
+    },
+    {
+      "claim": "Plain Exalt is selected only from requested nonsynthetic enabled candidates with every native cost key priced; native action_legal checks the admission proposal. The reached guard requires rare target capacity and some unsatisfied goal with an unblocked positive native pool member.",
+      "references": [
+        "engine/src/solver_selective_completion.cpp:326-347",
+        "engine/src/solver_selective_completion.cpp:389-394",
+        "engine/src/solver_selective_completion.cpp:733-754",
+        "engine/src/solver_compile.cpp:30-81"
+      ]
+    },
+    {
+      "claim": "Existing exact goal test runs after each fill. With other side full, Exalt can draw only target; full-miss repair remains paid EldritchAnnul; zero progress or false missing-goal guard takes existing narrower paid reroll. Early persistent held-side obstruction still takes paid original acquisition through compose.",
+      "references": [
+        "engine/src/solver_selective_completion.cpp:637-659",
+        "engine/src/solver_selective_completion.cpp:733-754",
+        "engine/src/solver_selective_completion.cpp:1024-1034"
+      ]
+    },
+    {
+      "claim": "Paired scope/prices are identical in both arms, including requested Exalt. Finite word witness enumerates actual native Exalt outcomes and routed paid cleanup; full original-root acceptance, weighted cost and every positive native programme entry remain mandatory, with identity tamper refusal.",
+      "references": [
+        "engine/tests/test_solver_compile.cpp:5356-5359",
+        "engine/tests/test_solver_compile.cpp:5504-5601",
+        "engine/tests/test_solver_compile.cpp:5781-5907"
+      ]
+    },
+    {
+      "claim": "Added-tag guard remains conservative and unqualified; compatibility is necessary individual rollability, never a joint-completion certificate. No crafting law/probability/resource recurrence, original prices/acceptance epsilon or scope change was introduced.",
+      "references": [
+        "engine/src/solver_compile.cpp:30-81"
+      ]
+    },
+    {
+      "claim": "Conquest modifier is construction-only, keeps exact original request and native positive acquisition word, and cannot request full-root evaluation; new graph is captured independently and cannot replace R8 pin without later declared evidence.",
+      "references": [
+        "engine/benchmarks/solver_benchmark.cpp:3628-3692",
+        "engine/benchmarks/solver_benchmark.cpp:3694-3714",
+        "engine/benchmarks/solver_benchmark.cpp:7288-7289"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "id": "R7",
+      "severity": "P3",
+      "confidence": "high, static test coverage witness; no demonstrated routing failure",
+      "affected_consumer": "private final-fill finite guard qualification",
+      "title": "Added final-side guards are counted but not included in every-entry native guard equivalence loop",
+      "references": [
+        "engine/tests/test_solver_compile.cpp:5633-5640",
+        "engine/tests/test_solver_compile.cpp:5810-5830",
+        "engine/src/solver_selective_completion.cpp:740-742"
+      ],
+      "static_witness": "Treatment has4 TestMissingGoalRollable nodes. Equivalence code selects only find_if binding==three-goal growth target side, compares that first node over all positive native-programme census entries, then separately loops all compatibility nodes. Two newly added final guards on the two-goal side receive no analogous all-entry native comparison. Selected native fill/cleanup witnesses cover only their named carriers.",
+      "minimal_disposition": "Extend existing rollability check to both sides/all treatment rollability nodes using actual native eligible mask and unsatisfied target slots on each positive census entry; retain complete census. No new benchmark infrastructure needed.",
+      "release_impact": "No production blocker demonstrated. Address before claiming full finite native guard equivalence for treatment; reasonable to execute current bounded diagnostic while retaining this coverage limit."
+    },
+    {
+      "id": "R8",
+      "severity": "P3",
+      "confidence": "high, static measurement coverage witness; no ledger undercount demonstrated",
+      "affected_consumer": "future hot-path ownership observer qualification",
+      "title": "Accounting timing pair audits only completed-entry boundaries",
+      "references": [
+        "engine/tests/test_solver_compile.cpp:6032-6053"
+      ],
+      "static_witness": "Both observer arms advance1 and sample each checkpoint, but audited_estimated_owned_bytes is invoked only when validated_entries changes or done. A still-suspended native admission cursor is not independently reconciled at that boundary by this added test. Matching completed-entry ledgers does not establish coverage while a cursor is live.",
+      "minimal_disposition": "Keep diagnostic-only API and current production full estimator. Before a hot-path switch, include a named checkpoint with active suspended admission in ledger/full audit evidence; separate audit timing from observer timing. Do not infer whole R11 pipeline savings from this6-entry pair.",
+      "release_impact": "Current pair may measure selected observer cost; no fast-observer production qualification or complete aggregate peak claim follows."
+    }
+  ],
+  "measurement_observations": [
+    "Each arm constructs a fresh validator on the same accepted original-root6-entry immutable census with identical scope/prices/caps, retaining the checker throughout.",
+    "Requires all6 entries, exact48 logical units, identical active work and checkpoint count; records observer/advance/audit nanoseconds separately. Timing order is fixed full then ledger; one finite pair is not robust performance evidence.",
+    "Potential reuse projection preserves every positive entry and uses exact carrier plus full operator occurrence identity under one immutable problem; introduces no skip, merge or cache certificate.",
+    "Parent-reported R11 rootsuccess1/cost896765.82 and968/12719 validated at pipeline deadline do not grant feasible-upper acceptance or economic qualification. Work1.884M counts native units, not CPU time;89.8percent final EldritchChaos cost is a lead, not measured gain from new fill.",
+    "Prior R6 aggregate transient-peak limit remains explicitly qualified in owner docs; new fast/ledger diagnostics do not repair complete aggregate peak evidence."
+  ],
+  "communicated_promptly": "R7 andR8 static coverage limits sent to parent before source review completion; no competing production edit.",
+  "release_recommendation": "Proceed only with prepared serial finite selectors/construction gate under parent LOCAL. No new routing blocker demonstrated. Hold consumer activation, fast-observer switch, aggregate-peak certificate, full Conquest root/every-entry economics, final control cohort and WASM.",
+  "new_native_results": "NONE; no reviewer build/test/solve/browser command and no LOCAL request in this turn"
+}
