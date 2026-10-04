@@ -7,7 +7,9 @@ Conquest graph matches R8 exact bytes. Root converged/success1/full prices with
 diagnostic cost896765.8190299857; entry deadline150s reached at968/12719positive
 entries. No checked upper, retention or activation. [Finite receipt](docs/active/2026-10-04-sol61-armour-recovery/root-r11-summary.json)
 and [Conquest receipt](docs/active/2026-10-04-sol61-armour-recovery/conquest-root-r11-summary.json)
-pin work1884694/50M, reservedpeak876476133/1GiB and all source/binary/input bytes.
+pin work1884694/50M and all source/binary/input bytes. Memory876476133 is a
+between-slice reservation observation, NOT complete aggregate peak/cap proof;
+review7c8f0fb8 identifies missing transient overlap, no demonstrated overrun.
 LOCAL released10:34:51UTC; no survivors, repeat or cap increase. [Living record](docs/active/2026-10-04-sol61-armour-recovery/README.md)
 owns negative:89.8%cost from EldritchChaos, final c86 repeats18864 times.
 Three-held/two-target final stages have reroll/annul but no fill; bounded native

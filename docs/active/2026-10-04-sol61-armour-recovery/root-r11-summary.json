@@ -175,5 +175,16 @@
     "root-r9-summary.json",
     "root-r10-summary.json"
   ],
-  "no_automatic_repeat_or_cap_increase": true
+  "no_automatic_repeat_or_cap_increase": true,
+  "aggregate_memory_qualification": {
+    "review_commit": "7c8f0fb8a9b448c52d0490e0c3047e3b7410b0a9",
+    "measurement": "Observations between native slices; checker/validator transients and their simultaneous outer overlap are not completely sampled",
+    "reported_selected_bytes": 674886885,
+    "reported_reserved_bytes": 876476133,
+    "checker_internal_peak_bytes": 133182141,
+    "complete_aggregate_peak_measured": false,
+    "aggregate_1GiB_compliance_proven": false,
+    "demonstrated_overrun": false,
+    "disposition": "Do not interpret aggregate_selected_peak/aggregate_reserved_peak raw field names as complete ownership peaks or cap qualification. Keep default-off finite and root-cost evidence; aggregate peak qualification remains open."
+  }
 }

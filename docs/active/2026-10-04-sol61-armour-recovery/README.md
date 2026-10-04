@@ -552,8 +552,9 @@ Root cost is not a qualified programme-policy upper or financial recovery.
 
 Logical generation233575+checker933384+entry717735=1884694 exactly equals
 the parent ledger, under50M. Active checker279657 and entry717735 remain separate.
-Selected simultaneous component peak674886885, reserved876476133 (includes
-201589248 transient reservation), under1GiB. Checker live87666138/internal
+Observed component bytes between slices peaked674886885, reservation-inclusive
+observation876476133 (includes201589248 transient reservation). These observations
+are below1GiB but do NOT establish complete aggregate peak or cap compliance. Checker live87666138/internal
 peak133182141; retained result estimate54713649. No work/memory cap hit or measured
 release saving. Full final30s exact allowance and cleanup receipts retained;
 no host watchdog/cancellation/survivor. LOCAL released10:34:51UTC. No repeat or
@@ -574,3 +575,19 @@ Compact projections pin full native costs/resources, request/actions/caps,
 graph/word/occurrence identities and bulk evaluator output. Generic entry owner
 is finitely qualified; Finder generation/scoped attachment lifetime remain open.
 Economic/all-entry, consumer/control cohort and matching WASM gates remain open.
+
+## Independent ownership measurement qualification:7c8f0fb8
+
+Parent supplied review7c8f0fb8a9b448c52d0490e0c3047e3b7410b0a9 of9c0c31d1:
+no new work-debit/double-charge/borrowed-result lifetime blocker established.
+It identifies that native benchmark memory observations occur between steps and
+miss checker transient peaks. No overrun is demonstrated, but the raw field
+names aggregate_selected_peak/aggregate_reserved_peak must not be interpreted as
+complete aggregate peak measurements or proof of1GiB compliance. The R11 compact
+receipts now carry this qualification explicitly; original native raw reports
+and their hashes are unchanged. Checker internal peak is a separate owner
+observation and cannot be added to phase peaks to create aggregate evidence.
+Default-off finite semantic/budget controls remain their own evidence. Root-only
+cost and incomplete positive validation remain the negative economic result.
+Future cap-qualified evaluation must close peak/overlap observation or retain
+this gap openly; no new memory experiment or larger case is launched here.
