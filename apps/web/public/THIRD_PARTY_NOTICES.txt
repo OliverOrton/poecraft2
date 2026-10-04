@@ -55,3 +55,7 @@ SOFTWARE.
 
 
 Game artwork: Grinding Gear Games. Images are derived from canonical RePoE visual identities and fetched from the official web.poecdn.com image service. The bundled game-assets/catalog.json records provenance and content hashes.
+
+Noto Sans Latin WOFF2 (Google Fonts v42), Copyright 2022 The Noto Project Authors.
+SIL Open Font License 1.1; full license is distributed at fonts/OFL.txt.
+https://github.com/notofonts/latin-greek-cyrillic
