@@ -11,6 +11,8 @@ const directory = resolve(process.argv[2] || 'dist');
 const build = JSON.parse(readFileSync(resolve(directory, 'build-info.json')));
 const smokeScope = process.env.POECRAFT_UI_SMOKE_SCOPE || 'full';
 assert.ok(['full', 'dock-theme'].includes(smokeScope), 'Unknown UI smoke scope');
+const builderConnectorContract = process.env.POECRAFT_UI_BUILDER_CONTRACT || 'legacy-48';
+assert.ok(['legacy-48', 'resource-v1'].includes(builderConnectorContract), 'Unknown Builder connector contract');
 const mime = { '.html': 'text/html', '.json': 'application/json', '.js': 'text/javascript', '.wasm': 'application/wasm', '.css': 'text/css', '.txt': 'text/plain', '.png': 'image/png', '.woff2': 'font/woff2' };
 const server = createServer((request, response) => {
     try {
@@ -121,7 +123,7 @@ try {
             await captureUiCheckpoint(withoutFont, 'font-fallback');
             await withoutFont.close();
             console.log(JSON.stringify({checkpoint: 'font-fallback', result: 'passed', channel: channel || 'pinned'}));
-            const ui = build.game_assets ? await checkUiContinuity(page).catch(async error => {
+            const ui = build.game_assets ? await checkUiContinuity(page, {builderConnectorContract}).catch(async error => {
                 await captureUiCheckpoint(page, 'failure');
                 console.error(JSON.stringify({failures, status: await page.locator('.pc-emu-status, .pc-calc-status').allTextContents()}));
                 throw error;
@@ -154,7 +156,7 @@ try {
             await stale.goto(origin + build.base);
             await stale.waitForFunction(() => document.querySelector('pc-emulator')?.textContent.includes('reload to retry'));
             assert.equal(await stale.evaluate(() => localStorage.getItem('hosting-preserved-draft-marker')), 'keep');
-            console.log(JSON.stringify({ browser: browserType.name(), version: browser.version(), channel: channel || 'pinned', base: build.base, build_id: build.build_id, result: 'passed', requests: responses.length, ui }));
+            console.log(JSON.stringify({ browser: browserType.name(), version: browser.version(), channel: channel || 'pinned', base: build.base, build_id: build.build_id, result: 'passed', scope: smokeScope, builderConnectorContract, requests: responses.length, ui }));
         } finally { await browser.close(); }
     }
 } finally { await new Promise(resolve => server.close(resolve)); }

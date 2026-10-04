@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { checkIntegratedConnectorGeometry } from './integrated-builder-ui-checks.mjs';
 
 function luminance(value) {
     const rgb = value.match(/[\d.]+/g).slice(0, 3).map(Number).map(x => {
@@ -205,22 +206,35 @@ export async function checkItemPresentationSemantics(page) {
     }
 }
 
-/** Source-baseline geometry; new A/B connector qualification belongs to its feature branch. */
-export async function checkBuilderPresentation(page) {
-    const geometry = await page.locator('pc-strategy-node').evaluateAll(nodes => nodes.map(node => ({
-        width: getComputedStyle(node).width,
-        ports: [...node.querySelectorAll('.pc-node-port')].map(port => ({
-            width: getComputedStyle(port).width, height: getComputedStyle(port).height,
-            top: getComputedStyle(port).top, radius: getComputedStyle(port).borderRadius,
-        })),
-    })));
-    assert.ok(geometry.length > 0);
-    for (const node of geometry) {
-        assert.equal(node.width, '210px');
-        for (const port of node.ports) {
-            assert.equal(port.width, '14px'); assert.equal(port.height, '14px');
-            assert.equal(port.radius, '50%'); assert.equal(port.top, '48px');
+/** Explicit connector contract: keep legacy qualification reproducible and
+ * compare combined resource ports with the exact currently rendered graph.
+ * Ordinary editor flow does not claim dedicated A/B fixture coverage.
+ */
+export async function checkBuilderPresentation(page, {connectorContract = 'legacy-48'} = {}) {
+    assert.ok(['legacy-48', 'resource-v1'].includes(connectorContract), 'Unknown Builder connector contract');
+    let connectorGeometry;
+    if (connectorContract === 'resource-v1') {
+        const editor = page.locator('pc-strategy-editor:visible');
+        assert.equal(await editor.count(), 1);
+        const graph = await editor.evaluate(element => structuredClone(element.strategy));
+        connectorGeometry = await checkIntegratedConnectorGeometry(page, graph, {requireFullVocabulary: false});
+    } else {
+        const geometry = await page.locator('pc-strategy-node').evaluateAll(nodes => nodes.map(node => ({
+            width: getComputedStyle(node).width,
+            ports: [...node.querySelectorAll('.pc-node-port')].map(port => ({
+                width: getComputedStyle(port).width, height: getComputedStyle(port).height,
+                top: getComputedStyle(port).top, radius: getComputedStyle(port).borderRadius,
+            })),
+        })));
+        assert.ok(geometry.length > 0);
+        for (const node of geometry) {
+            assert.equal(node.width, '210px');
+            for (const port of node.ports) {
+                assert.equal(port.width, '14px'); assert.equal(port.height, '14px');
+                assert.equal(port.radius, '50%'); assert.equal(port.top, '48px');
+            }
         }
+        connectorGeometry = {scope: 'legacy-48-connectors', nodes: geometry.length, sourceBaselinePortTop: 48};
     }
     const routing = page.locator('.pc-strategy-inspector .pc-edge-routing');
     const routingWasOpen = await routing.count() ? await routing.evaluate(element => element.open) : null;
@@ -239,5 +253,5 @@ export async function checkBuilderPresentation(page) {
         leaf.scrollHeight > leaf.closest('.pc-edge-card-row').clientHeight + 1).map(leaf => leaf.textContent));
     assert.deepEqual(clipped, [], 'Edge card text fits its existing row geometry');
     if (routingWasOpen === false) await routing.locator('summary').click();
-    return {nodeWidth: 210, portDiameter: 14, sourceBaselinePortTop: 48, keyboardFocus: true, edgeRowsFit: true};
+    return {connectorContract, connectorGeometry, nodeWidth: 210, portDiameter: 14, keyboardFocus: true, edgeRowsFit: true};
 }

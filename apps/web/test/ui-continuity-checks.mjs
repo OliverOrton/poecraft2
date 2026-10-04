@@ -5,7 +5,7 @@ import { checkCalculatorLayout, checkEmulatorLayout } from './calculator-layout-
 import { checkCraftChoices, checkCalculatorChoices } from './craft-choices-checks.mjs';
 
 /** Real browser interactions against the packaged UI; no Solver search or Simulator runs. */
-export async function checkUiContinuity(page) {
+export async function checkUiContinuity(page, {builderConnectorContract = 'legacy-48'} = {}) {
     // Ritual crowns must be selectable in their defence filter, not only All.
     await page.locator('pc-emulator .pc-bp-class').selectOption({label: 'Helmet'});
     await page.locator('pc-emulator .pc-bp-sub').selectOption({label: 'Armour / Energy Shield'});
@@ -87,7 +87,7 @@ export async function checkUiContinuity(page) {
     assert.equal(await page.locator('[data-action="group-mode"][data-path="root"][data-mode="all"]').getAttribute('aria-pressed'), 'true');
     assert.equal(await page.locator('[data-action="group-mode"][data-path="0"][data-mode="any"]').getAttribute('aria-pressed'), 'true');
     await page.locator('[data-action="condition-type"][data-path="0.0"]').selectOption('has_mod_family');
-    const builderPresentation = await checkBuilderPresentation(page);
+    const builderPresentation = await checkBuilderPresentation(page, {connectorContract: builderConnectorContract});
     console.log(JSON.stringify({checkpoint: "builder-presentation", builderPresentation}));
     await page.getByRole('button', {name: 'Choose modifiers', exact: true}).click();
     await captureUiCheckpoint(page, "builder");
@@ -105,7 +105,7 @@ export async function checkUiContinuity(page) {
     assert.match(JSON.stringify(condition), /"min_tier":0/);
     await checkStrategyHistory(page);
     // Check the populated condition text after tier/history edits as well as empty rows.
-    await checkBuilderPresentation(page);
+    await checkBuilderPresentation(page, {connectorContract: builderConnectorContract});
     await page.locator('.pc-tab-title').filter({hasText: /^Calculator/}).click();
     await page.waitForFunction(() => document.querySelector('.pc-calc-answer-value')?.textContent);
     await page.waitForFunction(() => !document.querySelector('pc-calculator')?.busy);
