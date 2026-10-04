@@ -1,3 +1,13 @@
+# Combined UI gate prepared (2026-10-04)
+
+Product production/assertion source ad5c45d4 imports trace-card d178c304 as
+aa9934df. Native/WASM and16 frozen inputs match owner pins. Exact native capture
+and existing full rendered caller are prepared; tests/types/build/metadata are
+unrun. The [living integration record](docs/active/2026-10-04-sol61-product-integration/README.md)
+and gate-plan.json own the serial bounded request. Parent LOCAL not granted.
+CI323c5ba7 is separate: equal-race cause unresolved, failed counterpart absent;
+no identity rule changed. No main push/deploy/dev-server action.
+
 # Combined product source checkpoint (2026-10-04)
 
 Isolated dot/sol61-ui-recomb-integration-20261004 combines R cfea56c0 and UI637fcef4

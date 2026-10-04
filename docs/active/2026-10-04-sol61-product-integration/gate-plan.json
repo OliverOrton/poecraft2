@@ -1,0 +1,129 @@
+{
+  "status": "PREPARED_UNRUN_PARENT_SLOT_REQUIRED",
+  "production_and_assertion_source": "ad5c45d4fd72d6a4125c3bf97b56688a28ec6b54",
+  "worktree": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-ui-recomb-integration-20261004",
+  "serial": true,
+  "compiler_jobs": 0,
+  "native_timed_solver_runs": 0,
+  "supervision": "Reuse parent/R existing deterministic Windows Job Object memory/cleanup owner. Its entrypoint must be resolved before launch; do not add a supervisor service.",
+  "common": {
+    "job_memory_limit_bytes": 4294967296,
+    "cleanup_drain_seconds": 5,
+    "stop_on_identity_correctness_timeout_resource_cleanup_or_assertion_failure": true,
+    "automatic_rerun": false,
+    "existing_tighter_case_bounds": "preserved",
+    "stage_start_end_and_logs": "atomic attempt-local records; preserve partial native captures"
+  },
+  "preflight": {
+    "source": "clean committed branch at launch, pinned HEAD and all production tree/artifact identities",
+    "inputs": "same16 frozen hashes before/after",
+    "dependencies": "Materialize isolated dependencies from owner tree only if package-lock hashes match; no other worktree or dev-server writes; no dependency installation requested.",
+    "artifacts": "Reuse exact qualified WASM50c98f55/MJS8ec20cf7; no native or WASM build in this UI gate"
+  },
+  "stages": [
+    {
+      "name": "metadata",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-ui-recomb-integration-20261004",
+      "command": [
+        "node",
+        "scripts/build-data-bundle.mjs"
+      ],
+      "wall_seconds": 60
+    },
+    {
+      "name": "typescript",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-ui-recomb-integration-20261004\\apps\\web",
+      "command": [
+        "node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit"
+      ],
+      "wall_seconds": 60
+    },
+    {
+      "name": "focused-trace-preview",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-ui-recomb-integration-20261004\\apps\\web",
+      "command": [
+        "node",
+        "node_modules/tsx/dist/cli.mjs",
+        "test/trace-item-preview.test.ts"
+      ],
+      "wall_seconds": 60
+    },
+    {
+      "name": "full-web",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-ui-recomb-integration-20261004\\apps\\web",
+      "command": [
+        "npm",
+        "test"
+      ],
+      "wall_seconds": 600,
+      "environment": {
+        "POECRAFT_UI_NATIVE_EVIDENCE_DIR": "<fresh attempt>/native-evidence"
+      },
+      "native_cases": "Existing suite only; original1000-trial fixtures and all180s planner/per-case limits retained. No added Simulator invocation or search batch."
+    },
+    {
+      "name": "vite",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-ui-recomb-integration-20261004\\apps\\web",
+      "command": [
+        "node",
+        "node_modules/vite/bin/vite.js",
+        "build"
+      ],
+      "wall_seconds": 120,
+      "qualification_reuse": "TypeScript already checked; existing product metadata remains source-matched"
+    },
+    {
+      "name": "package-and-verify",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-ui-recomb-integration-20261004",
+      "command": [
+        "node",
+        "scripts/package-public-artifacts.mjs",
+        "--web"
+      ],
+      "wall_seconds": 60,
+      "result": "Existing owner verifies immutable archive and returns its exact path/build ID"
+    },
+    {
+      "name": "rendered-full-and-native-builder",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-ui-recomb-integration-20261004",
+      "command": [
+        "node",
+        "apps/web/test/static-host-smoke.mjs",
+        "<exact verified archive>"
+      ],
+      "wall_seconds": 120,
+      "environment": {
+        "POECRAFT_UI_BUILDER_CONTRACT": "resource-v1",
+        "POECRAFT_UI_SMOKE_SCOPE": "full",
+        "POECRAFT_TEST_BROWSER_CHANNEL": "chrome",
+        "POECRAFT_SMOKE_BROWSERS": "chromium",
+        "POECRAFT_UI_NATIVE_EVIDENCE_DIR": "<same attempt>/native-evidence",
+        "POECRAFT_UI_CAPTURE_DIR": "<same attempt>/screenshots"
+      },
+      "locator_seconds": 30,
+      "screenshots": [
+        "integrated-ab-board",
+        "integrated-mixed-native-trace",
+        "failure"
+      ],
+      "scope": "Original full assertions plus exact captured mixed carrier card/raw receipts/costs, A/B ports/edge anchors and keyboard/navigation. Declared grid affects view positions only; native input graph preserved separately."
+    }
+  ],
+  "required_native_evidence": [
+    "ring-planner-response.json",
+    "ring-native-run.json",
+    "paid-feeder-native-run.json",
+    "mixed-carrier-native-response.json",
+    "mixed-carrier-native-run.json"
+  ],
+  "qualification_limits": [
+    "CI equal-race diagnosis remains separate and unpublished",
+    "Whole-product native/hosted release qualification remains pending",
+    "No solver quality or optimality claim from UI gate",
+    "Configured-cluster metadata, missing pair before snapshots and nested child steps remain unavailable",
+    "Chrome local rendering is not hosted/pinned-browser latency parity",
+    "No main merge, push, deployment or dev-server restart in this request"
+  ]
+}

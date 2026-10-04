@@ -1,3 +1,49 @@
+# Combined product gate prepared; all new checks unrun
+
+Current production/assertion source ad5c45d4 includes UI adapter d178c304 imported
+as aa9934df. Native/bindings and both qualified artifacts remain unchanged. All16
+frozen hashes match. The [bounded gate plan](gate-plan.json) is selected for a
+later parent LOCAL grant; no test/build/browser/metadata generation ran here.
+MJS syntax and8 affected TypeScript syntax parses pass; full typing is unrun.
+
+Optional immutable native capture now saves complete planner/export responses,
+existing paid-feeder results and mixed-carrier traces/examples through existing
+worker test calls. A separate native imported reference card is read with owned
+item/session cleanup; original requests, trials, prices and caps are unchanged.
+Raw mixed-carrier response is saved before reference-card reading. Capture binds
+the exact generated product commit, loader/WASM and frozen runtime identity.
+
+The existing full rendered runner invokes dedicated A/B/trace/card/navigation
+checks only with explicit resource-v1 and the same native evidence directory.
+It verifies evidence.build equals the packaged product build. A test-only grid
+spreads original fixture view positions; original native graph/result stays in
+its immutable capture. Requested/default source ports are reported separately.
+The temporary view performs no crafting/planning/simulation, waits for imported
+preview cleanup and restores the viewport. All new assertions remain unrun.
+
+The shared card adapter is source-complete, retaining full raw envelopes/receipts,
+physical identities, native cumulative costs, readonly facts and stale/disposal
+checks. Missing configuration or native carrier information remains unavailable;
+pair before-item snapshots and nested child steps are never reconstructed.
+
+CI323c5ba7 separately retains the173-pass/1-fail idempotency gate and failure-only
+exact payload/Git diagnostics. Its actual cause is unresolved: accepted source
+was clean14122ab1; failed counterpart was not saved. No volatile timestamp/UUID
+occurs in the hashed payload. No conflict detection/canonicalization was changed.
+Do not delay independent UI qualification behind that diagnostic branch, or
+transfer its required hosted release qualification to a local UI pass.
+
+The seven-stage request is metadata60s, TypeScript60s, focused60s, full npm600s,
+Vite120s, package/verify60s, full rendered120s;4GiB owned-tree cap and5s cleanup,
+serial/no compilers/no added solver run. Preserve tighter child180s/locator30s
+bounds. Reuse the parent/R existing memory-limited supervisor; its entrypoint
+must be resolved before launch. Isolated dependency materialization must match
+the unchanged lock and avoid owner/dev-server writes. No new supervisor, install,
+data refresh, main publication or deployment is requested.
+
+Previous source preparation and historical handoff below remain scoped to their
+own commits; current source/remaining status is in source-checkpoint.json.
+
 # Combined UI and recombination product integration
 
 This isolated source checkpoint combines qualified owner handoffs cfea56c0 and

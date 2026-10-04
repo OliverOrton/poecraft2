@@ -1,6 +1,6 @@
 {
-  "status": "SOURCE_ONLY_COMBINED_PRODUCT_CHECKPOINT",
-  "production_and_assertion_source": "5a00491c5a6e932a50ec7f40af4395b476a76786",
+  "status": "COMBINED_PRODUCT_SOURCE_READY_FOR_BOUNDED_GATE_UNRUN",
+  "production_and_assertion_source": "ad5c45d4fd72d6a4125c3bf97b56688a28ec6b54",
   "branch": "dot/sol61-ui-recomb-integration-20261004",
   "worktree": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-ui-recomb-integration-20261004",
   "base_main": "29d9e666b9d11dbe9ba58959f2598df9495dc49d",
@@ -20,12 +20,12 @@
     "rendered": "unrun"
   },
   "native_source_unchanged_from_recombination": true,
-  "owner_editor_and_cache_unchanged_from_recombination": true,
+  "owner_editor_and_cache_unchanged_from_recombination": false,
   "trees": {
     "engine": "4d11a36e6a7a6d9852cb292aca3c2b46e8d07088",
     "bindings/wasm": "c2d3f6af80e7b83c79e1cc94135ca5839c6b0715",
-    "apps/web/src/app": "ab7f4e121f2a775d0c0ce7e86a67dd573ef5b35e",
-    "apps/web/src/styles": "68830f3289324f30ff3c2459cf1074ce42706644"
+    "apps/web/src/app": "7690db07efa177c45d5a444f3afaf3d4613bad9e",
+    "apps/web/src/styles": "40ab8a450162f6e03eade5aa27a3f62096ad2910"
   },
   "owner_wasm_build_source": "75bea4df792ec85d4fa855d33780b9a045704450",
   "owner_wasm_test_source": "8f1ac866af68eee1d28e2ece4b3b582443b6d968",
@@ -127,24 +127,27 @@
   "rendered_gate": {
     "builder_contract_environment": "POECRAFT_UI_BUILDER_CONTRACT=resource-v1",
     "legacy_default": "legacy-48",
-    "dedicated_AB_and_trace_helpers": "prepared, unrun, not automatically wired into ordinary full smoke"
+    "dedicated_AB_and_trace_helpers": "wired into existing full runner when native evidence directory and resource-v1 are explicitly selected; unrun"
   },
   "trace_adapter": {
-    "state": "absent",
+    "state": "imported_source_only_unrun",
     "presentation_owner_path": "apps/web/src/app/components/pc-run-trace.ts",
     "context_owner_path": "apps/web/src/app/components/pc-strategy-editor.tsx",
     "native_preview_owner_path": "apps/web/src/app/item-preview.ts",
     "shared_card_owner_path": "apps/web/src/app/components/pc-mod-list.tsx",
     "resource_authority_path": "apps/web/src/app/engine-protocol.ts",
-    "required_context": "EngineClient, dataId, catalog, native base name lookup from existing editor; exact selected resource base_key/item_level/item/identity. Do not close global client/data."
+    "required_context": "EngineClient, dataId, catalog, native base name lookup from existing editor; exact selected resource base_key/item_level/item/identity. Do not close global client/data.",
+    "owner_source": "d178c304249f8af172ee2c6a059998917107d950",
+    "integration_commit": "aa9934dfbab01f2b1a66ecc22797043c0b52cd74"
   },
   "remaining": [
-    "Shared read-only trace card adapter and direct lifetime/error/stale-result checks",
-    "Complete actual native mixed-base and paid-feeder result/trace envelopes for rendered fixtures",
-    "Matching combined product metadata",
-    "Whole-product native, web/TypeScript and rendered integration checks",
-    "Hosted matching source CI",
-    "Separate CI14122ab1 corrected fixture/focused qualification"
+    "Parent LOCAL grant and existing memory-limited supervision entrypoint",
+    "Matching committed-source product metadata",
+    "Full TypeScript and focused trace preview regression",
+    "Complete npm with native result/planner/export captures",
+    "Packaged real-worker rendered integration checks",
+    "Whole-product final native and hosted matching-source qualification",
+    "Separate CI equal-race cause remains unresolved at323c5ba7"
   ],
   "whitespace": {
     "conflict_files_diff_check": "passed",
@@ -166,5 +169,7 @@
     "nested_child_steps": "absent",
     "ring_child": "no crafting action; separate passed changed-feeder witness is a different identity",
     "capture_required_in_granted_combined_gate": "Actual result.traces/examples and full planner/checked_export; never reconstruct old per-entry rolls/sequence from summaries"
-  }
+  },
+  "editor_changes": "UI adapter context/disposal-only delta; modifier cache repair retained",
+  "native_capture_and_rendered_assertion_source": "ad5c45d4fd72d6a4125c3bf97b56688a28ec6b54"
 }
