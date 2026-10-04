@@ -174,3 +174,30 @@ starts at the failed strategy-model file. Earlier native captures keep their
 actual d9ffc956 metadata; native source/WASM/requests/tests are unchanged by
 this label edit. Mixed-carrier capture/rendered comparison will use the repaired
 product metadata. No repeated Ring simulation is required for this label edit.
+
+## Rendered Restart witness retained
+
+At de6de644, remaining8 web files pass; with the25+5 retained prefix
+this completes all38 chain files without repeating the Ring trial. Fresh
+TypeScript, Vite and immutable package verification pass. Full rendered
+Chrome smoke passes font fallback and exact item/Dockview presentation,
+then its unchanged Restart middle-dot locator times out30s. Raw native paid
+feeder and mixed-carrier result/model are retained at gate-de6de644-r4;
+dedicated A/B and native trace-card browser checks were not reached.
+
+The shared display function contains four further encoded separators: feeder
+and move arrows, Restart and Eldritch middle dots. Four deterministic
+cp1252/UTF8 reversal rounds recover the intended Unicode separators; use
+ASCII escapes to preserve them. Only these display strings change, no test
+selector/assertion or mechanical action. Failed rendered receipt and five
+screenshots are retained. All owned processes absent,18 hashes unchanged,
+peak job1.72GB, LOCAL released.
+
+The source-only display correction still needs TypeScript/strategy-model and
+packaged rendered qualification. Existing native captures remain bound to
+actual d9ffc956/de6de644 observations. Current smoke demands full build-info
+equality for mixed-carrier capture; new display-source metadata will differ
+although native source/WASM/runtime/trace adapter and tested graph are unchanged.
+Do not rebind or overwrite the older receipt. Integration needs an explicit
+compositional reuse identity or a justified current-source capture before that
+assertion can pass; no repeated unchanged Simulator qualification is implied.

@@ -767,13 +767,13 @@ export function operationLabel(
     const params = operation.params ?? {};
     const catalog = context.catalog;
     switch (operation.type) {
-        case "invoke_feeder": return `Run feeder ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ ${stringParam(params, "resource_id") || "choose slot"}`;
-        case "move_resource": return `Move ${stringParam(params, "from") || "?"} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ ${stringParam(params, "to") || "?"}`;
+        case "invoke_feeder": return `Run feeder \u2192 ${stringParam(params, "resource_id") || "choose slot"}`;
+        case "move_resource": return `Move ${stringParam(params, "from") || "?"} \u2192 ${stringParam(params, "to") || "?"}`;
         case "discard_resource": return `Discard ${stringParam(params, "resource_id") || "choose slot"}`;
         case "acquire_resource": return `Acquire ${stringParam(params, "resource_id") || "donor"}`;
         case "recombination": return "Recombine pair";
         case "restart":
-            return "Restart ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· fresh base";
+            return "Restart \u00b7 fresh base";
         case "bestiary:imprint":
             return "Create Imprint";
         case "bestiary:restore_imprint":
@@ -835,7 +835,7 @@ export function operationLabel(
             const tier = Number(params.tier);
             const base = titleCaseKey(operation.type);
             return Number.isFinite(tier) && tier > 0
-                ? `${base} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· Tier ${tier}`
+                ? `${base} \u00b7 Tier ${tier}`
                 : base;
         }
         default:
