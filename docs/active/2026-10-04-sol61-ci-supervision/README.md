@@ -131,3 +131,31 @@ Branch-only publication is authorized to exercise the actual staged workflow.
 Its remote result is pending, supplies no new economic/optimality qualification,
 and does not close the original hosted scheduler timing cause. No main merge,
 deployment, local bundle generation or restart is part of this publication.
+
+## Hosted source23b5 failure retained
+
+Windows37183933992/job111381854872 completed failure: build and frozen preparation
+passed; ingest Python5 failed,283 passed,5 skipped in85.83s (stage87.219s).
+Native and Web were not run. Knowledge37183933970 passed independently.
+Prepare/Python atomic terminal receipts show clean source23b5, no timeout,
+no cleanup error, no unexpected outer descendant and no survivor. Failure exited
+promptly and artifact upload completed; this is supervision evidence, not green
+product qualification or a diagnosis of the original scheduler timing failure.
+
+All five failures concern plain Python os._exit(0/7) classified as unexpected
+post-parent descendants, including the existing crash/OOM distinction. The
+scheduler concurrency/exclusive-drain conditions passed. Pytest abbreviated the
+inner process mappings, so the offending PID/image/exit observation is not
+measured in this artifact. Do not infer it is the same local console image.
+
+Artifact11296785646 ZIP SHA256
+fde5c75edd17a2de3919e725ad1f518d23322cabff32858306874b9f3a996a5b
+is retained in the normal checkout's ignored
+out/sol61-overnight-coordination/hosted-ci-37183933992/.
+No rerun, main merge or deployment followed the failure.
+
+Pending diagnostic change retains full immutable process-result JSON before
+assertion formatting and emits full failure text for plain/crash controls.
+The existing staged artifact upload includes these per-test records. Process
+ownership, descendant classification, exit proof and all deadlines remain
+unchanged. Local reproduction/qualification requires a parent-assigned slot.

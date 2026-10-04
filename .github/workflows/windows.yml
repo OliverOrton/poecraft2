@@ -76,6 +76,8 @@ jobs:
       - name: Python tests
         if: steps.changes.outputs.native_required == 'true'
         shell: pwsh
+        env:
+          POECRAFT_TEST_PROCESS_EVIDENCE_DIR: build/validation/stages/${{ github.run_id }}-${{ github.run_attempt }}/Python/process-probes
         timeout-minutes: 21
         run: python -m poecraft_ingest.ci_validation --scope Python --output "build/validation/stages/${{ github.run_id }}-${{ github.run_attempt }}/Python"
       - name: Native tests

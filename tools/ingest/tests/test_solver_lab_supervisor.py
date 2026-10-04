@@ -191,12 +191,13 @@ def test_actual_subprocess_cancel_escalates_and_leaves_no_survivor(tmp_path: Pat
     }
 
 
-def test_actual_crash_and_synthetic_os_oom_remain_distinct(tmp_path: Path) -> None:
+def test_actual_crash_and_synthetic_os_oom_remain_distinct(tmp_path: Path, record_process_result) -> None:
     crash = run_isolated_process(
         [sys.executable, "-c", "import os; os._exit(7)"],
         watchdog_seconds=5.0,
         cwd=tmp_path,
     )
+    record_process_result(crash)
     crash_class = classify_process_result(crash, final_report_exists=False)
     oom_class = classify_process_result(
         {"exit_code": 0xC0000017, "timed_out": False, "survivor": False},
@@ -204,7 +205,8 @@ def test_actual_crash_and_synthetic_os_oom_remain_distinct(tmp_path: Path) -> No
     )
 
     assert crash_class.status == "failed"
-    assert crash_class.failure_kind == "process_crash_or_native_error", crash
+    if crash_class.failure_kind != "process_crash_or_native_error":
+        pytest.fail("crash process observation:\n" + json.dumps(crash, indent=2, sort_keys=True), pytrace=False)
     assert oom_class.status == "oom"
     assert oom_class.failure_kind == "operating_system_out_of_memory"
 

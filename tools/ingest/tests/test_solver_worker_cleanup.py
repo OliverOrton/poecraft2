@@ -89,7 +89,7 @@ def test_streamed_log_keeps_full_bytes_but_returns_only_requested_tail(tmp_path)
 
 @pytest.mark.skipif(os.name != "nt", reason="Windows job ownership")
 @pytest.mark.parametrize("stream_log", [False, True])
-def test_owned_grandchild_is_cleaned_after_parent_exits(tmp_path, stream_log):
+def test_owned_grandchild_is_cleaned_after_parent_exits(tmp_path, stream_log, record_process_result):
     command = """import json,subprocess,sys,time
 from poecraft_ingest.solver_worker import process_identity_token
 p=subprocess.Popen([sys.executable,'-c','import time;time.sleep(30)'])
@@ -99,6 +99,7 @@ time.sleep(.1)
     result = worker.run_isolated_process([sys.executable, "-u", "-c", command],
         cwd=Path(__file__).resolve().parents[3], watchdog_seconds=5,
         log_path=tmp_path / "tree.log" if stream_log else None)
+    record_process_result(result)
     identity = json.loads(result["output"].strip())
     assert worker.observe_process_identity(identity["pid"], identity["token"]) == "proved_absent"
     assert result["process_tree_owner"] == "windows_job"
@@ -111,14 +112,16 @@ time.sleep(.1)
 
 @pytest.mark.parametrize("exit_code", [0, 7])
 @pytest.mark.parametrize("stream_log", [False, True])
-def test_plain_exit_does_not_invent_a_descendant_lifetime(tmp_path, exit_code, stream_log):
+def test_plain_exit_does_not_invent_a_descendant_lifetime(tmp_path, exit_code, stream_log, record_process_result):
     result = worker.run_isolated_process(
         [sys.executable, "-u", "-c", f"import os; print('plain exit',flush=True); os._exit({exit_code})"],
         cwd=tmp_path, watchdog_seconds=5,
         log_path=tmp_path / "plain.log" if stream_log else None,
     )
+    record_process_result(result)
     assert result["exit_code"] == exit_code, result
-    assert not result["survivor"] and not result["descendants_after_parent_exit"], result
+    if result["survivor"] or result["descendants_after_parent_exit"]:
+        pytest.fail("plain exit process observation:\n" + json.dumps(result, indent=2, sort_keys=True), pytrace=False)
     assert "plain exit" in result["output"], result
 
 
