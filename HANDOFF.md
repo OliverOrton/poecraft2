@@ -1,17 +1,18 @@
-# Armour recovery: generic guard source ready for review (2026-10-04)
+# Armour recovery: persistent native blocker correction ready (2026-10-04)
 
-Isolated dot/sol61-armour-recovery-20261004 retains8984f7c8's468 finite passes
-and all prior failures. Default-off source now guards native missing-goal
-rollability via existing predicates/full group masks; blocked draws pay the
-existing held-side-preserving Eldritch Chaos stage and return to dispatch.
-Six guarded synthetic roots and a frozen original Conquest construction-only
-benchmark mode are prepared, unbuilt/unrun; no imported graph or activation.
+Isolated dot/sol61-armour-recovery-20261004 retains e669ddd7 R7:1588 finite
+checks, six scoped checked roots/724 positive entries, no survivors. Benchmark
+namespace compile failure and original Conquest unrun are preserved. Independent
+159b8039/R5 blocks generic qualification: retained junk may permanently block a
+target goal. New default-off source checks ALL target goals after clearing their
+side and sends persistent obstruction to original paid Chaos acquisition;
+removable blockers still use paid Eldritch Chaos. Four-stage tier bounds and
+strict original-root/entry authorities remain. Both-orientation native negative
+and eight corrected roots are prepared. Parent renewed LOCAL for the declared
+[persistent finite gate](docs/active/2026-10-04-sol61-armour-recovery/persistent-blocker-finite-request.json).
 The [living record](docs/active/2026-10-04-sol61-armour-recovery/README.md) owns
-the argument/receipts; [next request](docs/active/2026-10-04-sol61-armour-recovery/guarded-recovery-finite-request.json)
-pins source/input bytes, serial stages, maxJobs2 and existing watchdogs. CI owns
-LOCAL; no process exists for this programme. Accounting plan5d35ab6c/e0e24ccc
-stays separate next work. Whole Conquest root/entry/economic, controls and WASM
-remain open; no deployment, dev restart, frozen data edit or publication.
+arguments/receipts. No public activation, ownership fix, frozen data edit, deploy
+or dev restart. Whole Conquest/economic/consumer/control/WASM gates stay open.
 
 # Qualified solver CI repair (2026-10-03)
 

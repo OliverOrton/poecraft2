@@ -86,6 +86,7 @@ class SelectiveCompletionProducer {
     std::uint32_t requested_held_mask_ = 0;
     bool reroll_without_target_progress_ = false;
     bool guard_missing_goal_rollability_ = false;
+    bool escape_persistent_blockers_ = false;
     Phase phase_ = Phase::Begin;
     std::string status_ = "pending";
     std::optional<SelectiveCompletionCandidate> candidate_;
@@ -128,7 +129,8 @@ class PartialHeldRecoveryProducer {
         const pc_item_state& original_start,
         const std::unordered_map<std::string, double>& prices,
         const SolveOptions& limits, std::uint32_t anchor_mask,
-        bool private_gate = false, bool guard_missing_rollability = true);
+        bool private_gate = false, bool guard_missing_rollability = true,
+        bool escape_persistent_blockers = true);
     bool advance(std::uint32_t max_work_items = 1);
     bool done() const { return done_; }
     const std::optional<SelectiveCompletionCandidate>& candidate() const {
@@ -154,6 +156,7 @@ class PartialHeldRecoveryProducer {
     bool done_ = false;
     bool private_gate_ = false;
     bool guard_missing_rollability_ = true;
+    bool escape_persistent_blockers_ = true;
     std::string status_ = "pending";
     std::unique_ptr<SelectiveCompletionProducer> active_;
     std::array<std::optional<SelectiveCompletionCandidate>, 4> stages_;

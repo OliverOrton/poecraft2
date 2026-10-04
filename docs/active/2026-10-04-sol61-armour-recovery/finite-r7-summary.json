@@ -1,0 +1,86 @@
+{
+  "source_commit": "e669ddd7249a6ea7638f7b51a9dfed3a99ee9f8b",
+  "stages": [
+    {
+      "phase": "build-tests",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 62868,
+      "process_identity_token": "62868:134355800742361987",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 223234.80360000394
+    },
+    {
+      "phase": "retained-unguarded-rejection",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 50560,
+      "process_identity_token": "50560:134355802980626315",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 347.68830006942153
+    },
+    {
+      "phase": "guarded-recovery",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 65924,
+      "process_identity_token": "65924:134355802981084386",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 289.708900032565
+    },
+    {
+      "phase": "legacy-growth",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 62628,
+      "process_identity_token": "62628:134355802983989360",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 50.52129994146526
+    },
+    {
+      "phase": "build-benchmark",
+      "exit_code": 1,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 69360,
+      "process_identity_token": "69360:134355802984507885",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 7026.146800024435
+    }
+  ],
+  "unrun": [
+    "original-conquest-construction"
+  ],
+  "owned_processes": [],
+  "local_slot": "RELEASED at terminal batch result",
+  "stop_requested": false,
+  "finished_utc": "2026-10-04T09:38:25.477288+00:00",
+  "schema": "sol61_guarded_recovery_finite_receipt_v1",
+  "qualification": "SIX SCOPED SYNTHETICS PASS; generic claim held by independently identified persistent retained-side exclusion; original Conquest construction UNRUN after benchmark namespace compilation failure",
+  "test_binary_sha256": "ca15ce703cbf95d706019fd129c968be7786536f2bcf9994d17e9d120e3e6b0a",
+  "finite_checks": 1588,
+  "positive_root_fixtures": 6,
+  "positive_entries": 724,
+  "independent_blocker": "review159b8039233f0b68757b58ddb3febf4400d00b79/R5 P2",
+  "bulk_evidence": "out/sol61-armour/finite-r7",
+  "prior_failures_retained": true
+}

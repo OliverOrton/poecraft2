@@ -2359,8 +2359,8 @@ void run_synthetic_gate() {
 
     /* A tag-discriminating layout must still route every sampled result
      * exactly. Q3 may prove a junk identity unobservable under this deliberately
-     * tiny action set, so the executable policy—not a redundant serialized
-     * mod-count predicate—is the contract. */
+     * tiny action set, so the executable policyâ€”not a redundant serialized
+     * mod-count predicateâ€”is the contract. */
     {
         ActionRegistry tagged_registry = registry;
         tagged_registry.actions[transmute].discriminating_tag_ids = {3};
@@ -5216,12 +5216,16 @@ void run_solver_partial_held_witness_tests(const char* artifact_dir) {
 
 // This is deliberately an explicit research selector, not the normal suite.
 // No imported control graph, public proposal or retained incumbent is modified.
-void run_solver_partial_held_recovery_tests(const bool compound_blocker_only, const bool guarded_recovery) {
-    const unsigned first_fixture = compound_blocker_only ? 4 : 0;
-    const unsigned end_fixture = guarded_recovery ? 6 : compound_blocker_only ? 5 : 4;
+void run_solver_partial_held_recovery_tests(const bool compound_blocker_only, const bool guarded_recovery,
+        const bool persistent_blocker_only) {
+    const unsigned first_fixture = persistent_blocker_only ? 6 : compound_blocker_only ? 4 : 0;
+    const unsigned end_fixture = persistent_blocker_only || guarded_recovery ? 8 : compound_blocker_only ? 5 : 4;
     for (unsigned fixture = first_fixture; fixture < end_fixture; ++fixture) {
         auto session = make_compile_session();
         const bool compound_blocker = fixture >= 4;
+        const bool persistent_blocker = fixture >= 6;
+        const bool paid_escape = persistent_blocker && guarded_recovery && !persistent_blocker_only;
+        const bool negative_control = (compound_blocker && !guarded_recovery) || persistent_blocker_only;
         const bool reverse = (fixture & 1u) != 0;
         const unsigned anchor_slot = compound_blocker || fixture < 2 ? 3 : 4;
         // Realistic lower-tier blockers on each side. Keep native pool/group
@@ -5250,7 +5254,7 @@ void run_solver_partial_held_recovery_tests(const bool compound_blocker_only, co
             session->group_ids.push_back(session->primary_group[mod]);
             // The independent review's counterexample retains primary group13
             // and adds native exclusion group10; it does not relabel the goal.
-            if (compound_blocker && mod == 2) {
+            if (compound_blocker && mod == (persistent_blocker ? 7u : 2u)) {
                 session->group_ids.push_back(10);
                 std::sort(session->group_ids.begin()+session->group_offsets.back(),session->group_ids.end());
             }
@@ -5384,15 +5388,17 @@ void run_solver_partial_held_recovery_tests(const bool compound_blocker_only, co
                     mask_intersects(eligible,calc.layout().slots[slot].satisfying_mask))
                     rollable_missing |= 1u << slot;
             PC_CHECK(rollable_missing == 0);
-            std::printf("compound blocker native reachability: picks=3,2,5,7 groups2=13,10 goal_mask=%u ordering_mass=%.17g original_root_mass=%.17g rollable_missing_prefix_mask=%u\n",
-                satisfied_goal_mask(calc.state(carrier_state)),ordering_mass,compound_root_mass,rollable_missing);
+            std::printf("compound blocker native reachability: picks=3,2,5,7 secondary_group10_mod=%u goal_mask=%u ordering_mass=%.17g original_root_mass=%.17g rollable_missing_target_mask=%u\n",
+                persistent_blocker ? 7u : 2u,satisfied_goal_mask(calc.state(carrier_state)),ordering_mass,compound_root_mass,rollable_missing);
             std::printf("compound blocker exact carrier key:");
             for (const auto word : exact_item_state_key(carrier))
                 std::printf("%016llx,",static_cast<unsigned long long>(word));
             std::printf("\n");
             if (!(compound_root_mass > 0) || rollable_missing != 0) return;
         }
-        PartialHeldRecoveryProducer producer(calc,root,prices,limits,1u << anchor_slot,true,guarded_recovery);
+        // The retained-side negative control keeps prior routing and guard.
+        PartialHeldRecoveryProducer producer(calc,root,prices,limits,1u << anchor_slot,true,
+            guarded_recovery,guarded_recovery && !persistent_blocker_only);
         for (unsigned step = 0; step < 40000 && !producer.done(); ++step) producer.advance();
         if (!producer.candidate()) std::printf("private partial fixture=%u construction=%s\n",fixture,producer.status().c_str());
         PC_CHECK(producer.done() && producer.candidate());
@@ -5433,6 +5439,7 @@ void run_solver_partial_held_recovery_tests(const bool compound_blocker_only, co
             node = edge->target;
         }
         const auto& routed = prepared.strategy->nodes.at(node);
+        if (!paid_escape) {
         const auto held_run = std::find_if(control.nodes.begin(),control.nodes.end(),[&](const auto& current) {
             return current.kind == FinderControlKind::RunNativeProgram &&
                 routed.id == "c"+std::to_string(&current - control.nodes.data());
@@ -5539,6 +5546,42 @@ void run_solver_partial_held_recovery_tests(const bool compound_blocker_only, co
             }
             PC_CHECK(std::abs(mass-1) <= 1e-12);
         }
+        } else {
+            PC_CHECK(routed.kind == StrategyNodeKind::Operation);
+            const auto operation = resolve_strategy_operation(routed,registry,*session);
+            PC_CHECK(operation.resolved() && operation.descriptor_index == chaos);
+            const auto& paid = calc.outcomes(carrier_state,chaos,false);
+            PC_CHECK(paid.supported && paid.applicable && paid.choice_groups.empty());
+            double mass = 0;
+            for (const auto& exit : paid.entries) mass += exit.probability;
+            PC_CHECK(std::abs(mass-1) <= 1e-12);
+            PC_CHECK(registry.actions.at(chaos).cost_keys == std::vector<std::string>{"chaos"});
+            PC_CHECK(prices.at("chaos") == 100);
+            std::printf("persistent blocker carrier escape: fixture=%u route=paid_chaos price=100 full_mass=%.17g\n",fixture,mass);
+        }
+        if (guarded_recovery && !persistent_blocker_only) {
+            PC_CHECK(std::count_if(control.nodes.begin(),control.nodes.end(),[](const auto& current) {
+                return current.kind == FinderControlKind::TestTargetGoalsCompatible;
+            }) == 4);
+            for (const auto& current : control.nodes) {
+                if (current.kind != FinderControlKind::TestTargetGoalsCompatible) continue;
+                PC_CHECK(current.on_false == static_cast<std::uint32_t>(acquire-control.nodes.begin()));
+            }
+        }
+        if (persistent_blocker) {
+            auto cleared = carrier;
+            pc_item_clear_side(&cleared,reverse ? PC_SIDE_SUFFIX : PC_SIDE_PREFIX);
+            ActionContextImpl context(0); context.session = session;
+            PoolBuildRequest request; request.side_filter = reverse ? PC_SIDE_SUFFIX : PC_SIDE_PREFIX;
+            const auto& pool = get_weighted_pool(context,&cleared,request);
+            PC_CHECK(std::none_of(pool.entries.begin(),pool.entries.end(),[&](const auto& member) {
+                return member.final_weight > 0 && pc_bitset_test(calc.layout().slots[0].satisfying_mask.data(),member.session_mod_id);
+            }));
+            // Native retained modifier7 persists after the target-side clear.
+            PC_CHECK(std::any_of(cleared.prefixes,cleared.prefixes+cleared.prefix_count,[](const auto& mod) { return mod.mod_id == 7; }) ||
+                std::any_of(cleared.suffixes,cleared.suffixes+cleared.suffix_count,[](const auto& mod) { return mod.mod_id == 7; }));
+            std::printf("persistent blocker native cut: fixture=%u retained_mod7_blocks_goal0_after_target_clear\n",fixture);
+        }
         auto economy = std::make_shared<EconomyImpl>(); economy->prices = prices;
         StrategyEvalOptions eval; eval.economy = economy;
         eval.max_states = limits.max_discovered_states; eval.max_pairs = limits.max_state_action_rows;
@@ -5557,7 +5600,7 @@ void run_solver_partial_held_recovery_tests(const bool compound_blocker_only, co
             eval.policy_decision_entries.push_back(std::move(request));
         }
         const auto checked = evaluate_strategy(*prepared.strategy,eval);
-        if (compound_blocker && !guarded_recovery) {
+        if (negative_control) {
             // A positive native no-progress loop must prevent original-root
             // acceptance. Preserve its actual incomplete census, never manufacture
             // a complete one to claim entry-by-entry validation of this controller.
@@ -5607,6 +5650,32 @@ void run_solver_partial_held_recovery_tests(const bool compound_blocker_only, co
                         mask_intersects(eligible,calc.layout().slots[slot].satisfying_mask);
                 PC_CHECK(evaluate_compiled_condition(yes->condition,*session,entry.item) == native_rollable);
                 ++observed_entries;
+            }
+            for (const auto& compatibility : control.nodes) {
+                if (compatibility.kind != FinderControlKind::TestTargetGoalsCompatible) continue;
+                const auto& router = prepared.strategy->nodes.at(prepared.strategy->node_by_id.at(
+                    "c"+std::to_string(&compatibility-control.nodes.data())));
+                const auto pass = std::find_if(router.edges.begin(),router.edges.end(),[](const auto& edge) {
+                    return !edge.is_default;
+                });
+                PC_CHECK(pass != router.edges.end());
+                if (pass == router.edges.end()) return;
+                for (const auto& entry : checked.policy_entries.entries) {
+                    if (!(entry.root_expected_visits > 0)) continue;
+                    auto cleared = entry.item; pc_item_clear_side(&cleared,compatibility.binding);
+                    ActionContextImpl context(0); context.session = session;
+                    PoolBuildRequest request; request.side_filter = static_cast<std::int8_t>(compatibility.binding);
+                    const auto& pool = get_weighted_pool(context,&cleared,request);
+                    bool compatible = true;
+                    for (unsigned slot = 0; slot < goal.slots.size(); ++slot) {
+                        if (goal_slot_side(*session,goal.slots[slot]) != compatibility.binding) continue;
+                        compatible &= std::any_of(pool.entries.begin(),pool.entries.end(),[&](const auto& member) {
+                            return member.final_weight > 0 && pc_bitset_test(
+                                calc.layout().slots[slot].satisfying_mask.data(),member.session_mod_id);
+                        });
+                    }
+                    PC_CHECK(evaluate_compiled_condition(pass->condition,*session,entry.item) == compatible);
+                }
             }
             PC_CHECK(observed_entries > 0);
             std::printf("private guard projection: fixture=%u all_positive_entries=%u native_pool_equivalent\n",

@@ -1,0 +1,173 @@
+{
+  "schema": "sol61_persistent_blocker_finite_request_v1",
+  "status": "Source prepared; parent keeps LOCAL for this coherent bounded correction",
+  "basis_commit": "e669ddd7249a6ea7638f7b51a9dfed3a99ee9f8b",
+  "source_files_sha256": {
+    "engine/src/solver_compile.cpp": "35838754a73d7bc320c1265e12eed88a5fff32bc6bf5eb836ba881d6aeaea05a",
+    "engine/src/solver_compile_contracts.hpp": "b156eed5a8e3c13a1159365b0a3e4ccd6a50234927d07f3c9d506789409735f3",
+    "engine/src/solver_selective_completion.cpp": "dad1e5dacd80da6b368e5eb01e8fa301f45b94a7c6b08caf6beaa85b910f05ec",
+    "engine/src/solver_selective_completion.hpp": "42a363eac08a9a2eaf49004658612fff433b89d9a29314b47c26d52713575aab",
+    "engine/benchmarks/solver_benchmark.cpp": "4e21c7e213a4377dcce651e3e548b4f90416b4332465f33552759315517d3360",
+    "engine/tests/test_main.cpp": "4f5e19baded0f4076baa63f5b09baa450f9f46a6baa2979ddfd06f468ef22352",
+    "engine/tests/test_solver_compile.cpp": "ff8228f0b39b54b560b43a25e369fe29b7bb47d0bbde7fbdf339ec388cf59037",
+    "engine/tests/tests.hpp": "2779f4429fe4c934ec3bbe60b87ad1b2f490bad9dda8a0f238c3db1d11a1a82f"
+  },
+  "purpose": "Prove retained-side native blocker reachability/rejection, compare bounded paid acquisition escape both orientations with complete original-root and positive-entry checks, then frozen Conquest ordinary construction witness",
+  "runtime_files_sha256": {
+    "manifest.json": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "strings.json": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6",
+    "game-data.json": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e"
+  },
+  "slots": {
+    "LOCAL": "parent explicitly renewed for persistent blocker correction; release at terminal bounded batch",
+    "compiler_jobs": 2,
+    "all_stages": "serial"
+  },
+  "owner": "existing dev-engine/native benchmark/test selectors and poecraft_ingest.solver_worker.run_isolated_process",
+  "stages": [
+    {
+      "phase": "build-tests",
+      "argv": [
+        "powershell",
+        "-NoProfile",
+        "-File",
+        "scripts/dev-engine.ps1",
+        "-Task",
+        "Tests",
+        "-Jobs",
+        "2"
+      ],
+      "host_watchdog_seconds": 600
+    },
+    {
+      "phase": "retained-unguarded-rejection",
+      "argv": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-partial-held-compound-blocker-only"
+      ],
+      "host_watchdog_seconds": 180
+    },
+    {
+      "phase": "persistent-blocker-old-routing-rejection",
+      "argv": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-partial-held-persistent-blocker-only"
+      ],
+      "host_watchdog_seconds": 180
+    },
+    {
+      "phase": "guarded-recovery",
+      "argv": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-partial-held-guarded-only"
+      ],
+      "host_watchdog_seconds": 180
+    },
+    {
+      "phase": "legacy-growth",
+      "argv": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-growth-only"
+      ],
+      "host_watchdog_seconds": 180
+    },
+    {
+      "phase": "build-benchmark",
+      "argv": [
+        "powershell",
+        "-NoProfile",
+        "-File",
+        "scripts/dev-engine.ps1",
+        "-Task",
+        "Benchmark",
+        "-Jobs",
+        "2"
+      ],
+      "host_watchdog_seconds": 600
+    },
+    {
+      "phase": "original-conquest-construction",
+      "argv": [
+        "build/engine/poecraft_solver_benchmark.exe",
+        "--artifact",
+        "data/compiled/current",
+        "--corpus",
+        "docs/active/2026-10-04-sol61-armour-recovery/conquest-construction-manifest.json",
+        "--case",
+        "sol61-trace-conquest5-currentmodel-120",
+        "--partial-held-construction-witness",
+        "--output",
+        "<fresh batch>/conquest-construction.json"
+      ],
+      "host_watchdog_seconds": 165
+    }
+  ],
+  "synthetic_gate": {
+    "fixtures": 8,
+    "positive_root_evaluations": "Prior six plus persistent retained-side blockers both orientations",
+    "native_guard_projection": "Compare missing-goal ordinary eligibility and ALL target goals after native target clear on every positive census entry",
+    "entry_acceptance": "actual complete root census; unchanged validator on every positive entry",
+    "negative_controls": "Prior compound rejection; persistent blockers both orientations with prior guard and new escape disabled; strict native root rejection with actual incomplete census"
+  },
+  "synthetic_caps": {
+    "fixtures": {
+      "guarded_positive": 8,
+      "retained_unguarded_rejection": 1,
+      "persistent_old_routing_rejection": 2
+    },
+    "profile": "calculator_product_v1",
+    "max_states": 800000,
+    "max_discovered_states": 10000,
+    "max_expanded_states": 10000,
+    "max_state_action_rows": 100000,
+    "max_transitions": 1000000,
+    "max_reforge_work": 1000000,
+    "max_solver_owned_bytes": 268435456,
+    "checker_max_states": 10000,
+    "checker_max_pairs": 100000,
+    "checker_max_transitions": 1000000,
+    "checker_max_owned_bytes": 268435456,
+    "allow_economic_restart": false,
+    "probability_outcome_tolerance": 1e-12,
+    "accepted_failure_tolerance": 1e-09
+  },
+  "conquest_inputs": {
+    "docs/active/2026-10-03-sol61-recovery/qualification/law3/cases/conquest5-product.json": {
+      "sha256": "49bc43f7fa8616ab0f798d8e5c5a2e0c3e79342a51a1636446f2d80e65147642",
+      "bytes": 7942
+    },
+    "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json": {
+      "sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92",
+      "bytes": 141941
+    },
+    "docs/active/2026-10-04-sol61-armour-recovery/conquest-construction-manifest.json": {
+      "sha256": "9cdfc766842410dfac2c4aaa7a0e96342cf724cd7cea5dcf633293661d3c7607",
+      "bytes": 1125
+    }
+  },
+  "conquest_semantics": {
+    "source": "existing create_case_objects original product envelope/session/goal/economy resolver",
+    "construction": "default-off bounded native producer; no graph import, seed, proposal3 or primitive broad search",
+    "advance_protocol": "diagnostic construction owner advances one native work item; this is not a fixed-eight production solve comparison",
+    "finish_seconds": 120,
+    "native_case_watchdog_seconds": 150,
+    "host_watchdog_seconds": 165,
+    "policy_evaluation": "UNRUN",
+    "every_positive_policy_entry_validation": "UNRUN",
+    "cost_or_retention": "UNRUN",
+    "original_scope_and_success_ingress": "prepare_finder_candidate trusted compiler binding",
+    "carrier_reachability": "native positive Chaos pick ordering from original root; no full acquisition census",
+    "carrier_word": "exact resources/actions, full exit mass and held progress; complete graph and root acceptance remain required later",
+    "memory": "same 1GiB ceiling, parent-owned shared work and conservative compiler/word reservation; no audited live memory or resource optimisation claim"
+  },
+  "stop_on": "semantic/identity/resource disagreement, timeout/cancellation/survivor; routine fixture repairs require diagnosis and preserved receipt under existing parent authorization",
+  "exclusions": [
+    "Current/Finder public activation",
+    "ownership/accounting production fixes",
+    "query/checkpoint repeats",
+    "historical cost recovery claim",
+    "whole-controller Conquest qualification",
+    "timed matched armour/control cohort",
+    "WASM/browser qualification"
+  ]
+}

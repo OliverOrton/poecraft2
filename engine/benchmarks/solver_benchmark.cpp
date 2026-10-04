@@ -3230,6 +3230,7 @@ void create_case_objects(
 // no reference graph is imported and no upper/cost is published.
 int run_partial_held_construction_witness(pc_data_handle data, const Value& specification,
                                         const Arguments& args) {
+    using namespace poecraft;
     using namespace poecraft::solver;
     const auto began=Clock::now();
     const auto deadline=began+std::chrono::duration_cast<Clock::duration>(

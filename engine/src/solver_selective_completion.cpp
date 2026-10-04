@@ -634,10 +634,17 @@ void SelectiveCompletionProducer::build() {
         graph.nodes[held_junk].on_true = acquire;
         graph.nodes[held_junk].on_false = held_tests.front();
     }
+    const auto compatibility = escape_persistent_blockers_ ?
+        append(FinderControlKind::TestTargetGoalsCompatible,target_side_) : kNoId;
+    if (compatibility != kNoId) {
+        graph.nodes[compatibility].on_true = repair_test == kNoId ? occupied_test : repair_test;
+        graph.nodes[compatibility].on_false = acquire;
+    }
     for (std::size_t i = 0; i < held_tests.size(); ++i) {
         graph.nodes[held_tests[i]].on_true = i + 1 < held_tests.size()
             ? held_tests[i + 1] :
-                (repair_test == kNoId ? occupied_test : repair_test);
+                (compatibility != kNoId ? compatibility :
+                    (repair_test == kNoId ? occupied_test : repair_test));
         graph.nodes[held_tests[i]].on_false = acquire;
     }
     graph.nodes[acquire].next = goal;
@@ -836,10 +843,12 @@ PartialHeldRecoveryProducer::PartialHeldRecoveryProducer(CalcContext& problem,
         const pc_item_state& original_start,
         const std::unordered_map<std::string, double>& prices,
         const SolveOptions& limits, const std::uint32_t anchor_mask,
-        const bool private_gate, const bool guard_missing_rollability)
+        const bool private_gate, const bool guard_missing_rollability,
+        const bool escape_persistent_blockers)
     : problem_(problem), original_start_(original_start), prices_(prices),
       limits_(limits), anchor_mask_(anchor_mask), private_gate_(private_gate),
-      guard_missing_rollability_(guard_missing_rollability) {}
+      guard_missing_rollability_(guard_missing_rollability),
+      escape_persistent_blockers_(escape_persistent_blockers) {}
 
 void PartialHeldRecoveryProducer::refuse(std::string reason) {
     status_ = std::move(reason);
@@ -905,6 +914,7 @@ void PartialHeldRecoveryProducer::begin_stage() {
         stage_limits, stage_ < 2 ? SelectiveCompletionVariant::EldritchGrowthRepair :
             SelectiveCompletionVariant::RerollVersusRepair,
         acquisition_, stage_ < 2 ? scope_->held_side : 1u - scope_->held_side);
+    active_->escape_persistent_blockers_ = escape_persistent_blockers_;
     if (stage_ == 0) active_->requested_held_mask_ = anchor_mask_;
     if (stage_ < 2) {
         active_->reroll_without_target_progress_ = true;
@@ -984,7 +994,11 @@ void PartialHeldRecoveryProducer::compose() {
                 node = {FinderControlKind::FailureTerminal}; // All incoming acquisition edges were remapped.
             } else {
                 node.on_true = remap(node.on_true);
-                node.on_false = remap(node.on_false);
+                node.on_false = node.kind == FinderControlKind::TestTargetGoalsCompatible ?
+                    acquire : remap(node.on_false);
+                // Persistent blockers require the original paid whole-item
+                // acquisition even in final stages. Chaos preserves tiers;
+                // unrepresented later tier frames retain their refusal ports.
                 node.next = node.kind == FinderControlKind::RunNativeProgram ? dispatch : remap(node.next);
                 if (node.kind == FinderControlKind::RunNativeProgram) node.binding += program_offset;
             }

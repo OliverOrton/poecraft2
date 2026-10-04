@@ -340,3 +340,40 @@ construction witness. Existing isolated-worker supervisor owns serial execution,
 watchdogs and survivor receipts. LOCAL is ungranted and no new run has launched.
 Parent's reviewer accounting plan5d35ab6c/e0e24ccc remains the next separate
 consumer/lifetime repair after recovery routing; no accounting fix is included.
+
+## R7 receipt and retained-side obstruction correction
+
+R7 at e669ddd7 completed without surviving processes: tests build passed,
+retained compound rejection151/0, guarded six1353/0, legacy growth84/0.
+The guarded roots checked724 positive native entries (145,145,145,79,105,105).
+Benchmark compilation then failed on unqualified poecraft names in the new
+construction diagnostic; original Conquest construction did not run. Preserve
+[receipt](finite-r7-summary.json) and ignored out/sol61-armour/finite-r7 logs.
+These scoped passes do not qualify generic recovery: independent review
+159b8039/R5 identified retained-side junk with secondary group10 blocking goal0.
+
+The new negative witness moves group10 from target mod2 to retained mod7,
+rebuilds native group masks, and preserves the carrier3,2,5,7 and prices/weights.
+Native acquisition reachability, cleared-target eligibility and the old guarded
+root failure are fresh checks; no old mass is reused or census manufactured.
+Both orientations must reproduce the obstruction before fixed qualification.
+
+Private stages now test ALL target goals against positive native members after
+clearing the target side, including goals a reroll would destroy. Full native
+group exclusions are projected only onto retained-side modifier masks. A false
+condition routes to the existing original paid whole-item Chaos acquisition
+before any count/progress repair. Removable target blockers retain the narrower
+paid Eldritch Chaos route. Final stages override only this specific escape edge;
+unrepresented tier frames keep refusal ports. Chaos preserves tier identity,
+so the four admitted stage frames, scope and programme vocabulary stay bounded.
+Any expensive acquisition or loss of progress remains in full root evaluation.
+Advanced added-tag contexts conservatively use paid acquisition; no new native
+law or closure authority is inferred. Benchmark namespace qualification is also
+repaired. Current/Finder activation remains disabled.
+
+[persistent finite request](persistent-blocker-finite-request.json) declares
+serial two-job build, both retained negatives, eight corrected full roots and
+all positive entries/native projection, legacy growth, benchmark build, then
+the frozen original Conquest construction-only witness. Parent renewed LOCAL
+for this coherent repair. Root/entry/economic Conquest qualification, final
+controls, WASM and consumer ownership/accounting remain separate open gates.

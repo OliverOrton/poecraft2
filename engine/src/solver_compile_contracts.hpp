@@ -61,7 +61,9 @@ enum class FinderControlKind : std::uint8_t {
     TestEldritchTiers, TestSideCountAtLeast, RunNativeProgram,
     // Compiler projection into existing predicates, not native admission authority.
     // Binding selects the target side; false retains the paid recovery branch.
-    TestMissingGoalRollable
+    TestMissingGoalRollable,
+    // Every target goal must remain drawable after clearing that side.
+    TestTargetGoalsCompatible
 };
 enum class FinderProgramIntent : std::uint8_t {
     ExactOperator,
