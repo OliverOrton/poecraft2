@@ -341,3 +341,53 @@ normalization, floating drift, underflow or every native primitive law. R3 stays
 a latent general-helper contract finding, not a demonstrated production EV bug.
 No fixture/request pin changed, and no native command was launched. Pause for
 parent LOCAL or the next candidate/evidence; do not recreate the queued batch.
+
+## Targeted finite-r2 premise review (source-only)
+
+Reviewed the solver owner's uncommitted test diff on deb65256, with inspected
+`engine/tests/test_solver_compile.cpp` workspace SHA256
+`76036f7cf098d4f14d22c2d897a330d5ed1f315d0db69ade4ffd4770c1016c2d`.
+No production diff exists in that owner checkout. Native logs were read as owner
+evidence: partial-held293/293, native word33 exits/mass1.0000000000000002;
+query2714 with five failures. Four budget assertions followed a cached kernel;
+the checkpoint still failed save cardinality before exercising load. The owner
+stopped dependent checkpoint/metamod gates. No independent native run occurred.
+
+Fresh `CalcContext exhausted` at owner test lines4666-4684 has independent empty
+distribution/reforge caches (`solver_calc_types.hpp:1221,1260`). Interning the
+unchanged root does not evaluate a row. It reuses the exact committed Chaos query,
+goal, registry and prices, and borrows the same already-debited budget owner.
+Refusal therefore requires new native work, rather than demanding artificial
+work for a valid cache hit. Owner cap at its committed ledger denies the next
+positive unit before debit (`solver_calc.cpp:2236-2271`). Reforge memo hits return
+without new native work (`solver_reforge.cpp:809-849`), explaining the previous
+fixture's invalid premise. Existing same-context cancellation/rollback witness
+remains; fresh-context exhaustion is a separate aggregate-owner obligation.
+The new refusal, unchanged operators/debit, uncached correctly charged retry,
+and prior query/full membership assertions are retained. Optional direct
+strengthening: also assert both fresh child's committed work ledgers remain0
+on the refused unit; do not clear a warm cache or fabricate a debit to force it.
+
+The synthetic checkpoint at owner lines4691-4727 now holds suffix5/6, prefix3/0,
+and Exarch tier1. Its goal adds the already-present family100 flat prefix to the
+prior four families, leaving only prefix4 missing (mask29 of required31).
+Factory normal-roll prefix0/1/2 are blocked by held group10; prefix3 is held,
+and prefix4/group13 is the sole rollable prefix. Veiled prefix8 is outside the
+normal random mask. Thus native direct Eldritch Exalt has a proper one-step
+completion with intended root/goal two-state closure. Save, query, replay and
+malformed-load contexts all use this same five-goal fixture request. This is a
+changed synthetic checkpoint premise, not a changed frozen economic case.
+Calling `checkpoint_work.finish()` at line4714 performs the completed cache
+publication (`solver_solve.cpp:803-818`); policy availability and all three cache
+cardinalities are checked before admission, and no state growth is checked after
+it. This is a valid source-level setup for the existing coarse checkpoint
+contract. Runtime must still establish the actual retained closure; if its
+preflight fails, stop there rather than resizing arrays or weakening save checks.
+The typed-membership/full-envelope and malformed-key negatives remain intact.
+
+Recommendation: the observed premise corrections are suitable for the next
+owner finite qualification once LOCAL is assigned; no source blocker found.
+Runtime and skipped dependent selectors remain unqualified. This review does
+not repeat the decoder audit or reopen the repaired dead-end sentinel. Queued
+review fixture/source pins are unchanged; CI holds LOCAL, and this task launches
+no build, test or solve.
