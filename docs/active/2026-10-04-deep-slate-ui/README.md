@@ -5,7 +5,8 @@ Branch: `dot/sol61-deep-slate-20261004`; isolated sibling worktree.
 Selected direction: C2 Deep Slate, Noto Sans, stronger ember execution buttons.
 The complete delivered plan was read through Library as text; the reference
 image was not inspected. No native, goal, price, action or persistence contract
-changes are intended. The task remains source-only until the parent grants LOCAL.
+changes were made. One parent-authorized LOCAL qualification window completed;
+LOCAL was released to recombination. Further work is source-only until a new grant.
 
 ## Owners and migrated consumers
 
@@ -31,7 +32,9 @@ are bundled. No OS font installation or runtime third-party font request.
 - Field boundary/field: 4.99:1; boundary/card: 3.47:1.
 - Magic text was lifted within its blue semantic role to `#9a9aff` (5.34:1 on card).
 - `git diff --check` passed. These are source/arithmetic observations.
-- Tests, TypeScript, packaging and browser QA have not run; screenshots do not yet exist.
+- The arithmetic above is source evidence. Browser assertions checked the actual
+  computed text/primary contrast at >= 4.5:1 and focus/field boundaries at >= 3:1;
+  exact browser measurements were not logged in the completed run.
 
 Focused item tests now cover actual/required/any/exact-none/exact influence,
 unknown labels, shared live/imported metadata, recorded rolls and crafted/fractured
@@ -39,32 +42,144 @@ facts, cleanup on success/failure, and read-only keyboard fracture behavior.
 Existing goal, currency, Lock, Unveil, history/resource and layout checks retain
 their semantic/numerical authorities. No new supervisor or native workload.
 
-## LOCAL continuation
+## Completed qualification
 
-Request the serialized LOCAL window before starting checks. The isolated checkout
-currently lacks `node_modules`, generated web metadata and ignored compiled data;
-the normal checkout has them. Materialize/reuse dependencies and frozen inputs
-without changing the normal checkout, refreshing data or rebuilding native/WASM.
-Use the existing web data/build hooks and retain the frozen runtime identities.
-Run `npx tsc --noEmit`, the affected item/goal/currency/Lock/Unveil/resource checks,
-then the broader web suite when justified by the shared presentation surface.
-Use the existing static-host smoke runner with `POECRAFT_UI_CAPTURE_DIR` pointing
-to `out/deep-slate-ui/after`. It captures Emulator, Calculator input/goal, Stash
-and font fallback in a fresh browser profile. Capture the corresponding original
-revision views separately for actual before/after evidence. Retain watchdog/cleanup
-and serialize browser/build/test work with the parent. Do not launch solve batches.
+Built source: `2a46b1b3a45abaa2ffe7065447429aa3efe603a0`, clean at build time.
+Five local source commits, in order: `5b0e71ef`, `0ffc425d`, `5a531639`,
+`366219cc`, `2a46b1b3`. No native/WASM rebuild, canonical data refresh,
+normal-checkout edit, dev-server change, merge or push occurred.
+
+Dependencies were privately copied with the matching package-lock hash. Frozen
+compiled test inputs were copied and checked against their existing manifest;
+the product runtime payloads, WASM/loader, artwork catalogue and bundled economy
+identities were verified before use. Exact hashes are in
+`out/deep-slate-ui/preflight.json`. Runtime manifest is
+`82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d`;
+WASM SHA-256 is
+`9d65393ce4628bf3cbd6ce2c7ea2f856a43afa49d1d9398c1c0c3902e9fbfbfd` (ABI 3).
+
+| Check | Actual outcome | Evidence under `out/deep-slate-ui/` |
+| --- | --- | --- |
+| TypeScript + Vite production build | Passed, including final committed build | `build-initial.log`, `build-final.log` |
+| Existing 33-command web suite | All commands passed across the initial run and continuation; one full `npm test` invocation did not finish successfully | `web-tests.log`, `web-tests-chrome-tail.log` |
+| Initial browser availability | Failed at `workspace-resources.test.ts`: pinned Chromium headless shell absent | `web-tests.log` |
+| Remaining 12 suite commands | Passed with the existing `POECRAFT_TEST_BROWSER_CHANNEL=chrome` override; no passed unchanged commands rerun | `web-tests-chrome-tail.log` |
+| Web packaging and integrity | Passed: 667 files, immutable archive `52b534cf7382bc7adb2e066ba3110b18c5521c9382d9f37b03b6005aca0f088a` | `package-final.log`; `dist/public-artifacts/web/<archive>/deployment-manifest.json` |
+| Rendered UI prefix | Passed through native-clone actual influence, required/exact/any goal contexts, read-only controls, keyboard fracture identity, contrast/focus, stable 72px square rows, Emulator history/craft/tooltips and Calculator layouts/goal/draft checks | `ui-final.log`; reaching the later blocker establishes completion of the earlier unchanged assertions |
+| Local-font failure fallback | Passed in a fresh Chrome page with WOFF2 blocked; app remained usable | `ui-final.log`, `after/chromium-font-fallback.png` |
+| Full static-host/UI smoke | Failed at the existing Builder modifier-family picker; not fully qualified | `ui-final.log`, `after/chromium-failure.png` |
+| Original-revision reproduction | Same Builder picker failure on original product source `29d9e666` | `before-ui.log`, `before/chromium-builder-blocked.png` |
+
+The item adapter unit fixtures include explicit mocked combinations of flags and
+influences; they test projection and cleanup, not legal PoE combinations. The
+browser actual-influence fixture used a native-owned clone and checked the
+native-retained Shaper bits before displaying it. Its temporary card restores
+focus to the live Emulator so the existing scoped Ctrl+Z check remains intact.
+
+Initial new-fixture failures (keyboard modality, an already-open disclosure,
+and focus restoration) were corrected without weakening assertions. Their raw
+logs/screenshots remain in `ui-initial.log`, `ui-keyboard.log`,
+`ui-disclosure.log`, `ui-focus-return.log` and corresponding `after-*` folders.
+Installed Chrome was used with fresh profiles. Pinned Chromium and Firefox were
+not qualified; no browser download or user-profile access was used.
+
+Before/after views are in `before/` and `after/`: Emulator and Calculator input
+show the corresponding native item at the selected checkpoints. The original
+Emulator frame includes a hover tooltip. The original goal frame was captured
+before its asynchronous requirement update settled; it is a visual reference,
+not a matched goal-state comparison. The final goal frame waits for the native
+requirement update. Preserve these distinctions; do not relabel all screenshots
+as matching-state acceptance evidence. No Stash screenshot was reached.
+
+All launched processes ended; browsers and static servers closed in their
+existing finally blocks. Build watchdogs were 120 seconds, remaining suite
+commands 120 seconds each, packaging 60 seconds, UI runs 240 seconds with the
+runner's 30-second locator deadlines. LOCAL is no longer held.
+
+## Blocking defect and unrun checks
+
+The unchanged Builder `ensureModifiers()` key includes base, item level and
+cluster JSON, but both post-await stale-result comparisons omit cluster JSON.
+They therefore reject the result and schedule another load, leaving the modifier
+picker empty. The same code was inspected on the Builder feature branch. The
+parent assigned the correction and focused regression check to that feature
+owner. `out/deep-slate-ui/proposed-builder-cache-key.patch` is a reviewable,
+unapplied two-comparison fix; this UI branch did not change the editor logic.
+
+Because the smoke stopped there, Builder tier/Any-tier selection, Strategy
+history/reconnection, legacy computed port geometry/edge wrap checks, Stash
+save/import/dirty-close, artwork fallback and stale-runtime failure-page checks
+were not reached in the completed candidate browser run. Their unit/native web
+checks passed where present; that does not replace rendered qualification.
+New Builder A/B connectors, authored/actual compact item adapters, trace outputs
+and paid-feeder receipts have not been implemented or qualified by this branch.
+Zoom review and broader long-name/long-edge density checks also remain open.
+
+One uncommitted test-only change moves Builder measurement/capture before the
+blocker and logs completed checkpoints. It has not run and remains separate:
+`apps/web/test/ui-continuity-checks.mjs`, preserved additionally as
+`out/deep-slate-ui/unrun-checkpoint-logging.patch`. It is not part of the five
+committed source changes or the qualified build/package. Do not silently stage
+it with documentation or describe its legacy geometry assertions as passed.
+
+## Remaining browser batch
+
+Wait for the feature owner's separate cache fix/regression-tested commit and
+CI/integrator's coherent source integration. Read the reviewed source revision
+and handoff again only when changed. Finish bounded authored/actual Builder
+presentation adapters against that source first, preserving physical resource
+identity, paid-feeder provenance and native cost completeness. Require the
+feature owner's matching qualified WASM/worker bytes when its vocabulary or ABI
+needs them; this UI task does not rebuild native/WASM on its own.
+
+Prepare the remainder in the existing static-host/UI runner. Reuse its native
+fixtures and fresh browser profile; do not add a second server, supervisor or
+solver batch. The proposed checkpoint delta is still unrun, and its legacy
+`top: 48px` assertion must not be used as the new-feature port contract.
+
+1. Confirm modifier options publish for the selected full base/item-level/cluster
+   identity, and that stale asynchronous results cannot publish for another one.
+   Exercise the existing nested condition, minimum tier/Any tier, history and
+   reconnect checks with all original identities and acceptance rules.
+2. Check 210px nodes and 14px ports against the owner's connector model:
+   recombination input A at y=36, input B at y=78, ordinary input/output at y=54
+   (`top = y - 7`). Preserve port IDs, source/terminal rules, pointer payloads,
+   reconnect hit geometry and the item-supply edge style. Check focus, disabled
+   controls, wrapped node/edge labels and current/stale annotations.
+3. Review Builder authoring and trace views with owner-provided native fixtures.
+   Authored templates and an execution entry without a starting item must stay
+   distinct from actual resources. Actual output uses its resource's base,
+   level, physical identity and native item; missing snapshots remain unknown.
+   Keep consumed/unavailable inventory distinct, all paid-feeder receipts and
+   native known-cost/completeness fields, seven execution slots versus the
+   separate 32-entry planner catalogue. Do not imply an undelivered planner works.
+4. Exercise Stash save/import, lifecycle-disabled actions, error/loading state,
+   and dirty-close with the same native item and existing persistence owner.
+   Complete artwork and stale-runtime failure checks that the prior run did not
+   reach. Capture only the remaining Builder/trace/Stash views; retain already
+   passed unchanged Emulator/Calculator/font-fallback evidence.
+
+Request a new serialized LOCAL grant before any typecheck, build, test or browser
+command. Use focused checks for the actual source delta, the existing build and
+packaging owners, and one bounded remainder browser batch (240-second host
+watchdog, existing 30-second locator deadlines). Record new source/engine/runtime
+pins and separate output paths. Release LOCAL as soon as heavy work ends.
+Do not launch Simulator trials or solves for unchanged strategies. Retain failures
+and decide causally before any additional run; there is no fixed total-run cap.
 
 ## Retained exceptions and integration
 
 The Builder's feature/protocol/graph work belongs to its separate owner. Its
 geometry is retained, including 14px circular connection ports despite the new
-28px default button minimum. The audited Builder panels, fields, node/edge cards, trace and result surfaces now
+28px default button minimum. The audited Builder panels, fields, node/edge cards,
+trace and result surfaces now
 use the shared slate/text/status tokens. Graph rank/active/taken semantics and
 Unveil's deliberate green illustration retain their existing colors. Builder
 font metrics and wrapped edge text still require actual rendered qualification.
 Dense modifier footprints remain 72px (targets 96px), with keyboard-accessible
-inner scrolling for long content. Rendered density/zoom/keyboard/preview review
-is still required before qualification; the source changes alone do not prove it.
+inner scrolling for long content. The completed prefix checks cover ordinary
+slot geometry and keyboard/read-only behavior; the remaining cases above still
+need qualification.
 
 The recombination branch currently overlaps only by appending
 `.pc-edge-path.is-item-supply { stroke-dasharray: 5 4; }` to `app.css`.
@@ -83,4 +198,5 @@ feeder provenance, native cost completeness and seven execution resource slots.
 No execution adapters, graph/history owner, native or WASM changes are permitted.
 The current additional source slice updates only the audited style owner;
 actual/authoring item and trace adapters are still pending on a coherent Builder
-source base. LOCAL has not been granted, so browser/font/wrap checks remain unrun.
+source base. The completed LOCAL window qualified the pilot only as detailed
+above; Builder-specific rendered checks remain open.
