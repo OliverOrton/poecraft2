@@ -1,0 +1,49 @@
+{
+  "source_commit": "d48ed5c6fcfe62c0b105ccf2dc67877bdd7beaf0",
+  "stages": [
+    {
+      "phase": "build-tests",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 34612,
+      "process_identity_token": "34612:134355833287663447",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 41932.64539982192
+    },
+    {
+      "phase": "generic-entry-budget",
+      "exit_code": 1,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 85264,
+      "process_identity_token": "85264:134355833712433227",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 291.1395002156496
+    }
+  ],
+  "unrun": [
+    "guarded-recovery-owner-compatibility",
+    "legacy-blocker-and-entry-compatibility",
+    "build-benchmark",
+    "generated-conquest-original-root-and-entries"
+  ],
+  "owned_processes": [],
+  "local_slot": "RELEASED at terminal batch result",
+  "stop_requested": false,
+  "finished_utc": "2026-10-04T10:29:31.280813+00:00",
+  "schema": "sol61_generated_root_gate_finite_refusal_v1",
+  "test_binary_sha256": "f4df10b61ba6fd3c9dd3c2b082742c91799f9cb13f33d59521d4e6733ef954cb",
+  "finite_checks": 45,
+  "finite_failures": 1,
+  "failure": "discovery-one refuses after26 logical work; automatic batch carries max_discovered_states but validator discards typed cap and fixture labels all length_error as memory",
+  "positive_evidence": "work1/47 refuse at1/47, work48 completes all6, exhausted shared refuses before child work and keeps debit1, stricterlocal1/shared48 both correct; memory1 refuses before work",
+  "root_or_economic_qualification": "UNRUN",
+  "bulk_evidence": "out/sol61-armour/root-r10"
+}

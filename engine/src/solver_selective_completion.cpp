@@ -1211,9 +1211,13 @@ bool SelectiveProgrammeEntryValidator::advance(
         StateLocalAutomaticBatch batch;
         if (!calc_->advance_state_local_automatic_candidates(
                 state_, admission_, batch, 1)) continue;
-        if (batch.status != StateLocalAutomaticBatchStatus::Complete)
-            throw std::length_error(
-                "native programme admission resource deferred");
+        if (batch.status != StateLocalAutomaticBatchStatus::Complete) {
+            // Retain the admission owner's precise scheduling authority. A
+            // discovery/row/memory refusal must not become an unnamed capacity.
+            if (!batch.resource_cap.empty())
+                throw SolverResourceLimit(batch.resource_cap,batch.resource_limit);
+            throw std::length_error("native programme admission resource deferred");
+        }
         bool admitted = false;
         bool preserves_held = false;
         bool matched_semantic = false;

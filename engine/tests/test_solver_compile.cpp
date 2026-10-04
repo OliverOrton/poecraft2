@@ -5771,7 +5771,11 @@ void run_solver_entry_budget_tests() {
         std::string refusal;
         try { for (unsigned step = 0; step < 40000 && !validator.done(); ++step) validator.advance(1); }
         catch (const SolverResourceLimit& error) { refusal = error.cap_name(); }
-        catch (const std::length_error&) { refusal = "max_owned_bytes"; }
+        catch (const std::length_error& error) {
+            std::printf("native entry capacity detail: %s\n",error.what());
+            refusal = std::string(error.what()).find("no exact admission memory") != std::string::npos ?
+                "max_owned_bytes" : "unclassified_capacity";
+        }
         PC_CHECK(validator.done() == expected_done);
         PC_CHECK(refusal == expected_refusal);
         PC_CHECK(validator.logical_work() <= maximum_work);

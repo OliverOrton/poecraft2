@@ -508,3 +508,23 @@ Conquest graph/check remain identical. Existing parent grant explicitly covers
 straightforward fixture repairs; resume the declared unrun gate from a fresh
 batch directory/source pin. No semantic/financial result is inferred from build
 success or from the previously qualified1cc4f8ff source.
+
+## R10 native boundaries measured; typed discovery refusal preserved next
+
+Source d48ed5c6 built in41.933s; budget selector stopped45checks/1 failure,
+all later stages UNRUN. [Receipt](root-r10-summary.json) preserves exact source,
+binary/process pins and empty survivor list. Work1/47 refused with committed
+1/47; work48 completed all6 actual positive entries with48. Exhausted shared
+owner refused with child0/owner1, stricter local1 and exact shared48 also passed.
+Memory1 refused before work. No new root/economic qualification follows.
+
+The failed discovery1 witness stopped after26 committed native work. Source
+shows the automatic batch already preserves max_discovered_states/resource_limit,
+rolls back admission, and returns ResourceDeferred. The validator replaces that
+precise scheduling authority with a generic length_error; fixture incorrectly
+labels every length_error memory. Correction propagates the existing typed
+SolverResourceLimit from the batch and classifies only its explicit initial
+memory refusal as memory. Native budget/decision/rollback/resource semantics do
+not change. This is diagnostic authority needed for the cap-qualified full case;
+no cap is raised, census omitted or failed semantic premise relaxed. Resume from
+a new source/output under the existing coherent repair grant; retain R9/R10.
