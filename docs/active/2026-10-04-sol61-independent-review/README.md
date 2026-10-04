@@ -1388,3 +1388,21 @@ retained ownership and terminal cleanup. Any stop/error must keep upper false.
 No projected completion, financial-reference gain, aggregate peak, Current/Finder
 activation/full closure/WASM recommendation. Exact review/request/ownership
 analysis are restored-envelope-f1-*; no new benchmark infrastructure.
+
+
+## Solver break: causal reconciliation for Pro
+
+Parent selects source-only reconciliation/research handoff, then break; no new
+tests, capability implementation or experimental main merge. See
+[causal-research-handoff](causal-research-handoff.md) for exact baseline/evidence
+paths and four questions. Native s3 Ember1->EExalt versus savedCurrentc5 Chaos
+is a proven local continuation loss; whole EV contribution/introducing change
+remain unknown. Broader support already admits partial-held EExalt. Published
+law3 saved-policy evaluation85970.67 vs101311.35 establishes a policy gap;
+productCurrent returns101311.35 at bounded finish with capmask0. Historical
+preflight is ordinary execution diagnostic, not solver-provenance admission.
+Strict historical plain-fill witness failed; observed temporaryBench->Exalt is
+separate from generic newplainfill. Existing Finder accounting faults are native
+product defects, unlinked to Conquest. Private1GiB/observer/catch/fixture issues
+are qualification failures, not a proved original product regression cause.
+No new native evidence or release recommendation.
