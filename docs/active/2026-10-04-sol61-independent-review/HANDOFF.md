@@ -25,3 +25,8 @@ compound-refusal checks and233 four-positive-fixture checks. The positive native
 compound carrier still routes to paid no-progress Exalt; root and incomplete
 census correctly refuse. Generic routing repair is pending actual source.
 No activation/closure/frozen-economic/WASM approval.
+
+Guarded sourcee669ddd7 reviewed, eight pins verified, no native run. R5/P2
+held-side junk blocker can survive every proposed target-side recovery word;
+new six-fixture gate misses it. Exact paid acquisition/cleanup escape and native
+witness requested before generic qualification. See latest living-record section.

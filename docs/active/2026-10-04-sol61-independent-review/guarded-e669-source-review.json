@@ -1,0 +1,90 @@
+{
+  "source_commit": "e669ddd7249a6ea7638f7b51a9dfed3a99ee9f8b",
+  "mode": "source-only; no native build or test; CI holds LOCAL",
+  "source_pins": [
+    {
+      "path": "engine/src/solver_compile.cpp",
+      "sha256": "c361f2e594682dc7c5abb52dcac76269e37f39d3e90b4ab3868c775bcf109d4d",
+      "matches_request_and_commit": true
+    },
+    {
+      "path": "engine/src/solver_compile_contracts.hpp",
+      "sha256": "043457b7ef0af1a25cc31aff51528a8f2964d8425cc4969fed9384c8be8cf57f",
+      "matches_request_and_commit": true
+    },
+    {
+      "path": "engine/src/solver_selective_completion.cpp",
+      "sha256": "01886d08b1a6d62ebe38e9d58ffaa559db090bb034127f48052881887f4ff210",
+      "matches_request_and_commit": true
+    },
+    {
+      "path": "engine/src/solver_selective_completion.hpp",
+      "sha256": "8aa7a912afa2f672c30044a54d3a1eeeed4d93d6082aa36aaf9e52bc695d4be6",
+      "matches_request_and_commit": true
+    },
+    {
+      "path": "engine/benchmarks/solver_benchmark.cpp",
+      "sha256": "eee61518405daf313594343affb816d44ed032a8aa519135054f9372a2ffa557",
+      "matches_request_and_commit": true
+    },
+    {
+      "path": "engine/tests/test_main.cpp",
+      "sha256": "8d2b46ba5f26bb615d50cb6adb9b2a307357fda87733c8eb5862e8953fa983d1",
+      "matches_request_and_commit": true
+    },
+    {
+      "path": "engine/tests/test_solver_compile.cpp",
+      "sha256": "356d57ef2183d3fe47edcbab0d48b6a8947626c6c2c116cd2e51e6d6a8239733",
+      "matches_request_and_commit": true
+    },
+    {
+      "path": "engine/tests/tests.hpp",
+      "sha256": "500e8278cd0cb98e4dc0dfc24679ddb8adcf33caa85580775d0fe0322a21e840",
+      "matches_request_and_commit": true
+    }
+  ],
+  "request_sha256": "89b04df4b998bf310d9a1989999ee81371bcfdff1ef590d40357ab3c5e56d7f1",
+  "findings": [
+    {
+      "id": "R5",
+      "severity": "P2",
+      "confidence": "high static confidence; native reachability/root failure not executed",
+      "consumer": "default-off PartialHeldRecoveryProducer; public Current/Finder enumeration unchanged",
+      "location": "engine/src/solver_selective_completion.cpp:680-687,601-605,1040-1041",
+      "witness": {
+        "basis": "existing compound fixture4",
+        "changes": [
+          "modifier2 groups={13}, primary13; remove secondary10",
+          "modifier7 groups={10,21}, primary21; add secondary10",
+          "rebuild native group_offsets/group_ids/group_masks with existing fixture owner; no transition law edits"
+        ],
+        "root": "same clean empty Rare original root",
+        "carrier_prefixes": [
+          3,
+          2
+        ],
+        "carrier_suffixes": [
+          5,
+          7
+        ],
+        "anchor_slot": 3,
+        "held_goal_mask": 8,
+        "native_ordering": "3,2,5,7; all native weights positive, chosen groups do not conflict; exact mass requires fresh native enumeration",
+        "closed_invariant": "suffix modifier7 persists through prefix-target Ember/Ichor/Exalt/Chaos/Annul; native group10 excludes every target-family0 satisfying member; prefix completion impossible; suffix7 tier2 remains unsatisfied so full-small dispatch unavailable",
+        "expected": "root unresolved mass >0 and incomplete census refusal; old compound masses cannot be reused"
+      },
+      "correction": "Before partial-stage count/progress routing, detect a target goal with no positive native member unblocked by retained-side modifiers after clearing target side. Route such an obstruction to the existing paid acquisition node (or separately admitted cleanup). Keep EldritchChaos for target-side blockers. Never relax native validation or discard positive mass.",
+      "gates": "new witness both orientations plus original target-blocker controls, exact native root reachability and complete root/every-positive-entry acceptance; no gate execution here"
+    }
+  ],
+  "accepted_source_observations": [
+    "native pool membership and final_weight>0 used; no extra positive-weight predicate missing in immutable-tag domain",
+    "full canonical group masks include secondary groups",
+    "compiled mod_count uses exact IDs without family widening; evaluator observes count membership",
+    "capacity and rarity are explicit; clean original-root closed actions preserve lifecycle/influence/flag legality premises",
+    "dynamic added-tag domain conservatively retains paid reroll and is not newly qualified",
+    "false guard branch pays existing native Chaos/setup and dispatches all outcomes",
+    "private gate defaults off and old public proposal vocabulary unchanged"
+  ],
+  "release": "hold generic completion/activation pending held-side blocker escape and native evidence; e669 native gate unrun"
+}

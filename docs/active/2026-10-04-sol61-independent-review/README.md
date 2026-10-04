@@ -892,3 +892,77 @@ checkpoint replay/full closure, aggregate peak accounting and WASM remain held
 or separately unqualified. Recommend retaining this default-off research commit
 and its finite evidence; do not release the producer while this positive routing
 gap exists. Parent controls the next LOCAL grant; CI currently owns it.
+
+
+## Guarded recovery source review at e669ddd7
+
+Parent supplied e669ddd7249a6ea7638f7b51a9dfed3a99ee9f8b for review before its
+native gate. All eight prepared source pins match the owner files and commit.
+Read the actual diff, native pool/weight/group construction, exact condition
+compiler/evaluator, side-preservation law and new synthetic/Conquest diagnostics.
+No native build/test or production edit ran; CI owns LOCAL. The prepared request
+and compact source review are owner-guarded-e669-request.json and
+guarded-e669-source-review.json. No source-only statement here is a passing test.
+
+R5/P2 capability blocker, high STATIC confidence, unexecuted native witness:
+solver_selective_completion.cpp:680-687 sends the false rollability guard to the
+same target-side EldritchChaos. This can never remove an obstruction retained on
+the opposite side. Copy fixture4, REMOVE secondary group10 from modifier2
+(primary13 remains), ADD secondary10 to modifier7 (primary21 remains), rebuild
+the native group payloads exactly as the existing fixture does. Keep root,
+weights, family/tier, prices, actions, goal, carrier prefixes3/2 + suffixes5/7 and
+anchor5/held-mask8 unchanged. Ordering3,2,5,7 has positive native weights and no
+chosen group intersection; obtain its exact root mass by fresh native pool and
+full Chaos enumeration, not the old compound witness's numerical mass.
+
+Modifier7 is a lower-tier, unsatisfied suffix goal-family member with group10.
+All satisfying prefix-goal0 members are excluded while it survives. Prefix
+EldritchChaos preserves the ENTIRE opposite side, including7, by
+solver_reforge.cpp:313-329; prefix Annul cannot remove it either
+(solver_calc.cpp:3332-3344). The singleton stage does not reject held junk when
+requested_held_mask_ is nonzero (selective_completion:601-605). Its three target
+goals cannot all complete, and suffix7 never upgrades, so neither final-large nor
+full-small dispatch can escape (1040-1041). The current Exalt guard correctly
+observes the blockage; its selected paid reroll fails to break this closed class.
+The six prepared fixtures only put secondary10 on target-side2 (both mirrored
+orientations), so they do not falsify this held-side obstruction. Correct root/
+census refusal is expected; this is a capability gap, not an acceptance bypass.
+No actual root mass, failure count or frozen Conquest counterexample is claimed.
+
+Small exact correction for the implementing owner: BEFORE partial-stage count/
+progress routing, determine whether some target goal has no positive native
+member compatible with the retained side even after the target side is cleared.
+For the existing immutable-tag domain, reuse the native empty-frame positive
+members; OR full group conflict masks for each member and intersect those blocker
+masks with the held-side native mask before existing exact count0 predicates.
+Require some unblocked member for EACH target goal. Do not exempt currently
+satisfied target goals: the prospective reroll destroys them. This is a necessary
+escape observation, not proof that a joint completion law exists. If it fails,
+route to the existing paid acquisition node (or separately admitted cleanup that
+can remove the obstruction), retaining all resource and retry expectations.
+Place this escape before progress tests: an obstruction may block every target
+goal, so a guard reachable only after some target progress is insufficient.
+Preserve EldritchChaos for the original target-side blocker, whose obstruction is
+removed by that reroll; do not make every false guard discard the held anchor.
+
+Add native witnesses for both obstruction locations and mirrored sides. Retain
+original-root positive acquisition enumeration, legal paid words, complete root
+acceptance and actual complete-census validation of EVERY positive entry without
+an epsilon or permission change. Preserve the old unguarded rejection and six
+positive controls. Parent must assign ownership/LOCAL; no new C++ fixture was
+added here. Native gate is unrun and generic recovery qualification remains held.
+
+The new weight/projection source itself has no demonstrated missing positive-
+weight predicate in the reviewed domain: compile:38-46 takes actual native
+pool members and final_weight>0, matching temporary:246-250. Static tag/influence
+weights are immutable; full group masks give canonical symmetric conflict tests,
+including secondary groups. Exact mod_count is compiled without family widening
+and the evaluator observes its membership. Rarity/capacity are explicit. The
+private clean root and closed setup/add/annul/reroll actions preserve the other
+native legality premises; the guard is not authority for arbitrary foreign items.
+Added tags conservatively choose paid reroll and remain unqualified. Original
+prices, query membership, all-outcome dispatch and native entry validation remain
+unchanged. Private outer gate is still false; public proposals/ABI/vocabulary are
+not activated. The Conquest diagnostic remains construction-only and imports no
+policy; its source-only route/resource plan grants no economics or whole-root
+acceptance. Earlier R2 accounting findings and all release holds still apply.
