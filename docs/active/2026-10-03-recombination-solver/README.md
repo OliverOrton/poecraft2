@@ -534,3 +534,26 @@ checks under the existing limits. No repeated bundle command is requested. Keep
 prior build/lifetime/bundle successes, both failed gates and native823657c0
 qualification distinct. The second compact receipt is under
 `out/strategy-feeder/sol61-transport-repaired-20261004/qualification-receipt.json`.
+
+## Fresh-session call audit and direct regression prepared (2026-10-04)
+
+All seven production `build_session` call sites were inspected at source
+`9b312ef7`: ordinary/configured API, pair output, goal observation, constraints
+carriers, donor resources and the corrected planner facade allocate fresh objects.
+All15 test call sites do too. The ordinary overload forwards once to the retained
+constructor; no other initialized-session reuse was found. No common engine
+helper, mechanics or other programme was changed.
+
+A new direct ownership regression shares the already checked native Ring input
+owner with the full fixture. It uses an already-completed owned item, with no
+feeder/retry/sampling/export: repeated planner calls must have identical receipts,
+changing only paid entry cost3->11 must change that cost without new acquisitions,
+and dataset, request and live item ownership must remain unchanged. It also
+checks live-worker/planner capability refusals and closes both workers.
+
+Its optional negative-control mode pins the old failing artifacts and accepts
+only the exact constructor-conflict failure, after native input admission. This
+is prepared to run before the next full build to establish fixture preconditions;
+then build once and run the positive direct check before the larger planner gate.
+Both modes are unrun while UI/core own LOCAL. The living checkpoint records the
+bounded causal order, unchanged main-envelope limits and smaller ownership case.

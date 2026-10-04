@@ -5,7 +5,8 @@ import {createHash} from "node:crypto";
 import {readFileSync} from "node:fs";
 import {Worker, type TransferListItem} from "node:worker_threads";
 import {EngineClient, type EngineTransport} from "../src/app/engine-client";
-import {EngineError, type ModInfo, type RecombinationPlannerRequest, type WorkerMessage} from "../src/app/engine-protocol";
+import type {RecombinationPlannerRequest, WorkerMessage} from "../src/app/engine-protocol";
+import {prepareRingPlannerFixture, RING_FIXTURE_BASE} from "./recombination-planner-fixture";
 import {runRecombinationPlanner} from "../src/app/recombination-planner";
 import type {StrategyDocument} from "../src/app/strategy-model";
 const root = new URL("../../../", import.meta.url);
@@ -33,44 +34,11 @@ function spawn(readOnlyPlanner: boolean): EngineClient {
         onError: handler => worker.on("error", handler), terminate: () => worker.terminate()};
     return new EngineClient(transport, {readOnlyPlanner});
 }
-const client = spawn(false), base = "Metadata/Items/Rings/Ring1";
+const client = spawn(false), base = RING_FIXTURE_BASE;
 const near = (a: number, b: number) => assert.ok(Math.abs(a - b) < 1e-7, `${a} differs from ${b}`);
 try {
     await client.whenReady(); const abi = client.getAbiVersion(), data = await client.loadData(bundle.slice());
-    const session = await client.createSession(data, base, 80), context = await client.createContext(session, 62667494);
-    const blank = await client.createItem(session, {rarity: "rare", withImplicits: false});
-    const pool = await client.debugPool(context, blank, {action: {type: "exalt"}, side: "prefix"});
-    // Same finite fixture rule as the native Ring witness: first ordinary,
-    // positive-proxy prefixes in session order with full groups compatible.
-    // Admission/group checking stays in native editing and pair owners.
-    const selected: ModInfo[] = [];
-    let rejectedGroupConflicts = 0;
-    const full = await client.createItem(session, {rarity: "rare", withImplicits: false});
-    for (const candidate of pool.entries.filter(entry => entry.accepted && entry.generation_type === 0 && entry.spawn_weight > 0)
-        .sort((a, b) => a.session_mod_id - b.session_mod_id)) {
-        const info = await client.modInfo(session, candidate.session_mod_id);
-        if (info.reach_kind !== 0) continue;
-        const before = await client.exportItem(full, session);
-        try {await client.editItem(full, session, {add_explicit: info.key});}
-        catch (error) {
-            // pc_item_edit_json checks every canonical group and commits only
-            // after success. The legacy raw addMod helper cannot admit this fixture.
-            if (!(error instanceof EngineError) || !error.detail.includes("conflicting explicit modifier")) throw error;
-            assert.deepEqual(await client.exportItem(full, session), before, "group refusal must preserve the complete item");
-            ++rejectedGroupConflicts; continue;
-        }
-        const checked = await client.exportItem(full, session) as {prefixes: Array<{mod_key: string; flags: number}>};
-        assert.deepEqual(checked.prefixes.map(slot => slot.mod_key), [...selected.map(mod => mod.key), info.key]);
-        assert.ok(checked.prefixes.every(slot => slot.flags === 0));
-        selected.push(info); if (selected.length === 2) break;
-    }
-    assert.equal(selected.length, 2);
-    assert.ok(rejectedGroupConflicts > 0, "retain the frozen fixture's adjacent-tier conflict as negative evidence");
-    const a = await client.createItem(session, {rarity: "magic", withImplicits: false});
-    const b = await client.createItem(session, {rarity: "magic", withImplicits: false});
-    await client.editItem(a, session, {add_explicit: selected[0].key});
-    await client.editItem(b, session, {add_explicit: selected[1].key});
-    const itemA = await client.exportItem(a, session), itemB = await client.exportItem(b, session), itemAB = await client.exportItem(full, session);
+    const {session, a, b, selected, itemA, itemB, itemAB} = await prepareRingPlannerFixture(client, data);
     const initialPhysical = [itemA, itemB];
     const child: StrategyDocument = {version: "v1", name: "Checked B", description: "", start_node_id: "start",
         base_state: {base_key: base, item_level: 80, rarity: "magic", with_implicits: false,

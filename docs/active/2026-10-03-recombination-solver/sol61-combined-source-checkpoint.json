@@ -64,11 +64,12 @@
   },
   "next_batch": {
     "status": "REQUEST_NEW_PARENT_LOCAL_FOR_CAUSAL_ADAPTER_FIX",
-    "purpose": "Build matching WASM for the fresh retained-session constructor fix, then qualify repaired planner/Ring1000 and remaining adapter checks",
+    "purpose": "Pinned old-artifact ownership negative control, matching WASM for fresh-session fix, positive repeated-call ownership check, then planner/export/Ring1000 and remaining adapter checks",
     "compiler_jobs": 2,
     "build_command": "$env:EMCC_CORES='2'\n$env:BINARYEN_CORES='2'\npowershell -NoProfile -File scripts/build-wasm.ps1",
     "sdk_parallelism_evidence": "C:/emsdk/upstream/emscripten/tools/utils.py get_num_cores reads EMCC_CORES; shared.py run_multiple_processes and system_libs.py ninja owner use it.",
     "qualification_commands": [
+      "node apps/web/node_modules/tsx/dist/cli.mjs apps/web/test/recombination-planner-ownership.test.ts",
       "node apps/web/node_modules/tsx/dist/cli.mjs apps/web/test/recombination-planner-wasm.test.ts",
       "node apps/web/node_modules/tsx/dist/cli.mjs apps/web/test/recombination-wasm.test.ts",
       "node apps/web/node_modules/tsx/dist/cli.mjs apps/web/test/engine-feeder.test.ts",
@@ -90,7 +91,12 @@
       "item_specs": 64,
       "inventory_states": 256,
       "catalogue": 32,
-      "policy_iterations": 32
+      "policy_iterations": 32,
+      "ownership_fixture_wall_seconds": 180,
+      "ownership_items": 4,
+      "ownership_states": 8,
+      "ownership_policy_iterations": 2,
+      "ownership_work": 1000000
     },
     "qualification_trials": "Current owner-approved 1000 actual compiled-worker Ring trials seed62667494; retained component feeder tests keep their separate regression identity.",
     "reuse": "Reuse native823657c0 and frozen input/bundle/lifetime evidence where source-compatible. Retained WASM/MJS compile old facade43ef96cf and cannot qualify the fresh-session fix; one source-matched causal rebuild is required.",
@@ -102,7 +108,9 @@
       "Serial focused checks with existing watchdog/memory owner; stop on causal contract/identity failure",
       "Release LOCAL immediately; report no owned survivors"
     ],
-    "timed_research_runs": 0
+    "timed_research_runs": 0,
+    "negative_control_command": "node apps/web/node_modules/tsx/dist/cli.mjs apps/web/test/recombination-planner-ownership.test.ts --expect-legacy-session-conflict",
+    "negative_control_order": "First, on the retained known-broken artifacts before a matching rebuild. Stop if fixture admission or exact negative differs; this checks preconditions without a full build."
   },
   "publication": "No main merge, push, deployment, data refresh or dev-server action. Do not integrate as qualified.",
   "initial_source_commit": "9736e766de959070b0c89fcb71281438ebd6f64c",
@@ -173,7 +181,61 @@
     "adapter_diagnosis": "Planner facade called build_session with retained identities on the already-built pc_session_create SessionImpl. engine_internal.hpp explicitly requires a fresh SessionImpl; session_builder appends dense/group tables. Fixture admission now correctly uses native full-group checks. The adapter source fix constructs a fresh SessionImpl with the same immutable data/base/level before full-item import.",
     "fresh_session_fix_unbuilt": true,
     "retained_build_matches_changed_facade": false,
-    "latest_receipt": "out/strategy-feeder/sol61-transport-repaired-20261004/qualification-receipt.json"
+    "latest_receipt": "out/strategy-feeder/sol61-transport-repaired-20261004/qualification-receipt.json",
+    "fresh_session_audit": {
+      "reviewed_source": "9b312ef73668d459e35c582ece0b617a41de2ebf",
+      "production_calls": [
+        {
+          "file": "bindings/wasm/wasm_api.cpp",
+          "line": 2259,
+          "allocation": "fresh retained_session after fix"
+        },
+        {
+          "file": "engine/src/api.cpp",
+          "line": 597,
+          "allocation": "fresh ordinary SessionImpl"
+        },
+        {
+          "file": "engine/src/api.cpp",
+          "line": 652,
+          "allocation": "fresh configured-cluster SessionImpl"
+        },
+        {
+          "file": "engine/src/recombination.cpp",
+          "line": 260,
+          "allocation": "fresh output_session per carrier"
+        },
+        {
+          "file": "engine/src/recombination_calculator.cpp",
+          "line": 73,
+          "allocation": "fresh observation session"
+        },
+        {
+          "file": "engine/src/recombination_constraints.cpp",
+          "line": 178,
+          "allocation": "two default-constructed local carrier SessionImpl objects"
+        },
+        {
+          "file": "engine/src/simulator.cpp",
+          "line": 3099,
+          "allocation": "fresh resource_session per donor definition"
+        }
+      ],
+      "test_calls": 15,
+      "test_calls_all_fresh": true,
+      "ordinary_overload": "session_builder.cpp511 forwards once to retained overload with empty IDs; its callers above allocate fresh objects.",
+      "other_initialized_session_reuse_found": false,
+      "owner_precondition": "engine_internal.hpp728: Build into a fresh SessionImpl; immutable data and existing sessions stay fixed.",
+      "reason": "session_builder.cpp appends group_ids/class_tag_ids and writes offsets against their lengths; constructor is not an in-place rebuild API."
+    },
+    "direct_regression": {
+      "file": "apps/web/test/recombination-planner-ownership.test.ts",
+      "shared_fixture": "apps/web/test/recombination-planner-fixture.ts",
+      "purpose": "Already-goal owned full Ring item: repeated API calls on one immutable read-only dataset, identical receipts, changed explicit sunk/paid entry cost3->11, zero acquisition/recombine counts, unchanged dataset/request/live item and capability refusals.",
+      "no_feeder_or_retry_or_sampled_policy": true,
+      "old_artifact_negative": "--expect-legacy-session-conflict pins known MJS8ec20cf7/WASMc8b4991a and accepts only the exact retained-constructor physical-conflict failure after native fixture admission. It is not positive qualification.",
+      "executed": false
+    }
   },
   "bundle_input_preflight": "out/strategy-feeder/sol61-finite-20261004/bundle-input-preflight.json"
 }
