@@ -249,6 +249,13 @@ void SelectiveCompletionProducer::begin() {
         refuse("growth_requires_two_held_and_three_target_goals");
         return;
     }
+    if (full_side_exalt_fill_ &&
+        (variant_ != SelectiveCompletionVariant::RerollVersusRepair ||
+         side_slots_[held_side_].size() != 3 || side_slots_[target_side_].size() != 2 ||
+         problem_.goal().required_satisfied_slots() != problem_.goal().slots.size())) {
+        refuse("private_exalt_fill_requires_three_held_two_target_all_goals");
+        return;
+    }
     for (const std::uint32_t slot : side_slots_[held_side_])
         held_mask_ |= 1u << slot;
     if (requested_held_mask_ != 0) {
@@ -316,7 +323,7 @@ void SelectiveCompletionProducer::begin() {
         refuse("no_priced_root_acquisition");
         return;
     }
-    if (variant_ == SelectiveCompletionVariant::ProtectedScourFill) {
+    if (variant_ == SelectiveCompletionVariant::ProtectedScourFill || full_side_exalt_fill_) {
         for (const auto index : problem_.candidates()) {
             if (index >= problem_.registry().actions.size()) continue;
             const auto& action = problem_.registry().actions[index];
@@ -379,7 +386,7 @@ void SelectiveCompletionProducer::begin() {
         refuse("no_native_pool_materializable_held_proposal");
         return;
     }
-    if (variant_ == SelectiveCompletionVariant::ProtectedScourFill &&
+    if ((variant_ == SelectiveCompletionVariant::ProtectedScourFill || full_side_exalt_fill_) &&
         !action_legal(problem_.session(), problem_.registry().actions.at(fill_action_),
             problem_.state(primary_.source))) {
         refuse("native_exalt_fill_ineligible");
@@ -618,7 +625,7 @@ void SelectiveCompletionProducer::build() {
                 (side_slots_[target_side_].size() == 1 ? 2u : 3u));
     // A three-goal target must retain its held side after native rerolls return
     // two affixes. The unchanged exact goal test still requires all three.
-    const std::uint32_t occupied_test = uses_growth(variant_) ? kNoId : append(
+    const std::uint32_t occupied_test = uses_growth(variant_) || full_side_exalt_fill_ ? kNoId : append(
         FinderControlKind::TestSideCountAtLeast,
         (target_side_ << 8u) |
             (variant_ == SelectiveCompletionVariant::RetentionControl
@@ -723,6 +730,28 @@ void SelectiveCompletionProducer::build() {
             graph.nodes[run].next = goal;
             graph.nodes[repair_test].on_false = two;
         }
+    } else if (full_side_exalt_fill_) {
+        // Three independently tested held goals occupy the entire other side.
+        // Ordinary requested Exalt therefore draws only on the target side.
+        // Keep its native capacity/eligibility gate and pay Annul cleanup after
+        // a full miss; no temporary blocker or unpriced action is introduced.
+        const auto fill = append(FinderControlKind::RunPrimitive, fill_action_);
+        graph.nodes[fill].next = goal;
+        const auto guarded_fill = append(FinderControlKind::TestMissingGoalRollable, target_side_);
+        graph.nodes[guarded_fill].on_true = fill;
+        graph.nodes[guarded_fill].on_false = primary_branch;
+        const auto repair_branch = branch(secondary_, secondary_binding);
+        auto below_miss = primary_branch;
+        for (const auto slot : side_slots_[target_side_]) {
+            const auto below = append(FinderControlKind::TestSlot, slot);
+            graph.nodes[below].on_true = guarded_fill;
+            graph.nodes[below].on_false = below_miss;
+            below_miss = below;
+        }
+        // Keep the existing full-capacity paid repair unchanged, isolating the
+        // below-capacity progress-preserving fill from another routing change.
+        graph.nodes[repair_test].on_true = repair_branch;
+        graph.nodes[repair_test].on_false = below_miss;
     } else if (variant_ == SelectiveCompletionVariant::RetentionControl) {
         graph.nodes[occupied_test].on_true = primary_branch;
     } else {
@@ -844,11 +873,12 @@ PartialHeldRecoveryProducer::PartialHeldRecoveryProducer(CalcContext& problem,
         const std::unordered_map<std::string, double>& prices,
         const SolveOptions& limits, const std::uint32_t anchor_mask,
         const bool private_gate, const bool guard_missing_rollability,
-        const bool escape_persistent_blockers)
+        const bool escape_persistent_blockers, const bool full_side_exalt_fill)
     : problem_(problem), original_start_(original_start), prices_(prices),
       limits_(limits), anchor_mask_(anchor_mask), private_gate_(private_gate),
       guard_missing_rollability_(guard_missing_rollability),
-      escape_persistent_blockers_(escape_persistent_blockers) {}
+      escape_persistent_blockers_(escape_persistent_blockers),
+      full_side_exalt_fill_(full_side_exalt_fill) {}
 
 void PartialHeldRecoveryProducer::refuse(std::string reason) {
     status_ = std::move(reason);
@@ -915,6 +945,7 @@ void PartialHeldRecoveryProducer::begin_stage() {
             SelectiveCompletionVariant::RerollVersusRepair,
         acquisition_, stage_ < 2 ? scope_->held_side : 1u - scope_->held_side);
     active_->escape_persistent_blockers_ = escape_persistent_blockers_;
+    active_->full_side_exalt_fill_ = stage_ >= 2 && full_side_exalt_fill_;
     if (stage_ == 0) active_->requested_held_mask_ = anchor_mask_;
     if (stage_ < 2) {
         active_->reroll_without_target_progress_ = true;
@@ -1113,6 +1144,18 @@ std::uint64_t SelectiveProgrammeEntryValidator::estimated_owned_bytes() const {
     return sizeof(*this) + (work_budget_ == nullptr ? 0 :
         work_budget_->estimated_owned_bytes()) + (calc_ == nullptr ? 0 :
         calc_->estimated_owned_bytes());
+}
+
+std::uint64_t SelectiveProgrammeEntryValidator::fast_estimated_owned_bytes() const {
+    return sizeof(*this) + (work_budget_ == nullptr ? 0 :
+        work_budget_->fast_estimated_owned_bytes()) + (calc_ == nullptr ? 0 :
+        calc_->fast_estimated_owned_bytes());
+}
+
+std::uint64_t SelectiveProgrammeEntryValidator::audited_estimated_owned_bytes() const {
+    return sizeof(*this) + (work_budget_ == nullptr ? 0 :
+        work_budget_->audited_estimated_owned_bytes()) + (calc_ == nullptr ? 0 :
+        calc_->audited_estimated_owned_bytes());
 }
 
 bool SelectiveProgrammeEntryValidator::advance(

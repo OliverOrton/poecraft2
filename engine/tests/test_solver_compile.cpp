@@ -19,6 +19,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <chrono>
 #include <cstdio>
 #include <fstream>
 #include <filesystem>
@@ -5151,7 +5152,7 @@ void run_solver_partial_held_witness_tests(const char* artifact_dir) {
     const auto carrier_state = calc.intern_item(carrier);
     PC_CHECK(satisfied_goal_mask(calc.state(carrier_state)) == ((1u << 0) | (1u << 3)));
     PC_CHECK(!calc.is_goal_state(calc.state(carrier_state)));
-    const auto first_paid = [&](const StrategyImpl& strategy) {
+    const auto first_paid = [&](const StrategyImpl& strategy, const pc_item_state& routed_item) {
         auto node = strategy.start_node;
         for (std::size_t step = 0; step <= strategy.nodes.size(); ++step) {
             const auto& current = strategy.nodes.at(node);
@@ -5160,7 +5161,7 @@ void run_solver_partial_held_witness_tests(const char* artifact_dir) {
                 throw std::runtime_error("partial held carrier routed to terminal");
             const auto edge = std::find_if(current.edges.begin(),current.edges.end(),
                 [&](const auto& candidate) { return candidate.is_default ||
-                    evaluate_compiled_condition(candidate.condition,*session,carrier); });
+                    evaluate_compiled_condition(candidate.condition,*session,routed_item); });
             if (edge == current.edges.end()) throw std::runtime_error("partial held carrier has no native route");
             node = edge->target;
         }
@@ -5172,7 +5173,7 @@ void run_solver_partial_held_witness_tests(const char* artifact_dir) {
     const auto current = compile_strategy_json(session,current_json.data(),current_json.size());
     PC_CHECK(exact_item_state_key(historical->start_item) == exact_item_state_key(root));
     PC_CHECK(exact_item_state_key(current->start_item) == exact_item_state_key(root));
-    const auto old_route = first_paid(*historical), new_route = first_paid(*current);
+    const auto old_route = first_paid(*historical,carrier), new_route = first_paid(*current,carrier);
     PC_CHECK(historical->nodes[old_route].id == "s3" &&
         historical->nodes[old_route].action.type == ActionType::EldritchEmber);
     PC_CHECK(current->nodes[new_route].id == "c5" &&
@@ -5203,6 +5204,59 @@ void run_solver_partial_held_witness_tests(const char* artifact_dir) {
         native_mass += exit.probability;
     }
     PC_CHECK(std::abs(native_mass-1.0) <= 1e-12);
+    // Adjacent final-side witness: exact original-root acquisition, followed
+    // by native paid tier setup. Historical routing supplies diagnostic words,
+    // never a control graph to the ordinary producer.
+    auto final_carrier = root;
+    double final_ordering_mass = 0;
+    for (const auto& draw : count_law.draws)
+        if (draw.count == 4) final_ordering_mass += double(draw.weight)/count_law.denominator;
+    for (const auto id : {mod("LocalBaseArmourAndEvasionRating8"),
+            mod("LocalIncreasedArmourAndEvasion8"),
+            mod("LocalIncreasedArmourAndEvasionAndStunRecovery6"),
+            mod("AdditionalPhysicalDamageReduction5_")}) {
+        ActionContextImpl context(0); context.session = session;
+        const auto& pool = get_weighted_pool(context,&final_carrier,PoolBuildRequest{});
+        const auto pick = std::find_if(pool.entries.begin(),pool.entries.end(),[&](const auto& member) {
+            return member.session_mod_id == id && member.final_weight > 0;
+        });
+        PC_CHECK(pick != pool.entries.end() && pool.total_weight > 0);
+        if (pick == pool.entries.end() || pool.total_weight == 0) return;
+        final_ordering_mass *= double(pick->final_weight)/pool.total_weight;
+        PC_CHECK(pc_item_add_mod(&final_carrier,session->gen_type[id],id,
+            session->primary_group[id],0,nullptr) == PC_RESULT_OK);
+    }
+    PC_CHECK(final_ordering_mass > 0 && std::isfinite(final_ordering_mass));
+    PC_CHECK(satisfied_goal_mask(calc.state(calc.intern_item(final_carrier))) == 15);
+    unsigned historical_plain_fill_frames = 0;
+    for (const auto setup : {std::vector<std::uint32_t>{},
+            std::vector<std::uint32_t>{ember},
+            std::vector<std::uint32_t>{ember,registry.index_by_id.at("eldritch_ichor:2")}}) {
+        const auto frame_word = execute_attempt(calc,setup,calc.intern_item(final_carrier));
+        PC_CHECK(frame_word.supported && frame_word.fully_legal && frame_word.entries.size() == 1);
+        if (!frame_word.supported || !frame_word.fully_legal || frame_word.entries.size() != 1) return;
+        pc_item_state frame; PC_CHECK(calc.materialize(frame_word.entries.front().state,frame));
+        const auto historical_node = first_paid(*historical,frame);
+        const auto current_node = first_paid(*current,frame);
+        historical_plain_fill_frames += historical->nodes[historical_node].action.type == ActionType::Exalt;
+        const auto ordinary = registry.index_by_id.at("exalt");
+        const auto word = execute_attempt(calc,{ordinary},frame_word.entries.front().state);
+        PC_CHECK(word.supported && word.fully_legal && word.expected_primitive_actions == 1 &&
+            word.expected_resources == aggregate_resources(registry,{ordinary}));
+        double mass = 0;
+        for (const auto& exit : word.entries) {
+            PC_CHECK(exit.probability > 0 && (satisfied_goal_mask(calc.state(exit.state)) & 15) == 15);
+            PC_CHECK(calc.state(exit.state).prefix_count == 3 && calc.state(exit.state).suffix_count == 2);
+            mass += exit.probability;
+        }
+        PC_CHECK(std::abs(mass-1) <= 1e-12);
+        std::printf("three held native witness: root_ordering_mass=%.17g tiers=%u,%u historical=%s/%u current=%s/%u plain_exalt_exits=%zu mass=%.17g\n",
+            final_ordering_mass,frame.searing_exarch_tier,frame.eater_of_worlds_tier,
+            historical->nodes[historical_node].id.c_str(),static_cast<unsigned>(historical->nodes[historical_node].action.type),
+            current->nodes[current_node].id.c_str(),static_cast<unsigned>(current->nodes[current_node].action.type),
+            word.entries.size(),mass);
+    }
+    PC_CHECK(historical_plain_fill_frames > 0);
     std::printf("partial held native word: steps=2 exits=%zu mass=%.17g all_four_original_affixes_preserved\n",
         attempt.entries.size(),native_mass);
     std::printf("partial held native witness: law=%llu ordering_mass=%.17g goal_mask=%u historical=%s current=%s key=",
@@ -5217,7 +5271,7 @@ void run_solver_partial_held_witness_tests(const char* artifact_dir) {
 // This is deliberately an explicit research selector, not the normal suite.
 // No imported control graph, public proposal or retained incumbent is modified.
 void run_solver_partial_held_recovery_tests(const bool compound_blocker_only, const bool guarded_recovery,
-        const bool persistent_blocker_only) {
+        const bool persistent_blocker_only, const bool full_side_exalt_fill, const bool final_fill_pair) {
     const unsigned first_fixture = persistent_blocker_only ? 6 : compound_blocker_only ? 4 : 0;
     const unsigned end_fixture = persistent_blocker_only || guarded_recovery ? 8 : compound_blocker_only ? 5 : 4;
     for (unsigned fixture = first_fixture; fixture < end_fixture; ++fixture) {
@@ -5299,7 +5353,11 @@ void run_solver_partial_held_recovery_tests(const bool compound_blocker_only, co
         }
         pc_item_state root; pc_item_clear(&root); root.rarity = PC_RARITY_RARE;
         if (fixture == 3) root.eater_of_worlds_tier = 1;
-        CalcContext calc(session,goal,registry,{chaos},false,false,false,std::nullopt,{},false,{},true);
+        const std::vector<std::uint32_t> requested = final_fill_pair ?
+            std::vector<std::uint32_t>{chaos,registry.index_by_id.at("exalt")} :
+            std::vector<std::uint32_t>{chaos};
+        if (final_fill_pair) prices["exalt"] = .43;
+        CalcContext calc(session,goal,registry,requested,false,false,false,std::nullopt,{},false,{},true);
         calc.set_solve_resource_caps(limits.max_discovered_states,limits.max_reforge_work,
             false,limits.max_solver_owned_bytes);
         const auto scope = partial_held_recovery_scope(calc,root,limits);
@@ -5335,6 +5393,26 @@ void run_solver_partial_held_recovery_tests(const bool compound_blocker_only, co
         PC_CHECK(unpriced.advance() && !unpriced.candidate() &&
             unpriced.status() == "no_priced_requested_chaos_acquisition");
         auto carrier = root;
+        if (final_fill_pair && full_side_exalt_fill && fixture == 0) {
+            // The private fill cannot acquire authority from a price or from
+            // an action outside the caller's requested scope.
+            CalcContext no_exalt(session,goal,registry,{chaos},false,false,false,
+                std::nullopt,{},false,{},true);
+            no_exalt.set_solve_resource_caps(10000,1000000,false,256ull << 20);
+            PartialHeldRecoveryProducer unrequested(no_exalt,root,prices,limits,1u << anchor_slot,true,true,true,true);
+            for (unsigned step = 0; step < 40000 && !unrequested.done(); ++step) unrequested.advance();
+            PC_CHECK(unrequested.done() && !unrequested.candidate() &&
+                unrequested.status() == "partial_stage_2:no_priced_requested_exalt_fill");
+            auto missing_price = prices; missing_price.erase("exalt");
+            CalcContext unpriced_scope(session,goal,registry,requested,false,false,false,
+                std::nullopt,{},false,{},true);
+            unpriced_scope.set_solve_resource_caps(10000,1000000,false,256ull << 20);
+            PartialHeldRecoveryProducer missing_fill_price(unpriced_scope,root,missing_price,limits,
+                1u << anchor_slot,true,true,true,true);
+            for (unsigned step = 0; step < 40000 && !missing_fill_price.done(); ++step) missing_fill_price.advance();
+            PC_CHECK(missing_fill_price.done() && !missing_fill_price.candidate() &&
+                missing_fill_price.status() == "partial_stage_2:no_priced_requested_exalt_fill");
+        }
         const auto target_progress = compound_blocker ? 3u : 0u;
         for (const auto mod : {target_progress,2u,anchor_slot == 3 ? 5u : 6u,7u})
             PC_CHECK(pc_item_add_mod(&carrier,session->gen_type[mod],mod,
@@ -5398,12 +5476,14 @@ void run_solver_partial_held_recovery_tests(const bool compound_blocker_only, co
         }
         // The retained-side negative control keeps prior routing and guard.
         PartialHeldRecoveryProducer producer(calc,root,prices,limits,1u << anchor_slot,true,
-            guarded_recovery,guarded_recovery && !persistent_blocker_only);
+            guarded_recovery,guarded_recovery && !persistent_blocker_only,full_side_exalt_fill);
         for (unsigned step = 0; step < 40000 && !producer.done(); ++step) producer.advance();
         if (!producer.candidate()) std::printf("private partial fixture=%u construction=%s\n",fixture,producer.status().c_str());
         PC_CHECK(producer.done() && producer.candidate());
         if (!producer.candidate()) return;
         const auto& control = producer.candidate()->control;
+        if (final_fill_pair) std::printf("private final fill pair: fixture=%u treatment=%u exalt_price=%.17g requested_chaos_and_exalt\n",
+            fixture,full_side_exalt_fill,prices.at("exalt"));
         PC_CHECK(producer.candidate()->variant == SelectiveCompletionVariant::PartialHeldRecoveryResearch);
         PC_CHECK(product_completion_proposal_count(calc) == 3);
         // Native selected-owned accounting allows conservative overestimation;
@@ -5421,6 +5501,105 @@ void run_solver_partial_held_recovery_tests(const bool compound_blocker_only, co
         const auto prepared = prepare_finder_candidate(calc,session,root,graph,&control);
         PC_CHECK(prepared.ready() && !prepare_finder_candidate(calc,session,root,graph).ready());
         if (!prepared.ready()) return;
+        if (final_fill_pair) {
+            // Both arms have identical action scope and prices. This four-affix
+            // carrier preserves three held goals and one target goal, with a
+            // positive native Chaos ordering from the unchanged original root.
+            auto final_carrier = root;
+            double ordered_mass = 0;
+            const auto law = rare_reforge_count_law(session->rare_reforge_count_kind);
+            for (const auto& draw : law.draws)
+                if (draw.count == 4) ordered_mass += double(draw.weight)/law.denominator;
+            for (const auto id : {0u,3u,4u,5u}) {
+                ActionContextImpl context(0); context.session = session;
+                const auto& pool = get_weighted_pool(context,&final_carrier,PoolBuildRequest{});
+                const auto found = std::find_if(pool.entries.begin(),pool.entries.end(),[&](const auto& entry) {
+                    return entry.session_mod_id == id && entry.final_weight > 0;
+                });
+                PC_CHECK(found != pool.entries.end() && pool.total_weight > 0);
+                if (found == pool.entries.end() || pool.total_weight == 0) return;
+                ordered_mass *= double(found->final_weight)/pool.total_weight;
+                PC_CHECK(pc_item_add_mod(&final_carrier,session->gen_type[id],id,
+                    session->primary_group[id],0,nullptr) == PC_RESULT_OK);
+            }
+            PC_CHECK(ordered_mass > 0 && std::isfinite(ordered_mass));
+            const auto final_state = calc.intern_item(final_carrier);
+            PC_CHECK(satisfied_goal_mask(calc.state(final_state)) == 15);
+            const auto acquisition = std::find_if(control.nodes.begin(),control.nodes.end(),[&](const auto& current) {
+                return current.kind == FinderControlKind::RunPrimitive && current.binding == chaos;
+            });
+            PC_CHECK(acquisition != control.nodes.end());
+            if (acquisition == control.nodes.end()) return;
+            const auto route = [&](const pc_item_state& item) {
+                auto next = prepared.strategy->node_by_id.at("c"+std::to_string(acquisition->next));
+                for (std::size_t step = 0; step <= prepared.strategy->nodes.size(); ++step) {
+                    const auto& current = prepared.strategy->nodes.at(next);
+                    if (current.kind == StrategyNodeKind::Operation || current.kind == StrategyNodeKind::Terminal)
+                        return next;
+                    const auto edge = std::find_if(current.edges.begin(),current.edges.end(),[&](const auto& e) {
+                        return e.is_default || evaluate_compiled_condition(e.condition,*session,item);
+                    });
+                    if (edge == current.edges.end()) throw std::runtime_error("final fill witness lacks native route");
+                    next = edge->target;
+                }
+                throw std::runtime_error("final fill witness has unpaid cycle");
+            };
+            const auto native_word = [&](const StrategyNode& selected) -> std::vector<std::uint32_t> {
+                const auto bound = std::find_if(control.nodes.begin(),control.nodes.end(),[&](const auto& n) {
+                    return n.kind == FinderControlKind::RunNativeProgram && selected.id ==
+                        "c"+std::to_string(&n-control.nodes.data());
+                });
+                if (bound != control.nodes.end())
+                    return calc.operators().at(control.programs.at(bound->binding).operator_index).primitive_program;
+                const auto resolved = resolve_strategy_operation(selected,registry,*session);
+                if (!resolved.resolved()) throw std::runtime_error("final fill witness lacks trusted native word");
+                return {resolved.descriptor_index};
+            };
+            const auto selected = native_word(prepared.strategy->nodes.at(route(final_carrier)));
+            PC_CHECK(registry.actions.at(selected.back()).params.type ==
+                (full_side_exalt_fill ? ActionType::Exalt : ActionType::EldritchChaos));
+            if (full_side_exalt_fill) {
+                const auto fill = execute_attempt(calc,selected,final_state);
+                PC_CHECK(fill.supported && fill.fully_legal && fill.choice_groups.empty());
+                PC_CHECK(fill.expected_primitive_actions == 1 &&
+                    fill.expected_resources == aggregate_resources(registry,selected));
+                double mass = 0; unsigned full_misses = 0, blocked_misses = 0;
+                for (const auto& exit : fill.entries) {
+                    PC_CHECK(exit.probability > 0);
+                    PC_CHECK((satisfied_goal_mask(calc.state(exit.state)) & 15) == 15);
+                    pc_item_state after; PC_CHECK(calc.materialize(exit.state,after));
+                    PC_CHECK((reverse ? after.suffix_count : after.prefix_count) == 3);
+                    PC_CHECK((reverse ? after.prefix_count : after.suffix_count) == 2);
+                    if (!calc.is_goal_state(calc.state(exit.state))) {
+                        const auto second_word = native_word(prepared.strategy->nodes.at(route(after)));
+                        const auto second_type = registry.actions.at(second_word.back()).params.type;
+                        PC_CHECK(second_type == ActionType::Exalt || second_type == ActionType::EldritchChaos);
+                        if (second_type == ActionType::EldritchChaos) ++blocked_misses;
+                        else {
+                            const auto second = execute_attempt(calc,second_word,exit.state);
+                            PC_CHECK(second.supported && second.fully_legal);
+                            for (const auto& next : second.entries) {
+                                pc_item_state full; PC_CHECK(calc.materialize(next.state,full));
+                                PC_CHECK(full.prefix_count == 3 && full.suffix_count == 3);
+                                if (calc.is_goal_state(calc.state(next.state))) continue;
+                                const auto cleanup_word = native_word(prepared.strategy->nodes.at(route(full)));
+                                PC_CHECK(registry.actions.at(cleanup_word.back()).params.type == ActionType::EldritchAnnul);
+                                const auto cleanup = execute_attempt(calc,cleanup_word,next.state);
+                                PC_CHECK(cleanup.supported && cleanup.fully_legal &&
+                                    cleanup.expected_resources == aggregate_resources(registry,cleanup_word));
+                                for (const auto& cleaned : cleanup.entries)
+                                    PC_CHECK((satisfied_goal_mask(calc.state(cleaned.state)) & 7) == 7);
+                                ++full_misses;
+                            }
+                        }
+                    }
+                    mass += exit.probability;
+                }
+                PC_CHECK(std::abs(mass-1) <= 1e-12 && full_misses > 0);
+                std::printf("private final fill native witness: fixture=%u ordering_mass=%.17g fill_mass=%.17g cleanup_words=%u blocked_misses=%u held_mask=7 target_progress_preserved\n",
+                    fixture,ordered_mass,mass,full_misses,blocked_misses);
+            }
+        }
         // Route from the successor of the compulsory original-root acquisition,
         // never pass an already-acquired carrier off as the original request.
         const auto acquire = std::find_if(control.nodes.begin(),control.nodes.end(),
@@ -5454,7 +5633,7 @@ void run_solver_partial_held_recovery_tests(const bool compound_blocker_only, co
         if (guarded_recovery) {
             PC_CHECK(std::count_if(control.nodes.begin(),control.nodes.end(),[](const auto& current) {
                 return current.kind == FinderControlKind::TestMissingGoalRollable;
-            }) == 2);
+            }) == (full_side_exalt_fill ? 4 : 2));
             const auto guarded = std::find_if(control.nodes.begin(),control.nodes.end(),[&](const auto& current) {
                 return current.kind == FinderControlKind::TestMissingGoalRollable &&
                     current.binding == (reverse ? PC_SIDE_SUFFIX : PC_SIDE_PREFIX);
@@ -5683,6 +5862,30 @@ void run_solver_partial_held_recovery_tests(const bool compound_blocker_only, co
         }
         for (const auto key : {"chaos","eldritch_exalt","eldritch_annul","eldritch_chaos"})
             PC_CHECK(checked.expected_consumption.contains(key) && checked.expected_consumption.at(key) > 0);
+        if (full_side_exalt_fill)
+            PC_CHECK(checked.expected_consumption.contains("exalt") && checked.expected_consumption.at("exalt") > 0);
+        if (final_fill_pair) {
+            // Potential exact reuse classes only. Occurrence identity includes
+            // its held mask/intent; the immutable enclosing problem supplies
+            // goals, laws, scope and prices. No entry is skipped or merged.
+            std::set<std::vector<std::uint64_t>> carriers, carrier_occurrences;
+            unsigned positives = 0;
+            for (const auto& entry : checked.policy_entries.entries) {
+                if (!(entry.root_expected_visits > 0)) continue;
+                const auto item = exact_item_state_key(entry.item);
+                const std::vector<std::uint64_t> carrier_key(item.begin(),item.end());
+                carriers.insert(carrier_key);
+                auto key = entry.selected_operator_identity;
+                key.push_back(0x4558414354454e54ull);
+                key.insert(key.end(),carrier_key.begin(),carrier_key.end());
+                carrier_occurrences.insert(std::move(key));
+                ++positives;
+            }
+            PC_CHECK(positives == checked.policy_entries.entries.size() && !carrier_occurrences.empty());
+            std::printf("private exact entry reuse projection: fixture=%u treatment=%u positives=%u carriers=%zu carrier_occurrences=%zu potential_redundant=%zu none_dropped\n",
+                fixture,full_side_exalt_fill,positives,carriers.size(),carrier_occurrences.size(),
+                positives-carrier_occurrences.size());
+        }
         unsigned entries = 0;
         try {
             SelectiveProgrammeEntryValidator validator(calc,session,control,checked.policy_entries,prices,limits);
@@ -5822,6 +6025,48 @@ void run_solver_entry_budget_tests() {
     chained.set_reforge_work_budget_owner(&exact);
     PC_CHECK(chained.remaining_reforge_work_budget() == 0);
     chained.set_reforge_work_budget_owner(nullptr);
+    // Causal ownership-observation witness on one unchanged control/census.
+    // Native caps and checker lifetime do not change between these two arms.
+    unsigned control_steps = 0;
+    std::uint64_t control_work = 0, control_active = 0;
+    for (const bool fast : {false,true}) {
+        SelectiveProgrammeEntryValidator validator(source,session,control,census,prices,limits);
+        std::uint64_t observation_ns = 0, advance_ns = 0, audit_ns = 0, peak = 0;
+        unsigned steps = 0, audits = 0, previous_entries = 0;
+        const auto elapsed = [](const auto begin) {
+            return static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now()-begin).count());
+        };
+        while (!validator.done() && steps < 40000) {
+            auto began = std::chrono::steady_clock::now();
+            validator.advance(1); advance_ns += elapsed(began); ++steps;
+            began = std::chrono::steady_clock::now();
+            const auto bytes = fast ? validator.fast_estimated_owned_bytes() : validator.estimated_owned_bytes();
+            observation_ns += elapsed(began); peak = std::max(peak,bytes);
+            PC_CHECK(bytes < limits.max_solver_owned_bytes);
+            if (validator.validated_entries() != previous_entries || validator.done()) {
+                began = std::chrono::steady_clock::now();
+                const auto audited = validator.audited_estimated_owned_bytes();
+                const auto ledger = validator.fast_estimated_owned_bytes();
+                audit_ns += elapsed(began); ++audits;
+                PC_CHECK(ledger >= audited);
+                previous_entries = validator.validated_entries();
+            }
+        }
+        PC_CHECK(validator.done() && validator.validated_entries() == census.entries.size());
+        PC_CHECK(validator.positive_entries() == 6 && validator.logical_work() == 48);
+        if (!fast) {
+            control_steps = steps; control_work = validator.logical_work(); control_active = validator.active_work();
+        } else {
+            PC_CHECK(steps == control_steps && validator.logical_work() == control_work &&
+                validator.active_work() == control_active);
+        }
+        std::printf("native entry accounting witness: observer=%s steps=%u entries=%u logical=%llu active=%llu observation_ns=%llu advance_ns=%llu audited_ns=%llu audits=%u validator_selected_peak=%llu checker_retained=1\n",
+            fast ? "ledger" : "full",steps,validator.validated_entries(),
+            static_cast<unsigned long long>(validator.logical_work()),static_cast<unsigned long long>(validator.active_work()),
+            static_cast<unsigned long long>(observation_ns),static_cast<unsigned long long>(advance_ns),
+            static_cast<unsigned long long>(audit_ns),audits,static_cast<unsigned long long>(peak));
+    }
     // The original immutable result and all six positive entries stayed alive.
     PC_CHECK(finder_evaluation_accepted(checker.result()) && checker.result().policy_entries.entries.size() == 6);
 }

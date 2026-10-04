@@ -68,6 +68,7 @@ struct Arguments {
     std::string fixed_graph_hash;
     bool partial_held_construction_witness = false;
     bool partial_held_root_check = false;
+    bool partial_held_final_fill = false;
     fs::path development_checkpoint_save;
     fs::path development_checkpoint_load;
     std::string case_id;
@@ -3549,7 +3550,7 @@ int run_partial_held_construction_witness(pc_data_handle data, const Value& spec
     if (outer>=limits.max_solver_owned_bytes)
         throw std::length_error("construction witness has no aggregate generation allowance");
     auto allowance=limits;allowance.max_solver_owned_bytes-=outer;
-    PartialHeldRecoveryProducer producer(calc,root,handles.economy->impl->prices,allowance,1u<<3,true);
+    PartialHeldRecoveryProducer producer(calc,root,handles.economy->impl->prices,allowance,1u<<3,true,true,true,args.partial_held_final_fill);
     std::uint64_t peak=0;
     const auto memory=[&](const std::uint64_t extra=0) {
         const auto live=owner.fast_estimated_owned_bytes()+calc.fast_estimated_owned_bytes()+
@@ -3627,6 +3628,68 @@ int run_partial_held_construction_witness(pc_data_handle data, const Value& spec
         resources<<escape_json(key)<<':'<<quantity;
     }
     resources<<'}';
+    std::ostringstream final_witness;
+    if (args.partial_held_final_fill) {
+        auto final_carrier=root; double positive_ordering=0;
+        for (const auto& draw:law.draws) if (draw.count==4) positive_ordering+=double(draw.weight)/law.denominator;
+        for (const auto id:{mod("LocalBaseArmourAndEvasionRating8"),mod("LocalIncreasedArmourAndEvasion8"),
+                mod("LocalIncreasedArmourAndEvasionAndStunRecovery6"),mod("AdditionalPhysicalDamageReduction5_")}) {
+            ActionContextImpl context(0);context.session=calc.shared_session();
+            const auto& pool=get_weighted_pool(context,&final_carrier,PoolBuildRequest{});
+            const auto pick=std::find_if(pool.entries.begin(),pool.entries.end(),[&](const auto& member) {
+                return member.session_mod_id==id && member.final_weight>0;
+            });
+            if (pick==pool.entries.end() || pool.total_weight==0)
+                throw std::runtime_error("final-side witness lacks positive original-root ordering");
+            positive_ordering*=double(pick->final_weight)/pool.total_weight;
+            if (pc_item_add_mod(&final_carrier,session.gen_type[id],id,session.primary_group[id],0,nullptr)!=PC_RESULT_OK)
+                throw std::runtime_error("final-side exact carrier insertion failed");
+        }
+        const auto final_state=calc.intern_item(final_carrier);
+        if (!(positive_ordering>0) || satisfied_goal_mask(calc.state(final_state))!=15)
+            throw std::runtime_error("final-side native reachability identity drifted");
+        auto next=prepared.strategy->node_by_id.at("c"+std::to_string(acquisition->next));
+        for (std::size_t step=0;step<=prepared.strategy->nodes.size();++step) {
+            const auto& node=prepared.strategy->nodes.at(next);
+            if (node.kind==StrategyNodeKind::Operation || node.kind==StrategyNodeKind::Terminal) break;
+            const auto edge=std::find_if(node.edges.begin(),node.edges.end(),[&](const auto& candidate) {
+                return candidate.is_default || evaluate_compiled_condition(candidate.condition,session,final_carrier);
+            });
+            if (edge==node.edges.end()) throw std::runtime_error("generated final-side carrier lacks native route");
+            next=edge->target;
+        }
+        const auto& fill_node=prepared.strategy->nodes.at(next);
+        const auto resolved=resolve_strategy_operation(fill_node,calc.registry(),session);
+        if (!resolved.resolved() || calc.registry().actions.at(resolved.descriptor_index).params.type!=ActionType::Exalt)
+            throw std::runtime_error("ordinary generated final-side decision is not requested Exalt");
+        const auto fill=execute_attempt(calc,{resolved.descriptor_index},final_state);
+        if (!fill.supported || !fill.fully_legal || !fill.choice_groups.empty() ||
+            fill.expected_primitive_actions!=1 || fill.expected_resources!=aggregate_resources(calc.registry(),{resolved.descriptor_index}))
+            throw std::runtime_error("generated final-side native fill word mismatch");
+        double final_mass=0;
+        for (const auto& exit:fill.entries) {
+            if (!(exit.probability>0) || (satisfied_goal_mask(calc.state(exit.state))&15)!=15 ||
+                calc.state(exit.state).prefix_count!=3 || calc.state(exit.state).suffix_count!=2)
+                throw std::runtime_error("generated final-side fill loses held or target progress");
+            final_mass+=exit.probability;
+        }
+        if (std::abs(final_mass-1)>1e-12) throw std::runtime_error("generated final-side word mass mismatch");
+        memory(graph.capacity()+1+refinement::strategy_impl_owned_bytes(*prepared.strategy)+
+            imprint_attempt_kernel_nested_bytes(word)+imprint_attempt_kernel_nested_bytes(fill));
+        std::ostringstream fill_resources;fill_resources<<std::setprecision(17)<<'{';bool first_fill_resource=true;
+        for (const auto& [key,quantity]:fill.expected_resources) {
+            if (!first_fill_resource) fill_resources<<',';first_fill_resource=false;
+            fill_resources<<escape_json(key)<<':'<<quantity;
+        }
+        fill_resources<<'}';
+        final_witness<<std::setprecision(17)<<",\"final_side_witness\":{\"route\":"<<escape_json(fill_node.id)
+            <<",\"action\":"<<escape_json(calc.registry().actions.at(resolved.descriptor_index).id)
+            <<",\"held_goal_mask\":7,\"incoming_goal_mask\":15,\"positive_root_ordering_mass\":"<<positive_ordering
+            <<",\"exact_carrier_key\":"<<numbers(exact_item_state_key(final_carrier))
+            <<",\"native_word_mass\":"<<final_mass<<",\"native_word_exits\":"<<fill.entries.size()
+            <<",\"native_word_steps\":1,\"native_resources\":"<<fill_resources.str()
+            <<",\"every_native_exit_preserves_all_four_goals\":true}";
+    }
     std::ofstream report(construction_path);report<<std::setprecision(17)
         <<"{\"kind\":\"partial_held_construction_witness_v1\",\"case\":"<<escape_json(required_string(specification,"id"))
         <<",\"constructed\":true,\"graph_hash\":"<<escape_json(finder_candidate_graph_hash(graph))
@@ -3639,6 +3702,7 @@ int run_partial_held_construction_witness(pc_data_handle data, const Value& spec
         <<",\"source_operator_index\":"<<binding.operator_index
         <<",\"generation_work\":"<<parent.telemetry().reforge_logical_work_v1
         <<",\"conservative_reserved_peak\":"<<peak<<",\"transient_reservation\":"<<transient_reservation<<",\"nodes\":"<<control.nodes.size()<<",\"programs\":"<<control.programs.size()
+        <<",\"private_final_fill\":"<<(args.partial_held_final_fill?"true":"false")<<final_witness.str()
         <<",\"original_root_acceptance\":\"unrun\",\"every_positive_entry_acceptance\":\"unrun\",\"economic_qualification\":false}\n";
     const bool captured = report && std::ifstream(graph_path).good();
     report.close();
@@ -7008,6 +7072,7 @@ Arguments parse_arguments(int argc, char** argv) {
         else if (argument == "--fixed-graph-hash") args.fixed_graph_hash=value("--fixed-graph-hash");
         else if (argument == "--partial-held-construction-witness") args.partial_held_construction_witness=true;
         else if (argument == "--partial-held-root-check") args.partial_held_root_check=true;
+        else if (argument == "--partial-held-final-fill") args.partial_held_final_fill=true;
         else if (argument == "--partial-output") {
             args.partial_output = value("--partial-output");
         }
@@ -7220,6 +7285,8 @@ Arguments parse_arguments(int argc, char** argv) {
             args.exact_strategy_evaluation_time_limit_seconds!=0 || args.goal_progress_gated_reforges)
             throw std::runtime_error("fixed-graph pair requires one Finder case, input/hash/output and no solve/verification diagnostic alterations");
     }
+    if (args.partial_held_final_fill && (!args.partial_held_construction_witness || args.partial_held_root_check))
+        throw std::runtime_error("private final fill requires construction-only witness; root experiment is not declared");
     if ((args.partial_held_construction_witness || args.partial_held_root_check) &&
         (args.case_id != "sol61-trace-conquest5-currentmodel-120" || args.output.empty() ||
          args.solver_mode != "current" || args.validate_only || args.action_layout_diagnostic ||

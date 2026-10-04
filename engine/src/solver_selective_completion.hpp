@@ -87,6 +87,7 @@ class SelectiveCompletionProducer {
     bool reroll_without_target_progress_ = false;
     bool guard_missing_goal_rollability_ = false;
     bool escape_persistent_blockers_ = false;
+    bool full_side_exalt_fill_ = false;
     Phase phase_ = Phase::Begin;
     std::string status_ = "pending";
     std::optional<SelectiveCompletionCandidate> candidate_;
@@ -130,7 +131,7 @@ class PartialHeldRecoveryProducer {
         const std::unordered_map<std::string, double>& prices,
         const SolveOptions& limits, std::uint32_t anchor_mask,
         bool private_gate = false, bool guard_missing_rollability = true,
-        bool escape_persistent_blockers = true);
+        bool escape_persistent_blockers = true, bool full_side_exalt_fill = false);
     bool advance(std::uint32_t max_work_items = 1);
     bool done() const { return done_; }
     const std::optional<SelectiveCompletionCandidate>& candidate() const {
@@ -157,6 +158,7 @@ class PartialHeldRecoveryProducer {
     bool private_gate_ = false;
     bool guard_missing_rollability_ = true;
     bool escape_persistent_blockers_ = true;
+    bool full_side_exalt_fill_ = false;
     std::string status_ = "pending";
     std::unique_ptr<SelectiveCompletionProducer> active_;
     std::array<std::optional<SelectiveCompletionCandidate>, 4> stages_;
@@ -188,6 +190,10 @@ class SelectiveProgrammeEntryValidator {
     std::uint64_t logical_work() const;
     std::uint64_t active_work() const;
     std::uint64_t estimated_owned_bytes() const;
+    // Finite diagnostic comparison only: the retained census stays borrowed.
+    // Existing consumers retain the full ownership calculation until qualified.
+    std::uint64_t fast_estimated_owned_bytes() const;
+    std::uint64_t audited_estimated_owned_bytes() const;
 
   private:
     const CalcContext& problem_;

@@ -591,3 +591,87 @@ Default-off finite semantic/budget controls remain their own evidence. Root-only
 cost and incomplete positive validation remain the negative economic result.
 Future cap-qualified evaluation must close peak/overlap observation or retain
 this gap openly; no new memory experiment or larger case is launched here.
+
+## Selected follow-up: source-only three-held/two-target ordinary fill
+
+Parent selected this cut after R11 and allocated LOCAL next to CI/product gates.
+The new [finite request](final-fill-finite-request.json) pins this source and
+frozen inputs. All new builds/tests/construction are UNRUN. No Conquest root
+repeat, cap increase, production switch, retained upper or publication occurs.
+Independent review precedes the requested finite LOCAL batch.
+
+The private composer now optionally reuses the existing requested/priced Exalt
+selection from protected fill for its final three-held/two-target stages. The
+flag defaults false. Three separate held-goal tests establish three distinct
+natural affixes on the other side, exhausting that side's native capacity.
+Below target capacity, a target T1 plus the exact native missing-goal eligibility
+predicate permits ordinary Exalt; every existing held/compatibility test precedes
+it. A removable target blocker pays the existing side reroll. A persistent
+retained-side blocker still escapes by original paid Chaos. Full target capacity
+keeps the existing paid Annul route, isolating the fill change. Every paid step
+returns to the exact clean goal test; cleanup is never treated as free. There is
+no base-specific rule, new native crafting law, public proposal or graph import.
+
+The historical current-law graph has one plain Exalt operation s12, two Eldritch
+Exalt operation words and numerous separately blocked Exalt words. This static
+projection motivates the missing general capacity/progress composition; it does
+not prove the new candidate reconstructs history or recovers its price. The
+native original-request witness now compares the adjacent three-held carrier
+across paid tier frames using the native condition evaluator. Its expected
+historical plain-fill route is a finite gate, still UNRUN. The existing benchmark
+construction owner has a new private --partial-held-final-fill modifier and
+freezes ordinary generated final-carrier Exalt on the exact original Conquest
+request. It explicitly rejects that modifier for a full root check. Capture the
+new complete graph pin after success, without substituting it for R8's old pin.
+
+The paired finite selector runs the eight existing fixture identities twice,
+with identical explicit Chaos+Exalt scope and Exalt.43 price in both arms. It
+checks lawful positive root ordering, both side orientations, preserved held and
+incoming target progress, blocked draws, actual routed paid Annul cleanup,
+unrequested/unpriced refusal, original-root acceptance, every native positive
+entry and the existing semantic tamper negative. It prints exact carrier/full
+occurrence reuse counts without skipping any entry. The old Chaos-only eight
+roots remain separate legacy semantic/cost/878-entry controls. No cross-scope
+cost comparison is a financial gate. All finite caps/tolerances are preserved.
+
+### Entry-time finding and smallest ownership witness
+
+R11's150.068s is the WHOLE generation/checker/entry pipeline. The deadline starts
+before construction and is passed into root checking; no phase elapsed fields
+were recorded. Thus the receipt cannot establish150s spent in entry validation.
+Its1,884,694 logical units (717,735 entry units) exclude ownership scans, context
+construction and occurrence lookup; they are not a CPU-time counter.
+
+The concrete hot observation path is benchmark memory after EACH one-checkpoint
+validator advance, then validator.estimated_owned_bytes, then full recursive
+CalcContext.calculate_owned_bytes. That calculation scans all retained state,
+distribution, operator, option-kernel and reforge payloads, creating deduplication
+sets. The native cursor already has a bounded incremental ledger. On suspension,
+entry validation also repeats the control-node/string lookup and full occurrence
+key construction for the unchanged entry. Admission itself already reuses exact
+carrier/query completed membership and native templates; completed carrier-local
+contexts are deliberately retained at zero to avoid dead-cache memory growth.
+None of those observations measures their contribution to R11's wall time.
+
+Two diagnostic ownership accessors expose the existing fast ledger and its full
+undercount audit, while production consumers retain the current full estimator.
+The six-real-positive-entry owner fixture measures independent full/ledger
+observers of the SAME graph/census/prices/scope, preserves checker lifetime and
+requires exact48 work, identical checkpoint/active-work counts, all six entries
+and a full audit at each completed entry. It prints observation/advance/audit
+nanoseconds. This is a finite selected-accounting compatibility measurement,
+not complete aggregate peak evidence or permission for early checker release.
+Only measured meaningful observation savings and matching audited ownership
+would justify a later hot-path switch. Hoisting immutable per-entry lookup is a
+separate small option if profiling supports it. Cross-occurrence validation
+reuse needs exact complete carrier/word/held-mask/intent identity under the same
+immutable problem, plus retained per-entry coverage; no cache certificate is
+introduced here. The source-only duplicate projection will show whether that
+hypothesis has any finite opportunity before spending a policy run.
+
+The bounded next batch uses existing supervision, two compiler jobs, serial
+finite selectors and one construction-only capture, stopping on first failure.
+It contains NO Conquest solve/evaluation. Finder generation/lifetime, early
+release, complete aggregate peak observation, economic/all-entry qualification,
+control cohort and matching WASM remain open. R9/R10 failures, R11 negative cost
+and incomplete968/12719 coverage remain unchanged evidence.

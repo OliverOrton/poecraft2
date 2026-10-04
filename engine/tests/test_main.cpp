@@ -83,6 +83,12 @@ int main(int argc, char** argv) {
         std::printf("private persistent blocker rejection tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
         return pctest::g_failures == 0 ? 0 : 1;
     }
+    if (argc > 1 && std::string(argv[1]) == "--solver-partial-held-final-fill-only") {
+        run_solver_partial_held_recovery_tests(false,true,false,false,true);
+        run_solver_partial_held_recovery_tests(false,true,false,true,true);
+        std::printf("private paired final fill tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     if (argc > 1 && std::string(argv[1]) == "--solver-partial-held-guarded-only") {
         run_solver_partial_held_recovery_tests(false,true);
         std::printf("private guarded recovery tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);

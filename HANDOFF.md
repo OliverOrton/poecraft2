@@ -1,21 +1,22 @@
-# Armour recovery: qualified entry owner; negative full Conquest result
+# Armour: source-only final fill prepared; finite LOCAL pending
 
-Isolated sourcea585ec46 R11:5603finite checks pass; eight R8 roots/all878entries
-unchanged. Entry owner enforces1/47/48 work, shared and discovery/memory caps.
-R9 compile/R10 typed-cap diagnostic failures preserved. One frozen original
-Conquest graph matches R8 exact bytes. Root converged/success1/full prices with
-diagnostic cost896765.8190299857; entry deadline150s reached at968/12719positive
-entries. No checked upper, retention or activation. [Finite receipt](docs/active/2026-10-04-sol61-armour-recovery/root-r11-summary.json)
-and [Conquest receipt](docs/active/2026-10-04-sol61-armour-recovery/conquest-root-r11-summary.json)
-pin work1884694/50M and all source/binary/input bytes. Memory876476133 is a
-between-slice reservation observation, NOT complete aggregate peak/cap proof;
-review7c8f0fb8 identifies missing transient overlap, no demonstrated overrun.
-LOCAL released10:34:51UTC; no survivors, repeat or cap increase. [Living record](docs/active/2026-10-04-sol61-armour-recovery/README.md)
-owns negative:89.8%cost from EldritchChaos, final c86 repeats18864 times.
-Three-held/two-target final stages have reroll/annul but no fill; bounded native
-growth there is a next source lead for parent selection, not measured recovery.
-Finder generation/lifecycle, early checker release, economic/all-entry,
-consumer/control/WASM gates remain open. No main publication or activation.
+After293be87e parent selected generic three-held/two-target Exalt composition
+and entry-time investigation. Private default-off final stages now preserve
+below-capacity target progress via requested/priced ordinary Exalt, exact native
+eligibility and existing blocker/paid cleanup paths. Paired native finite tests,
+historical-word witness, same-census ledger/full-scan observation pair and
+original-Conquest construction-only capture are prepared, all UNRUN.
+[Bounded request](docs/active/2026-10-04-sol61-armour-recovery/final-fill-finite-request.json)
+pins source/inputs; independent review first, LOCAL currently owned by CI/product
+gates. No new full Conquest run, cap increase or production activation.
+R11 remains diagnostic896765.8190299857, success1 but only968/12719 positive
+entries validated; no checked upper. Its150s covers the entire pipeline, without
+phase timing. Full recursive ownership scans occur after every entry cursor
+checkpoint; exact admission cache already exists. New profiling/reuse projections
+will test overhead opportunity without omitting entries or releasing the borrowed
+census. R11 memory876476133 remains incomplete between-step/reservation evidence,
+not aggregate peak or1GiB compliance. [Living record](docs/active/2026-10-04-sol61-armour-recovery/README.md)
+retains prior receipts, failures and all economic/consumer/Finder/WASM gaps.
 
 # Qualified solver CI repair (2026-10-03)
 
