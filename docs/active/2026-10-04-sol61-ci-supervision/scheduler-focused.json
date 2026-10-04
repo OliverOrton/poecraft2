@@ -1,0 +1,13 @@
+{
+  "exit_code": 0,
+  "timed_out": false,
+  "canceled": false,
+  "cancellation_mode": null,
+  "cancellation_ack_ms": null,
+  "process_id": 61512,
+  "process_identity_token": "61512:134355606548260006",
+  "survivor": false,
+  "survivor_check": "process_group_kill_then_parent_poll",
+  "wall_ms": 7713.4678000584245,
+  "output_tail": "...............                                                          [100%]\n15 passed in 7.25s\n"
+}

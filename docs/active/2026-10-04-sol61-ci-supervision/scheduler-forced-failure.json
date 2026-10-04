@@ -1,0 +1,13 @@
+{
+  "exit_code": 1,
+  "timed_out": false,
+  "canceled": false,
+  "cancellation_mode": null,
+  "cancellation_ack_ms": null,
+  "process_id": 36700,
+  "process_identity_token": "36700:134355607441408041",
+  "survivor": false,
+  "survivor_check": "process_group_kill_then_parent_poll",
+  "wall_ms": 1726.4919998124242,
+  "output_tail": "F                                                                        [100%]\n================================== FAILURES ===================================\n__________ test_bounded_dispatch_runs_two_ordinary_jobs_concurrently __________\n\ntmp_path = WindowsPath('C:/Users/Oliver/AppData/Local/Temp/pytest-of-Oliver/pytest-278/test_bounded_dispatch_runs_two0')\nmonkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000026FA5DCA650>\n\n    def test_bounded_dispatch_runs_two_ordinary_jobs_concurrently(\n        tmp_path: Path, monkeypatch: pytest.MonkeyPatch\n    ) -> None:\n        service = _service(\n            tmp_path, worker_headroom_bytes=0, global_safety_reserve_bytes=0,\n        )\n        for index in range(2):\n            service.submit_job(\n                case_id=_case_id(service), idempotency_key=f\"parallel-{index}\"\n            )\n        counter = {\"active\": 0, \"peak\": 0}\n        entered, release = threading.Event(), threading.Event()\n        monkeypatch.setattr(\n            \"poecraft_ingest.solver_lab_supervisor._run_case\",\n            _fake_completed_run(\n                counter, entered=entered, release=release, required_active=2,\n            ),\n        )\n        supervisor = SolverLabSupervisor(\n            service, max_workers=2, memory_budget_bytes=2 * GIB,\n            memory_safety_reserve_bytes=0,\n            available_memory_provider=lambda: 4 * GIB, poll_interval_seconds=0.01,\n        )\n        supervisor.start()\n>       _wait_for(entered.is_set, supervisor=supervisor)\n\ntools\\ingest\\tests\\test_solver_lab_supervisor.py:371: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nargs = (<bound method Event.is_set of <threading.Event at 0x26fa5e02650: set>>,)\nkwargs = {'supervisor': <poecraft_ingest.solver_lab_supervisor.SolverLabSupervisor object at 0x0000026FA5D374D0>}\n\n    def fail(*args, **kwargs):\n        original(*args, **kwargs)\n>       raise AssertionError(\"deliberately fail after both workers entered\")\nE       AssertionError: deliberately fail after both workers entered\n\nout\\sol61-ci-supervision\\initial\\forced_failure.py:8: AssertionError\n=========================== short test summary info ===========================\nFAILED tools\\ingest\\tests\\test_solver_lab_supervisor.py::test_bounded_dispatch_runs_two_ordinary_jobs_concurrently\n1 failed, 14 deselected in 1.12s\n"
+}
