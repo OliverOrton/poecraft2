@@ -823,8 +823,11 @@ class _WindowsProcessJob:
                             image = ctypes.create_unicode_buffer(32768)
                             length = wintypes.DWORD(len(image))
                             image_ok = api.QueryFullProcessImageNameW(handle, 0, image, ctypes.byref(length))
+                            image_error = None if image_ok else ctypes.get_last_error()
                             observed.append({"pid": int(pid), "exit_signal": "live",
                                              "image": image.value if image_ok else None,
+                                             "image_query_error": image_error,
+                                             "exit_wait_after_image_query": int(api.WaitForSingleObject(handle, 0)),
                                              "owned_job_member": True})
                             observed[-1]["platform_console_host"] = _owned_console_host(
                                 observed[-1], self.system_console_image)
@@ -1048,6 +1051,7 @@ def run_isolated_process(
         "descendants_after_parent_exit": descendants_after_parent_exit,
         "descendant_observations": descendant_observations,
         "console_host_cleanup_performed": console_host_cleanup_performed,
+        "system_console_image": getattr(process_job, "system_console_image", None),
         "process_tree_owner": "windows_job" if process_job is not None else "process_group",
         "cleanup_drain_timed_out": drain_timed_out,
         "cleanup_error": cleanup_error,
