@@ -543,7 +543,7 @@ RecombBuilderExport export_recomb_builder_policy(const RecombSolverRequest& requ
     };
     unsigned edge_count=0;
     const auto edge=[&](const std::string& from,const std::string& to,const std::string& condition="") {
-        edges.push_back("{\"id\":\"edge/"+std::to_string(edge_count++)+"\",\"from\":"+bridge_quote(from)+",\"to\":"+bridge_quote(to)+
+        edges.push_back("{\"id\":\"edge_"+std::to_string(edge_count++)+"\",\"from\":"+bridge_quote(from)+",\"to\":"+bridge_quote(to)+
             (condition.empty()?",\"is_default\":true":",\"condition\":"+condition)+'}');
     };
     const auto op=[&](const std::string& id,const std::string& name,const std::string& type,const std::string& params) {
@@ -552,62 +552,68 @@ RecombBuilderExport export_recomb_builder_policy(const RecombSolverRequest& requ
     const auto full=[&](unsigned id) {return "{\"type\":\"full_item_is\",\"base_state\":"+random_recomb_base_state_json(result.items.at(id),*request.session)+'}';};
     std::vector<const RecombPolicyDecision*> decisions(result.inventories.size(),nullptr);
     for(const auto& d:result.policy) {require(d.state<decisions.size() && !decisions[d.state],"Duplicate policy state");decisions[d.state]=&d;}
-    node("start","start");node("success","terminal",",\"terminal\":\"success\"");edge("start","state/"+std::to_string(root));
+    node("start","start");node("success","terminal",",\"terminal\":\"success\"");edge("start","state_"+std::to_string(root));
     for(unsigned c=0;c<contexts.size();++c) {
-        const auto context=contexts[c]; const auto id="state/"+std::to_string(c);
+        const auto context=contexts[c]; const auto id="state_"+std::to_string(c);
         if(result.terminal.at(context.state)) {
             int selected=-1;
             for(unsigned i=0;i<2;++i)if(context.slots[i]>=0 && result.item_is_goal.at(context.slots[i])){selected=int(i);break;}
             require(selected>=0,"Export terminal has no accepted physical output");
-            op(id,"Completed item","move_resource","{\"from\":\"slot/"+std::to_string(selected)+"\",\"to\":\"finished\"}");edge(id,"success");continue;
+            op(id,"Completed item","move_resource","{\"from\":\"slot_"+std::to_string(selected)+"\",\"to\":\"finished\"}");edge(id,"success");continue;
         }
         const auto* d=decisions.at(context.state);require(d,"Export missing nonterminal policy decision");
         if(d->kind==RecombDecisionKind::Acquire) {
             const auto& offer=request.acquisitions.at(d->acquisition);
             require(offer.source_kind=="purchase" || offer.checked_feeder,"Unchecked feeder quote cannot become an executable saved feeder");
             const unsigned vacant=context.slots[0]<0?0:1;require(context.slots[vacant]<0,"Export acquisition overwrites a physical resource");
-            const auto resource="offer/"+std::to_string(d->acquisition);
+            const auto resource="offer_"+std::to_string(d->acquisition);
             op(id,offer.checked_feeder?"Saved feeder":"Donor item",offer.checked_feeder?"invoke_feeder":"acquire_resource","{\"resource_id\":"+bridge_quote(resource)+'}');
-            const auto move="move/"+std::to_string(c),route="route/"+std::to_string(c);
-            op(move,"Retain acquired item","move_resource","{\"from\":"+bridge_quote(resource)+",\"to\":\"slot/"+std::to_string(vacant)+"\"}");
+            const auto move="move_"+std::to_string(c),route="route_"+std::to_string(c);
+            op(move,"Retain acquired item","move_resource","{\"from\":"+bridge_quote(resource)+",\"to\":\"slot_"+std::to_string(vacant)+"\"}");
             node(route,"router");edge(id,move);edge(move,route);
             for(const auto& [target,p]:d->outcomes) {
                 require(p>0,"Export contains a nonpositive acquisition outcome");
                 auto next=result.inventories.at(target);
                 for(auto held:context.slots)if(held>=0){auto f=std::find(next.begin(),next.end(),unsigned(held));require(f!=next.end(),"Acquisition loses held input");next.erase(f);}
                 require(next.size()==1,"Acquisition must return one actual full item");auto slots=context.slots;slots[vacant]=int(next[0]);
-                edge(route,"state/"+std::to_string(intern(target,slots)),full(next[0]));
+                edge(route,"state_"+std::to_string(intern(target,slots)),full(next[0]));
             }
         } else if(d->kind==RecombDecisionKind::Recombine) {
             require(context.slots[0]>=0 && context.slots[1]>=0,"Export pair lacks two physical inputs");
-            std::ostringstream params;params<<std::setprecision(17)<<"{\"input_a\":\"slot/0\",\"input_b\":\"slot/1\",\"output\":\"slot/0\",\"use_declared_inputs\":true,\"all_in_attempt_cost_chaos\":"<<*request.recombination_cost_chaos<<'}';
+            // Match the planner's canonical A/B order without reordering or
+            // merging the represented slots of either actual physical item.
+            const auto& inventory=result.inventories.at(context.state);
+            require(inventory.size()==2,"Export canonical pair arity differs");
+            const unsigned first=context.slots[0]==int(inventory[0])?0:1, second=1-first;
+            require(context.slots[first]==int(inventory[0]) && context.slots[second]==int(inventory[1]),"Export physical pair order differs");
+            std::ostringstream params;params<<std::setprecision(17)<<"{\"input_a\":\"slot_"<<first<<"\",\"input_b\":\"slot_"<<second<<"\",\"output\":\"slot_0\",\"use_declared_inputs\":true,\"all_in_attempt_cost_chaos\":"<<*request.recombination_cost_chaos<<'}';
             op(id,"Recombination","recombination",params.str());
             for(const auto& [target,p]:d->outcomes) {
                 require(p>0 && result.inventories.at(target).size()==1,"Pair must consume two and create one actual output");
                 const unsigned item=result.inventories[target][0];
-                edge(id,"state/"+std::to_string(intern(target,{int(item),-1})),full(item));
+                edge(id,"state_"+std::to_string(intern(target,{int(item),-1})),full(item));
             }
         } else if(d->kind==RecombDecisionKind::Discard) {
             const auto spec=result.inventories.at(context.state).at(d->input_a);
             unsigned slot=0;
             if(context.slots[0]!=int(spec) || (d->input_a==1 && context.slots[0]==context.slots[1]))slot=1;
             require(context.slots[slot]==int(spec) && d->outcomes.size()==1 && d->outcomes[0].second==1,"Invalid physical discard policy");
-            op(id,"Discard item","discard_resource","{\"resource_id\":\"slot/"+std::to_string(slot)+"\"}");
+            op(id,"Discard item","discard_resource","{\"resource_id\":\"slot_"+std::to_string(slot)+"\"}");
             auto slots=context.slots;slots[slot]=-1;
-            edge(id,"state/"+std::to_string(intern(d->outcomes[0].first,slots)));
+            edge(id,"state_"+std::to_string(intern(d->outcomes[0].first,slots)));
         } else throw std::invalid_argument("Unsupported export decision");
     }
     pc_item_state empty{};pc_item_clear(&empty);
     const auto base=random_recomb_base_state_json(empty,*request.session);
     std::ostringstream out;out<<std::setprecision(17)<<"{\"version\":\"v1\",\"name\":\"Recombination policy\",\"description\":\"Checked bounded estimated policy; declared acquisition and all-in attempt scenario costs.\",\"start_node_id\":\"start\",\"start_item_present\":false,\"base_state\":"<<base<<",\"resources\":[";
     for(unsigned slot=0;slot<3;++slot) {
-        if(slot)out<<',';const auto id=slot<2?"slot/"+std::to_string(slot):"finished";
+        if(slot)out<<',';const auto id=slot<2?"slot_"+std::to_string(slot):"finished";
         out<<"{\"id\":"<<bridge_quote(id)<<",\"acquisition_price_key\":\"held/"<<slot<<"\",\"base_state\":";
         if(slot<request.initial_items.size())out<<random_recomb_base_state_json(request.initial_items[slot],*request.session)<<",\"initially_owned\":true,\"initial_cost_chaos\":"<<request.initial_item_costs.at(slot);
         else out<<base;out<<'}';
     }
     for(unsigned i=0;i<request.acquisitions.size();++i) {
-        const auto& a=request.acquisitions[i];out<<",{\"id\":\"offer/"<<i<<"\",\"acquisition_price_key\":\"recomb-acquisition/"<<i<<"\",\"base_state\":";
+        const auto& a=request.acquisitions[i];out<<",{\"id\":\"offer_"<<i<<"\",\"acquisition_price_key\":\"recomb-acquisition/"<<i<<"\",\"base_state\":";
         if(a.checked_feeder) {
             const auto child=compile_strategy_json(request.session,a.checked_feeder->document().data(),a.checked_feeder->document().size());
             out<<random_recomb_base_state_json(child->start_item,*request.session)<<",\"feeder\":{\"strategy_id\":"<<bridge_quote(a.checked_feeder->strategy_id())<<",\"revision\":"<<bridge_quote(a.checked_feeder->revision())
@@ -711,7 +717,13 @@ RecombBuilderExport check_recomb_builder_policy(const RecombSolverRequest& reque
                 if(e.condition.kind==ConditionKind::Always || (observed>=0 && next.slots[observed]>=0 &&
                     evaluate_compiled_condition(e.condition,*request.session,result.items[next.slots[observed]]))){selected=&e;break;}
             }
-            if(!selected)selected=fallback;require(selected,"Checked Builder drops a positive no-match outcome");
+            if(!selected)selected=fallback;
+            if(!selected) {
+                std::ostringstream detail;detail<<"Checked Builder drops a positive no-match outcome at "<<node.id<<" observed slot "<<observed;
+                if(observed>=0 && next.slots[observed]>=0)detail<<" key "<<random_recomb_item_key(result.items[next.slots[observed]]);
+                for(const auto& candidate:node.edges)detail<<" edge "<<candidate.id<<" kind "<<int(candidate.condition.kind)<<" key "<<candidate.condition.full_item_key;
+                throw std::invalid_argument(detail.str());
+            }
             if(!selected->input_resource_id.empty())next.incoming=int(slot(selected->input_resource_id));
             else if(node.kind!=StrategyNodeKind::Router)next.incoming=-1;
             next.node=selected->target;mass[intern(next.node,std::move(next.slots),next.incoming)]+=p;

@@ -152,8 +152,10 @@ void run_constraint_witnesses(pc_data_handle data, pc_session_handle ring) {
         {"AislinVeiledSuffix__",RecombOrigin::VeilTemplate},
         {"GrantsCatAspectCrafted",RecombOrigin::BeastAspect},
         {"AccuracyRatingPerFrenzyChargeUber1",RecombOrigin::InfluencedNatural},
-        {"ArmourAndEnergyShieldPercentCrafted_",RecombOrigin::CraftedUnresolved},
+        {"ArmourAndEnergyShieldPercentCrafted_",RecombOrigin::NotExplicit},
         {"BreachBodyAddedColdDamagePerPowerCharge1",RecombOrigin::NonNaturalUnresolved}};
+    // Frozen canonical generation type is unique (33), not a prefix/suffix bench recipe.
+    // Classification knowledge must not turn this catalogue record into numerical support.
     const auto& d = *ring->impl->data;
     auto fixture = std::make_shared<SessionImpl>(); fixture->data = ring->impl->data;
     fixture->base_index = ring->impl->base_index; fixture->item_level = 80;
@@ -168,7 +170,11 @@ void run_constraint_witnesses(pc_data_handle data, pc_session_handle ring) {
     build_session(*fixture,retained);
     for (unsigned i = 0; i < sizeof(fixtures)/sizeof(fixtures[0]); ++i) {
         const auto category = classify_recombination_mod(*fixture,fixture->session_id_by_global_id.at(retained[i]));
+        if (category.origin != fixtures[i].second)
+            std::fprintf(stderr,"taxonomy fixture %s: expected %s, actual %s\n",fixtures[i].first,
+                recombination_origin_name(fixtures[i].second),recombination_origin_name(category.origin));
         PC_CHECK(category.origin == fixtures[i].second);
+        if(i==7) PC_CHECK(!category.explicit_modifier);
         const auto expected = i < 6 ? RecombExclusivity::Exclusive :
             i == 6 ? RecombExclusivity::NonExclusive : RecombExclusivity::Unresolved;
         PC_CHECK(category.exclusivity == expected);
