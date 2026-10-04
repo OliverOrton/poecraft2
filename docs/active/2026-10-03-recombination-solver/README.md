@@ -442,3 +442,27 @@ represented modifier order was merged away. LOCAL is released with no owned
 survivors. Matching WASM, real planner worker/cancellation transport, full web tests,
 rendered combined UI and hosted combined qualification remain unrun/held. The
 unchanged metadata file used by the mocked cache test is not runtime qualification.
+
+## Planner transport source checkpoint (2026-10-04)
+
+The next slice is source-only and unbuilt. The typed service creates a fresh,
+read-only request worker; it captures the full authored request and verifies
+native ABI/data/model/price/goal/scenario/export identities. Abort and wall timeout
+terminate that worker, and completion terminates it before result delivery. Main
+live crafting handles never enter this lifetime. The synchronous native facade
+uses the existing full-item importer and bounded C solver/export owners.
+
+Prepared lifetime tests include a real blocked-worker termination witness;
+the matching-WASM Ring test checks paid complete children, the independent
+recycling export, explicit scenarios and 1,000 actual compiled-worker trials.
+These tests are unrun. The earlier native gate at `823657c0` remains separately
+qualified; its receipt does not qualify this facade/transport. No compiled file
+or frozen data was changed. The source checkpoint records the next LOCAL request,
+serial stage limits, compiler jobs=2, cleanup and remaining product gates.
+
+The [bundle approval receipt](bundle-review-rejection.json) retains the exact
+rejected command and full reviewer reason. Nothing ran from that command and
+no retry occurred. The script would deterministically bundle existing frozen
+bytes but mutate derived public bundles and metadata. Future product bundling
+requires parent resolution of that authorization boundary. Test fixtures reading
+frozen bytes in memory do not qualify product bundle/source metadata.

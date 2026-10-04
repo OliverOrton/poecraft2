@@ -51,7 +51,7 @@ export interface EngineTransport {
     postMessage(message: ClientMessage, transfer?: Transferable[]): void;
     onMessage(handler: (message: WorkerMessage) => void): void;
     onError?(handler: (error: Error) => void): void;
-    terminate?(): void;
+    terminate?(): void | Promise<unknown>;
 }
 
 interface Pending {
@@ -95,6 +95,8 @@ export interface SolverRunOptions {
 
 export class EngineClient {
     private readonly transport: EngineTransport;
+    private readonly readOnlyPlanner: boolean;
+    private plannerDisposed = false;
     private readonly pending = new Map<number, Pending>();
     private nextId = 1;
     private abiVersion = 0;
@@ -102,8 +104,9 @@ export class EngineClient {
     private resolveReady!: () => void;
     private rejectReady!: (error: Error) => void;
 
-    constructor(transport: EngineTransport) {
+    constructor(transport: EngineTransport, options?: {readOnlyPlanner?: boolean}) {
         this.transport = transport;
+        this.readOnlyPlanner = options?.readOnlyPlanner === true;
         this.ready = new Promise((resolve, reject) => {
             this.resolveReady = resolve;
             this.rejectReady = reject;
@@ -114,7 +117,11 @@ export class EngineClient {
 
     /** Create a client backed by a browser Web Worker loaded from this module's
      * sibling engine-worker. Bundlers (Vite) rewrite the worker URL. */
-    static spawn(): EngineClient {
+    static spawn(): EngineClient { return this.spawnWorker(false); }
+
+    static spawnRecombinationPlanner(): EngineClient { return this.spawnWorker(true); }
+
+    private static spawnWorker(readOnlyPlanner: boolean): EngineClient {
         const worker = new Worker(new URL("./engine-worker.ts", import.meta.url), {
             type: "module",
         });
@@ -134,7 +141,7 @@ export class EngineClient {
                     );
             },
             terminate: () => worker.terminate(),
-        });
+        }, {readOnlyPlanner});
     }
 
     /** Resolves once the worker has initialised the WASM module. */
@@ -201,6 +208,12 @@ export class EngineClient {
             signal?: AbortSignal;
         },
     ): Promise<T> {
+        if (this.readOnlyPlanner && this.plannerDisposed)
+            throw new EngineError(4, "Read-only planner worker has already terminated");
+        if (method === "recombinationPlanner" && !this.readOnlyPlanner)
+            throw new EngineError(4, "Recombination planning requires a request-owned worker");
+        if (this.readOnlyPlanner && !["loadData", "dataSummary", "closeData", "recombinationPlanner"].includes(method))
+            throw new EngineError(4, "The read-only planner worker cannot own live crafting resources");
         await this.ready;
         const id = this.nextId++;
         return new Promise<T>((resolve, reject) => {
@@ -248,6 +261,12 @@ export class EngineClient {
             { transfer: [bundle.buffer] },
         );
         return data;
+    }
+
+    /** Synchronous native work: invoke only on a request-owned worker through
+     * runRecombinationPlanner. A queued cancel message cannot interrupt it. */
+    recombinationPlanner(data: number, request: import("./engine-protocol").RecombinationPlannerRequest): Promise<import("./engine-protocol").RecombinationPlannerResponse> {
+        return this.call("recombinationPlanner", {data, request});
     }
 
     dataSummary(data: number): Promise<Record<string, unknown>> {
@@ -683,7 +702,11 @@ export class EngineClient {
         return this.call<SolverTelemetry>("solverTelemetry", { solver });
     }
 
-    dispose(): void {
-        this.transport.terminate?.();
+    dispose(): void | Promise<unknown> {
+        if (this.readOnlyPlanner) {
+            this.plannerDisposed = true;
+            this.onError(new Error("Read-only planner worker disposed"));
+        }
+        return this.transport.terminate?.();
     }
 }

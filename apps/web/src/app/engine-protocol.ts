@@ -1172,3 +1172,52 @@ export interface ResponseMessage {
 
 export type ClientMessage = RequestMessage | CancelMessage | {kind: "finish"; id: number};
 export type WorkerMessage = ReadyMessage | ProgressMessage | ResponseMessage;
+
+/** Read-only bounded planner DTO. item_state is the native version-3 stable-key
+ * export, including actual base/level, every slot, roll and resource flag. */
+export interface RecombinationPlannerRequest {
+    version: "recombination-planner-request-v2";
+    base_key: string;
+    item_level: number;
+    data_identity: [string, string, string, string];
+    model_id: string;
+    price_identity: string;
+    goal_set: unknown;
+    acquisitions: Array<{
+        id: string;
+        source_kind: "purchase" | "completed_feeder" | "checked_feeder";
+        quote_identity: string;
+        item_state: unknown;
+        total_cost_chaos: number;
+        cost_complete: boolean;
+        feeder?: {strategy_id: string; revision: string; document_json: string;
+            output_contract_id: string; paid_start_cost_chaos: number};
+    }>;
+    initial_items: Array<{item_state: unknown; paid_cost_chaos: number}>;
+    all_in_attempt_cost_chaos: number | null;
+    allow_incomplete_costs: boolean;
+    feeder_economy?: unknown;
+    scenario?: {id: string; prefix_first_a: number; prefix_first_b: number};
+    limits?: {items?: number; states?: number; policy_iterations?: number; work?: number};
+    export_checked: boolean;
+}
+export interface RecombinationPlannerResponse {
+    result: {
+        version: "random_recombination_inventory_v2";
+        model_id: string; price_identity: string; scenario_id: string | null;
+        data_identity: [string, string, string, string];
+        cost_complete: boolean; fully_priced_ranking: boolean;
+        game_odds_estimated: true; global_optimality_claim: false; robust_cost_bound: false;
+        expected_cost_chaos: number; expected_recombinations: number;
+        acquisitions: Array<{id: string; expected_invocations: number; source_kind: string;
+            native_feeder_checked: boolean; [key: string]: unknown}>;
+        [key: string]: unknown;
+    };
+    checked_export: null | {
+        version: "checked-recombination-builder-v1";
+        strategy: import("./strategy-model").StrategyDocument;
+        economy: unknown;
+        identity_receipt: RecombinationPlannerResponse["result"];
+        [key: string]: unknown;
+    };
+}

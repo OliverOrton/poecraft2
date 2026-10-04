@@ -1055,6 +1055,10 @@ async function dispatch(
                 params.item as number,
                 params.action as string,
             );
+        case "recombinationPlanner":
+            if (cancelled.has(id)) throw new EngineError(1, "Recombination planner cancelled before native work");
+            return bindings.recombinationPlanner(params.data as number,
+                params.request as import("./engine-protocol").RecombinationPlannerRequest);
         case "solverSolve":
             return solveSolver(id, params);
         case "solverStateValue":

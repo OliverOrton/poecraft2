@@ -2,7 +2,8 @@
  * Process-wide engine service. Spawns the single WASM worker, loads the
  * compiled data bundle once, and hands the shared EngineClient (plus the loaded
  * data handle) to UI components. Components never construct EngineClient
- * directly so there is exactly one worker and one loaded dataset per tab.
+ * directly so live crafting uses one worker and one loaded dataset per tab. Read-only
+ * recombination plans use a request-owned worker with its own cancellation lifetime.
  */
 
 import { EngineClient } from "./engine-client";
@@ -45,4 +46,15 @@ export function getEngine(): Promise<Engine> {
         enginePromise = boot();
     }
     return enginePromise;
+}
+
+/** Uses the existing immutable public bundle; no fetch/ingest/economy refresh.
+ * Product delivery still requires a matching planner WASM/build receipt. */
+export async function planRecombination(request: import("./engine-protocol").RecombinationPlannerRequest,
+    options: Omit<import("./recombination-planner").RecombinationPlannerRunOptions, "expectedAbiVersion" | "createWorker">) {
+    const {runRecombinationPlanner} = await import("./recombination-planner");
+    const response = await fetch(DATA_URL, {signal: options.signal});
+    const bytes = await verifiedRuntime(response, build.runtime);
+    return runRecombinationPlanner(bytes, request, {signal: options.signal, wallTimeMs: options.wallTimeMs,
+        requestIdentity: options.requestIdentity, isCurrent: options.isCurrent, expectedAbiVersion: build.engine.abi_version});
 }

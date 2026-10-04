@@ -1,0 +1,28 @@
+{
+  "status": "REJECTED_NOT_EXECUTED_NOT_RETRIED",
+  "workdir": "C:/Users/Oliver/Documents/poecraft2-sol61-recomb-builder-20261004",
+  "sandbox_permissions": "require_escalated",
+  "exact_command": "node scripts/build-data-bundle.mjs *> out/strategy-feeder/sol61-finite-20261004/cache-build-data.log\nif ($LASTEXITCODE -ne 0) { Get-Content out/strategy-feeder/sol61-finite-20261004/cache-build-data.log; exit $LASTEXITCODE }\nnode apps/web/node_modules/tsx/dist/cli.mjs apps/web/test/strategy-modifier-cache.test.ts *> out/strategy-feeder/sol61-finite-20261004/cache-regression-02.log\n$code = $LASTEXITCODE\nGet-Content out/strategy-feeder/sol61-finite-20261004/cache-regression-02.log\nexit $code",
+  "reviewer_error": "CreateProcess: Rejected(\"This action was rejected due to unacceptable risk.\")",
+  "reviewer_reason": "The command mutates generated web data artifacts via the bundle-build script despite the explicit no-data-refresh boundary; run the test only after creating required metadata through an approved non-refresh path.",
+  "classification": "Deterministic bundling of already frozen bytes plus current build metadata, not canonical ingest/data/economy refresh. It mutates derived public web artifacts.",
+  "inputs": [
+    "apps/web/runtime.lock.json selects manifest82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "Selected existing frozen manifest/strings.json/game-data.json; payload hashes checked by script",
+    "Existing artwork catalogue and PNGs, bundled economy index",
+    "Existing WASM/MJS instantiated to query ABI; not rebuilt",
+    "git HEAD/scoped source hashes and dirty state; build base/economy environment choices"
+  ],
+  "intended_outputs": [
+    "apps/web/public/poecraft-data.<SHA256>.json: concatenated existing frozen manifest and payload bytes",
+    "apps/web/src/generated/build-info.json: runtime/artwork/economy/WASM/source/build identities",
+    "Deletion of prior derived apps/web/public/poecraft-data[.<SHA256>].json bundles",
+    "out/strategy-feeder/sol61-finite-20261004/cache-build-data.log and cache-regression-02.log"
+  ],
+  "canonical_files_written": [],
+  "network_refresh": false,
+  "executed_alternative": "Reviewer explicitly allowed a non-refresh metadata path. A later separately approved command copied unchanged UI build-info.json only as an import fixture for the mocked cache regression; no bundle script was retried.",
+  "limitation": "The mock import metadata identifies another source and existing WASM. It is not combined product/runtime qualification.",
+  "future_authorization": "No retry or alternative bundle generation is authorized in this source-only turn; parent must resolve the restriction before any proposed future build:data/npm pretest.",
+  "reviewer_full_message": "This action was rejected due to unacceptable risk.\nReason: The command mutates generated web data artifacts via the bundle-build script despite the explicit no-data-refresh boundary; run the test only after creating required metadata through an approved non-refresh path.\nDo not bypass this rejection through a workaround or indirect execution. Continue with a safer alternative, or carry out checks to prove that the action is authorized or low risk before trying again. Complete unaffected work without asking for confirmation. Report anything that remains blocked, clarify why it was blocked by auto-review, inform the user of the risk and ask for approval."
+}

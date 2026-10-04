@@ -30,7 +30,7 @@
     "Ring1 ilvl80 original fixture prices: 1+2/.333 expected cost, 1/.333 attempts, 1+1/.333 acquisitions through checked native export",
     "Full-item multimod/roll preservation and complete two-output Annul child; failed/unaccepted terminals, missing prices, cycles, cancellation and conflicting revisions refuse",
     "Owned-root accounting and native cancellation preserving settled costs/resources",
-    "1000 native compiled Builder trials at seed62667494 (NOT RUN)"
+    "1000 native compiled Builder trials at seed62667494 (passed in native gate, browser unrun)"
   ],
   "completed_checks": [
     "Two-job Tests/static/shared native builds",
@@ -63,39 +63,47 @@
     "all_exec_sessions_complete": true
   },
   "next_batch": {
-    "purpose": "Matching WASM and genuinely cancellable planner worker/adapters after further source work and a new parent LOCAL grant",
+    "status": "REQUEST_PARENT_LOCAL_NOT_GRANTED",
+    "purpose": "Source-matched planner WASM, real worker lifetime/identity, Ring checked export and affected web adapters",
     "compiler_jobs": 2,
-    "build_owner": "scripts/dev-engine.ps1 -Task Tests / -Task Engine -Jobs 2",
-    "native_selectors": [
-      "--random-recombination-only",
-      "--recombination-solver-only",
-      "--strategy-recombination-only",
-      "--strategy-feeder-only"
+    "build_command": "$env:EMCC_CORES='2'\n$env:BINARYEN_CORES='2'\npowershell -NoProfile -File scripts/build-wasm.ps1",
+    "sdk_parallelism_evidence": "C:/emsdk/upstream/emscripten/tools/utils.py get_num_cores reads EMCC_CORES; shared.py run_multiple_processes and system_libs.py ninja owner use it.",
+    "qualification_commands": [
+      "node apps/web/node_modules/tsx/dist/cli.mjs apps/web/test/recombination-planner-lifetime.test.ts",
+      "node apps/web/node_modules/tsx/dist/cli.mjs apps/web/test/recombination-planner-wasm.test.ts",
+      "node apps/web/node_modules/tsx/dist/cli.mjs apps/web/test/recombination-wasm.test.ts",
+      "node apps/web/node_modules/tsx/dist/cli.mjs apps/web/test/engine-feeder.test.ts",
+      "node apps/web/node_modules/tsx/dist/cli.mjs apps/web/test/engine-client-transfer.test.ts",
+      "node apps/web/node_modules/tsx/dist/cli.mjs apps/web/test/strategy-feeder.test.ts",
+      "node apps/web/node_modules/tsx/dist/cli.mjs apps/web/test/strategy-modifier-cache.test.ts",
+      "node apps/web/node_modules/typescript/bin/tsc --noEmit --project apps/web/tsconfig.json"
     ],
-    "python": "focused random recombination and strategy feeder tests against new isolated DLL",
+    "full_product_gate": "Separate parent decision resolving the exact bundle approval rejection before npm pretest/build:data or product metadata/bundle writes. Direct fixture tests read frozen bytes in memory and are test owners, not substitute product bundles.",
     "artifact": "data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
-    "requirements": [
-      "New parent LOCAL grant; prior finite slot released",
-      "Frozen native hash and interpreter/DLL preflight",
-      "Deterministic bounded/blocking execution through existing supervision",
-      "Retain failures; stop on unresolved contract/identity/mass/cap failure",
-      "Release LOCAL immediately; report owned process cleanup"
-    ],
-    "timed_research_runs": 0,
-    "internal_limits": {
+    "execution": "Serial causal stages through existing solver_worker.run_isolated_process/watchdog, deterministic logs, process identity/cleanup. No new orchestration service.",
+    "per_stage_limits": {
+      "wasm_build_wall_seconds": 1800,
+      "wasm_build_memory_bytes": 8589934592,
+      "node_fixture_wall_seconds": 180,
+      "planner_request_wall_ms": 180000,
+      "node_memory_bytes": 4294967296,
+      "typecheck_wall_seconds": 180,
+      "work": 20000000,
       "item_specs": 64,
       "inventory_states": 256,
       "catalogue": 32,
-      "policy_iterations": 32,
-      "work": 20000000
+      "policy_iterations": 32
     },
-    "unchanged_tolerances": {
-      "pair_mass": 1e-10,
-      "pivot": 1e-13,
-      "nonnegative_allowance": -1e-08,
-      "residual": "1e-8*max(1,V)",
-      "policy_improvement": "1e-10*max(1,V)"
-    }
+    "qualification_trials": "Current owner-approved 1000 actual compiled-worker Ring trials seed62667494; retained component feeder tests keep their separate regression identity.",
+    "reuse": "Do not rerun passing native/Python dependencies while engine source and frozen data match 823657c0; only adapter/WASM tests here.",
+    "receipts": "New source/tree, WASM/MJS hashes and matching request/model/economy/data/checker pins under out/strategy-feeder; native DLL/exe receipts remain 823657c0.",
+    "stop": "Stop on identity/probability/resource/export/properness/cap/compilation failure; retain failure, do not raise caps or repeat for green.",
+    "requirements": [
+      "New explicit parent LOCAL grant",
+      "No denied bundle command retry or alternate bundle generation",
+      "Release LOCAL immediately on completion/failure; prove no owned survivors"
+    ],
+    "timed_research_runs": 0
   },
   "publication": "No main merge, push, deployment, data refresh or dev-server action. Do not integrate as qualified.",
   "initial_source_commit": "9736e766de959070b0c89fcb71281438ebd6f64c",
@@ -111,5 +119,28 @@
     "recombination-solver-03.log physical A/B modifier-order routing mismatch"
   ],
   "native_executable_sha256": "bcdf9165d9be4b27803594f4460c54708609d3b572fa169de48d56596c8075b0",
-  "native_dll_sha256": "32162f44f1f7c5f1b6ead3a61a4c40d996680a39d41e406b55df64daffd4761d"
+  "native_dll_sha256": "32162f44f1f7c5f1b6ead3a61a4c40d996680a39d41e406b55df64daffd4761d",
+  "pending_adapter": {
+    "status": "SOURCE_ONLY_UNBUILT_UNQUALIFIED",
+    "source_scope": "request-owned read-only planner worker and strict native WASM JSON facade",
+    "native_dependency": "823657c0b67a793676e83285c4e05b85175a96ab",
+    "native_engine_source_unchanged": true,
+    "compiled_artifacts_changed": false,
+    "cancellation": "Terminate the single-request worker on AbortSignal, wall timeout and completion; Node awaits exit. Do not enqueue a cosmetic cancel to interrupt synchronous WASM.",
+    "resource_identity": "Planner loads immutable copied bytes into its own worker; no main worker live session/item/resource handle is accepted.",
+    "identity": "Full request JSON and authored revision/content identity captured before dispatch; verify ABI, model, price, data, goal, explicit scenario/order and export receipt; stale authored revisions refuse delivery.",
+    "facade": "Existing stable-key full-item importer/native session retention/solver C API own mechanics. Full four-hash data pin and strict scalar fields/caps; v3 remains analysis-only.",
+    "prepared_unrun_tests": [
+      "recombination-planner-lifetime.test.ts",
+      "recombination-planner-wasm.test.ts"
+    ],
+    "limitations": [
+      "No planner UI controls wired by this slice; service API and typed result/export DTO only.",
+      "No point scenario selected for advanced Apply.",
+      "WASM/new TypeScript/full web/hosted stages remain unrun.",
+      "Worker termination discards read-only partial planning evidence; no partial feasible result is claimed.",
+      "Existing paid Builder cancellation within a synchronous worker chunk is not newly qualified by this planner transport."
+    ],
+    "bundle_rejection": "bundle-review-rejection.json"
+  }
 }

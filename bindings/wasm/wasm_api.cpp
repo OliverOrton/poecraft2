@@ -30,6 +30,7 @@
 #include "poecraft/hinekora.h"
 #include "poecraft/multi_item.h"
 #include "poecraft/recombination.h"
+#include "poecraft/recombination_solver.h"
 #include "handles_internal.hpp"
 #include "poecraft/api.h"
 #include "poecraft/item_state.h"
@@ -1319,6 +1320,66 @@ void restore_lock(std::uint32_t item_id, std::uint32_t context_id, pc_session_ha
     entry->handle = handle; entry->context = context_id;
 }
 
+// Strict transport validation before the existing full-item importer; never
+// truncate unsupported numeric fields or synthesize an item from a goal.
+uint32_t planner_uint(const Value& v,uint32_t maximum) {
+    const auto n=v.as_number();
+    if(!std::isfinite(n) || n<0 || n>maximum || std::floor(n)!=n)
+        throw std::invalid_argument("Planner integer exceeds its declared transport bound");
+    return uint32_t(n);
+}
+double planner_cost(const Value& v) {
+    const auto n=v.as_number();
+    if(!std::isfinite(n) || n<0) throw std::invalid_argument("Planner cost must be finite and nonnegative");
+    return n;
+}
+const Value& planner_state(const Value& value) {
+    const auto* wrapped=value.find("state"); const auto& state=wrapped?*wrapped:value;
+    if(state.type!=Type::Object || planner_uint(state.at("item_state_version"),3)!=3)
+        throw std::invalid_argument("Planner requires complete version-3 stable-key item exports");
+    for(const auto key:{"rarity","quality","item_flags","generic_influence_bits","link_mask"})
+        planner_uint(state.at(key),key==std::string("rarity")?2:255);
+    planner_uint(state.at("memory_strands"),100);
+    if(planner_uint(state.at("lifecycle"),2)!=PC_ITEM_LIVE)
+        throw std::invalid_argument("Planner initial/quoted items must be actual live item specifications");
+    for(const auto key:{"searing_exarch_tier","eater_of_worlds_tier"})planner_uint(state.at(key),4);
+    const auto& colors=state.at("socket_colors").as_array();
+    if(colors.size()!=planner_uint(state.at("socket_count"),PC_MAX_SOCKETS))
+        throw std::invalid_argument("Planner socket payload/count differs");
+    for(const auto& color:colors)planner_uint(color,255);
+    state.at("base_key").as_string();planner_uint(state.at("item_level"),100);
+    if(state.find("foresight"))throw std::invalid_argument("Planner foresight information state is held");
+    if(const auto* b=state.find("bestiary"))if(b->at("checkpoint_present").as_bool())
+        throw std::invalid_argument("Planner checkpoint resources are outside the bounded language");
+    for(const auto name:{"prefixes","suffixes","implicits","enchantments"})
+        for(const auto& slot:state.at(name).as_array()) {
+            slot.at("mod_key").as_string();planner_uint(slot.at("flags"),255);
+        }
+    return state;
+}
+void planner_retained_keys(const Value& value,const poecraft::DataImpl& data,std::vector<uint32_t>& retained) {
+    const auto add=[&](const Value& key) {
+        const auto f=data.mod_pos_by_key.find(key.as_string());
+        if(f==data.mod_pos_by_key.end())throw std::invalid_argument("Planner refers to an unknown canonical modifier key");
+        retained.push_back(data.mod_global_ids.at(f->second));
+    };
+    if(value.type==Type::Array)for(const auto& v:value.array)planner_retained_keys(v,data,retained);
+    if(value.type==Type::Object)for(const auto& [key,v]:value.object) {
+        if(key=="mod_key" || key=="veiled_chosen_key" || key=="family_mod_key")add(v);
+        else if(key=="mod_keys" || key=="veiled_option_keys" || key=="family_mod_keys")for(const auto& mod:v.as_array())add(mod);
+        else planner_retained_keys(v,data,retained);
+    }
+}
+using PlannerJsonQuery=pc_result(*)(pc_recombination_solver_handle,char*,size_t,size_t*,pc_error_info*);
+std::string planner_result(pc_recombination_solver_handle solver,PlannerJsonQuery query) {
+    size_t length=0;pc_error_info error=make_error();
+    const auto status=query(solver,nullptr,0,&length,&error);
+    if(status!=PC_RESULT_BUFFER_TOO_SMALL || length>8*1024*1024)throw std::invalid_argument(error.message);
+    std::vector<char> bytes(length+1);
+    if(query(solver,bytes.data(),bytes.size(),&length,&error)!=PC_RESULT_OK)throw std::invalid_argument(error.message);
+    return std::string(bytes.data(),length);
+}
+
 } // namespace
 
 extern "C" {
@@ -2154,6 +2215,83 @@ const char* pcw_recombination_pair_apply(uint32_t id, uint32_t context_id, const
         result.output_session = nullptr; // transferred to the registry
         return respond(std::move(out));
     } catch (const std::exception& ex) { rollback(); return fail(PC_RESULT_INVALID_ARGUMENT, ex.what()); }
+}
+
+// The caller must use a disposable read-only worker: native synchronous work
+// has no message-loop cancellation point. No live handle/resource is modified.
+EMSCRIPTEN_KEEPALIVE
+uint32_t pcw_recombination_planner_version() { return PC_RECOMBINATION_SOLVER_VERSION; }
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_recombination_planner(uint32_t data_id,const char* request_json) {
+    auto* data=find(g_data,data_id);
+    if(!data || !request_json)return fail(PC_RESULT_INVALID_ARGUMENT,"Planner dataset/request is missing");
+    if(std::strlen(request_json)>1024*1024)return fail(PC_RESULT_CAPACITY_EXCEEDED,"Planner request byte cap reached");
+    try {
+        const auto root=Parser(request_json,std::strlen(request_json)).parse();
+        if(root.at("version").as_string()!="recombination-planner-request-v2")
+            throw std::invalid_argument("Unsupported planner request version");
+        const auto& identities=root.at("data_identity").as_array();const auto& d=*(*data)->impl;
+        const std::array<std::string,4> actual{d.artifact_data_hash,d.artifact_source_hash,d.artifact_game_data_hash,d.artifact_strings_hash};
+        if(identities.size()!=4)throw std::invalid_argument("Planner requires the full frozen data identity");
+        for(unsigned i=0;i<4;++i)if(actual[i].empty() || identities[i].as_string()!=actual[i])
+            throw std::invalid_argument("Planner frozen data identity differs");
+        const auto& offers=root.at("acquisitions").as_array();const auto& inputs=root.at("initial_items").as_array();
+        if(offers.empty() || offers.size()>32 || inputs.size()>2)throw std::length_error("Planner catalogue/inventory cap reached");
+        pc_session_options session_options{};session_options.struct_size=sizeof(session_options);session_options.abi_version=PC_ABI_VERSION;
+        session_options.base_metadata_path=root.at("base_key").as_string().c_str();session_options.item_level=planner_uint(root.at("item_level"),100);
+        pc_session_handle raw_session=nullptr;pc_error_info error=make_error();
+        if(pc_session_create(*data,&session_options,&raw_session,&error)!=PC_RESULT_OK)return fail(error);
+        std::unique_ptr<pc_session,decltype(&pc_session_destroy)> session(raw_session,pc_session_destroy);
+        std::vector<uint32_t> retained;planner_retained_keys(root,d,retained);
+        for(const auto& offer:offers)if(const auto* feeder=offer.find("feeder")) {
+            const auto& doc=feeder->at("document_json").as_string();
+            if(doc.size()>1024*1024)throw std::length_error("Planner feeder document byte cap reached");
+            planner_retained_keys(Parser(doc.data(),doc.size()).parse(),d,retained);
+        }
+        std::sort(retained.begin(),retained.end());retained.erase(std::unique(retained.begin(),retained.end()),retained.end());
+        poecraft::build_session(*session->impl,retained); // Native retained-mod mapping, not eligibility/probability admission.
+        std::vector<pc_item_state> items,initial;items.reserve(offers.size());initial.reserve(inputs.size());
+        std::vector<pc_recombination_acquisition> acquisitions;acquisitions.reserve(offers.size());std::vector<double> initial_costs;
+        for(const auto& offer:offers) {
+            items.push_back(parse_item_state(planner_state(offer.at("item_state")),session.get()));
+            pc_recombination_acquisition acquisition{};acquisition.id=offer.at("id").as_string().c_str();
+            acquisition.source_kind=offer.at("source_kind").as_string().c_str();acquisition.quote_identity=offer.at("quote_identity").as_string().c_str();
+            acquisition.item=&items.back();acquisition.total_cost_chaos=planner_cost(offer.at("total_cost_chaos"));acquisition.cost_complete=offer.at("cost_complete").as_bool();
+            if(const auto* feeder=offer.find("feeder")) {
+                acquisition.feeder_strategy_id=feeder->at("strategy_id").as_string().c_str();acquisition.feeder_revision=feeder->at("revision").as_string().c_str();
+                acquisition.feeder_document_json=feeder->at("document_json").as_string().c_str();acquisition.feeder_output_contract_id=feeder->at("output_contract_id").as_string().c_str();
+                acquisition.feeder_paid_start_cost_chaos=planner_cost(feeder->at("paid_start_cost_chaos"));
+            }
+            acquisitions.push_back(acquisition);
+        }
+        for(const auto& input:inputs) {initial.push_back(parse_item_state(planner_state(input.at("item_state")),session.get()));initial_costs.push_back(planner_cost(input.at("paid_cost_chaos")));}
+        pc_recombination_solver_options options{};options.struct_size=sizeof(options);options.abi_version=PC_ABI_VERSION;options.solver_version=PC_RECOMBINATION_SOLVER_VERSION;
+        options.model_id=root.at("model_id").as_string().c_str();options.price_identity=root.at("price_identity").as_string().c_str();
+        const auto& goal=root.at("goal_set_json").as_string();options.goal_set_json=goal.data();options.goal_set_json_size=goal.size();
+        options.acquisitions=acquisitions.data();options.acquisition_count=uint32_t(acquisitions.size());options.initial_items=initial.data();options.initial_item_costs=initial_costs.data();options.initial_item_count=uint32_t(initial.size());
+        const auto& attempt=root.at("all_in_attempt_cost_chaos");options.recombination_cost_complete=attempt.type!=Type::Null;
+        options.recombination_cost_chaos=attempt.type==Type::Null?0:planner_cost(attempt);options.allow_incomplete_costs=root.at("allow_incomplete_costs").as_bool();
+        options.max_items=64;options.max_states=256;options.max_policy_iterations=32;options.max_work=20000000;
+        if(const auto* limits=root.find("limits")) {
+            if(const auto* v=limits->find("items"))options.max_items=planner_uint(*v,64);
+            if(const auto* v=limits->find("states"))options.max_states=planner_uint(*v,256);
+            if(const auto* v=limits->find("policy_iterations"))options.max_policy_iterations=planner_uint(*v,32);
+            if(const auto* v=limits->find("work"))options.max_work=planner_uint(*v,20000000);
+            if(!options.max_items || !options.max_states || !options.max_policy_iterations || !options.max_work)throw std::invalid_argument("Planner caps must be positive");
+        }
+        if(const auto* scenario=root.find("scenario")) {
+            options.scenario_id=scenario->at("id").as_string().c_str();options.prefix_first_a=scenario->at("prefix_first_a").as_number();options.prefix_first_b=scenario->at("prefix_first_b").as_number();
+        }
+        if(const auto* economy=root.find("feeder_economy_json")) {options.feeder_economy_json=economy->as_string().data();options.feeder_economy_json_size=economy->as_string().size();}
+        pc_recombination_solver_handle raw_solver=nullptr;
+        if(pc_recombination_solver_create(session.get(),&options,&raw_solver,&error)!=PC_RESULT_OK)return fail(error);
+        std::unique_ptr<std::remove_pointer_t<pc_recombination_solver_handle>,decltype(&pc_recombination_solver_destroy)> solver(raw_solver,pc_recombination_solver_destroy);
+        const auto result=planner_result(solver.get(),pc_recombination_solver_result_json);
+        const auto checked=root.at("export_checked").as_bool()?planner_result(solver.get(),pc_recombination_solver_export_json):"null";
+        return respond("{\"ok\":true,\"result\":"+result+",\"checked_export\":"+checked+'}');
+    }catch(const std::length_error& e){return fail(PC_RESULT_CAPACITY_EXCEEDED,e.what());}
+     catch(const std::exception& e){return fail(PC_RESULT_UNSUPPORTED_FEATURE,e.what());}
 }
 
 // Reconstruct an item from a previously exported state document and register it

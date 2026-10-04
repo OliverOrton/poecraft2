@@ -133,6 +133,14 @@ export class EngineBindings {
         return parsed;
     }
 
+    recombinationPlanner(data: number, request: import("./engine-protocol").RecombinationPlannerRequest): import("./engine-protocol").RecombinationPlannerResponse {
+        const version = this.module.ccall("pcw_recombination_planner_version", "number", [], []);
+        if (version !== 2) throw new EngineError(4, "Matching recombination planner WASM v2 is required");
+        return this.callJsonWithHeapBytes("pcw_recombination_planner", ["number"], [data],
+            new TextEncoder().encode(JSON.stringify({...request, goal_set_json: JSON.stringify(request.goal_set),
+                feeder_economy_json: request.feeder_economy === undefined ? undefined : JSON.stringify(request.feeder_economy)}))) as unknown as import("./engine-protocol").RecombinationPlannerResponse;
+    }
+
     loadData(bundle: Uint8Array): number {
         const ptr = this.module._malloc(bundle.length);
         try {
