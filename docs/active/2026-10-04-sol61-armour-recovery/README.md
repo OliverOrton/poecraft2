@@ -658,7 +658,7 @@ undercount audit, while production consumers retain the current full estimator.
 The six-real-positive-entry owner fixture measures independent full/ledger
 observers of the SAME graph/census/prices/scope, preserves checker lifetime and
 requires exact48 work, identical checkpoint/active-work counts, all six entries
-and a full audit at each completed entry. It prints observation/advance/audit
+and a full audit after every checkpoint, including suspended admission cursors. It prints observation/advance/audit
 nanoseconds. This is a finite selected-accounting compatibility measurement,
 not complete aggregate peak evidence or permission for early checker release.
 Only measured meaningful observation savings and matching audited ownership
@@ -675,3 +675,27 @@ It contains NO Conquest solve/evaluation. Finder generation/lifetime, early
 release, complete aggregate peak observation, economic/all-entry qualification,
 control cohort and matching WASM remain open. R9/R10 failures, R11 negative cost
 and incomplete968/12719 coverage remain unchanged evidence.
+
+### Source review3b45b7c8: focused finite coverage corrections
+
+Reviewer3b45b7c839843ed69b8ce3d0a1cf21d6d93ebbd1 found no fill-routing
+blocker atf5ab312250bb8285fb3468fa9dfee6211da02ec6 and matched all12 source
+and3 frozen runtime pins. Two source-only test gaps are now closed in the
+prepared gate, without changing production routing or accounting:
+
+- Iterate EVERY missing-goal guard in the generated control, including both
+  final-side guards, and compare each guard's compiled predicate with its own
+  side's native eligible missing-goal pool at EVERY strictly positive entry.
+  Assert two guards for control/four for fill and complete entry coverage per
+  guard. Native compatibility checks on all four stages remain unchanged.
+- Audit the unchanged-census accounting observer after EVERY native checkpoint,
+  including suspended cursors. Require audits==steps, at least one suspended
+  audit, exactly six completed-entry audits, no ledger undercount and matching
+  work/checkpoint/positive-entry counts in both observers. Print suspension and
+  completion counts separately. Production keeps the full estimator and live
+  checker. These observations still do not prove complete aggregate peak.
+
+The refreshed finite request pins the revised test source. All new stages remain
+UNRUN; LOCAL still belongs to CI/product gates. No observer switch, early checker
+release, policy run or cap increase has occurred. The next deliverable remains
+one bounded serial finite/construction batch after the parent grants LOCAL.

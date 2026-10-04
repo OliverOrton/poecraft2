@@ -5,7 +5,10 @@ and entry-time investigation. Private default-off final stages now preserve
 below-capacity target progress via requested/priced ordinary Exalt, exact native
 eligibility and existing blocker/paid cleanup paths. Paired native finite tests,
 historical-word witness, same-census ledger/full-scan observation pair and
-original-Conquest construction-only capture are prepared, all UNRUN.
+original-Conquest construction-only capture are prepared, all UNRUN. Reviewer
+3b45b7c8 found no routing blocker atf5ab3122; source-only corrections now cover
+every final-side guard at every positive entry and ownership audits at suspended
+cursor checkpoints. Production observer/checker lifetime remain unchanged.
 [Bounded request](docs/active/2026-10-04-sol61-armour-recovery/final-fill-finite-request.json)
 pins source/inputs; independent review first, LOCAL currently owned by CI/product
 gates. No new full Conquest run, cap increase or production activation.

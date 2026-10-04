@@ -5807,29 +5807,38 @@ void run_solver_partial_held_recovery_tests(const bool compound_blocker_only, co
         PC_CHECK(finder_evaluation_accepted(checked));
         if (!finder_evaluation_accepted(checked)) return;
         if (guarded_recovery) {
-            const auto target_side = reverse ? PC_SIDE_SUFFIX : PC_SIDE_PREFIX;
-            const auto guard = std::find_if(control.nodes.begin(),control.nodes.end(),[&](const auto& current) {
-                return current.kind == FinderControlKind::TestMissingGoalRollable && current.binding == target_side;
-            });
-            const auto& observed = prepared.strategy->nodes.at(prepared.strategy->node_by_id.at(
-                "c"+std::to_string(guard-control.nodes.begin())));
-            const auto yes = std::find_if(observed.edges.begin(),observed.edges.end(),[](const auto& edge) {
-                return !edge.is_default;
-            });
-            unsigned observed_entries = 0;
-            for (const auto& entry : checked.policy_entries.entries) {
-                if (!(entry.root_expected_visits > 0)) continue;
-                const auto eligible = calc.temporary_followup_eligible_mask(entry.item,registry.index_by_id.at("exalt"));
-                const auto state = calc.intern_item(entry.item);
-                const auto satisfied = satisfied_goal_mask(calc.state(state));
-                bool native_rollable = false;
-                for (unsigned slot = 0; slot < goal.slots.size(); ++slot)
-                    native_rollable |= goal_slot_side(*session,goal.slots[slot]) == target_side &&
-                        (satisfied & (1u << slot)) == 0 &&
-                        mask_intersects(eligible,calc.layout().slots[slot].satisfying_mask);
-                PC_CHECK(evaluate_compiled_condition(yes->condition,*session,entry.item) == native_rollable);
-                ++observed_entries;
+            unsigned observed_entries = 0, observed_guards = 0;
+            for (const auto& guard : control.nodes) {
+                if (guard.kind != FinderControlKind::TestMissingGoalRollable) continue;
+                ++observed_guards;
+                const auto& observed = prepared.strategy->nodes.at(prepared.strategy->node_by_id.at(
+                    "c"+std::to_string(&guard-control.nodes.data())));
+                const auto yes = std::find_if(observed.edges.begin(),observed.edges.end(),[](const auto& edge) {
+                    return !edge.is_default;
+                });
+                PC_CHECK(yes != observed.edges.end());
+                if (yes == observed.edges.end()) return;
+                unsigned guard_entries = 0;
+                // Include both final-stage guards, in both side orientations.
+                // Every strictly positive entry is compared independently with
+                // this guard's actual target side and the native eligible pool.
+                for (const auto& entry : checked.policy_entries.entries) {
+                    if (!(entry.root_expected_visits > 0)) continue;
+                    const auto eligible = calc.temporary_followup_eligible_mask(entry.item,registry.index_by_id.at("exalt"));
+                    const auto state = calc.intern_item(entry.item);
+                    const auto satisfied = satisfied_goal_mask(calc.state(state));
+                    bool native_rollable = false;
+                    for (unsigned slot = 0; slot < goal.slots.size(); ++slot)
+                        native_rollable |= goal_slot_side(*session,goal.slots[slot]) == guard.binding &&
+                            (satisfied & (1u << slot)) == 0 &&
+                            mask_intersects(eligible,calc.layout().slots[slot].satisfying_mask);
+                    PC_CHECK(evaluate_compiled_condition(yes->condition,*session,entry.item) == native_rollable);
+                    ++guard_entries;
+                }
+                PC_CHECK(guard_entries == checked.policy_entries.entries.size());
+                observed_entries += guard_entries;
             }
+            PC_CHECK(observed_guards == (full_side_exalt_fill ? 4u : 2u));
             for (const auto& compatibility : control.nodes) {
                 if (compatibility.kind != FinderControlKind::TestTargetGoalsCompatible) continue;
                 const auto& router = prepared.strategy->nodes.at(prepared.strategy->node_by_id.at(
@@ -5857,8 +5866,8 @@ void run_solver_partial_held_recovery_tests(const bool compound_blocker_only, co
                 }
             }
             PC_CHECK(observed_entries > 0);
-            std::printf("private guard projection: fixture=%u all_positive_entries=%u native_pool_equivalent\n",
-                fixture,observed_entries);
+            std::printf("private guard projection: fixture=%u guards=%u positive_entry_guard_pairs=%u native_pool_equivalent\n",
+                fixture,observed_guards,observed_entries);
         }
         for (const auto key : {"chaos","eldritch_exalt","eldritch_annul","eldritch_chaos"})
             PC_CHECK(checked.expected_consumption.contains(key) && checked.expected_consumption.at(key) > 0);
@@ -6032,7 +6041,7 @@ void run_solver_entry_budget_tests() {
     for (const bool fast : {false,true}) {
         SelectiveProgrammeEntryValidator validator(source,session,control,census,prices,limits);
         std::uint64_t observation_ns = 0, advance_ns = 0, audit_ns = 0, peak = 0;
-        unsigned steps = 0, audits = 0, previous_entries = 0;
+        unsigned steps = 0, audits = 0, suspended_audits = 0, completed_audits = 0, previous_entries = 0;
         const auto elapsed = [](const auto begin) {
             return static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now()-begin).count());
@@ -6044,28 +6053,33 @@ void run_solver_entry_budget_tests() {
             const auto bytes = fast ? validator.fast_estimated_owned_bytes() : validator.estimated_owned_bytes();
             observation_ns += elapsed(began); peak = std::max(peak,bytes);
             PC_CHECK(bytes < limits.max_solver_owned_bytes);
-            if (validator.validated_entries() != previous_entries || validator.done()) {
-                began = std::chrono::steady_clock::now();
-                const auto audited = validator.audited_estimated_owned_bytes();
-                const auto ledger = validator.fast_estimated_owned_bytes();
-                audit_ns += elapsed(began); ++audits;
-                PC_CHECK(ledger >= audited);
-                previous_entries = validator.validated_entries();
-            }
+            // Audit after every admission checkpoint, including incomplete
+            // entries while the native cursor retains transient scratch. A
+            // completion-only audit cannot qualify the hot observer path.
+            began = std::chrono::steady_clock::now();
+            const auto audited = validator.audited_estimated_owned_bytes();
+            const auto ledger = validator.fast_estimated_owned_bytes();
+            audit_ns += elapsed(began); ++audits;
+            PC_CHECK(ledger >= audited);
+            if (validator.validated_entries() == previous_entries) ++suspended_audits;
+            else ++completed_audits;
+            previous_entries = validator.validated_entries();
         }
         PC_CHECK(validator.done() && validator.validated_entries() == census.entries.size());
         PC_CHECK(validator.positive_entries() == 6 && validator.logical_work() == 48);
+        PC_CHECK(audits == steps && suspended_audits > 0 && completed_audits == census.entries.size());
         if (!fast) {
             control_steps = steps; control_work = validator.logical_work(); control_active = validator.active_work();
         } else {
             PC_CHECK(steps == control_steps && validator.logical_work() == control_work &&
                 validator.active_work() == control_active);
         }
-        std::printf("native entry accounting witness: observer=%s steps=%u entries=%u logical=%llu active=%llu observation_ns=%llu advance_ns=%llu audited_ns=%llu audits=%u validator_selected_peak=%llu checker_retained=1\n",
+        std::printf("native entry accounting witness: observer=%s steps=%u entries=%u logical=%llu active=%llu observation_ns=%llu advance_ns=%llu audited_ns=%llu audits=%u suspended_audits=%u completed_audits=%u validator_selected_peak=%llu checker_retained=1\n",
             fast ? "ledger" : "full",steps,validator.validated_entries(),
             static_cast<unsigned long long>(validator.logical_work()),static_cast<unsigned long long>(validator.active_work()),
             static_cast<unsigned long long>(observation_ns),static_cast<unsigned long long>(advance_ns),
-            static_cast<unsigned long long>(audit_ns),audits,static_cast<unsigned long long>(peak));
+            static_cast<unsigned long long>(audit_ns),audits,suspended_audits,completed_audits,
+            static_cast<unsigned long long>(peak));
     }
     // The original immutable result and all six positive entries stayed alive.
     PC_CHECK(finder_evaluation_accepted(checker.result()) && checker.result().policy_entries.entries.size() == 6);
