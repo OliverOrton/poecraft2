@@ -1547,8 +1547,10 @@ pc-workspace {
 }
 
 /* Bridge the installed Dockview theme to the same surface/text authorities.
- * Its joined tabs, split geometry and drag interactions keep their own owners. */
-pc-workspace.dockview-theme-abyss {
+ * BaseGrid creates a nested theme root, which redeclares library variables.
+ * Joined tabs, split geometry and drag interactions keep their own owners. */
+pc-workspace.dockview-theme-abyss,
+pc-workspace .dockview-theme-abyss {
     --dv-group-view-background-color: var(--pc-surface-page);
     --dv-tabs-and-actions-container-background-color: var(--pc-surface-panel);
     --dv-activegroup-visiblepanel-tab-background-color: var(--pc-surface-page);
