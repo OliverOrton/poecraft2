@@ -1,0 +1,334 @@
+{
+  "schema": "sol61_entry_observer_r2_summary_v1",
+  "source_commit": "db4ad864c362ba48da41552757b91771a21e0c54",
+  "finite_checks": 39066,
+  "finite_failures": 0,
+  "finite_stages": [
+    {
+      "phase": "exact-entry-work-observer-and-selected-peak-safety",
+      "checks": 347,
+      "failures": 0
+    },
+    {
+      "phase": "query-membership-semantic-and-allocation-rollback-controls",
+      "checks": 2919,
+      "failures": 0
+    },
+    {
+      "phase": "same-request-paired-final-fill-sixteen-finite-roots-and-every-checkpoint-audit",
+      "checks": 23982,
+      "failures": 0
+    },
+    {
+      "phase": "unchanged-eight-root-and-878-entry-control-with-checkpoint-audits",
+      "checks": 11581,
+      "failures": 0
+    },
+    {
+      "phase": "legacy-blocker-shared-native-consumer",
+      "checks": 171,
+      "failures": 0
+    },
+    {
+      "phase": "finder-protected-shared-validator-compatibility",
+      "checks": 66,
+      "failures": 0
+    }
+  ],
+  "binaries": {
+    "build-tests": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_engine_tests.exe",
+      "sha256": "f0f18d9aa8a5303f7b2b30782fc60683a6fdab313ec5d54119a1b084f0ddedb7",
+      "source_commit": "db4ad864c362ba48da41552757b91771a21e0c54"
+    },
+    "build-benchmark": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_solver_benchmark.exe",
+      "sha256": "b1f2259755e5b64cd0aa81829a3a908713d6af678792b628362c7fdbe716e2a3",
+      "source_commit": "db4ad864c362ba48da41552757b91771a21e0c54"
+    }
+  },
+  "exact_scratch_refusal": "native max_owned_bytes125121; real shared max_owned_bytes125129;3successful checkpoints/0entry/logical/active work; shared48debit retained; full/ledger36checkpoints/30suspended/6completed exact48work, no undercount; suspended cleanup retains checker/census/debit/session ownership",
+  "root": {
+    "kind": "generated_partial_held_root_check_v1",
+    "case": "sol61-trace-conquest5-currentmodel-120",
+    "status": "censored_capacity",
+    "phase": "positive_entries",
+    "refusal": "solver exceeded max_solver_owned_bytes (702645053)",
+    "cap_reason": "max_solver_owned_bytes",
+    "economy_id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "graph_hash": "7602779656003707844",
+    "private_final_fill": true,
+    "generation_wall_ms": 344.2032,
+    "checker_wall_ms": 5104.8423,
+    "entry_wall_ms": 5594.2051,
+    "checker_steps": 10040,
+    "entry_advances": 10305,
+    "memory_observation_calls": 20349,
+    "memory_observation_ns": 974475500,
+    "entry_live_memory_observation_ns": 786803400,
+    "entry_memory_observer": "native_selected_allocation_ledger",
+    "aggregate_memory_observation_complete": false,
+    "root_accepted": true,
+    "all_positive_entries_accepted": false,
+    "checked_feasible_upper": false,
+    "root_cost": 210090.72616079813,
+    "checked_cost": null,
+    "supplied_historical_reference_cost": 85970.67347138176,
+    "meets_supplied_reference_cost": false,
+    "consumer_retention_or_activation": false,
+    "historical_graph_imported": false,
+    "positive_entries": 12658,
+    "validated_entries": 1717,
+    "census_entries": 12658,
+    "census_refused_entries": 0,
+    "success": 1,
+    "unresolved": 0,
+    "failure": 0,
+    "stop": 0,
+    "not_applied": 0,
+    "no_matching_edge": 0,
+    "generation_logical_work": 233575,
+    "checker_logical_work": 933384,
+    "checker_active_work": 279657,
+    "entry_logical_work": 717735,
+    "entry_active_work": 717735,
+    "aggregate_committed_logical_work": 1884694,
+    "aggregate_work_cap": 50000000,
+    "aggregate_selected_peak": 872063327,
+    "aggregate_reserved_peak": 1073652575,
+    "transient_reservation": 201589248,
+    "aggregate_memory_cap": 1073741824,
+    "checker_live_bytes": 87596436,
+    "checker_internal_peak_bytes": 133064129,
+    "checker_retained_for_census": true,
+    "requested_finish_observed": false,
+    "requested_seconds": 120,
+    "native_seconds": 150,
+    "step_work_items": 8,
+    "checker_limits": {
+      "states": 800000,
+      "pairs": 1215000,
+      "transitions": 10000000,
+      "owned_bytes": 790241977,
+      "logical_work": 49766425
+    },
+    "resolved_limits": {
+      "max_states": 800000,
+      "max_discovered_states": 800000,
+      "max_expanded_states": 200000,
+      "max_rows": 1215000,
+      "max_transitions": 10000000,
+      "max_compiled_nodes": 100000,
+      "max_compiled_edges": 400000,
+      "max_strategy_json_bytes": 67108864,
+      "max_telemetry_json_bytes": 2097152
+    },
+    "wall_ms": 11107.5309
+  },
+  "matched_root_semantics": {
+    "graph_sha256": "bedc2a4718e4622a301b0efd9159335fbe41db46f1b521c8d3bdac619249337a",
+    "root_cost": 210090.72616079813,
+    "complete_expected_consumption": [
+      {
+        "key": "chaos",
+        "quantity": 44.65634981329255
+      },
+      {
+        "key": "eldritch_annul",
+        "quantity": 1020.4519218573246
+      },
+      {
+        "key": "eldritch_chaos",
+        "quantity": 4234.88478803816
+      },
+      {
+        "key": "eldritch_ember:1",
+        "quantity": 0.9982286793977418
+      },
+      {
+        "key": "eldritch_exalt",
+        "quantity": 635.2674448518271
+      },
+      {
+        "key": "eldritch_ichor:1",
+        "quantity": 0.001771147751617756
+      },
+      {
+        "key": "eldritch_ichor:2",
+        "quantity": 0.995651341580196
+      },
+      {
+        "key": "exalt",
+        "quantity": 201.19272317894035
+      }
+    ],
+    "expected_actions": 6138.448878908284,
+    "resources_actions_terminal_probabilities_identical_to_full_observer_R1": true
+  },
+  "causal_observation": {
+    "same_graph_inputs_prices_laws": true,
+    "full_observer_entry_memory_ns": 141156879500,
+    "ledger_entry_memory_ns": 786803400,
+    "full_observer_entry_wall_ms": 144574.9072,
+    "ledger_entry_wall_ms": 5594.2051,
+    "disposition": "bounded matched observation; faster observer exposes existing memory capacity limit, not a robust timing claim, complete-entry policy qualification or economic gain"
+  },
+  "checker_memory": {
+    "owned_bytes_estimate": 87596436,
+    "peak_owned_bytes_estimate": 133064129,
+    "retained_output_owned_bytes_estimate": 54621231,
+    "max_owned_bytes": 790241977,
+    "max_output_json_bytes": 67108864
+  },
+  "disposition": "39066 finite checks pass; ONE root stops actual memory at1717/12658 after11.108s with unchanged diagnosticcost210090.73/success1. No qualified upper/retention/activation or improvement vsreleased101311/historical85970. No further run.",
+  "completion": {
+    "source_commit": "db4ad864c362ba48da41552757b91771a21e0c54",
+    "stages": [
+      {
+        "phase": "build-tests",
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 23020,
+        "process_identity_token": "23020:134355950098608637",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 22489.027800038457
+      },
+      {
+        "phase": "exact-entry-work-observer-and-selected-peak-safety",
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 30472,
+        "process_identity_token": "30472:134355950329595597",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 351.6865000128746
+      },
+      {
+        "phase": "query-membership-semantic-and-allocation-rollback-controls",
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 79344,
+        "process_identity_token": "79344:134355950330006311",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 46.58780014142394
+      },
+      {
+        "phase": "same-request-paired-final-fill-sixteen-finite-roots-and-every-checkpoint-audit",
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 14096,
+        "process_identity_token": "14096:134355950330482141",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 749.2025999817997
+      },
+      {
+        "phase": "unchanged-eight-root-and-878-entry-control-with-checkpoint-audits",
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 92840,
+        "process_identity_token": "92840:134355950337984565",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 410.8468999620527
+      },
+      {
+        "phase": "legacy-blocker-shared-native-consumer",
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 5320,
+        "process_identity_token": "5320:134355950342115266",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 104.0182001888752
+      },
+      {
+        "phase": "finder-protected-shared-validator-compatibility",
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 88988,
+        "process_identity_token": "88988:134355950343157157",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 28.112399857491255
+      },
+      {
+        "phase": "build-benchmark",
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 12908,
+        "process_identity_token": "12908:134355950343452280",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 15245.605500182137
+      },
+      {
+        "phase": "generated-final-fill-original-root-and-all-entries",
+        "exit_code": 2,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 22744,
+        "process_identity_token": "22744:134355950500419910",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 11667.809000005946
+      }
+    ],
+    "unrun": [],
+    "owned_processes": [],
+    "local_slot": "RELEASED at terminal batch result",
+    "stop_requested": false,
+    "finished_utc": "2026-10-04T13:44:21.467383+00:00"
+  },
+  "bulk_directory": "out/sol61-armour/entry-observer-r2",
+  "bulk_files": {
+    "out/sol61-armour/entry-observer-r2/request.json": {
+      "sha256": "7307e0ec7f90aad643a13a95ac2263b7ba56f7282e99ae79484fa31683eb7ef6",
+      "bytes": 18617
+    },
+    "out/sol61-armour/entry-observer-r2/completion.json": {
+      "sha256": "8bdec68960f258b60fc5ff4cdf1d1d60112c99b6187b3b3a7576b5e348323306",
+      "bytes": 4118
+    },
+    "out/sol61-armour/entry-observer-r2/generic-final-fill-root.json": {
+      "sha256": "e9c5b592a329524941e7716cd66d64e138b8241b2c63c8dd8deb53457227c356",
+      "bytes": 11280
+    },
+    "out/sol61-armour/entry-observer-r2/generic-final-fill-root.json.strategy.json": {
+      "sha256": "bedc2a4718e4622a301b0efd9159335fbe41db46f1b521c8d3bdac619249337a",
+      "bytes": 39418
+    },
+    "out/sol61-armour/entry-observer-r2/generated-final-fill-original-root-and-all-entries.receipt.json": {
+      "sha256": "e5a75f92b99158cfe691fceb552c326610075c501bde14c73da8d047b96d3117",
+      "bytes": 316
+    }
+  }
+}

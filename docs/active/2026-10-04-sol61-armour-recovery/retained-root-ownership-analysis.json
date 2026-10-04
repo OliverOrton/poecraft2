@@ -1,0 +1,30 @@
+{
+  "schema": "sol61_retained_root_ownership_analysis_v1",
+  "source_receipt": "entry-observer-r2-summary.json",
+  "observed": {
+    "checker_complete_live_selected": 87596436,
+    "complete_result_including_census_selected": 54621231,
+    "checker_storage_above_complete_result_upper_bound": 32975205,
+    "selected_peak_other_than_checker": 784466891,
+    "selected_peak": 872063327,
+    "reservation": 201589248,
+    "sampled_reserved_peak": 1073652575,
+    "old_diagnostic_cap": 1073741824,
+    "coverage": [
+      1717,
+      12658
+    ]
+  },
+  "derived_fixed_outer_before_checker": {
+    "bytes": 81910599,
+    "derivation": "1GiB -reservation -checker resolved max_owned_bytes790241977; diagnostic-only source constant context/graph/control footprint; not an independently captured refusal snapshot"
+  },
+  "ownership_cut": "Complete result/census54.621MB is already INCLUDED in live checker87.596MB; do not add/subtract it twice. At most32.975MB could disappear with redundant checker state, less new stable owner/transfer overlap. R2 does not separately capture exact validator/cache bytes after refusal rollback; remaining observed784.467MB also includes outer solver/private generator/context/graph/strategy/storage.",
+  "minimum_completion_allowance": null,
+  "minimum_disposition": "Current evidence gives a last sampled lower bound near1GiB and an actual admission cap refusal, not a completed12658-entry maximum. Do not linearly extrapolate from partial census or claim3.1GiB sufficient before execution.",
+  "choice": "Retain checker/census. Reviewer8e9dc70b4cfdc303d4ae598e934a54a03f992f09 recommends budget restoration over earlyrelease;32.975MB maximum checker-only saving is not established sufficient and does not justify new borrowed-result lifetime code.",
+  "parent_authorization": "User explicitly approved restoring helpful accidental budget; parent states released envelope3.1GiB aggregate,1GiB research cap is NOT immutable userlimit. Source-only proposal/reviewer before another native run.",
+  "proposed_exact_integer_cap": 3328599654,
+  "cap_interpretation": "Conservative integer floor of explicitly approved3.1GiB envelope=3328599654bytes (<exact3.1GiB by0.4byte). Current checkout/snapshot does not independently pin a historical released byte count; do not claim this is a recovered deployment constant.",
+  "accounting_delta": "Benchmark-only: count actual retained shared economy once via existing refinement owner and caller options as a REAL separate copy (checker has its own copy); frozen quantities cached only while immutable and audited at phase boundaries. Mutable validator and outer owners measured every checkpoint. Capture fast/full selected live components BEFORE validator release, and after native refusal rollback, retaining full result estimate as checker subset. Full transient/process peak remains unproved and explicitly false."
+}

@@ -1,0 +1,128 @@
+{
+  "schema": "sol61_samegraph_restored_envelope_request_v1",
+  "status": "SOURCE READY PROPOSAL; new benchmark UNBUILT and root UNRUN; reviewer and parentLOCAL assignment required; no new run authorization inferred from source-only preparation",
+  "basis_commit": "db4ad864c362ba48da41552757b91771a21e0c54",
+  "source_files_sha256": {
+    "engine/src/solver_compile.cpp": "35838754a73d7bc320c1265e12eed88a5fff32bc6bf5eb836ba881d6aeaea05a",
+    "engine/src/solver_compile_contracts.hpp": "b156eed5a8e3c13a1159365b0a3e4ccd6a50234927d07f3c9d506789409735f3",
+    "engine/src/solver_selective_completion.cpp": "55aae11d9143570808f4543dce066e824940441c87857249d1dbe6f877b00433",
+    "engine/src/solver_selective_completion.hpp": "cff99b2e0a96ba91f5dd8c3ce5b07d4cc1b5529d72befdb1c2644d351b24cdda",
+    "engine/benchmarks/solver_benchmark.cpp": "3caa9e79009bdd3751cf81b3a16b7c1db95f29f9c4eb2f5ddeb7c3ee1a1e569c",
+    "engine/tests/test_main.cpp": "82a2aae41073c57633bad1647f5b1facf4c320596ed3ace802f0bfb32d4369b7",
+    "engine/tests/test_solver_compile.cpp": "13a0cda987bf3ac3e87458af6564ff8753c609831edbcce5609107bab2eeeed9",
+    "engine/tests/tests.hpp": "f6d8cde9c553dd80a174c9b9081b4a29d7d314ec7d9ec91a295075337b2beb05",
+    "engine/src/solver_calc.cpp": "41198cac24afe47b3c65fc07094b6fffa4138f5f69fb656e2339a2a52d3e34b1",
+    "engine/src/solver_calc_types.hpp": "2035b3939d546fb868578b00ee86f358978cbac32d804a4b63a9e2f47fdadd02",
+    "engine/src/solver_options_automatic.cpp": "e85c97e4d6ba591f4b00882864d2d9d7a60ab120b7a7788169c4a7f8523766a0",
+    "engine/src/solver_options_helpers.hpp": "575d705635d48d9c24543bbefd506180c3d1f83bc2ba621f7ac845cbbdbed15e"
+  },
+  "runtime_files_sha256": {
+    "manifest.json": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "strings.json": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6",
+    "game-data.json": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e"
+  },
+  "conquest_inputs": {
+    "docs/active/2026-10-03-sol61-recovery/qualification/law3/cases/conquest5-product.json": {
+      "sha256": "49bc43f7fa8616ab0f798d8e5c5a2e0c3e79342a51a1636446f2d80e65147642",
+      "bytes": 7942
+    },
+    "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json": {
+      "sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92",
+      "bytes": 141941
+    },
+    "docs/active/2026-10-04-sol61-armour-recovery/conquest-construction-manifest.json": {
+      "sha256": "9cdfc766842410dfac2c4aaa7a0e96342cf724cd7cea5dcf633293661d3c7607",
+      "bytes": 1125
+    },
+    "docs/active/2026-10-04-sol61-armour-recovery/conquest5-restored-3p1gib.json": {
+      "sha256": "44a0dc112b1db699a078a68bf1074cf956e215ce27ac61f2c1c6af3656d22142",
+      "bytes": 7749
+    },
+    "docs/active/2026-10-04-sol61-armour-recovery/conquest-restored-envelope-manifest.json": {
+      "sha256": "5b8937c71f37ad6a06ab8717bfc65e33050f3bbbf53656b9e56cc4ad51b8bb06",
+      "bytes": 1266
+    }
+  },
+  "candidate_graph": {
+    "fnv1a64": "7602779656003707844",
+    "sha256": "bedc2a4718e4622a301b0efd9159335fbe41db46f1b521c8d3bdac619249337a",
+    "bytes": 39418,
+    "nodes": 108,
+    "programs": 20,
+    "identity": "regenerate from exact original problem/control bindings; compare complete bytes/semantic occurrence provenance before checking, never import capturedgraph"
+  },
+  "finite_qualification": "entry-observer-r2-summary.json:39066checks0failures exact native production source db4ad864; benchmark-only accounting diagnostics change, no repeat native suites required without new failure",
+  "checker_ownership": "complete checker/result/census RETAINED unchanged throughout every positive entry; no borrowedpointer transfer/earlyrelease/cacheauthority",
+  "parent_selected_resource_envelope": "User explicitly approved restoring helpful accidental budget; parent states released envelope3.1GiB aggregate,1GiB research cap is NOT immutable userlimit. Source-only proposal/reviewer before another native run.",
+  "exact_requested_cap": 3328599654,
+  "historical_deployment_byte_constant": "UNCONFIRMED; this is a conservative integer encoding inside explicitly approved3.1GiB envelope, reviewer may pin exact previous constant before launch",
+  "only_case_json_delta": {
+    "path": "caps.max_solver_owned_bytes",
+    "old": 1073741824,
+    "new": 3328599654,
+    "all_other_case_fields_identical": true
+  },
+  "original_semantic_request": "Same full original empty rare ilvl86/clean5naturalT1goal/root/tiers/priced product envelope/frozenAllflame/baseoverride5; exact resources/actions/terminal probs/root cost must match R2; no graph import",
+  "unchanged_limits": {
+    "requested_seconds": 120,
+    "final_exact_allowance_seconds": 30,
+    "native_deadline_seconds": 150,
+    "host_watchdog_seconds": 165,
+    "checker_step_work_items": 8,
+    "entry_step_work_items": 1,
+    "aggregate_logical_work_cap": 50000000,
+    "aggregate_owned_bytes_cap": 3328599654,
+    "rows": 1215000,
+    "transitions": 10000000,
+    "economic_restart": false,
+    "limits": "preserve full original file and resolved owner.options discovery/checker/output caps; record all resolutions",
+    "epsilon": 1e-12,
+    "acceptance_probability_tolerance": 1e-09,
+    "resources": "exact quantities, no resource epsilon or weighted structural overwrite"
+  },
+  "source_delta": "Benchmark-only: count actual retained shared economy once via existing refinement owner and caller options as a REAL separate copy (checker has its own copy); frozen quantities cached only while immutable and audited at phase boundaries. Mutable validator and outer owners measured every checkpoint. Capture fast/full selected live components BEFORE validator release, and after native refusal rollback, retaining full result estimate as checker subset. Full transient/process peak remains unproved and explicitly false.",
+  "ownership_review": "refinement economy owner counts sharedEconomy once; separately retained solver price copy and caller eval copy are REAL allocations. Complete output/census is a SUBSET of checker, not another added54.6MB. Full selected component audits at root-to-entry handoff and live entry end/refusal; no simultaneous checker/validator component skipped, no sum of independent phasepeaks. Diagnostic serialization remains reservation-bounded; full transient peak false.",
+  "minimum_allowance": "Report measured complete all-entry selected/reservation peak ONLY if it completes; on refusal retain lower-bound and next-live snapshot. Minimum for completion remains UNKNOWN until complete witness; no scaled census projection/cap escalation beyond this authorized envelope.",
+  "slots": {
+    "LOCAL": "not currently held; parent assignment after source review",
+    "compiler_jobs": 2,
+    "execution": "serial existing supervisor; ONE changed-cap samegraph case, stop failure/identity mismatch"
+  },
+  "owner": "existing dev-engine/native benchmark/corpus/run_isolated_process; no new supervisor",
+  "stages": [
+    {
+      "phase": "build-benchmark",
+      "argv": [
+        "powershell",
+        "-NoProfile",
+        "-File",
+        "scripts/dev-engine.ps1",
+        "-Task",
+        "Benchmark",
+        "-Jobs",
+        "2"
+      ],
+      "host_watchdog_seconds": 600
+    },
+    {
+      "phase": "samegraph-restored-envelope-original-root-and-all-entries",
+      "argv": [
+        "build/engine/poecraft_solver_benchmark.exe",
+        "--artifact",
+        "data/compiled/current",
+        "--corpus",
+        "docs/active/2026-10-04-sol61-armour-recovery/conquest-restored-envelope-manifest.json",
+        "--case",
+        "sol61-trace-conquest5-currentmodel-120",
+        "--partial-held-root-check",
+        "--partial-held-final-fill",
+        "--output",
+        "<fresh batch>/restored-envelope-root.json"
+      ],
+      "host_watchdog_seconds": 165
+    }
+  ],
+  "reuse": "Keep1GiB R1/R2 and39066finite evidence; do not rerun unchanged failed arm; same-candidate FNV/SHA/bindings/generation/root/census resources semantic identity checked against retained control before upper acceptance.",
+  "after_result": "Immediate parent final withLOCALreleasedUTC/no survivors/allentry/refusal/cost/work/phases/actualliveownership/binary/source/graph identity before docs. No uncheckedfinancial gain or publicCurrent/Finder/WASM activation.",
+  "stop_on": "first semantic/resource/goal/scope/graph/case/price/ledger/debit/positiveentry mismatch, native/host/watchdog/memory cap or survivor. Preserve failure/unrun phases; no repeated unchanged run, arbitrary growth beyondapproved3.1, droppedtinyentries, approximate merging or improper closure authority."
+}

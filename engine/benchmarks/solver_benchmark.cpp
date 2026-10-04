@@ -3272,14 +3272,33 @@ int check_generated_partial_root(poecraft::solver::CalcContext& calc,
     std::unique_ptr<StrategyEvalWork> checker;
     std::unique_ptr<SelectiveProgrammeEntryValidator> validator; // Destroy before checker.
     StrategyEvalProgress progress;
+    StrategyEvalOptions eval;
+    std::vector<std::string> phase_ownership;
+    // This shared economy and caller options remain immutable during checking.
+    // Cache only their frozen allocations, never mutable child/cursor storage.
+    const auto economy_owned = refinement::economy_owned_bytes(economy->prices,economy->id.capacity());
+    std::uint64_t caller_eval_owned = 0;
+    const auto caller_eval_bytes = [&] {
+        std::uint64_t bytes = sizeof(eval)+eval.review_projection_json.capacity()+1+
+            eval.continuation_entries.capacity()*sizeof(StrategyContinuationEntryRequest)+
+            eval.graph_local_provenance.owned_bytes()+
+            eval.policy_decision_entries.capacity()*sizeof(StrategyPolicyDecisionRequest);
+        for (const auto& request : eval.policy_decision_entries)
+            bytes += request.compiled_node_id.capacity()+1+
+                (request.coarse_state_identity.capacity()+request.selected_operator_identity.capacity())*sizeof(std::uint64_t);
+        return bytes;
+    };
     // The reservation already covers bounded construction/prepare/serialization
     // copies. Count their observed buffers too, conservatively; never subtract
     // a checker phase peak or omit its retained result/census during validation.
     const auto outer = [&](const bool audited) {
+        std::uint64_t receipt_owned = phase_ownership.capacity()*sizeof(std::string);
+        for (const auto& snapshot : phase_ownership) receipt_owned += snapshot.capacity()+1;
         return (audited ? owner.audited_estimated_owned_bytes() : owner.fast_estimated_owned_bytes())+
             (audited ? calc.audited_estimated_owned_bytes() : calc.fast_estimated_owned_bytes())+
             producer.estimated_owned_bytes()+graph.capacity()+1+
-            refinement::strategy_impl_owned_bytes(*strategy)+retained_word_bytes;
+            refinement::strategy_impl_owned_bytes(*strategy)+retained_word_bytes+
+            economy_owned+caller_eval_owned+receipt_owned;
     };
     const auto memory = [&] {
         const auto observation_began = Clock::now();
@@ -3312,7 +3331,33 @@ int check_generated_partial_root(poecraft::solver::CalcContext& calc,
         finish_requested |= now >= requested_deadline;
         return now < deadline;
     };
-    StrategyEvalOptions eval;
+    const auto snapshot_ownership = [&](const char* boundary) {
+        if (economy_owned != refinement::economy_owned_bytes(economy->prices,economy->id.capacity()) ||
+            caller_eval_owned != caller_eval_bytes())
+            throw std::logic_error("generated frozen economy/caller options ownership changed");
+        const auto fixed = outer(false),fixed_audit = outer(true);
+        const auto validator_live = validator ? validator->estimated_owned_bytes() : 0;
+        const auto validator_audit = validator ? validator->audited_estimated_owned_bytes() : 0;
+        if (fixed < fixed_audit || validator_live < validator_audit)
+            throw std::logic_error("generated phase selected ownership ledger undercounted its full audit");
+        const auto checker_live = checker ? checker->live_owned_bytes() : 0;
+        const auto output_live = checker ? checker->diagnostic_result().retained_output_owned_bytes_estimate : 0;
+        const auto selected = fixed+checker_live+validator_live;
+        peak_selected = std::max(peak_selected,selected);peak = std::max(peak,selected+reservation);
+        std::ostringstream snapshot;
+        snapshot << "{\"boundary\":" << escape_json(boundary)
+            << ",\"outer_selected\":" << fixed << ",\"outer_audited\":" << fixed_audit
+            << ",\"economy_selected\":" << refinement::economy_owned_bytes(economy->prices,economy->id.capacity())
+            << ",\"caller_eval_selected\":" << caller_eval_bytes()
+            << ",\"checker_selected\":" << checker_live << ",\"checker_complete_output_selected\":" << output_live
+            << ",\"checker_complete_output_is_subset\":true"
+            << ",\"validator_selected\":" << validator_live << ",\"validator_audited\":" << validator_audit
+            << ",\"selected_sum\":" << selected << ",\"reserved_sum\":" << selected+reservation
+            << ",\"validator_entries\":" << (validator ? validator->validated_entries() : 0)
+            << ",\"census_entries\":" << (checker ? checker->result().policy_entries.entries.size() : 0)
+            << ",\"complete_transient_peak\":false}";
+        phase_ownership.push_back(snapshot.str());
+    };
     eval.economy = economy; eval.epsilon = 1e-12; eval.max_sweeps = limits.max_sweeps;
     eval.max_states = std::min(limits.max_discovered_states,
         limits.candidate_evaluation_limits.max_states == 0 ? limits.max_discovered_states :
@@ -3338,6 +3383,7 @@ int check_generated_partial_root(poecraft::solver::CalcContext& calc,
         occurrence.selected_operator_identity = key; occurrence.graph_local = true;
         eval.policy_decision_entries.push_back(std::move(occurrence));
     }
+    caller_eval_owned = caller_eval_bytes(); // All dynamic options are now prepared; only scalar caps change below.
     try {
         if (outer(false) < outer(true))
             throw std::logic_error("generated root outer accounting audit exceeded fast count");
@@ -3359,6 +3405,7 @@ int check_generated_partial_root(poecraft::solver::CalcContext& calc,
             root_accepted = true; phase = "positive_entries";
             entry_phase_began = Clock::now();entry_phase_started = true;
             checker_wall_ms = milliseconds(checker_phase_began,entry_phase_began);
+            snapshot_ownership("accepted_checker_before_entries");
             auto allowance = limits;
             allowance.max_solver_owned_bytes = memory();
             allowance.max_reforge_work = parent.remaining_reforge_work_budget();
@@ -3375,6 +3422,7 @@ int check_generated_partial_root(poecraft::solver::CalcContext& calc,
             entries_accepted = validator->done() &&
                 validated_entries == checker->result().policy_entries.entries.size();
             status = entries_accepted ? "checked_root_and_all_positive_entries" : "censored_time";
+            snapshot_ownership("entry_phase_end_before_release");
             validator.reset(); // Borrowed census references end before checker/result changes.
             memory();
         }
@@ -3392,6 +3440,11 @@ int check_generated_partial_root(poecraft::solver::CalcContext& calc,
     if (validator) {
         validated_entries = validator->validated_entries(); positive_entries = validator->positive_entries();
         validation_work = validator->logical_work(); validation_active = validator->active_work();
+        try { snapshot_ownership("entry_refusal_after_rollback_before_release"); }
+        catch (const std::exception& error) {
+            status = "rejected_accounting"; refusal += std::string(":phase_ownership:")+error.what();
+            entries_accepted = false;
+        }
         validator.reset();
     }
     // Preserve executed checker units on every exit, with the same watermark.
@@ -3430,7 +3483,11 @@ int check_generated_partial_root(poecraft::solver::CalcContext& calc,
         <<",\"memory_observation_calls\":"<<memory_observation_calls<<",\"memory_observation_ns\":"<<memory_observation_ns
         <<",\"entry_live_memory_observation_ns\":"<<entry_live_observation_ns
         <<",\"entry_memory_observer\":\"native_selected_allocation_ledger\""
-        <<",\"aggregate_memory_observation_complete\":false"
+        <<",\"aggregate_memory_observation_complete\":false,\"phase_ownership\":[";
+    for (std::size_t index=0;index<phase_ownership.size();++index) {
+        if (index) report<<',';report<<phase_ownership[index];
+    }
+    report<<']'
         <<",\"root_accepted\":"<<(root_accepted?"true":"false")
         <<",\"all_positive_entries_accepted\":"<<(entries_accepted?"true":"false")
         <<",\"checked_feasible_upper\":"<<(complete?"true":"false")

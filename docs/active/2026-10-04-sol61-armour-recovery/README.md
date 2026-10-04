@@ -923,3 +923,74 @@ failure, then ONE samecandidate root only after clean finite results and reviewe
 source clearance. Inputs/graph/laws/caps remain pinned; no unchanged failure
 rerun, cap increase, memory omission or policy activation. On terminal result
 return LOCAL/no-survivor/result to parent immediately before more documentation.
+
+
+## Observer R2:39066 pass; faster exact observer exposes memory capacity
+
+[Compact R2 receipt](entry-observer-r2-summary.json) pins source db4ad864,
+testf0f18d9a...dedb7/benchmarkb1f22597...16e2a3. All six finite selectors pass:
+347entry/peak/lifetime,2919query/rollback,23982paired16roots,11581legacy8roots,
+171blocker and66actual protected Finder checks =39066/zero failures. Runtime
+now records the real native scratch cap max_owned_bytes125121; shared pressure
+returns max_owned_bytes125129, before any work/entry, with48debit preserved.
+R1's298/1wrong-classification failure remains retained.
+
+ONE samegraph root runs11.108s: generation.344s/checker5.105s/entries5.594s.
+Entry-live memory observation falls from141.1568795s to.7868034s under the same
+ordinary generated graph7602779656003707844/bedc2a47...49337a. Root resources,
+expected actions, terminal probabilities and exactcost210090.72616079813 match
+the full-observer control. Coverage improves976->1717of12658, then memory stops
+max_solver_owned_bytes702645053. Logical work remains1884694/50M; selected sampled
+peak872063327/reservation-inclusive1073652575bytes. This is a bounded causal
+observer observation, no robust timing claim or economic/complete-entry gain.
+No qualified upper/retention/activation. LOCAL released13:44:21UTC/no survivors
+and reported immediately. Bulk remains out/sol61-armour/entry-observer-r2.
+
+## Source-only approved envelope restoration and retained ownership
+
+Parent explicitly supersedes the1GiB research ceiling: Oliver approved restoring
+helpful accidental budget, and the released envelope is stated as3.1GiB aggregate.
+The1GiB control remains an identified experiment, not an immutable user limit.
+[Ownership analysis](retained-root-ownership-analysis.json) records87,596,436
+checker-live bytes, of which complete retained result/census54,621,231 is ALREADY
+included. A safe result transfer could release at most32,975,205bytes before new
+owner/overlap costs. This does not establish enough benefit to clear12658entries;
+review8e9dc70b4cfdc303d4ae598e934a54a03f992f09 recommends retaining the checker
+and narrowly restoring the approved envelope. No early release/borrowed move.
+
+Other selected ownership at the last sampled peak is784,466,891bytes, largely
+validator/cache plus outer solver/generation/control/graph/strategy. The old
+receipt did not preserve exact live validator/cache inventory after the refusal
+rollback. Minimum aggregate allowance for COMPLETE coverage remains unknown;
+last sample near1GiB is a lower-bound observation, not a linear census projection.
+Complete transient/process peak remains unqualified.
+
+[Ready proposal](restored-envelope-root-request.json) uses the exact integer
+floor of3.1GiB,3,328,599,654bytes, as a conservative capacity encoding INSIDE
+parent's explicit approval. A historical deployed exact byte constant was not
+independently located; no claim of recovering it. Reviewer/parent must reconcile
+that exact encoding before launch. [Derived case](conquest5-restored-3p1gib.json)
+changes ONLY caps.max_solver_owned_bytes; all other original request fields,
+prices, scope, tiers, goals, counts, deadlines and limits remain parsed-identical.
+The separate manifest/request pins the capacity variant, old control and new
+bytes; original frozen case is untouched. Require identical generated graph,
+bindings/root/census/resources, with every12658positive entry required.
+
+Benchmark-only preparation explicitly counts the shared retained economy once
+through the existing refinement owner and the external caller's evaluation
+options as a real copy separate from checker options. Only frozen caller/economy
+allocations are cached; phase audits reject lifetime/capacity drift. Mutable
+validator/outer owners remain live every checkpoint. Full-selected audits capture
+components before validator release at completion or after refusal rollback;
+complete result/census is reported as a checker SUBSET, never added twice.
+Snapshot storage is charged, serialization/construction reservation retained,
+and complete transient peak stays explicitly false. No production observer/
+lifetime/strategy change. These benchmark additions are UNBUILT/UNRUN.
+
+Next requested gate is only a two-job benchmark build and ONE restored-envelope
+samegraph root under150native/165host/50Mwork, after reviewer+LOCAL assignment.
+Reuse39066 finite evidence; no unchanged failed arm or larger-budget search.
+On complete coverage report observed selected/reserved ownership rather than
+inventing a minimum; on refusal preserve the actual live component cut. Cost210k
+still exceeds released101311/supplied historical85970. Current/Finder activation,
+economic/controller recovery, complete peak/cohort/WASM/publication remain open.
