@@ -1,0 +1,181 @@
+{
+  "schema": "sol61_independent_accounting_source_review_v1",
+  "candidate_commit": "9c0c31d112c7b19346f9a6526e7b07882b8b7a6b",
+  "diff_basis": "1cc4f8ffa48d2bfdb2f99116120300a9455e2905",
+  "evidence_class": "SOURCE REVIEW ONLY; no reviewer native run; owner LOCAL batch not yet reviewed",
+  "reviewed_request_sha256": "e465b89b13453a46df662b4a5567a629ffb211572957f27057a54b16d937c150",
+  "request_source_pins_verified": 10,
+  "source_pins": {
+    "engine/src/solver_compile.cpp": {
+      "sha256": "35838754a73d7bc320c1265e12eed88a5fff32bc6bf5eb836ba881d6aeaea05a",
+      "bytes": 243669
+    },
+    "engine/src/solver_compile_contracts.hpp": {
+      "sha256": "b156eed5a8e3c13a1159365b0a3e4ccd6a50234927d07f3c9d506789409735f3",
+      "bytes": 8341
+    },
+    "engine/src/solver_selective_completion.cpp": {
+      "sha256": "5995a4243c9af62c7a04fa53a5178857d98dcdf58de63e842f46ddd16a024bad",
+      "bytes": 68476
+    },
+    "engine/src/solver_selective_completion.hpp": {
+      "sha256": "c1d91dc2c83ebc112888b32f58386fa3246b1f0d0bd9660df9fa545d4d1ef3f1",
+      "bytes": 8330
+    },
+    "engine/benchmarks/solver_benchmark.cpp": {
+      "sha256": "26738d370360a3f29ab095bb3e4ffee7d7796a41bd000a2ed303c3cacea80530",
+      "bytes": 391982
+    },
+    "engine/tests/test_main.cpp": {
+      "sha256": "b4ac51fd0cf645bd29e874501ff2af6b6c5b0f54fc78d0144c044094167c076e",
+      "bytes": 22463
+    },
+    "engine/tests/test_solver_compile.cpp": {
+      "sha256": "df496283f4f338286f1cc56a725c3633790bad12e3fb5bdfa10d1061e342d52c",
+      "bytes": 420576
+    },
+    "engine/tests/tests.hpp": {
+      "sha256": "b17c4b3f436b11e77016afccff6f7ae54d06b92d3bd3499f7ae63d4aa2dc02ca",
+      "bytes": 4209
+    },
+    "engine/src/solver_calc.cpp": {
+      "sha256": "41198cac24afe47b3c65fc07094b6fffa4138f5f69fb656e2339a2a52d3e34b1",
+      "bytes": 160031
+    },
+    "engine/src/solver_calc_types.hpp": {
+      "sha256": "2035b3939d546fb868578b00ee86f358978cbac32d804a4b63a9e2f47fdadd02",
+      "bytes": 66035
+    },
+    "engine/src/solver_eval.cpp": {
+      "sha256": "feb270f3c60a2544cdb317793e043a2515f19a9e6a5f95faf0333c1a12582559",
+      "bytes": 463969
+    },
+    "engine/src/solver_eval_helpers.hpp": {
+      "sha256": "d20bbcdce4e8a692acaa9a49dfef547d6711a0bd3627af1967877856ccb7d464",
+      "bytes": 82429
+    },
+    "engine/src/solver_options_automatic.cpp": {
+      "sha256": "e85c97e4d6ba591f4b00882864d2d9d7a60ab120b7a7788169c4a7f8523766a0",
+      "bytes": 131533
+    },
+    "engine/src/solver_solve_selective_completion.cpp": {
+      "sha256": "97cf5cb80f13cc376351fa0dd2ebc41028d5e043bd86229de3b3df8d1f461865",
+      "bytes": 22416
+    }
+  },
+  "production_disposition": {
+    "generic_entry_work_owner": "R2 unowned/stricter-local defect addressed in source; native boundary qualification pending",
+    "finder_generation": "R2 actual88/report40 under cap50 remains open; unchanged production Finder",
+    "retained_checker": "new generated full-root diagnostic retains checker/census throughout validator; other early-release proposals remain deferred",
+    "new_work_or_lifetime_blocker": "none demonstrated in reviewed source",
+    "aggregate_peak_evidence": "R6 open; sampled live overlap is not complete simultaneous peak evidence",
+    "release": "retain default-off source; no consumer activation/closure/WASM/frozen economics approval from this source review"
+  },
+  "source_observations": [
+    {
+      "claim": "Persistent private budget owner spans every entry and advance; created only for unowned or stricter-local callers and forwards to the existing parent.",
+      "references": [
+        "engine/src/solver_selective_completion.cpp:1121-1138",
+        "engine/src/solver_selective_completion.hpp:201-203"
+      ]
+    },
+    {
+      "claim": "Owner is declared before admission child, so normal and exception destruction ends child/cursor ownership first. Shared parent and original problem must still outlive validator under the existing API contract.",
+      "references": [
+        "engine/src/solver_selective_completion.hpp:190-203",
+        "engine/src/solver_calc_types.hpp:1041-1052"
+      ]
+    },
+    {
+      "claim": "Ordinary denying cap is checked before parent forwarding and child committed increments; automatic children forward before recording their separate committed ledger. Refused units are not logically debited.",
+      "references": [
+        "engine/src/solver_calc.cpp:2249-2285",
+        "engine/src/solver_options_automatic.cpp:1053-1063"
+      ]
+    },
+    {
+      "claim": "Effective remaining work is cap minus min(cap, ordinary committed logical work), minimized across the acyclic owner chain; legacy active refusal saturation is not allowance authority.",
+      "references": [
+        "engine/src/solver_calc.cpp:2236-2246",
+        "engine/src/solver_calc.cpp:2266-2285"
+      ]
+    },
+    {
+      "claim": "Validator child enforces explicit discovered-state/memory caps, includes private-owner bytes, and leaves original exact entry legality/probability/resource/identity obligations intact.",
+      "references": [
+        "engine/src/solver_selective_completion.cpp:1112-1156",
+        "engine/src/solver_selective_completion.cpp:1163-1314"
+      ]
+    },
+    {
+      "claim": "Checker diagnostic getter refreshes executed committed work from its calc even after a step throws; handoff uses monotone watermarks and repeats the same delta operation on exit. Validator work is forwarded directly and is not charged a second time.",
+      "references": [
+        "engine/src/solver_eval.cpp:9750-9793",
+        "engine/benchmarks/solver_benchmark.cpp:3283-3294",
+        "engine/benchmarks/solver_benchmark.cpp:3333-3379",
+        "engine/benchmarks/solver_benchmark.cpp:3395-3398"
+      ]
+    },
+    {
+      "claim": "New check borrows unchanged full census from a live checker, destroys validator first, and requires root acceptance plus every census entry before any checked financial upper.",
+      "references": [
+        "engine/benchmarks/solver_benchmark.cpp:3262-3263",
+        "engine/benchmarks/solver_benchmark.cpp:3341-3362",
+        "engine/benchmarks/solver_benchmark.cpp:3399-3415"
+      ]
+    },
+    {
+      "claim": "Constructor source inspected does setup/interning, not native action-outcome expansion; no concrete lost native work on constructor throw found. No automatic-admission execution references in evaluator sources.",
+      "references": [
+        "engine/src/solver_eval.cpp:1340-1505",
+        "engine/src/solver_eval_helpers.hpp:1134-1596"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "id": "R6",
+      "severity": "P2",
+      "confidence": "high for source-level measurement limitation; no observed run discrepancy or cap overrun",
+      "consumer": "generated Conquest full-root diagnostic memory qualification",
+      "title": "Aggregate peak receipt omits within-step checker transient high-water",
+      "references": [
+        "engine/benchmarks/solver_benchmark.cpp:3274-3278",
+        "engine/benchmarks/solver_benchmark.cpp:3429-3432",
+        "engine/src/solver_eval.cpp:1114-1122",
+        "engine/src/solver_eval.cpp:3772-3777",
+        "engine/src/solver_eval.cpp:4094-4103",
+        "engine/src/solver_eval.cpp:9796-9802"
+      ],
+      "static_witness": "memory() samples live_owned_bytes only before/after step(8). Checker check_owned_cap(transient) updates a different internal high-water; temporary refinement storage can disappear within a slice. Receipt prints that checker high-water separately but does not combine it with concurrently retained outer owners. Thus aggregate_*_peak is only the maximum sampled boundary overlap.",
+      "impact": "Cannot use aggregate_selected_peak/aggregate_reserved_peak as complete aggregate peak evidence. Native inner cap is still enforced with headroom, so this is not a demonstrated 1GiB overrun or invalid financial root.",
+      "minimal_disposition": "Before memory qualification, include fixed concurrently retained outer ownership plus checker internal peak for that exclusive phase, and similarly establish validator transient overlap if claiming a complete aggregate peak. Otherwise explicitly label values sampled lower bounds and retain the qualification hold; do not sum unrelated phase peaks or claim a checker release saving.",
+      "communication": "Sent promptly to parent in commentary before source review completion; no competing production edit or fixture."
+    }
+  ],
+  "native_gates_pending": [
+    "owner canonical build and --solver-entry-budget-only actual1/47/48; exhausted/shared/stricter-local/discovery/memory boundaries",
+    "eight recovery controls and existing blocker/native-entry compatibility",
+    "one pinned generated Conquest original root and every positive entry, exact work debit, cap/refusal/time and cleanup receipt"
+  ],
+  "acceptance_preserved": {
+    "epsilon": 1e-12,
+    "root_acceptance_tolerance": 1e-09,
+    "conquest_graph_fnv1a64": "2424103896900201902",
+    "aggregate_work_cap": 50000000,
+    "aggregate_memory_cap": 1073741824,
+    "requested_seconds": 120,
+    "native_seconds": 150,
+    "host_watchdog_seconds": 165,
+    "supplied_reference_cost": 85970.67347138176
+  },
+  "not_qualified": [
+    "actual9c native behavior/performance",
+    "Finder generation accounting",
+    "query/full-envelope closure beyond prior separately qualified2ce finite cuts",
+    "Current/Finder retention or activation",
+    "Bow4/Bow5/Ring/Amulet/armour final frozen cohort",
+    "aggregate transient peak certificate",
+    "WASM"
+  ]
+}

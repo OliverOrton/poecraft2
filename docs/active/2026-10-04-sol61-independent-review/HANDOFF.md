@@ -1,34 +1,27 @@
 # Independent review handoff
 
 Review worktree: poecraft2-sol61-independent-review-20261004.
-Tested source f442b4d8a354f6c0cd2beab6c960299360ccd694, production2ce0a75b.
-Canonical Tests build passed; Engine archive reused; all4 process identities
-proved absent, no timeout/cancellation/survivor. LOCAL released.
+Latest actual diff:9c0c31d112c7b19346f9a6526e7b07882b8b7a6b vs1cc4f8ff.
+Ten prepared pins verified; no reviewer heavy command. Owner has LOCAL for the
+finite budget/compatibility gate and one original generated Conquest check.
 
-- Weighted23/23 passes. Nonunit inputs are diagnostics; no production defect.
-- Finder cap50: actual88, report40;4 checks/2 contract failures.
-- Unowned validator cap1: actual48, six real positive entries;3 checks/1 failure.
-  Exhausted shared-owner control: refused, child0, owner1 retained.
+- R2 validator: source addressed, native1/47/48/shared/discovery/memory results
+  pending. No new work debit or lifetime blocker demonstrated.
+- R6/P2: aggregate peaks sample boundary live bytes and omit internal transient
+  checker overlap. Complete aggregate peak evidence held; no demonstrated1GiB
+  overrun. Sent promptly to parent.
+- Finder R2 remains open: reviewer canonical cap50 actual88/report40.
+- R5 retained-side blocker repaired at1cc and native R8 qualified: eight roots,
+  all878 entries,5944 checks; exact Conquest Ember1/Exalt word constructed.
+  Conquest full-root/economics still pending actual terminal receipt.
 
-[Living record and proposed correction](README.md#canonical-finite-results-and-source-only-correction-plan)
-[Exact compact results](finite-r3-summary.json) / [process receipts](finite-r3-processes.json).
-Both earlier link failures and the canonical build identity are preserved.
-The creation-token pause was reconciled with the existing observer; no rerun.
+[Living record](README.md) / [9c source review](accounting-9c-source-review.json) /
+[pinned request](owner-conquest-root-9c-request.json).
+Earlier reviewer canonical evidence is finite-r3-summary.json/processes.json:
+weighted23/23 passes; unowned validator48 under cap1 reproduced; exhausted-owner
+control child0/owner1 passed. Canonical build/cleanup qualified, LOCAL released.
+Owner finite R8 receipts/source pins are preserved and independently verified.
 
-No production correction is implemented. Minimal planned consumer paths:
-solver_finder.cpp/.hpp, solver_selective_completion.cpp/.hpp; narrow lifetime/
-effective-remainder helper in solver_calc_types.hpp/solver_calc.cpp. Keep owned
-Current behavior, committed debit, original request identities, query membership
-and incumbents. Parent assigns the implementer and any future LOCAL; CI currently owns LOCAL.
-Recovery8984f7c8 is source/owner-receipt reviewed:468/468 checks, including151
-compound-refusal checks and233 four-positive-fixture checks. The positive native
-compound carrier still routes to paid no-progress Exalt; root and incomplete
-census correctly refuse. Generic routing repair is pending actual source.
-No activation/closure/frozen-economic/WASM approval.
-
-Correction1cc4f8ff and owner R8 receipts d452cef2 reviewed; eight source pins,
-raw logs/Conquest graph/report and frozen inputs verified. R5 is native-confirmed
-and repaired for eight accepted roots/all878 entries;5944 checks pass. Generated
-Conquest partial-held Ember1/Exalt witness passes, full-root/economics still unrun.
-R2 accounting/lifetime repair is next actual-diff review; no public activation,
-closure, final controls or WASM approval. Reviewer ran no heavy command.
+Retain default-off source; no Current/Finder retention/activation, full closure,
+final Bow4/Bow5/Ring/Amulet/armour frozen cohort or WASM approval. Parent alone
+assigns future LOCAL/ownership; no production edits or main merge/push here.

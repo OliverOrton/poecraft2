@@ -1028,3 +1028,55 @@ WASM. R2 accounting defects remain open; the parent's separate accounting/lifeti
 candidate needs actual-diff review. Nonblocking cleanup: unrelated old em dashes
 at test_solver_compile.cpp:2362-2363 became mojibake; restore before integration.
 No review-owned production fix or new fixture was made.
+
+
+## Generic entry budget and generated-root source review
+
+Reviewed immutable9c0c31d112c7b19346f9a6526e7b07882b8b7a6b against1cc4f8ff. All ten
+prepared source pins match Git blobs; four dependent evaluator/admission/consumer
+sources are also pinned in accounting-9c-source-review.json. No reviewer native
+command, fixture or production edit. Owner holds LOCAL for the finite gate and
+one original generated Conquest check; those results have not been reviewed.
+
+R2 validator disposition is SOURCE ADDRESSED, NATIVE PENDING. The persistent
+private ordinary budget owner bounds unowned or stricter-local admission across
+all entries and slices, forwards existing parent work before execution, and dies
+after its child/cursor. Denying ordinary caps precede owner forwarding and child
+committed increments. Existing stricter/exhausted owners are reused; baseline
+work is preserved. Effective remainder reads committed logical work through the
+acyclic chain. Private owner bytes and child discovery/memory caps are explicit.
+Original goal, exact carrier/occurrence identity, full semantic resources, native
+legality/properness and every strictly positive entry gate remain unchanged.
+
+The new generated-root diagnostic retains its checker, complete result and census
+through validation. diagnostic_result refreshes executed checker units even after
+step exceptions; monotone watermarks debit deltas once before handing off the
+remaining allowance. Validator units go directly to the same owner and are not
+debited again. Aggregate equality checks generation+checker+validator logical
+work. Constructor setup inspected does not expand native action outcomes; no
+concrete uncharged constructor work or new lifetime/double-debit blocker found.
+A checked financial upper still requires accepted original root and all entries;
+frozen graph, probabilities, prices, work caps and120+30/165 watchdogs remain.
+
+R6/P2 is an OPEN MEMORY EVIDENCE LIMITATION, communicated promptly. Benchmark:
+3274-3278 samples current live checker/validator bytes after each slice and labels
+those maxima aggregate_selected_peak/aggregate_reserved_peak at3429. Evaluator:
+1114-1122 tracks transient high-water separately, with refinement storage at
+3772-3777 and4094-4103; peak_owned_bytes9800 exposes that value. Temporary memory
+can disappear within step(8), so sampled overlap can miss concurrently retained
+outer ownership plus checker transient peak. This static witness does NOT show a
+1GiB overrun: the checker receives exclusive headroom and enforces its own cap.
+The financial root is not rejected solely by this measurement limitation. For
+aggregate peak qualification, combine a phase's fixed retained outer owners with
+that phase's internal peak and establish validator transient overlap, or explicitly
+label these fields sampled lower bounds and hold peak qualification. Do not sum
+unrelated phase peaks or claim a checker release saving. Native discrepancy is
+unmeasured.
+
+Await actual budget boundaries, recovery compatibility and the single Conquest
+terminal receipt. No unchanged failure rerun or cap increase is authorized by
+this review. Finder generation R2(actual88/report40 at cap50) and other early
+checker release work remain open. Default-off recovery finite R8 qualification
+is unchanged. Source-only recommendation: retain candidate for its requested
+finite gate; hold public activation, final frozen controls, complete aggregate
+peak claims, closure and WASM.
