@@ -966,3 +966,65 @@ unchanged. Private outer gate is still false; public proposals/ABI/vocabulary ar
 not activated. The Conquest diagnostic remains construction-only and imports no
 policy; its source-only route/resource plan grants no economics or whole-root
 acceptance. Earlier R2 accounting findings and all release holds still apply.
+
+
+## Persistent-blocker correction and native R8 review
+
+Reviewed1cc4f8ffa48d2bfdb2f99116120300a9455e2905 actual diff; parent supplied the
+completed owner receipt d452cef2 while review was active. No reviewer native run
+or production edit. Eight runtime source hashes match the immutable tested commit
+(and matched working bytes before the owner resumed accounting edits). All four
+selector log hashes, complete Conquest graph/report hashes and three frozen case/
+economy/manifest hashes/byte counts verify. Seven receipts report exit0, no timeout,
+cancellation or survivor. Owner released LOCAL; CI owns it. Exact receipts and
+source review are owner-*-r8-* and correction-1cc-source-review.json.
+
+R5 disposition: corrected and qualified for the requested finite cuts. Compiler:
+41-75 requires positive native membership for EVERY target goal after clearing,
+including currently satisfied goals. Full canonical blocker masks are restricted
+to the retained side; no current capacity or unsatisfied-slot exemption survives.
+Selective_completion:637-647 tests compatibility before counts/progress. Compose:
+997-1001 routes that specific false edge to original PAID Chaos in all stages,
+including final stages, while retaining other refusal ports. Chaos preserves tier
+identity; unsupported frames still face existing ports. Full original-root checking
+remains mandatory. Every acquisition outcome returns to ordinary dispatch, with
+costs/retries in original-root rewards. No probability/resource epsilon, native
+law, price, root, goal, scope or public proposal changes. Removable target-side
+blockers retain the narrower paid EldritchChaos route and useful held progress.
+
+Fresh native R5 confirmation: exact original-root carrier mass0.018899252609993832,
+one-ordering0.00018729344839751061. With only the new escape disabled, both old
+mirrored controllers leave0.84001882298508312 unresolved and refuse the actual
+incomplete census. Enabled carriers select requested Chaos at synthetic price100,
+full mass1.0000000000000002 within unchanged1e-12. Both original roots accept and
+validate77 actual positive entries each. Fully paid costs1058.41163574 and
+1058.40531371 preserve the expense of lost progress; fixed structural word counts
+do not replace weighted original-root rewards.
+
+R8 passes5944 checks:151 original rejection +322 retained-side old-routing
+rejection +5387 corrected recovery +84 legacy growth. Eight accepted roots cover
+878 programme entries (145/145/145/79/105/105/77/77). All four compatibility nodes
+are compared with the actual native pool AFTER clearing the target side on every
+positive census entry, with positive final weights and every target goal included.
+The unchanged validator accepts the complete actual census; identity tamper
+negatives remain. Prior six costs/counts are unchanged. These are scoped finite
+results: per-slot compatibility is necessary, not joint-completion authority;
+dynamic added tags remain conservative and unqualified.
+
+Frozen Conquest ordinary construction passes: generated held-mask8 c21 executes
+Ember1 plus EldritchExalt from a positive original-root goal-mask9 carrier, with
+native ordering2.4457291281364614e-9. Two paid actions/resources,33 exits, mass
+1.0000000000000002, all retain held progress. Complete generated graph36069 bytes,
+SHA-2567f2c12941904762444da1ecf95ef77f8456e2ab170cd74465c5aba50bbd4461e;
+source/report/frozen inputs/binaries are pinned. No graph import or broad-search
+permission. This proves construction/word behavior only: Conquest full-root,
+every-entry and economics remain UNRUN. Reserved peak283828260 includes201589248
+transient reservation and proves no audited peak or memory release saving.
+
+No new blocker found in this correction's reviewed finite cuts. Retain default-off
+source and evidence; hold public activation, Conquest retention/economics, Current/
+Finder qualification, checkpoint/full closure, final frozen control cohort and
+WASM. R2 accounting defects remain open; the parent's separate accounting/lifetime
+candidate needs actual-diff review. Nonblocking cleanup: unrelated old em dashes
+at test_solver_compile.cpp:2362-2363 became mojibake; restore before integration.
+No review-owned production fix or new fixture was made.

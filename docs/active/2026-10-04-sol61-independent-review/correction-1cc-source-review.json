@@ -1,0 +1,105 @@
+{
+  "source_commit": "1cc4f8ffa48d2bfdb2f99116120300a9455e2905",
+  "owner_receipt_commit": "d452cef2f15075adb2c629dd4202d29f20c4ee63",
+  "review_mode": "source and owner-executed receipt review; no independent native run or production edit",
+  "source_pins": [
+    {
+      "path": "engine/src/solver_compile.cpp",
+      "sha256": "35838754a73d7bc320c1265e12eed88a5fff32bc6bf5eb836ba881d6aeaea05a",
+      "matches_immutable_tested_commit": true
+    },
+    {
+      "path": "engine/src/solver_compile_contracts.hpp",
+      "sha256": "b156eed5a8e3c13a1159365b0a3e4ccd6a50234927d07f3c9d506789409735f3",
+      "matches_immutable_tested_commit": true
+    },
+    {
+      "path": "engine/src/solver_selective_completion.cpp",
+      "sha256": "dad1e5dacd80da6b368e5eb01e8fa301f45b94a7c6b08caf6beaa85b910f05ec",
+      "matches_immutable_tested_commit": true
+    },
+    {
+      "path": "engine/src/solver_selective_completion.hpp",
+      "sha256": "42a363eac08a9a2eaf49004658612fff433b89d9a29314b47c26d52713575aab",
+      "matches_immutable_tested_commit": true
+    },
+    {
+      "path": "engine/benchmarks/solver_benchmark.cpp",
+      "sha256": "4e21c7e213a4377dcce651e3e548b4f90416b4332465f33552759315517d3360",
+      "matches_immutable_tested_commit": true
+    },
+    {
+      "path": "engine/tests/test_main.cpp",
+      "sha256": "4f5e19baded0f4076baa63f5b09baa450f9f46a6baa2979ddfd06f468ef22352",
+      "matches_immutable_tested_commit": true
+    },
+    {
+      "path": "engine/tests/test_solver_compile.cpp",
+      "sha256": "ff8228f0b39b54b560b43a25e369fe29b7bb47d0bbde7fbdf339ec388cf59037",
+      "matches_immutable_tested_commit": true
+    },
+    {
+      "path": "engine/tests/tests.hpp",
+      "sha256": "2779f4429fe4c934ec3bbe60b87ad1b2f490bad9dda8a0f238c3db1d11a1a82f",
+      "matches_immutable_tested_commit": true
+    }
+  ],
+  "receipt_sha256": {
+    "owner-finite-r8-summary.json": "dda851cd7b08f87f42fa4a6f648ab4a9d69d31763ebec9b32a89dc1de1059e30",
+    "owner-conquest-r8-summary.json": "000b8431e7df96649373a9aad7d7d1ef29e2d525093e1ec8378bca260576a240",
+    "owner-finite-r8-request.json": "cb9801a0a2c0d00aa363ec1b4c6c3175961b7cc67bf001fe3237890003f727bc",
+    "owner-persistent-old-r8.log": "a2aa0aba1a9a85f7aa25501ca90ca6f0bcdf48231f0fb108f6c65c971df0aff0",
+    "owner-guarded-r8.log": "8ce118c5287497f5cc6596cbe887961203409b46fd3550139558b2b9b4afe774"
+  },
+  "R5_disposition": "native-confirmed old-routing defect; corrected source and eight scoped synthetic roots/every-positive-entry evidence accepted; public/generic qualification held",
+  "source_obligations": {
+    "all_target_goals": "compiler:41-75 includes satisfied slots, positive native members and retained-side full-group blockers",
+    "early_escape": "selective_completion:637-647 before count/progress dispatch",
+    "paid_acquisition": "selective_completion:997-1001 routes only compatibility false edge to original paid Chaos in every stage; all outcomes dispatch; tiers preserved",
+    "acceptance": "original-root acceptance, actual complete census and every positive entry validator unchanged"
+  },
+  "native_results": {
+    "checks": 5944,
+    "failures": 0,
+    "positive_roots": 8,
+    "positive_entries": 878,
+    "persistent_ordering_mass": 0.0001872934483975106,
+    "persistent_root_carrier_mass": 0.01889925260999383,
+    "old_routing_unresolved": 0.8400188229850831,
+    "corrected_persistent_entries_per_orientation": 77,
+    "corrected_persistent_costs": [
+      1058.41163574,
+      1058.40531371
+    ]
+  },
+  "conquest_construction": {
+    "ordering_mass": 2.4457291281364614e-09,
+    "route": "c21",
+    "held_mask": 8,
+    "word": [
+      "eldritch_ember:1",
+      "eldritch_exalt"
+    ],
+    "word_mass": 1.0000000000000002,
+    "word_actions": 2,
+    "exits": 33,
+    "resources": {
+      "eldritch_ember:1": 1,
+      "eldritch_exalt": 1
+    },
+    "graph_sha256": "7f2c12941904762444da1ecf95ef77f8456e2ab170cd74465c5aba50bbd4461e",
+    "graph_bytes": 36069,
+    "native_report_sha256": "4fdef95fd002c7b8c0284d15a1b4da68fa5b71eedeba02131cdc0ca416613cbb",
+    "frozen_input_hashes_verified": true,
+    "whole_root_entry_economic_acceptance": "unrun"
+  },
+  "limits": [
+    "Per-slot compatibility is necessary, not joint completion authority",
+    "Dynamic added tags unqualified",
+    "No aggregate peak saving/lifetime qualification",
+    "R2 accounting defects remain open",
+    "Current/Finder activation, Conquest full economics/entries, final controls, checkpoint/full closure and WASM unqualified"
+  ],
+  "nonblocking_cleanup": "test_solver_compile.cpp:2362-2363 unrelated comment em-dash mojibake; restore before integration",
+  "concurrency": "Owner began accounting edits after working-byte pin audit; final source identity verified against immutable1cc commit, not current uncommitted files"
+}

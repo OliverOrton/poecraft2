@@ -1,0 +1,220 @@
+{
+  "source_commit": "1cc4f8ffa48d2bfdb2f99116120300a9455e2905",
+  "stages": [
+    {
+      "phase": "build-tests",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 32132,
+      "process_identity_token": "32132:134355812181967112",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 218758.32760008052
+    },
+    {
+      "phase": "retained-unguarded-rejection",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 89368,
+      "process_identity_token": "89368:134355814375222724",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 337.46360009536147
+    },
+    {
+      "phase": "persistent-blocker-old-routing-rejection",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 79712,
+      "process_identity_token": "79712:134355814375729998",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 64.9683999363333
+    },
+    {
+      "phase": "guarded-recovery",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 16228,
+      "process_identity_token": "16228:134355814376402008",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 363.9978999271989
+    },
+    {
+      "phase": "legacy-growth",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 44064,
+      "process_identity_token": "44064:134355814380043580",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 53.07809985242784
+    },
+    {
+      "phase": "build-benchmark",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 93796,
+      "process_identity_token": "93796:134355814380598545",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 14843.51269993931
+    },
+    {
+      "phase": "original-conquest-construction",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 23192,
+      "process_identity_token": "23192:134355814533712119",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 882.9725000541657
+    }
+  ],
+  "unrun": [],
+  "owned_processes": [],
+  "local_slot": "RELEASED at terminal batch result",
+  "stop_requested": false,
+  "finished_utc": "2026-10-04T09:57:34.007125+00:00",
+  "schema": "sol61_persistent_blocker_finite_receipt_v1",
+  "qualification": "Native persistent-blocker negative controls and eight corrected synthetic full roots/every positive entry pass; actual original Conquest ordinary construction witness passes; whole Conquest economic qualification remains UNRUN",
+  "checks": [
+    {
+      "phase": "retained-unguarded-rejection",
+      "checks": 151,
+      "failures": 0,
+      "log_sha256": "69daba7a83dd0a128d989d3c507d126cf70cca4ce6f11cbeac9485c11088883e"
+    },
+    {
+      "phase": "persistent-blocker-old-routing-rejection",
+      "checks": 322,
+      "failures": 0,
+      "log_sha256": "a2aa0aba1a9a85f7aa25501ca90ca6f0bcdf48231f0fb108f6c65c971df0aff0"
+    },
+    {
+      "phase": "guarded-recovery",
+      "checks": 5387,
+      "failures": 0,
+      "log_sha256": "8ce118c5287497f5cc6596cbe887961203409b46fd3550139558b2b9b4afe774"
+    },
+    {
+      "phase": "legacy-growth",
+      "checks": 84,
+      "failures": 0,
+      "log_sha256": "2d13dd6fb1f8baac9d33037551aeab5df29427f31157a9d4f43f98b1136f7845"
+    }
+  ],
+  "total_checks": 5944,
+  "positive_root_fixtures": [
+    {
+      "fixture": 0,
+      "anchor_slot": 3,
+      "root_checked_cost": 282.224787,
+      "positive_entries": 145,
+      "control_nodes": 102,
+      "programs": 20
+    },
+    {
+      "fixture": 1,
+      "anchor_slot": 3,
+      "root_checked_cost": 282.189717985,
+      "positive_entries": 145,
+      "control_nodes": 102,
+      "programs": 20
+    },
+    {
+      "fixture": 2,
+      "anchor_slot": 4,
+      "root_checked_cost": 274.525596464,
+      "positive_entries": 145,
+      "control_nodes": 102,
+      "programs": 20
+    },
+    {
+      "fixture": 3,
+      "anchor_slot": 4,
+      "root_checked_cost": 274.390726972,
+      "positive_entries": 79,
+      "control_nodes": 90,
+      "programs": 14
+    },
+    {
+      "fixture": 4,
+      "anchor_slot": 3,
+      "root_checked_cost": 274.559625906,
+      "positive_entries": 105,
+      "control_nodes": 102,
+      "programs": 20
+    },
+    {
+      "fixture": 5,
+      "anchor_slot": 3,
+      "root_checked_cost": 274.523961891,
+      "positive_entries": 105,
+      "control_nodes": 102,
+      "programs": 20
+    },
+    {
+      "fixture": 6,
+      "anchor_slot": 3,
+      "root_checked_cost": 1058.41163574,
+      "positive_entries": 77,
+      "control_nodes": 102,
+      "programs": 20
+    },
+    {
+      "fixture": 7,
+      "anchor_slot": 3,
+      "root_checked_cost": 1058.40531371,
+      "positive_entries": 77,
+      "control_nodes": 102,
+      "programs": 20
+    }
+  ],
+  "positive_entries": 878,
+  "test_binary_identity": {
+    "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_engine_tests.exe",
+    "sha256": "88ddd8e09e1cb1ddfe91fb5bccf2ff0faf63164296683f852e79b2ae209b6fdf",
+    "source_commit": "1cc4f8ffa48d2bfdb2f99116120300a9455e2905"
+  },
+  "construction_summary": "conquest-construction-r8-summary.json",
+  "bulk_evidence": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\out\\sol61-armour\\finite-r8",
+  "persistent_negative": {
+    "original_root_exact_carrier_mass": 0.01889925260999383,
+    "positive_ordering_mass": 0.0001872934483975106,
+    "root_success": 0.15998117701491674,
+    "root_unresolved": 0.8400188229850831,
+    "census_refused_entries": 14,
+    "native_guard_retained_but_new_escape_disabled": true,
+    "root_and_census_refusal_preserved": true
+  },
+  "not_claimed": [
+    "public activation",
+    "Conquest checked upper/cost recovery",
+    "full historical graph reconstruction",
+    "ownership savings",
+    "armour/control cohort or WASM qualification"
+  ]
+}

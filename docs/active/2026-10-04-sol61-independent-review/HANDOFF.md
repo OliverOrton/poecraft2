@@ -26,7 +26,9 @@ compound carrier still routes to paid no-progress Exalt; root and incomplete
 census correctly refuse. Generic routing repair is pending actual source.
 No activation/closure/frozen-economic/WASM approval.
 
-Guarded sourcee669ddd7 reviewed, eight pins verified, no native run. R5/P2
-held-side junk blocker can survive every proposed target-side recovery word;
-new six-fixture gate misses it. Exact paid acquisition/cleanup escape and native
-witness requested before generic qualification. See latest living-record section.
+Correction1cc4f8ff and owner R8 receipts d452cef2 reviewed; eight source pins,
+raw logs/Conquest graph/report and frozen inputs verified. R5 is native-confirmed
+and repaired for eight accepted roots/all878 entries;5944 checks pass. Generated
+Conquest partial-held Ember1/Exalt witness passes, full-root/economics still unrun.
+R2 accounting/lifetime repair is next actual-diff review; no public activation,
+closure, final controls or WASM approval. Reviewer ran no heavy command.
