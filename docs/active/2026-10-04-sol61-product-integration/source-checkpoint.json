@@ -156,5 +156,15 @@
     "main_merged": false,
     "pushed": false,
     "deployment": false
+  },
+  "trace_contract_handoff": {
+    "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-recomb-builder-20261004\\out\\strategy-feeder\\sol61-transport-guard-fixture-20261004\\trace-ui-handoff.json",
+    "sha256": "e3e5a5dee6c542bfba954725c5b96076a5a79968ba616928bd1c81c4101351ad",
+    "source": "cfea56c0df744cd5fdc3a69db83a33acacbd76d1",
+    "retained_raw_trace_json": false,
+    "before_input_snapshots": "not in pair receipt; resolve earlier native trace snapshot or label unavailable",
+    "nested_child_steps": "absent",
+    "ring_child": "no crafting action; separate passed changed-feeder witness is a different identity",
+    "capture_required_in_granted_combined_gate": "Actual result.traces/examples and full planner/checked_export; never reconstruct old per-entry rolls/sequence from summaries"
   }
 }

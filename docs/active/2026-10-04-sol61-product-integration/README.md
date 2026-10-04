@@ -59,6 +59,17 @@ caller must retain the actual native mixed-base and paid-feeder trace envelopes,
 select an exact graph/edge/entry and call them. The shared trace-card assertion is
 pending its adapter and native reference model; prepared code is not coverage.
 
+
+The R trace-ui-handoff.json is pinned in the source receipt. Full qualified trace
+JSON was not saved and its old per-entry rolls/sequence cannot be reconstructed.
+Pair receipts give input identities without before-item snapshots: resolve an
+earlier actual trace snapshot or label it unavailable. Feeder receipts retain
+actual output, acceptance and paid costs, including failed children; nested child
+steps are absent. Ring's unchanged child and the separately qualified Normal-to-
+Magic/repeated feeder1->feeder2 witness remain distinct. The native contract is
+sufficient for the presentation with these limits. The granted combined gate
+must save actual result.traces/examples and full planner/checked_export response.
+
 ## Product metadata and next gates
 
 scripts/build-data-bundle.mjs is unchanged from main. All16 owner frozen-input
