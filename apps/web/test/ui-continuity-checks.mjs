@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { checkWorkbenchPresentation, captureUiCheckpoint } from './ui-presentation-checks.mjs';
 import { checkEmulatorHistory, checkStrategyHistory } from './edit-history-checks.mjs';
 import { checkCalculatorLayout, checkEmulatorLayout } from './calculator-layout-checks.mjs';
 import { checkCraftChoices, checkCalculatorChoices } from './craft-choices-checks.mjs';
@@ -18,14 +19,18 @@ export async function checkUiContinuity(page) {
     await page.waitForFunction(() => document.querySelector('pc-emulator .pc-emu-history')?.textContent.toLowerCase().includes('alchemy'));
     assert.ok(await page.locator('pc-emulator .pc-mod-slot.is-filled').count() >= 4);
     await checkEmulatorLayout(page);
+    const presentation = await checkWorkbenchPresentation(page);
+    await captureUiCheckpoint(page, "emulator");
     await checkEmulatorHistory(page);
     await checkCraftChoices(page);
     await page.locator('pc-emulator [data-cmd="calculator"]').click();
     await checkCalculatorLayout(page);
     await checkCalculatorChoices(page);
+    await captureUiCheckpoint(page, "calculator-input");
     await page.locator('pc-calculator [data-calc-context="goal"]').click();
     await page.locator('pc-calculator .pc-mod-family-header').first().click();
     await page.locator('pc-calculator .pc-mod-tier-btn').first().click();
+    await captureUiCheckpoint(page, "calculator-goal");
     await page.locator('pc-calculator [data-calc-tool="odds"]').click();
     await page.locator('pc-calculator [data-select-action="chaos"]:not(:disabled)').click();
     await page.waitForFunction(() => document.querySelector('.pc-calc-answer-value')?.textContent === '0%');
@@ -123,6 +128,7 @@ export async function checkUiContinuity(page) {
     assert.equal(await page.evaluate(() => document.querySelector('pc-emulator').dirty), false);
     await page.getByRole('button', {name: 'Stash', exact: true}).click();
     const saved = page.locator('.pc-stash-item').filter({hasText: 'UI continuity item'});
+    await captureUiCheckpoint(page, 'stash');
     await saved.getByRole('button', {name: 'Import copy', exact: true}).click();
     await page.locator('pc-emulator .pc-mod-slot.is-filled').first().waitFor();
     assert.deepEqual(await page.locator('pc-emulator .pc-mod-slot.is-filled').allTextContents(), itemMods);
@@ -133,7 +139,7 @@ export async function checkUiContinuity(page) {
     await imported.locator('.pc-tab-close').click();
     await page.locator('.pc-modal [data-choice="discard"]').click();
     await imported.waitFor({state: 'detached'});
-    return {crafts: true, handoffs: true, coverageGoal: true, draftRecovery: true, restart: true,
+    return {presentation, crafts: true, handoffs: true, coverageGoal: true, draftRecovery: true, restart: true,
         namespacedAction: true, nestedConditions: true, tierAndAnyTier: true, tabLifecycle: true, artwork: true,
         stashRoundTrip: true, dirtyClose: true, emulatorHistory: true, strategyHistory: true, edgeReconnection: true,
         craftChoices: true, craftTooltips: true, stableModSlots: true, calculatorComparison: true, harvestMaterials: true, historySpend: true};

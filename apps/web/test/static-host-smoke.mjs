@@ -5,10 +5,11 @@ import { resolve, extname, sep } from 'node:path';
 import { chromium, firefox } from 'playwright';
 import assert from 'node:assert/strict';
 import { checkUiContinuity } from './ui-continuity-checks.mjs';
+import { captureUiCheckpoint } from './ui-presentation-checks.mjs';
 
 const directory = resolve(process.argv[2] || 'dist');
 const build = JSON.parse(readFileSync(resolve(directory, 'build-info.json')));
-const mime = { '.html': 'text/html', '.json': 'application/json', '.js': 'text/javascript', '.wasm': 'application/wasm', '.css': 'text/css', '.txt': 'text/plain', '.png': 'image/png' };
+const mime = { '.html': 'text/html', '.json': 'application/json', '.js': 'text/javascript', '.wasm': 'application/wasm', '.css': 'text/css', '.txt': 'text/plain', '.png': 'image/png', '.woff2': 'font/woff2' };
 const server = createServer((request, response) => {
     try {
         const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
@@ -99,6 +100,16 @@ try {
                 ui.artworkFallback = true;
                 await withoutArt.close();
             }
+            // The local font is optional for usability; the fallback keeps a working app.
+            const withoutFont = await browser.newPage();
+            await withoutFont.route('**/*.woff2', route => route.fulfill({status: 404, body: 'missing'}));
+            await withoutFont.goto(origin + build.base);
+            await withoutFont.locator('pc-emulator .pc-bp-confirm:not(:disabled)').click();
+            await withoutFont.locator('pc-emulator [data-simple-action="alchemy"]:not(:disabled)').waitFor();
+            await withoutFont.evaluate(() => document.fonts.ready);
+            assert.equal(await withoutFont.evaluate(() => document.fonts.check('400 14px "Noto Sans"')), false);
+            await captureUiCheckpoint(withoutFont, 'font-fallback');
+            await withoutFont.close();
             // A tab pinned to old JS must fail safely if its data disappeared.
             const stale = await browser.newPage();
             await stale.addInitScript(() => localStorage.setItem('hosting-preserved-draft-marker', 'keep'));
