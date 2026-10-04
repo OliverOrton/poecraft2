@@ -1,4 +1,7 @@
 import assert from "node:assert/strict";
+import {retainNativeUIEvidence} from "./native-ui-evidence";
+import {readItemCard} from "../src/app/item-preview";
+import {traceResourceSnapshot} from "../src/app/trace-item-preview";
 import {selectedRuntime} from "../../../scripts/build-data-bundle.mjs";
 import {Worker, type TransferListItem} from "node:worker_threads";
 import {EngineClient, type EngineTransport} from "../src/app/engine-client";
@@ -32,6 +35,7 @@ try {
         finally { await client.closeSimulator(simulator); await client.closeStrategy(strategy); }
     };
     const result = await execute(parent, {target_runs: 1000});
+    retainNativeUIEvidence("paid-feeder-native-run", {graph: parent, result});
     assert.equal(result.summary.success_count, 1000);
     assert.equal(result.summary.total_actions, 2000);
     assert.equal(result.summary.known_total_cost, 9000);
@@ -155,6 +159,16 @@ try {
             {id: "other-base", from: "pair", to: "other", priority: 1, is_default: true});
         mixedPair.edges[2].condition = {type: "base_is", base_key: base};
         const mixed = await pairRun(mixedPair, {target_runs: 1});
+        const trace = mixed.traces[0], entryIndex = trace.entries.length - 1;
+        retainNativeUIEvidence("mixed-carrier-native-response", {graph: mixedPair, result: mixed, traceIndex: 0, entryIndex});
+        const activeResource = trace.entries[entryIndex].resources?.find(resource => resource.active_output);
+        const snapshot = activeResource && traceResourceSnapshot(activeResource);
+        assert.ok(snapshot, "Mixed carrier fixture supplies a complete native snapshot");
+        const bases = await client.listBases(data), catalog = await client.catalog(data);
+        const nativeModel = await readItemCard(client, data, catalog, snapshot,
+            bases.find(value => value.path === snapshot.base)?.name ?? snapshot.base);
+        retainNativeUIEvidence("mixed-carrier-native-run", {graph: mixedPair, result: mixed,
+            traceIndex: 0, entryIndex, nativeModel});
         assert.equal(mixed.summary.success_count, 1); assert.equal(mixed.summary.total_actions, 3); assert.equal(mixed.summary.known_total_cost, 11);
         const returned = mixed.examples.success[0].resources!.find(resource => resource.active_output)!;
         assert.equal(returned.item_level, 75); assert.ok([base, otherBase].includes(returned.base_key!));

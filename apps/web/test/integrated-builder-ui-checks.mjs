@@ -72,7 +72,8 @@ export async function checkIntegratedEdgeGeometry(page, graph, edgeId, boardSele
     const from = graph.nodes.find(node => node.id === edge.from), to = graph.nodes.find(node => node.id === edge.to);
     const destination = inputs(to).find(port => port.id === edge.to_port);
     assert.ok(destination, 'Fixture uses an explicit valid destination port');
-    assert.equal(edge.from_port, 'output');
+    const effectiveFromPort = edge.from_port ?? 'output';
+    assert.equal(effectiveFromPort, 'output');
     const expected = {from: {x: from.position.x + NODE_WIDTH, y: from.position.y + 54},
         to: {x: to.position.x, y: to.position.y + destination.y}};
     const layer = page.locator(boardSelector).locator('pc-edge-layer');
@@ -95,7 +96,7 @@ export async function checkIntegratedEdgeGeometry(page, graph, edgeId, boardSele
         })), edgeId);
     assert.deepEqual(handles, [{end: 'from', x: expected.from.x + 18, y: expected.from.y, radius: 7},
         {end: 'to', x: expected.to.x - 18, y: expected.to.y, radius: 7}]);
-    return {scope: 'integrated-edge', edgeId, fromPort: edge.from_port, toPort: edge.to_port,
+    return {scope: 'integrated-edge', edgeId, fromPort: effectiveFromPort, requestedFromPort: edge.from_port ?? null, toPort: edge.to_port,
         kind: edge.kind, endpoints: expected, reconnectOffset: 18, reconnectRadius: 7};
 }
 
@@ -196,4 +197,70 @@ export async function checkIntegratedTraceItemCard(page, {resource, nativeModel,
     assert.deepEqual(await card.locator('.pc-item-card-header [data-influence-context="actual"]').allTextContents(), nativeModel.influences);
     return {scope: 'integrated-trace-card', resourceId: resource.resource_id, identity: resource.identity,
         nativeFactsPreserved: true, readOnly: true};
+}
+
+
+/** Render a captured real native result. Only view positions are spread onto a
+ * declared test grid; original request graph and native result remain unchanged
+ * in the immutable evidence. No simulation, planner or mutation call occurs.
+ */
+export async function checkRetainedNativeBuilder(page, evidence, capture) {
+    assert.equal(evidence.kind, 'native_ui_evidence_v1');
+    assert.equal(evidence.name, 'mixed-carrier-native-run');
+    const {graph: originalGraph, result, traceIndex, entryIndex, nativeModel} = evidence.payload;
+    assert.equal(traceIndex, 0, 'Existing retained fixture uses its first trace');
+    const trace = result.traces[traceIndex], entry = trace.entries[entryIndex];
+    assert.equal(entryIndex, trace.entries.length - 1, 'Default selected native entry is the retained last step');
+    const resource = entry.resources.find(value => value.active_output);
+    assert.ok(resource); assert.ok(nativeModel);
+    const graph = structuredClone(originalGraph);
+    for (const node of graph.nodes) node.position = {x: node.position.x * 260, y: node.position.y * 160};
+    graph.ui = {...graph.ui, viewport: {panX: 24, panY: 24, zoom: 1}};
+    const edges = ['input_a', 'input_b'].map(port => graph.edges.find(edge => edge.kind === 'item' && edge.to_port === port));
+    assert.ok(edges.every(Boolean), 'Actual mixed-carrier graph retains paid A and B supply edges');
+    const previousViewport = page.viewportSize();
+    await page.setViewportSize({width: 1440, height: 1100});
+    const selector = '#pc-integrated-native-fixture';
+    try {
+        await page.waitForFunction(() => document.querySelector('pc-strategy-editor')?.engineReady);
+        await page.evaluate(({graph, result, edgeId}) => {
+            if (document.querySelector('#pc-integrated-native-fixture')) throw new Error('Native fixture already mounted');
+            const editor = document.querySelector('pc-strategy-editor');
+            const root = document.createElement('section'); root.id = 'pc-integrated-native-fixture';
+            root.style.cssText = 'position:relative;z-index:1000;background:var(--pc-bg);padding:16px';
+            const board = document.createElement('pc-strategy-board'); board.style.cssText = 'display:block;height:540px';
+            const trace = document.createElement('pc-run-trace');
+            root.append(board, trace); document.body.append(root);
+            board.setView(graph, {kind:'edge',id:edgeId}, [], {nodeIds:new Set(),edgeIds:new Set(),activeNodeId:null}, null, editor.labelContext);
+            trace.setItemPreviewContext(editor.client, editor.dataId, editor.catalog, editor.bases);
+            trace.setResult(result);
+        }, {graph, result, edgeId: edges[0].id});
+        const geometry = await checkIntegratedConnectorGeometry(page, graph, {boardSelector: selector+' pc-strategy-board'});
+        const anchors = [];
+        for (const edge of edges) {
+            await page.locator(selector+' pc-strategy-board').evaluate((board, {graph,id}) =>
+                board.setView(graph, {kind:'edge',id}, [], {nodeIds:new Set(),edgeIds:new Set(),activeNodeId:null}), {graph,id:edge.id});
+            anchors.push(await checkIntegratedEdgeGeometry(page, graph, edge.id, selector+' pc-strategy-board'));
+        }
+        await capture(page, 'integrated-ab-board');
+        const host = page.locator(selector+' pc-run-trace');
+        await host.locator('[data-mode="trace"]').click();
+        const authority = await checkIntegratedTraceAuthority(page, entry, selector+' .pc-trace-detail');
+        const card = await checkIntegratedTraceItemCard(page, {resource, nativeModel,
+            wrapperSelector: selector+' .pc-trace-item-preview'});
+        await capture(page, 'integrated-mixed-native-trace');
+        const navigation = await checkIntegratedTraceNavigation(page, trace, selector+' pc-run-trace');
+        return {scope:'retained-native-integrated-builder', nativeEvidenceName:evidence.name,
+            viewLayout:'test grid x260/y160; original native request graph retained separately',
+            geometry, anchors, authority, card, navigation,
+            exclusions:['missing pair before-item snapshots','nested child steps','configured cluster snapshots without configuration']};
+    } finally {
+        await page.evaluate(async () => {
+            const root = document.querySelector('#pc-integrated-native-fixture');
+            if (!root) return;
+            try {await root.querySelector('pc-run-trace')?.disposeItemPreview();}
+            finally {root.remove();}
+        });
+        if (previousViewport) await page.setViewportSize(previousViewport);
+    }
 }

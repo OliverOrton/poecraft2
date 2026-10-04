@@ -1,6 +1,7 @@
 // Requires a newly built matching WASM facade. It reads the selected frozen
 // artifact in memory and never invokes build:data or changes generated metadata.
 import assert from "node:assert/strict";
+import {retainNativeUIEvidence} from "./native-ui-evidence";
 import {createHash} from "node:crypto";
 import {readFileSync} from "node:fs";
 import {Worker, type TransferListItem} from "node:worker_threads";
@@ -66,6 +67,7 @@ try {
         {expectedAbiVersion: abi, requestIdentity: JSON.stringify(r), isCurrent: () => current,
             createWorker: () => spawn(true), wallTimeMs: 180_000});
     const result = await run(request), receipt = result.result, checked = result.checked_export!;
+    retainNativeUIEvidence("ring-planner-response", {request, response: result});
     assert.ok(checked); near(receipt.expected_cost_chaos, 1 + 2 / .333);
     near(receipt.expected_recombinations, 1 / .333);
     near(receipt.acquisitions[0].expected_invocations + receipt.acquisitions[1].expected_invocations, 1 + 1 / .333);
@@ -125,6 +127,7 @@ try {
         const trials = await client.runStrategy(simulator, {target_runs: 1000, seed: 62667494,
             max_actions_per_run: 1000, max_graph_steps_per_run: 4096, retained_success_count: 1,
             retained_failure_count: 1, retained_trace_count: 1, max_trace_entries: 256});
+        retainNativeUIEvidence("ring-native-run", {graph: checked.strategy, result: trials});
         assert.equal(trials.summary.completed_runs, 1000); assert.equal(trials.summary.success_count, 1000);
         assert.equal(trials.summary.known_total_cost, 6826); assert.equal(trials.summary.total_actions, 11739);
         assert.equal(trials.summary.cost_status, "complete"); assert.equal(trials.missing_prices.length, 0);

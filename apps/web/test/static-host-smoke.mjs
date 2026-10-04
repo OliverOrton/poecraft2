@@ -6,6 +6,7 @@ import { chromium, firefox } from 'playwright';
 import assert from 'node:assert/strict';
 import { checkUiContinuity } from './ui-continuity-checks.mjs';
 import { captureUiCheckpoint, checkDockTheme } from './ui-presentation-checks.mjs';
+import { checkRetainedNativeBuilder } from './integrated-builder-ui-checks.mjs';
 
 const directory = resolve(process.argv[2] || 'dist');
 const build = JSON.parse(readFileSync(resolve(directory, 'build-info.json')));
@@ -128,6 +129,15 @@ try {
                 console.error(JSON.stringify({failures, status: await page.locator('.pc-emu-status, .pc-calc-status').allTextContents()}));
                 throw error;
             }) : {skipped: 'archive predates React/asset migration'};
+            const evidenceDirectory = process.env.POECRAFT_UI_NATIVE_EVIDENCE_DIR;
+            let integratedBuilder = null;
+            if (evidenceDirectory) {
+                assert.equal(builderConnectorContract, 'resource-v1');
+                const evidence = JSON.parse(readFileSync(resolve(evidenceDirectory, 'mixed-carrier-native-run.json')));
+                assert.deepEqual(evidence.build, build, 'Native evidence matches this exact packaged product');
+                integratedBuilder = await checkRetainedNativeBuilder(page, evidence, captureUiCheckpoint);
+                console.log(JSON.stringify({checkpoint:'integrated-builder-native', result:'passed', integratedBuilder}));
+            }
             assert.deepEqual(failures, []);
             for (const suffix of ['.wasm', build.runtime.url, 'league-index.json']) {
                 assert.ok(responses.some(r => r.url.endsWith(suffix) && r.status === 200), `missing successful ${suffix}`);
@@ -156,7 +166,7 @@ try {
             await stale.goto(origin + build.base);
             await stale.waitForFunction(() => document.querySelector('pc-emulator')?.textContent.includes('reload to retry'));
             assert.equal(await stale.evaluate(() => localStorage.getItem('hosting-preserved-draft-marker')), 'keep');
-            console.log(JSON.stringify({ browser: browserType.name(), version: browser.version(), channel: channel || 'pinned', base: build.base, build_id: build.build_id, result: 'passed', scope: smokeScope, builderConnectorContract, requests: responses.length, ui }));
+            console.log(JSON.stringify({ browser: browserType.name(), version: browser.version(), channel: channel || 'pinned', base: build.base, build_id: build.build_id, result: 'passed', scope: smokeScope, builderConnectorContract, requests: responses.length, ui, integratedBuilder }));
         } finally { await browser.close(); }
     }
 } finally { await new Promise(resolve => server.close(resolve)); }
