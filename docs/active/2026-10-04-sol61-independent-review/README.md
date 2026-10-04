@@ -1346,3 +1346,45 @@ Recommendation limited to reviewed native observer correction and authorized
 budget-only qualification with retained checker after exact request review. No
 financial upper, complete peak, historical correspondence, Current/Finder activation,
 full-envelope closure, final control cohort, WASM or main merge/push approval.
+
+
+## Restored-envelope request and retained ownership source review
+
+Reviewed f1ea94f82ad378ef4296785c5cbab11131697387 directly;20 pins verify
+(12source/3runtime/5inputs). New separate case differs from original ONLY at
+caps.max_solver_owned_bytes1073741824 ->3328599654. This exactly floors approved
+3.1GiB; historical deployed integer remains explicitly unconfirmed. Parent now
+selects this concrete cap; no renewed user permission or historical-equivalence
+claim is needed. Frozen original case and all other fields/tolerances stay intact.
+No reviewer heavy command; new benchmark UNBUILT and gate UNRUN.
+
+No nominal accounting bypass or semantic identity change found. Checker/result/
+census retained until child destruction; no earlyrelease. Actual shared economy
+and immutable caller options are now counted/audited; separate solve price/checker
+option copies retained. Only immutable estimates cached after dynamic preparation.
+Mutable validator/outer owners remain live each checkpoint; original reservation,
+child/scratch caps and committed-work forwarding stay active. Complete output
+is a checker subset, not an extra allocation.32.975MB selected checker storage
+above complete output is only an upper estimate, no proved net release saving.
+R6 complete transient peak remains explicitly false.
+
+NEW R11/P2 private benchmark failure acceptance (static, not native reproduced),
+communicated promptly: benchmark3422 sets entries_accepted=true before new
+throwing final snapshot3425. A one-shot snapshot allocation failure reaches
+3435-36 rejected_error without clearing acceptance. Cleanup snapshot3443 can
+succeed; if debit/output remain valid, complete3471 still true, checked upper/
+cost3491-95 published and exit0 at3542. This is a concrete exception-path witness,
+not a native policy illegality. Clear entries_accepted in every failure catch;
+preserve root diagnostic/refusal/counts/debit/lifetimes. Implementation owner
+fixes production; reviewer does not compete in benchmark source.
+
+Restored-envelope proposal otherwise suitable. Hold gate for this small failure-
+acceptance correction, review actual diff, then parent LOCAL may build Benchmark
+Jobs2 and run ONE existing supervised full samegraph case. Reuse39066 finite
+checks; new diagnostics alone need no repeated native mechanics suite. Require
+regenerated graph bytes/occurrences, all12658 native-positive entries, identical
+root probabilities/cost/resources/prices and debits, exact typed caps/150/165,
+retained ownership and terminal cleanup. Any stop/error must keep upper false.
+No projected completion, financial-reference gain, aggregate peak, Current/Finder
+activation/full closure/WASM recommendation. Exact review/request/ownership
+analysis are restored-envelope-f1-*; no new benchmark infrastructure.
