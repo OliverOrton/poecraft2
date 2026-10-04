@@ -1134,3 +1134,29 @@ causal leads, not demonstrated savings. Recommendation: prepared serial finite
 gate is reasonable under parent LOCAL, with R7/R8 limits retained or amended.
 Hold Current/Finder activation, fast-observer switch, complete peak authority,
 full Conquest root/every-entry economics, final frozen cohort and WASM.
+
+
+## Historical negative separated from economic-candidate gate
+
+Brief read-only review at99a58e7e61212d7dcd13fcea49c4f4826c7bafba/source675c2f06:
+no semantic objection to the parent's explicit separate six-stage candidate
+gate. The strict historical_plain_fill_frames>0 assertion remains at compile
+test5310 and its explicit witness selector is separate from the candidate pair
+(test_main71-90). R3 native log and process receipt hashes match the committed
+summary;961checks/1failure remains a FAILED historical diagnostic. P0 and native
+ordinary Exalt/progress/resource observations are retained scoped evidence, not
+whole-candidate acceptance or historical reconstruction. No reviewer heavy run.
+
+The failed bounded historical mechanism hypothesis supplies no required premise
+for a new lawful controller. Authorizing independent original-root/every-positive-
+entry/cost/cap/identity gates is appropriate; do not relabel R3 as passing, weaken
+its assertion, broaden the historical search or grant economic/WASM/activation
+from the lawful primitive alone. Six unrun stages retain strict correctness and
+spent budgets under parent's selected continuation; no full Conquest repeat.
+
+R7/R8 are SOURCE AMENDED, NATIVE PENDING at675c2f06: guard loop5862-5892 now
+compares every rollability node/side over every positive census entry; ownership
+pair audits after each checkpoint, including unfinished entries, and requires
+positive suspended-audit count. Source/API/production unchanged otherwise; these
+checks have not executed in R3's stopped batch. Earlier peak/Finder/economic
+qualification holds remain.

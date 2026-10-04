@@ -1,16 +1,17 @@
 # Independent review handoff
 
 Review worktree: poecraft2-sol61-independent-review-20261004.
-Latest source review:f5ab312250bb8285fb3468fa9dfee6211da02ec6 vs293be87e.
+Latest separation check:99a58e7e/source675c2f06; no semantic objection to
+parent-selected six-stage economic-candidate gate. R3 remains961checks/1failure;
+native log/receipt hashes verified, no reviewer heavy command.
 12 prepared source and3 frozen input pins verified; no reviewer heavy command.
 CI owns LOCAL; all new finite fill/observer/construction gates unrun here.
 
 - No new fill routing blocker demonstrated. Default-off final stages preserve
   native held/capacity/blocker/pricing premises and paid cleanup.
-- R7/P3: all-entry native guard comparison covers first growth-side guard only;
-  extend to new final-side guards before complete guard qualification.
-- R8/P3: timing pair audits completed entries only; live suspended cursor needs
-  reconciliation before hot-path switch. Current full estimator unchanged.
+- R7/R8: source amended675c2f06 for all guards/positive entries and per-checkpoint
+  suspended ownership audits; native qualification pending. Current full
+  estimator unchanged. Historical match assertion5310 remains failed/preserved.
 - R6/P2: complete aggregate transient peak evidence remains held; no demonstrated
   1GiB overrun. Owner now explicitly qualifies sampled R11 reports.
 - Finder R2 remains open: earlier reviewer cap50 actual88/report40. Generic
