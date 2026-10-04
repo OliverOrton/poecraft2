@@ -1,3 +1,14 @@
+# Combined product gate R1 retained (2026-10-04)
+
+Metadata, TypeScript and trace-preview passed at5a46f465. Full npm failed before
+native execution: missing ignored compiled/current manifest. Later3 stages unrun.
+Exact frozen runtime has now been staged into a new isolated path; no assertion
+or mechanics changed. LOCAL released, no survivors;16+2 frozen hashes unchanged.
+The [living record](docs/active/2026-10-04-sol61-product-integration/README.md)
+owns receipts and continuation. Request metadata/full-npm/Vite/package/rendered
+under existing bounds. CI equal-race cause remains separate/unresolved.
+No main merge/push/deploy/dev-server action.
+
 # Combined UI gate prepared (2026-10-04)
 
 Product production/assertion source ad5c45d4 imports trace-card d178c304 as

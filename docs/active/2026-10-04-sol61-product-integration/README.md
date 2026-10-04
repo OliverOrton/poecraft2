@@ -131,3 +131,27 @@ and hosted matching-source qualification remain pending. The CI corrected-snapsh
 negative and focused174 gate also remain pending in their separate worktree.
 No native quality ceiling, solver quality cohort or new optimality authority is
 created by these presentation/correctness receipts. No main merge/push/deploy.
+
+## First combined gate receipt
+
+At source5a46f465, metadata, TypeScript and focused trace-preview passed in
+1.14s,3.65s and2.08s. Full npm stopped after3.44s because this fresh checkout
+was missing ignored data/compiled/current/manifest.json, before native test
+execution. Vite/package/rendered remained unrun. Each owned parent proved absent;
+no timeout, unexpected descendant, cleanup error, job-close survivor or live
+gate process. Peak job memory was0.56GB or lower. All16 frozen inputs plus the
+2 qualified WASM payloads remain byte-identical. LOCAL released.
+
+The failure is retained in out/sol61-product-integration/gate-5a46f465-r1.
+The prerequisite is corrected by materializing the new isolated test artifact
+path from the exact checked-in runtime snapshot82fb60a2, with three SHA256/size
+comparisons. No existing artifact, canonical database, mechanics, prices or
+assertions changed. This is a staging correction, not a passed native/full-web
+result. R1 used the locally checked bounded CI worker blob910c80eb as execution
+adapter with R hidden/suspended launch and4GiB job limit; product worker source
+was unchanged. Pipe drain and job-close verification each retain5s bounds;
+actual total cleanup is reported rather than asserted to be5s.
+
+The next parent-coordinated batch should regenerate source-matched metadata,
+resume full npm, then Vite/package/rendered. TypeScript/focused evidence can be
+reused for unchanged source trees. No automatic rerun or main publication.

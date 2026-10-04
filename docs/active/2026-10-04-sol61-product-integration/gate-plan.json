@@ -18,7 +18,8 @@
     "source": "clean committed branch at launch, pinned HEAD and all production tree/artifact identities",
     "inputs": "same16 frozen hashes before/after",
     "dependencies": "Materialize isolated dependencies from owner tree only if package-lock hashes match; no other worktree or dev-server writes; no dependency installation requested.",
-    "artifacts": "Reuse exact qualified WASM50c98f55/MJS8ec20cf7; no native or WASM build in this UI gate"
+    "artifacts": "Reuse exact qualified WASM50c98f55/MJS8ec20cf7; no native or WASM build in this UI gate",
+    "test_runtime": "Before npm, require data/compiled/current three payload bytes equal the pinned tracked runtime snapshot82fb60a2. A fresh isolated path may be materialized by exact byte copy only, no canonical or upstream refresh. R1 missing-path failure remains retained."
   },
   "stages": [
     {
@@ -125,5 +126,20 @@
     "Configured-cluster metadata, missing pair before snapshots and nested child steps remain unavailable",
     "Chrome local rendering is not hosted/pinned-browser latency parity",
     "No main merge, push, deployment or dev-server restart in this request"
-  ]
+  ],
+  "r1_disposition": {
+    "source": "5a46f46535dd632b5d786c102fa186e1cb309111",
+    "passed": [
+      "metadata",
+      "typescript",
+      "focused-trace-preview"
+    ],
+    "failed": "full-web missing data/compiled/current/manifest.json before native tests",
+    "later_stages": "unrun",
+    "no_survivor": true,
+    "frozen_inputs": "16 plus2 matching WASM payloads unchanged",
+    "local_slot": "released",
+    "receipt": "out/sol61-product-integration/gate-5a46f465-r1/batch.json",
+    "repair": "new isolated test runtime staged from exact tracked snapshot; no assertions or source mechanics changed"
+  }
 }
