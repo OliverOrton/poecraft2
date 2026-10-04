@@ -577,3 +577,32 @@ This failure remains in
 out/strategy-feeder/sol61-transport-fresh-session-20261004/planner-ring-worker.json.
 The causal test-only retry and remaining targeted checks are pending while LOCAL
 is still held; no rebuilt artifact is qualified for integration yet.
+
+
+## Focused native and matching-WASM qualification passed (2026-10-04)
+
+The8f1ac866 test-only correction passed without another build. Matching WASM
+50c98f55/mjs8ec20cf7 passed direct repeated-call ownership, complete checked child
+identity/costs, physical recycling/export, explicit v3 analysis-only scenarios
+and refusals. The unchanged Ring1/80 witness retained expected cost1+2/.333,
+attempts1/.333 and acquisitions1+1/.333, below fresh-pair3/.333. All1000 actual
+compiled-worker trials at seed62667494 succeeded with cost6826/actions11739,
+matching native823657c0. Pair, feeder, transfer, strategy and TypeScript checks
+also passed. The feeder station-cost-incomplete component remains a separate
+regression identity.
+
+All16 frozen inputs are unchanged. Existing deterministic supervision enforced
+the declared build1800s/8GiB and test180s/4GiB bounds, at most2 compiler jobs.
+The build took388.75s/2.94GB; planner109.91s/1.47GB; feeder111.21s/1.02GB.
+Every process session completed and escalated cleanup found zero owned survivors.
+LOCAL is released. Retain the old constructor negative and stale guard-assertion
+failure with earlier failures; no production guard was weakened.
+
+Compact source/data/model/checker/artifact pins, stage logs and cleanup:
+out/strategy-feeder/sol61-transport-guard-fixture-20261004/qualification-receipt.json.
+Exact request construction and complete input admission are hash-pinned fixture
+sources; raw request JSON was not separately saved. The artifacts now qualify
+this focused native/worker bridge, not full product delivery. Full npm, integrated
+rendered UI and hosted Build/Test remain unrun; the integration owner must align
+generated product metadata with matching source/artifacts. No bundle packaging,
+refresh, main merge/push, deployment or dev-server action occurred in this batch.

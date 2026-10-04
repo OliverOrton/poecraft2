@@ -1,5 +1,5 @@
 {
-  "status": "FOCUSED_NATIVE_FINITE_PASSED_WASM_WORKER_HELD",
+  "status": "FOCUSED_NATIVE_AND_MATCHING_WASM_FINITE_PASSED",
   "programme": "combined estimated recombination and checked bounded Builder export",
   "source_commit": "823657c0b67a793676e83285c4e05b85175a96ab",
   "engine_tree": "4d11a36e6a7a6d9852cb292aca3c2b46e8d07088",
@@ -40,17 +40,18 @@
     "Focused Python:12 tests and7 subtests",
     "Focused asynchronous cache regression and pre-fix negative control",
     "Web TypeScript noEmit",
-    "Scoped whitespace check"
+    "Scoped whitespace check",
+    "Pinned old-artifact constructor negative control; one causal matching WASM build75bea4df",
+    "Direct repeated-call/paid ownership; checked Ring export and1000 matching-worker successes, cost6826/actions11739",
+    "Matching pair/feeder/transfer/strategy regressions and new TypeScript noEmit",
+    "All16 frozen inputs unchanged; zero owned heavy survivors, all exec sessions complete"
   ],
   "unrun": [
-    "matching WASM",
-    "actual planner worker route/cancellation transport",
     "full npm suite",
     "combined rendered UI",
     "hosted combined Build/Test"
   ],
   "not_implemented_or_held": [
-    "Matching WASM/worker/planner exposure pending native dependency qualification; no cosmetic browser cancellation",
     "Same-policy cross-scenario comparison API; currently only individually declared native point scenarios",
     "Closed bench recipe numerical admission and zero-proxy special weights; no guessed weights",
     "Broad failed-child/nested inventory recovery",
@@ -63,8 +64,8 @@
     "all_exec_sessions_complete": true
   },
   "next_batch": {
-    "status": "REQUEST_NEW_PARENT_LOCAL_FOR_CAUSAL_ADAPTER_FIX",
-    "purpose": "Pinned old-artifact ownership negative control, matching WASM for fresh-session fix, positive repeated-call ownership check, then planner/export/Ring1000 and remaining adapter checks",
+    "status": "COMPLETED_LOCAL_RELEASED",
+    "purpose": "Completed focused transport gate. Next product/rendered/hosted gates belong to integration/UI owner.",
     "compiler_jobs": 2,
     "build_command": "$env:EMCC_CORES='2'\n$env:BINARYEN_CORES='2'\npowershell -NoProfile -File scripts/build-wasm.ps1",
     "sdk_parallelism_evidence": "C:/emsdk/upstream/emscripten/tools/utils.py get_num_cores reads EMCC_CORES; shared.py run_multiple_processes and system_libs.py ninja owner use it.",
@@ -102,17 +103,12 @@
     "reuse": "Reuse native823657c0 and frozen input/bundle/lifetime evidence where source-compatible. Retained WASM/MJS compile old facade43ef96cf and cannot qualify the fresh-session fix; one source-matched causal rebuild is required.",
     "receipts": "New source/tree, WASM/MJS hashes and matching request/model/economy/data/checker pins under out/strategy-feeder; native DLL/exe receipts remain 823657c0.",
     "stop": "Stop on identity/probability/resource/export/properness/cap/compilation failure; retain failure, do not raise caps or repeat for green.",
-    "requirements": [
-      "New parent LOCAL grant after CI",
-      "Source-scope and artifact/frozen-input identity preflight against retained receipts",
-      "Serial focused checks with existing watchdog/memory owner; stop on causal contract/identity failure",
-      "Release LOCAL immediately; report no owned survivors"
-    ],
+    "requirements": [],
     "timed_research_runs": 0,
     "negative_control_command": "node apps/web/node_modules/tsx/dist/cli.mjs apps/web/test/recombination-planner-ownership.test.ts --expect-legacy-session-conflict",
     "negative_control_order": "First, on the retained known-broken artifacts before a matching rebuild. Stop if fixture admission or exact negative differs; this checks preconditions without a full build."
   },
-  "publication": "No main merge, push, deployment, data refresh or dev-server action. Do not integrate as qualified.",
+  "publication": "Focused qualified source/matching artifacts available locally for integrator. Full product qualification unrun; no main merge/push/deployment/data refresh/dev-server action.",
   "initial_source_commit": "9736e766de959070b0c89fcb71281438ebd6f64c",
   "qualification_receipt": "out/strategy-feeder/sol61-finite-20261004/qualification-receipt.json",
   "cache_fix_commit": "63ff9c1242b49d0aed7002cb19c3c5749d8c9757",
@@ -128,7 +124,7 @@
   "native_executable_sha256": "bcdf9165d9be4b27803594f4460c54708609d3b572fa169de48d56596c8075b0",
   "native_dll_sha256": "32162f44f1f7c5f1b6ead3a61a4c40d996680a39d41e406b55df64daffd4761d",
   "pending_adapter": {
-    "status": "PLANNER_ADAPTER_FRESH_SESSION_CONTRACT_FAILURE_SOURCE_FIXED_UNBUILT",
+    "status": "FOCUSED_MATCHING_WASM_TRANSPORT_PASSED_PRODUCT_GATES_UNRUN",
     "source_scope": "request-owned read-only planner worker and strict native WASM JSON facade",
     "native_dependency": "823657c0b67a793676e83285c4e05b85175a96ab",
     "native_engine_source_unchanged": true,
@@ -137,51 +133,42 @@
     "resource_identity": "Planner loads immutable copied bytes into its own worker; no main worker live session/item/resource handle is accepted.",
     "identity": "Full request JSON and authored revision/content identity captured before dispatch; verify ABI, model, price, data, goal, explicit scenario/order and export receipt; stale authored revisions refuse delivery.",
     "facade": "Existing stable-key full-item importer/native session retention/solver C API own mechanics. Full four-hash data pin and strict scalar fields/caps; v3 remains analysis-only.",
-    "prepared_unrun_tests": [
-      "recombination-planner-lifetime.test.ts",
-      "recombination-planner-wasm.test.ts"
-    ],
+    "prepared_unrun_tests": [],
     "limitations": [
       "No planner UI controls wired by this slice; service API and typed result/export DTO only.",
       "No point scenario selected for advanced Apply.",
-      "WASM/new TypeScript/full web/hosted stages remain unrun.",
-      "Worker termination discards read-only partial planning evidence; no partial feasible result is claimed.",
-      "Existing paid Builder cancellation within a synchronous worker chunk is not newly qualified by this planner transport."
+      "Full npm/product rendered/hosted stages remain unrun.",
+      "Worker termination discards read-only partial planning evidence; no partial feasible result claimed.",
+      "Existing paid Builder cancellation inside a synchronous worker chunk is not newly qualified by this planner transport."
     ],
     "bundle_rejection": "bundle-review-rejection.json",
     "source_commit": "a97e2cdd0947dc7048474e2c92cd49a572fc0a97",
     "qualification_source_commit": "43ef96cf772942f3cd6adf75caea0d4baceda8c6",
-    "matching_wasm_built": false,
+    "matching_wasm_built": true,
     "qualification_receipt": "out/strategy-feeder/sol61-transport-20261004/qualification-receipt.json",
     "artifacts": {
       "bindings/wasm/dist/poecraft_engine.mjs": "8ec20cf7c0f86cbad4c5d0638e0733da3110610cf02091c0807d4b87186d2b97",
-      "bindings/wasm/dist/poecraft_engine.wasm": "c8b4991a0457b671d677f5751eb88f9025b6982a4b2011b3b2321a80dd1038cb"
+      "bindings/wasm/dist/poecraft_engine.wasm": "50c98f555d4ef9f6786c9a5fcfd138442a5d01ae1b3759b09712dbae059cdd9c"
     },
     "failure_detail": "solver: goal slots 0 and 1 have overlapping members",
     "fixture_diagnosis": "Fixture selected adjacent tiers of an overlapping family: legacy pcw_item_add_mod calls raw pc_item_add_mod and does not validate canonical groups. The source fixture comment assumed this helper rejected overlap. Native planner correctly refused the overlapping goal before any policy/trials. Native Ring witness selects modifiers by full group disjointness; the web fixture must establish the same identity via native validation.",
     "remaining_unrun": [
-      "1000 matching-worker Ring trials",
-      "recombination-wasm.test.ts",
-      "engine-feeder.test.ts",
-      "engine-client-transfer.test.ts",
-      "strategy-feeder.test.ts",
-      "TypeScript noEmit",
       "full npm suite",
       "combined rendered UI",
       "hosted combined Build/Test"
     ],
-    "worker_ring_trials": 0,
-    "artifact_disposition": "Matching compiled WASM/MJS remain uncommitted and unqualified for integration; preserve them for a causal fixture repair, not a repeat build.",
+    "worker_ring_trials": 1000,
+    "artifact_disposition": "Matching artifacts ready for the local publication commit after focused qualification; product/hosted/rendered gate unrun.",
     "fixture_repair": "Use pc_item_edit_json via EngineClient.editItem for all explicit additions; native full canonical group conflict checks own candidate admission. Verify accepted complete slot keys/flags and refused full-item atomicity. Skip only declared group conflicts; unexpected errors stop. Retain a deliberate overlapping-goal refusal case.",
     "reconciliation_receipt": "out/strategy-feeder/sol61-transport-20261004/reconnected-reconciliation.json",
     "revision_negative_case": "Different embedded child content at the same revision changes only document name, preserving the output/cost law so the test isolates revision identity.",
-    "new_checks_run": false,
+    "new_checks_run": true,
     "fixture_repair_tested_at": "84d7757c30ba4bf4811110f15c9555137a4fb307",
     "current_failure_detail": "Recombination item contains conflicting physical modifiers",
     "adapter_diagnosis": "Planner facade called build_session with retained identities on the already-built pc_session_create SessionImpl. engine_internal.hpp explicitly requires a fresh SessionImpl; session_builder appends dense/group tables. Fixture admission now correctly uses native full-group checks. The adapter source fix constructs a fresh SessionImpl with the same immutable data/base/level before full-item import.",
-    "fresh_session_fix_unbuilt": true,
-    "retained_build_matches_changed_facade": false,
-    "latest_receipt": "out/strategy-feeder/sol61-transport-repaired-20261004/qualification-receipt.json",
+    "fresh_session_fix_unbuilt": false,
+    "retained_build_matches_changed_facade": true,
+    "latest_receipt": "out/strategy-feeder/sol61-transport-guard-fixture-20261004/qualification-receipt.json",
     "fresh_session_audit": {
       "reviewed_source": "9b312ef73668d459e35c582ece0b617a41de2ebf",
       "production_calls": [
@@ -234,7 +221,7 @@
       "purpose": "Already-goal owned full Ring item: repeated API calls on one immutable read-only dataset, identical receipts, changed explicit sunk/paid entry cost3->11, zero acquisition/recombine counts, unchanged dataset/request/live item and capability refusals.",
       "no_feeder_or_retry_or_sampled_policy": true,
       "old_artifact_negative": "--expect-legacy-session-conflict pins known MJS8ec20cf7/WASMc8b4991a and accepts only the exact retained-constructor physical-conflict failure after native fixture admission. It is not positive qualification.",
-      "executed": false
+      "executed": true
     },
     "fresh_session_gate": {
       "tested_source": "75bea4df792ec85d4fa855d33780b9a045704450",
@@ -246,9 +233,50 @@
       "matching_mjs_sha256": "8ec20cf7c0f86cbad4c5d0638e0733da3110610cf02091c0807d4b87186d2b97",
       "retained_failure": "Planner guard fixture expected legacy inventory/control message; native correctly refused full-item routing outside restricted checked language. Trials not reached.",
       "source_only_fixture_fix": "Check EngineError/code1/exact full-item guard and unchanged live A/B; no production/native change.",
-      "remaining_checks": "Test-only causal retry and adapter/TypeScript stages pending; LOCAL held.",
-      "disconnection": "Existing build session and process identities reconciled; no relaunch."
-    }
+      "remaining_checks": "Causal fixture retry and all remaining adapter/TypeScript checks passed; LOCAL released.",
+      "disconnection": "Existing build session and process identities reconciled; no relaunch.",
+      "final_test_source": "8f1ac866af68eee1d28e2ece4b3b582443b6d968",
+      "final_receipt": "out/strategy-feeder/sol61-transport-guard-fixture-20261004/qualification-receipt.json",
+      "ring_worker_witness": {
+        "witness": "Ring1/80 checked recycling",
+        "modifiers": [
+          "AddedColdDamage1",
+          "AddedFireDamage1"
+        ],
+        "model": "poe1-random-spawn-proxy-preserve-tier-roll-no-upgrade-v1",
+        "data_identity": [
+          "d511e23d1289674c4ac869d20ccd62a979af65f58d4aac83a01ac9bbb02c853e",
+          "b458174874efbe64cf830d603f9e3effddd2042d0f3faa548b40c0e69a68ca7a",
+          "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e",
+          "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6"
+        ],
+        "expected_cost": 7.006006006006006,
+        "seed": 62667494,
+        "trials": {
+          "completed_runs": 1000,
+          "success_count": 1000,
+          "failure_count": 0,
+          "stop_count": 0,
+          "total_actions": 11739,
+          "action_limit_count": 0,
+          "cost_limit_count": 0,
+          "step_limit_count": 0,
+          "no_matching_edge_count": 0,
+          "action_not_applied_count": 0,
+          "missing_price_run_count": 0,
+          "costed_action_count": 11739,
+          "missing_price_action_count": 0,
+          "known_total_cost": 6826,
+          "cost_status": "complete",
+          "seed": 62667494,
+          "target_runs": 1000
+        },
+        "worker_survivors": 0
+      }
+    },
+    "matching_build_source_commit": "75bea4df792ec85d4fa855d33780b9a045704450",
+    "latest_test_source_commit": "8f1ac866af68eee1d28e2ece4b3b582443b6d968"
   },
-  "bundle_input_preflight": "out/strategy-feeder/sol61-finite-20261004/bundle-input-preflight.json"
+  "bundle_input_preflight": "out/strategy-feeder/sol61-finite-20261004/bundle-input-preflight.json",
+  "latest_transport_receipt": "out/strategy-feeder/sol61-transport-guard-fixture-20261004/qualification-receipt.json"
 }
