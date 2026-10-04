@@ -50,3 +50,28 @@ The query branch2ce0a75b and Recomb's old failing source CI retain distinct iden
 The supplied Pro gate recommendations are incorporated only within these owners;
 the old aggregate/zero-run constraints are superseded by Oliver's explicit approval.
 A valid policy, bounded capability, and optimality remain independent outcomes.
+
+## Focused Python contract batch
+
+First staged/worker/reporter/corpus/lifecycle batch:122 passed,29 failed in20.60s
+(outer21.16s), no timeout and no survivor. All24 unattended failures stopped at
+the absent benchmark prerequisite in the fresh worktree;3 corpus stubs provided
+empty reports rejected by the new finalization identity check;2 exposed process
+exit observation differences in the new Windows job owner. Raw failures remain
+in out/sol61-ci-supervision/python-contract-r1/. This does not explain the
+original hosted scheduling failure.
+
+Existing main29d9 benchmark97fb69b6b61070d601f8b8127634bd3d522ac0368e5d23402d8cef8243807900
+and runtime82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d
+were copied byte-for-byte after checking the production source/include/benchmark
+trees and the frozen runtime manifest and declared file hashes. The lifecycle
+batch uses the executable for identity hashing only; this is no solver performance
+or candidate-native qualification. Materialization receipt:
+out/sol61-ci-supervision/python-contract-r2-prerequisites.json.
+
+Case stubs now carry the requested ID, and a wrong-ID negative remains rejected.
+The Windows owner enumerates its job's live PID handles, checks membership and
+actual exit signals, and waits on retained handles under the existing cleanup
+bound. This is intended to distinguish delayed job accounting from a live child;
+qualification remains pending. Native capability and sentinel negatives remain
+unbuilt. The matching-source release verifier is a subsequent source slice.

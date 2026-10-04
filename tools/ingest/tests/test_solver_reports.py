@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 from pathlib import Path
 
@@ -12,6 +13,7 @@ from poecraft_ingest.bounded_policy_workflow import (
 )
 from poecraft_ingest.solver_reports import (
     build_report,
+    capability_profile,
     build_research_report,
     compare_runs,
     exact_closure_profile,
@@ -603,3 +605,157 @@ def test_financial_identity_excludes_omitted_versus_explicit_override() -> None:
     assert comparison["paired_cases"] == 0
     assert comparison["economic_gate"]["passed"] is False
     assert comparison["excluded"][0]["fields"] == ["input.run_overrides"]
+
+def _capability_case(tmp_path: Path, label: str, cost: float) -> dict:
+    case = _economic_case(cost)
+    case["solve_summary"].update(policy_available=True, upper_bound=cost, evaluated_policy_cost=cost)
+    export = tmp_path / f"{label}.strategy.json"
+    payload = json.dumps({"fixture": label}).encode()
+    export.write_bytes(payload)
+    case["compiled_graph"] = {"strategy_output_path": str(export), "strategy_json_bytes": len(payload)}
+    pin = ("a" if label == "control" else "b") * 64
+    case["_runner"] = {
+        "status": "completed", "survivor": False, "report_sha256": pin,
+        "run_identity": {
+            "corpus": {"sha256": "c" * 64, "case_inputs": [{"path": "economic.json", "sha256": "d" * 64}]},
+            "artifact": {"manifest_sha256": "e" * 64},
+            "machine": {"system": "fixture"}, "configuration": {"exact_evaluation": True},
+        },
+        "ordinary_finalization": {
+            "ordinary_report_sha256": pin,
+            "strategy_files": [{"name": export.name, "sha256": hashlib.sha256(payload).hexdigest(),
+                                "size_bytes": len(payload)}],
+        },
+    }
+    return case
+
+
+def _capability_profile() -> dict:
+    return {"kind": "checked_policy_capability_v1", "candidate_run": "candidate",
+            "cases": [{"id": "economic", "control_run": "control",
+                       "control_report_sha256": "a" * 64, "quality_allowance_fraction": 0.0}]}
+
+
+def test_capability_gate_catches_valid_expensive_fallback_when_candidate_is_missing(tmp_path):
+    control = _capability_case(tmp_path, "control", 5)
+    fallback = _capability_case(tmp_path, "suppressed", 100)
+    result = capability_profile({"control": ({}, [control]), "candidate": ({}, [fallback])},
+                                _capability_profile())
+    row = result["cases"][0]
+    assert row["validity"]["passed"] is True
+    assert row["quality_status"] == "capability_miss" and result["passed"] is False
+    assert row["reasons"] == ["declared_capability_ceiling_missed"]
+    assert row["first_feasible_policy_observed"]["elapsed_ms"] == 100
+    assert row["first_control_quality_policy_observed"] is None
+    assert row["optimality_authority"] == "unchanged"
+
+
+@pytest.mark.parametrize("cost", [0, 5, 4])
+def test_capability_gate_accepts_any_checked_policy_including_chaos_at_ceiling(tmp_path, cost):
+    control = _capability_case(tmp_path, "control", 5)
+    candidate = _capability_case(tmp_path, "chaos", cost)
+    result = capability_profile({"control": ({}, [control]), "candidate": ({}, [candidate])},
+                                _capability_profile())
+    assert result["passed"] is True
+    assert result["lower_or_optimality_authority_added"] is False
+    assert result["cases"][0]["first_control_quality_policy_observed"]["coverage"] == "final_checked_export_only"
+
+
+@pytest.mark.parametrize("loss", ["policy", "export", "same_size_export_mutation", "report", "evaluation", "survivor"])
+def test_capability_gate_never_reuses_a_lost_or_unchecked_historical_upper(tmp_path, loss):
+    control = _capability_case(tmp_path, "control", 5)
+    candidate = _capability_case(tmp_path, "candidate", 4)
+    candidate["bound_trace"]["samples"][0].update(upper_bound=1, elapsed_ms=1)
+    if loss == "policy": candidate["solve_summary"]["policy_available"] = False
+    if loss == "export": Path(candidate["compiled_graph"]["strategy_output_path"]).unlink()
+    if loss == "same_size_export_mutation":
+        p = Path(candidate["compiled_graph"]["strategy_output_path"])
+        p.write_bytes(p.read_bytes().replace(b"candidate", b"different"))
+    if loss == "report": candidate["_runner"]["report_sha256"] = "f" * 64
+    if loss == "evaluation": candidate["exact_strategy_evaluation"]["cost_complete"] = False
+    if loss == "survivor": candidate["_runner"]["survivor"] = True
+    row = capability_profile({"control": ({}, [control]), "candidate": ({}, [candidate])},
+                             _capability_profile())["cases"][0]
+    assert row["validity"]["passed"] is False and row["passed"] is False
+    assert row["historical_native_upper_min"] == 1
+    assert row["final_exportable_checked_upper"] is None
+
+
+def test_capability_report_does_not_backdate_final_checked_export_or_fill_missing_memory(tmp_path):
+    control = _capability_case(tmp_path, "control", 5)
+    candidate = _capability_case(tmp_path, "candidate", 4)
+    candidate["bound_trace"]["samples"][0].update(upper_bound=4, elapsed_ms=1)
+    candidate.pop("memory")
+    row = capability_profile({"control": ({}, [control]), "candidate": ({}, [candidate])},
+                             _capability_profile())["cases"][0]
+    assert row["first_control_quality_policy_observed"]["elapsed_ms"] == 100
+    assert row["memory"] is None
+
+
+@pytest.mark.parametrize("change", ["goal", "scope", "raw_bytes", "runtime", "caps", "law"])
+def test_capability_gate_rejects_control_with_mismatched_identity(tmp_path, change):
+    control = _capability_case(tmp_path, "control", 5)
+    candidate = _capability_case(tmp_path, "candidate", 4)
+    if change == "goal": candidate["input"]["goal"]["allow_extra_modifiers"] = True
+    if change == "scope": candidate["product_action_ids"] = ["chaos", "annul"]
+    if change == "raw_bytes": candidate["_runner"]["run_identity"]["corpus"]["case_inputs"][0]["sha256"] = "f" * 64
+    if change == "runtime": candidate["_runner"]["run_identity"]["artifact"]["manifest_sha256"] = "f" * 64
+    if change == "caps": candidate["input"]["caps"]["max_solver_owned_bytes"] += 1
+    if change == "law": candidate["input"]["rare_reforge_count_law_version"] = 3
+    row = capability_profile({"control": ({}, [control]), "candidate": ({}, [candidate])},
+                             _capability_profile())["cases"][0]
+    assert row["quality_status"] == "unqualified" and row["passed"] is False
+    assert row["reasons"] == ["comparison_identity_unqualified"]
+
+
+def test_capability_control_pin_and_coverage_only_cases_remain_unqualified(tmp_path):
+    control = _capability_case(tmp_path, "control", 5)
+    candidate = _capability_case(tmp_path, "candidate", 4)
+    profile = _capability_profile()
+    profile["cases"][0]["control_report_sha256"] = "f" * 64
+    runs = {"control": ({}, [control]), "candidate": ({}, [candidate])}
+    assert capability_profile(runs, profile)["cases"][0]["reasons"] == ["control_report_pin_mismatch_or_missing"]
+    profile["cases"][0]["control_run"] = None
+    row = capability_profile(runs, profile)["cases"][0]
+    assert row["validity"]["passed"] and row["quality_status"] == "unqualified"
+    assert row["reasons"] == ["qualified_control_not_declared"]
+
+
+@pytest.mark.parametrize("allowance", [None, True, -0.01, float("inf"), float("nan")])
+def test_capability_allowance_must_be_predeclared_and_finite(tmp_path, allowance):
+    control = _capability_case(tmp_path, "control", 5)
+    candidate = _capability_case(tmp_path, "candidate", 4)
+    profile = _capability_profile()
+    profile["cases"][0]["quality_allowance_fraction"] = allowance
+    with pytest.raises(ValueError, match="predeclare"):
+        capability_profile({"control": ({}, [control]), "candidate": ({}, [candidate])}, profile)
+
+
+def test_capability_cli_gate_uses_immutable_control_pin(tmp_path):
+    runs = {}
+    pins = {}
+    for label, cost in [("control", 5), ("candidate", 100)]:
+        case = _capability_case(tmp_path, label, cost)
+        runner = case.pop("_runner")
+        directory = tmp_path / label
+        directory.mkdir()
+        report_path = directory / "case.json"
+        report_path.write_text(json.dumps({"cases": [case]}), encoding="utf-8")
+        pin = hashlib.sha256(report_path.read_bytes()).hexdigest()
+        pins[label] = pin
+        receipt = runner["ordinary_finalization"]
+        receipt["ordinary_report_sha256"] = pin
+        ledger = {**runner["run_identity"],
+                  "cases": {"economic": {"status": "completed", "survivor": False,
+                                        "report_path": str(report_path), "ordinary_finalization": receipt}}}
+        (directory / "ledger.json").write_text(json.dumps(ledger), encoding="utf-8")
+        runs[label] = directory
+    profile = _capability_profile()
+    profile["cases"][0]["control_report_sha256"] = pins["control"]
+    profile_path = tmp_path / "profile.json"
+    profile_path.write_text(json.dumps(profile), encoding="utf-8")
+    output = tmp_path / "quality.json"
+    assert reports_main(["--run", f"control={runs['control']}", "--run", f"candidate={runs['candidate']}",
+                         "--capability-profile", str(profile_path), "--capability-gate",
+                         "--output", str(output)]) == 1
+    assert json.loads(output.read_text())["capability_qualification"]["cases"][0]["quality_status"] == "capability_miss"

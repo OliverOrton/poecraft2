@@ -1,9 +1,10 @@
 [CmdletBinding()]
 param(
-    [ValidateSet("All", "Python", "Native", "Web")]
+    [ValidateSet("All", "Prepare", "Python", "Native", "Web")]
     [string]$Scope = "All",
     [switch]$SkipBuild,
     [switch]$FetchPinnedData,
+    [switch]$SkipDataPreparation,
     # Opt-in browser setup for disposable CI runners; local runs keep their default.
     [switch]$InstallTestBrowser
 )
@@ -23,6 +24,7 @@ function Invoke-ProjectPython {
     }
 }
 
+$NeedsPreparation = $Scope -in @("All", "Prepare") -or -not $SkipDataPreparation
 $NeedsPython = $Scope -in @("All", "Python")
 $NeedsNative = $Scope -in @("All", "Native")
 $NeedsWeb = $Scope -in @("All", "Web")
@@ -53,6 +55,7 @@ $Database = "$Root/data/sqlite/poecraft.db"
 $Artifact = "$Root/data/compiled/current"
 $ValidationOutput = "$Root/build/validation"
 New-Item -ItemType Directory -Force -Path $ValidationOutput | Out-Null
+if ($NeedsPreparation) {
 if (-not (Test-Path -LiteralPath $Database)) {
     if ($FetchPinnedData) {
         Invoke-ProjectPython @("-m", "poecraft_ingest.cli", "fetch", "--output", $Source,
@@ -97,6 +100,15 @@ if ($ActualManifestHash -ne $Lock.runtime_artifact.manifest_sha256) {
 Invoke-ProjectPython @("$Root/tools/ingest/compile_engine_data.py", "validate", "--database", $Database,
     "--artifact", $Artifact)
 
+}
+else {
+    if (-not (Test-Path -LiteralPath $Database) -or
+        -not (Test-Path -LiteralPath "$Artifact/manifest.json") -or
+        (Get-FileHash -LiteralPath "$Artifact/manifest.json" -Algorithm SHA256).Hash.ToLowerInvariant() -ne $Lock.runtime_artifact.manifest_sha256) {
+        throw "A matching frozen Prepare stage is required before skipping data preparation."
+    }
+}
+
 if ($NeedsPython) {
     # Separate processes preserve the established tests.test_ingest fixture
     # import without colliding with the other packages' tests namespaces.
@@ -111,7 +123,7 @@ if ($NeedsPython) {
 if ($NeedsNative) {
     $CTest = Get-Command ctest -ErrorAction SilentlyContinue
     if ($CTest -and (Test-Path "$Root/build/engine/CMakeCache.txt")) {
-        & $CTest.Source --test-dir "$Root/build/engine" -C Release --output-on-failure
+        & $CTest.Source --test-dir "$Root/build/engine" -C Release --output-on-failure --timeout 300
     }
     else {
         & $EngineTests $Artifact "$Root/fixtures/spec"

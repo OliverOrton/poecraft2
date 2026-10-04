@@ -528,6 +528,7 @@ def terminate_process_tree(process: subprocess.Popen[str]) -> None:
             check=False,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
+            timeout=5.0,
         )
     else:
         try:
@@ -650,6 +651,7 @@ def terminate_verified_process_identity(pid: int, token: str) -> bool:
             check=False,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
+            timeout=5.0,
         )
     else:
         try:
@@ -664,6 +666,185 @@ def terminate_verified_process_identity(pid: int, token: str) -> bool:
     return process_identity_token(pid) != token
 
 
+class _WindowsProcessJob:
+    """Own descendants from a suspended launch, including after parent exit.
+
+    Windows API authority: AssignProcessToJobObject and
+    JOBOBJECT_BASIC_ACCOUNTING_INFORMATION on learn.microsoft.com.
+    No breakaway, memory or CPU limits are added to the caller's existing limits.
+    """
+    def __init__(self, process) -> None:
+        import ctypes
+        from ctypes import wintypes
+        self.ctypes = ctypes
+        self.kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+        handles = {"CreateJobObjectW": ([ctypes.c_void_p, wintypes.LPCWSTR], wintypes.HANDLE),
+                   "SetInformationJobObject": ([wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD], wintypes.BOOL),
+                   "AssignProcessToJobObject": ([wintypes.HANDLE, wintypes.HANDLE], wintypes.BOOL),
+                   "QueryInformationJobObject": ([wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD, ctypes.c_void_p], wintypes.BOOL),
+                   "TerminateJobObject": ([wintypes.HANDLE, wintypes.UINT], wintypes.BOOL),
+                   "CloseHandle": ([wintypes.HANDLE], wintypes.BOOL),
+                   "OpenProcess": ([wintypes.DWORD, wintypes.BOOL, wintypes.DWORD], wintypes.HANDLE),
+                   "WaitForSingleObject": ([wintypes.HANDLE, wintypes.DWORD], wintypes.DWORD),
+                   "IsProcessInJob": ([wintypes.HANDLE, wintypes.HANDLE, ctypes.POINTER(wintypes.BOOL)], wintypes.BOOL)}
+        for name, (args, result) in handles.items():
+            getattr(self.kernel, name).argtypes = args
+            getattr(self.kernel, name).restype = result
+        class BasicLimits(ctypes.Structure):
+            _fields_ = [("ProcessTime", ctypes.c_longlong), ("JobTime", ctypes.c_longlong),
+                        ("Flags", wintypes.DWORD), ("MinWS", ctypes.c_size_t),
+                        ("MaxWS", ctypes.c_size_t), ("ActiveLimit", wintypes.DWORD),
+                        ("Affinity", ctypes.c_size_t), ("Priority", wintypes.DWORD),
+                        ("Scheduling", wintypes.DWORD)]
+        class ExtendedLimits(ctypes.Structure):
+            _fields_ = [("Basic", BasicLimits), ("IO", ctypes.c_ulonglong * 6),
+                        ("ProcessMemory", ctypes.c_size_t), ("JobMemory", ctypes.c_size_t),
+                        ("PeakProcessMemory", ctypes.c_size_t), ("PeakJobMemory", ctypes.c_size_t)]
+        class Accounting(ctypes.Structure):
+            _fields_ = [("Times", ctypes.c_longlong * 4), ("PageFaults", wintypes.DWORD),
+                        ("TotalProcesses", wintypes.DWORD), ("ActiveProcesses", wintypes.DWORD),
+                        ("Terminated", wintypes.DWORD)]
+        self.Accounting = Accounting
+        self.handle = self.kernel.CreateJobObjectW(None, None)
+        if not self.handle:
+            raise ctypes.WinError(ctypes.get_last_error())
+        try:
+            limits = ExtendedLimits()
+            limits.Basic.Flags = 0x2000  # JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+            if not self.kernel.SetInformationJobObject(self.handle, 9, ctypes.byref(limits), ctypes.sizeof(limits)):
+                raise ctypes.WinError(ctypes.get_last_error())
+            if not self.kernel.AssignProcessToJobObject(self.handle, int(process._handle)):
+                raise ctypes.WinError(ctypes.get_last_error())
+            self._resume_suspended_process(process.pid)
+        except BaseException:
+            self.close()
+            raise
+
+    def _resume_suspended_process(self, pid: int) -> None:
+        # Popen closes the initial thread handle. Toolhelp obtains that handle
+        # while the process is still suspended, before any child can be created.
+        import ctypes
+        from ctypes import wintypes
+        class ThreadEntry(ctypes.Structure):
+            _fields_ = [("Size", wintypes.DWORD), ("Usage", wintypes.DWORD),
+                        ("ThreadId", wintypes.DWORD), ("ProcessId", wintypes.DWORD),
+                        ("BasePriority", wintypes.LONG), ("DeltaPriority", wintypes.LONG),
+                        ("Flags", wintypes.DWORD)]
+        api = self.kernel
+        api.CreateToolhelp32Snapshot.argtypes = [wintypes.DWORD, wintypes.DWORD]
+        api.CreateToolhelp32Snapshot.restype = wintypes.HANDLE
+        api.Thread32First.argtypes = api.Thread32Next.argtypes = [wintypes.HANDLE, ctypes.POINTER(ThreadEntry)]
+        api.Thread32First.restype = api.Thread32Next.restype = wintypes.BOOL
+        api.OpenThread.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+        api.OpenThread.restype = wintypes.HANDLE
+        api.ResumeThread.argtypes = [wintypes.HANDLE]
+        api.ResumeThread.restype = wintypes.DWORD
+        snapshot = api.CreateToolhelp32Snapshot(4, 0)  # TH32CS_SNAPTHREAD
+        if snapshot in (None, ctypes.c_void_p(-1).value):
+            raise ctypes.WinError(ctypes.get_last_error())
+        try:
+            entry = ThreadEntry()
+            entry.Size = ctypes.sizeof(entry)
+            valid = api.Thread32First(snapshot, ctypes.byref(entry))
+            while valid:
+                if entry.ProcessId == pid:
+                    thread = api.OpenThread(2, False, entry.ThreadId)  # THREAD_SUSPEND_RESUME
+                    if not thread:
+                        raise ctypes.WinError(ctypes.get_last_error())
+                    try:
+                        if api.ResumeThread(thread) == 0xffffffff:
+                            raise ctypes.WinError(ctypes.get_last_error())
+                        return
+                    finally:
+                        api.CloseHandle(thread)
+                valid = api.Thread32Next(snapshot, ctypes.byref(entry))
+            raise OSError("suspended process has no initial thread")
+        finally:
+            api.CloseHandle(snapshot)
+
+    def _live_process_handles(self) -> list:
+        # ActiveProcesses accounting can lag a signaled process. Enumerate the
+        # job's IDs and qualify each owned handle before claiming a descendant.
+        from ctypes import wintypes
+        ctypes, api = self.ctypes, self.kernel
+        capacity = 16
+        for _ in range(8):
+            class ProcessIds(ctypes.Structure):
+                _fields_ = [("Assigned", wintypes.DWORD), ("Count", wintypes.DWORD),
+                            ("Ids", ctypes.c_size_t * capacity)]
+            info = ProcessIds()
+            ok = api.QueryInformationJobObject(self.handle, 3, ctypes.byref(info),
+                                              ctypes.sizeof(info), None)
+            error = ctypes.get_last_error()
+            if info.Assigned > capacity or not ok and error == 234:  # ERROR_MORE_DATA
+                capacity = max(capacity * 2, int(info.Assigned))
+                continue
+            if not ok:
+                raise ctypes.WinError(error)
+            if info.Count > capacity:
+                raise OSError("invalid owned process list length")
+            handles = []
+            try:
+                for pid in info.Ids[:info.Count]:
+                    handle = api.OpenProcess(0x00100000 | 0x1000, False, pid)
+                    if not handle:
+                        if ctypes.get_last_error() == 87:  # already absent
+                            continue
+                        raise ctypes.WinError(ctypes.get_last_error())
+                    try:
+                        belongs = wintypes.BOOL()
+                        if not api.IsProcessInJob(handle, self.handle, ctypes.byref(belongs)):
+                            raise ctypes.WinError(ctypes.get_last_error())
+                        if not belongs.value:  # ID reused after leaving this job
+                            continue
+                        state = api.WaitForSingleObject(handle, 0)
+                        if state == 258:  # WAIT_TIMEOUT: actually live
+                            handles.append(handle)
+                            handle = None
+                        elif state != 0:  # WAIT_OBJECT_0: proved exited
+                            raise OSError("owned process exit observation failed")
+                    finally:
+                        if handle:
+                            api.CloseHandle(handle)
+                return handles
+            except BaseException:
+                for handle in handles:
+                    api.CloseHandle(handle)
+                raise
+        raise OSError("owned process list did not stabilize")
+
+    def active_processes(self) -> int:
+        handles = self._live_process_handles()
+        try:
+            return len(handles)
+        finally:
+            for handle in handles:
+                self.kernel.CloseHandle(handle)
+
+    def terminate(self) -> None:
+        # Job accounting reaching zero alone does not establish signaled exit.
+        # Retain handles across termination and wait within the cleanup bound.
+        handles = self._live_process_handles()
+        deadline = time.monotonic() + 5.0
+        try:
+            if not self.kernel.TerminateJobObject(self.handle, 1):
+                raise self.ctypes.WinError(self.ctypes.get_last_error())
+            for handle in handles:
+                remaining_ms = max(0, int((deadline - time.monotonic()) * 1000))
+                if self.kernel.WaitForSingleObject(handle, remaining_ms) != 0:
+                    raise TimeoutError("owned Windows process did not exit")
+            if self.active_processes():
+                raise TimeoutError("owned Windows process job did not drain")
+        finally:
+            for handle in handles:
+                self.kernel.CloseHandle(handle)
+
+    def close(self) -> None:
+        if self.handle:
+            self.kernel.CloseHandle(self.handle)
+            self.handle = None
+
+
 def run_isolated_process(
     command: list[str],
     *,
@@ -672,79 +853,132 @@ def run_isolated_process(
     cancel_requested: Callable[[], bool] | None = None,
     on_started: Callable[[int, str | None], None] | None = None,
     graceful_cancel_seconds: float = 0.25,
+    cleanup_drain_seconds: float = 5.0,
+    log_path: Path | None = None,
+    log_tail_bytes: int = 65536,
 ) -> dict[str, Any]:
-    """Run one process group and prove the parent is gone before returning."""
-
+    """Run one process group with bounded cleanup and optional streamed logging."""
+    if not math.isfinite(watchdog_seconds) or watchdog_seconds <= 0:
+        raise ValueError("watchdog_seconds must be positive and finite")
+    if not math.isfinite(cleanup_drain_seconds) or cleanup_drain_seconds <= 0:
+        raise ValueError("cleanup_drain_seconds must be positive and finite")
+    if log_tail_bytes < 0:
+        raise ValueError("log_tail_bytes cannot be negative")
     creationflags = 0
     popen_options: dict[str, Any] = {}
     if os.name == "nt":
-        creationflags = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW
+        creationflags = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW | 0x4  # CREATE_SUSPENDED
     else:
         popen_options["start_new_session"] = True
     started = time.monotonic()
-    process = subprocess.Popen(
-        command,
-        cwd=cwd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        creationflags=creationflags,
-        **popen_options,
-    )
-    identity_token = process_identity_token(process.pid)
-    if on_started is not None:
-        on_started(process.pid, identity_token)
-    timed_out = False
-    canceled = False
-    cancellation_mode: str | None = None
-    cancellation_started: float | None = None
+    log_stream = None
+    if log_path is not None:
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        # Attempt-local logs cannot silently overwrite earlier evidence.
+        log_stream = log_path.open("xb")
+    process = None
+    process_job = None
+    descendants_after_parent_exit = False
+    timed_out = canceled = drain_timed_out = False
+    cleanup_error = None
+    cancellation_mode = None
+    cancellation_started = None
     output = ""
-    deadline = started + watchdog_seconds
-    while True:
-        remaining = deadline - time.monotonic()
-        if remaining <= 0:
-            timed_out = True
-            terminate_process_tree(process)
-            output, _ = process.communicate()
-            break
-        if cancel_requested is not None and cancel_requested():
-            canceled = True
-            cancellation_started = time.monotonic()
-            graceful_sent = False
-            try:
-                if os.name == "nt":
-                    process.send_signal(signal.CTRL_BREAK_EVENT)
-                else:
-                    os.killpg(process.pid, signal.SIGTERM)
-                graceful_sent = True
-            except (OSError, ProcessLookupError, ValueError):
-                graceful_sent = False
-            if graceful_sent:
-                try:
-                    output, _ = process.communicate(timeout=graceful_cancel_seconds)
-                    cancellation_mode = "graceful_process_group_signal"
-                    break
-                except subprocess.TimeoutExpired:
-                    pass
-            terminate_process_tree(process)
-            output, _ = process.communicate()
-            cancellation_mode = (
-                "graceful_then_process_tree_termination"
-                if graceful_sent
-                else "process_tree_termination_graceful_unavailable"
-            )
-            break
+
+    def force_cleanup() -> None:
+        nonlocal output, drain_timed_out, cleanup_error
         try:
-            output, _ = process.communicate(timeout=min(0.25, remaining))
-            break
-        except subprocess.TimeoutExpired:
-            continue
-    survivor = process.poll() is None
-    if survivor:
-        terminate_process_tree(process)
-        survivor = process.poll() is None
+            if process_job is not None:
+                process_job.terminate()
+            else:
+                terminate_process_tree(process)
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            cleanup_error = f"{type(exc).__name__}: {exc}"
+        try:
+            drained, _ = process.communicate(timeout=cleanup_drain_seconds)
+            output = drained or ""
+        except subprocess.TimeoutExpired as exc:
+            drain_timed_out = True
+            partial = exc.output or ""
+            output = partial.decode("utf-8", errors="replace") if isinstance(partial, bytes) else partial
+
+    try:
+        process = subprocess.Popen(
+            command, cwd=cwd,
+            stdout=log_stream if log_stream is not None else subprocess.PIPE,
+            stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace",
+            creationflags=creationflags, **popen_options,
+        )
+        identity_token = process_identity_token(process.pid)
+        if on_started is not None:
+            on_started(process.pid, identity_token)
+        if os.name == "nt":
+            # Record ownership while suspended; launch/observer errors leave a
+            # known PID and cannot race an unowned child into execution.
+            process_job = _WindowsProcessJob(process)
+        deadline = started + watchdog_seconds
+        while True:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                timed_out = True
+                force_cleanup()
+                break
+            if cancel_requested is not None and cancel_requested():
+                canceled = True
+                cancellation_started = time.monotonic()
+                graceful_sent = False
+                try:
+                    if os.name == "nt":
+                        process.send_signal(signal.CTRL_BREAK_EVENT)
+                    else:
+                        os.killpg(process.pid, signal.SIGTERM)
+                    graceful_sent = True
+                except (OSError, ProcessLookupError, ValueError):
+                    pass
+                if graceful_sent:
+                    try:
+                        output, _ = process.communicate(timeout=graceful_cancel_seconds)
+                        output = output or ""
+                        cancellation_mode = "graceful_process_group_signal"
+                        break
+                    except subprocess.TimeoutExpired:
+                        pass
+                force_cleanup()
+                cancellation_mode = (
+                    "graceful_then_process_tree_termination" if graceful_sent
+                    else "process_tree_termination_graceful_unavailable"
+                )
+                break
+            try:
+                output, _ = process.communicate(timeout=min(0.25, remaining))
+                output = output or ""
+                break
+            except subprocess.TimeoutExpired:
+                if process_job is not None and process.poll() is not None and process_job.active_processes():
+                    descendants_after_parent_exit = True
+                    force_cleanup()
+                    break
+                continue
+        if process.poll() is None:
+            force_cleanup()
+        if process_job is not None and process.poll() is not None and process_job.active_processes():
+            descendants_after_parent_exit = True
+            force_cleanup()
+    except BaseException:
+        # Callback and observer errors must also terminate the owned process.
+        if process is not None:
+            force_cleanup()
+        raise
+    finally:
+        if process_job is not None:
+            process_job.close()
+        if log_stream is not None:
+            log_stream.close()
+    if log_path is not None:
+        with log_path.open("rb") as stream:
+            stream.seek(max(0, log_path.stat().st_size - log_tail_bytes))
+            output = stream.read(log_tail_bytes).decode("utf-8", errors="replace")
+    parent_survivor = process.poll() is None
     return {
         "exit_code": process.returncode,
         "timed_out": timed_out,
@@ -752,15 +986,21 @@ def run_isolated_process(
         "cancellation_mode": cancellation_mode,
         "cancellation_ack_ms": (
             (time.monotonic() - cancellation_started) * 1000.0
-            if cancellation_started is not None
-            else None
+            if cancellation_started is not None else None
         ),
         "process_id": process.pid,
         "process_identity_token": identity_token,
-        "survivor": survivor,
-        "survivor_check": "process_group_kill_then_parent_poll",
+        # An undrained inherited pipe cannot establish a cleaned process tree.
+        "survivor": parent_survivor or drain_timed_out or cleanup_error is not None,
+        "parent_survivor": parent_survivor,
+        "descendants_after_parent_exit": descendants_after_parent_exit,
+        "process_tree_owner": "windows_job" if process_job is not None else "process_group",
+        "cleanup_drain_timed_out": drain_timed_out,
+        "cleanup_error": cleanup_error,
+        "survivor_check": "owned_windows_job_drained" if process_job is not None else "bounded_process_group_termination_then_parent_poll",
         "wall_ms": (time.monotonic() - started) * 1000.0,
         "output": output,
+        "log_path": str(log_path) if log_path is not None else None,
     }
 
 
@@ -801,6 +1041,7 @@ def classify_process_result(
         exit_code in {0, 2}
         and not result.get("timed_out")
         and not result.get("survivor")
+        and not result.get("descendants_after_parent_exit")
         and final_report_exists
     )
     if completed:
@@ -809,6 +1050,16 @@ def classify_process_result(
             failure_kind=None,
             completed=True,
             native_expectations_met=exit_code == 0,
+        )
+    if result.get("survivor"):
+        return ProcessClassification(
+            status="failed", failure_kind="surviving_process",
+            completed=False, native_expectations_met=None,
+        )
+    if result.get("descendants_after_parent_exit"):
+        return ProcessClassification(
+            status="failed", failure_kind="unexpected_descendant_lifetime",
+            completed=False, native_expectations_met=None,
         )
     if result.get("canceled"):
         return ProcessClassification(

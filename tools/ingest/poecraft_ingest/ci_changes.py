@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path, PurePosixPath
 import subprocess
@@ -16,8 +17,32 @@ def classify(paths: list[str] | None) -> dict:
             path.startswith('docs/') and p.suffix == '.md')
     only_prose = bool(paths) and all(prose(p) for p in paths)
     return {'native_required': not only_prose,
-            'reason': 'Only known documentation paths changed; native validation is not applicable.'
+            'reason': 'Only known documentation paths changed; native validation was not run; no prior qualification is inferred.'
                 if only_prose else 'Mixed, executable, unknown or unavailable changes require native validation.'}
+
+
+def validation_identity(root: Path, revision: str = "HEAD") -> str:
+    """Bind tracked non-prose inputs, excluding the protected file."""
+    # ls-tree does not support exclude pathspecs. Resolve safe top-level inputs
+    # with ls-files first, including inputs present only in the named revision.
+    paths = subprocess.check_output(
+        ["git", "ls-files", "--full-name", "-z", "--with-tree", revision,
+         "--", ".", ":(exclude,top)0"], cwd=root,
+    ).split(b"\0")
+    roots = sorted({path.split(b"/", 1)[0].decode("utf-8") for path in paths if path})
+    if not roots:
+        raise ValueError("no safe tracked source inputs")
+    rows = subprocess.check_output(
+        ["git", "ls-tree", "-r", "-z", revision, "--", *roots], cwd=root,
+    ).split(b"\0")
+    inputs = []
+    for row in rows:
+        if not row:
+            continue
+        metadata, path_bytes = row.split(b"\t", 1)
+        if classify([path_bytes.decode("utf-8")])["native_required"]:
+            inputs.append(row)
+    return hashlib.sha256(b"\0".join(sorted(inputs))).hexdigest()
 
 
 def main() -> int:

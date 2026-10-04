@@ -7,6 +7,10 @@ on:
 jobs:
   build-and-test:
     runs-on: windows-latest
+    timeout-minutes: 90
+    env:
+      CMAKE_BUILD_PARALLEL_LEVEL: 2
+      PYTHONPATH: tools/ingest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -21,10 +25,10 @@ jobs:
           CHANGE_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
           PYTHONPATH: tools/ingest
         run: python -m poecraft_ingest.ci_changes --base "$env:CHANGE_BASE" --output "$env:GITHUB_OUTPUT"
-      - name: Native validation not applicable
+      - name: Native validation not run
         if: steps.changes.outputs.native_required == 'false'
         shell: pwsh
-        run: Write-Output 'Only known documentation paths changed. Solver knowledge checks validate the affected layer; native build/test is not applicable.'
+        run: Write-Output 'Only known documentation paths changed. Solver knowledge checks validate the affected layer; native build/tests were not run. This supplies no native or policy-quality qualification; release requires matching prior evidence.'
       - name: Bind project Python and install test dependencies
         if: steps.changes.outputs.native_required == 'true'
         shell: pwsh
@@ -62,11 +66,39 @@ jobs:
       - name: Build
         if: steps.changes.outputs.native_required == 'true'
         shell: pwsh
-        run: ./scripts/build.ps1
-      - name: Test
+        timeout-minutes: 20
+        run: ./scripts/build.ps1 -Jobs 2
+      - name: Prepare frozen data
         if: steps.changes.outputs.native_required == 'true'
         shell: pwsh
-        run: ./scripts/test.ps1 -SkipBuild -FetchPinnedData -InstallTestBrowser
+        timeout-minutes: 11
+        run: python -m poecraft_ingest.ci_validation --scope Prepare --output "build/validation/stages/${{ github.run_id }}-${{ github.run_attempt }}/Prepare"
+      - name: Python tests
+        if: steps.changes.outputs.native_required == 'true'
+        shell: pwsh
+        timeout-minutes: 21
+        run: python -m poecraft_ingest.ci_validation --scope Python --output "build/validation/stages/${{ github.run_id }}-${{ github.run_attempt }}/Python"
+      - name: Native tests
+        if: steps.changes.outputs.native_required == 'true'
+        shell: pwsh
+        timeout-minutes: 16
+        run: python -m poecraft_ingest.ci_validation --scope Native --output "build/validation/stages/${{ github.run_id }}-${{ github.run_attempt }}/Native"
+      - name: Web and real WASM tests
+        if: steps.changes.outputs.native_required == 'true'
+        shell: pwsh
+        timeout-minutes: 11
+        run: python -m poecraft_ingest.ci_validation --scope Web --output "build/validation/stages/${{ github.run_id }}-${{ github.run_attempt }}/Web"
+      - name: Preserve staged validation evidence
+        if: always() && steps.changes.outputs.native_required == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-validation-stages
+          path: |
+            build/validation/stages/
+            build/engine/Testing/Temporary/LastTest.log
+            build/engine/Testing/Temporary/LastTestsFailed.log
+            build/validation/runtime-identity-*.json
+          if-no-files-found: warn
       - name: Preserve frozen runtime identity failure
         if: failure() && steps.changes.outputs.native_required == 'true'
         uses: actions/upload-artifact@v4

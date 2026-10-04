@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param()
+param([ValidateRange(1, 2)][int]$Jobs = 2)
 
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
@@ -59,7 +59,7 @@ if ($CMake -and $Ninja -and $CCompiler -and $Compiler) {
     if ($LASTEXITCODE -ne 0) {
         throw "CMake configure failed with exit code $LASTEXITCODE."
     }
-    & $CMake --build "$Root/build/engine" --parallel
+    & $CMake --build "$Root/build/engine" --parallel $Jobs
     if ($LASTEXITCODE -ne 0) {
         throw "CMake build failed with exit code $LASTEXITCODE."
     }

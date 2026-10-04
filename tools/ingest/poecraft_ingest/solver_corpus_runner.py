@@ -208,7 +208,8 @@ def _ordinary_finalization_components(
     }
 
 
-def _capture_ordinary_finalization(paths: AttemptPaths, case_id: str) -> dict[str, Any]:
+def _capture_ordinary_finalization(paths: AttemptPaths, case_id: str, *,
+                                   receipt_path: Path | None = None) -> dict[str, Any]:
     report = read_json_object(paths.report_path)
     cases = report.get("cases")
     if (
@@ -241,7 +242,7 @@ def _capture_ordinary_finalization(paths: AttemptPaths, case_id: str) -> dict[st
         "ordinary_result_identity_v1": canonical_sha256(components),
         "finalized_at_unix_ns": time.time_ns(),
     }
-    finalization_path = paths.attempt_directory / "ordinary-finalization.json"
+    finalization_path = receipt_path or (paths.attempt_directory / "ordinary-finalization.json")
     _atomic_json(finalization_path, captured)
     return {
         **captured,
@@ -572,6 +573,13 @@ def _run_case(
                         and ordinary_strategies_unchanged
                     ),
                 }
+    if classification.completed and ordinary_finalization is None:
+        # Legacy corpus cases share an output directory. Bind each final report
+        # and its exported bytes in a case-local receipt, never a shared overwrite.
+        ordinary_finalization = _capture_ordinary_finalization(
+            resolved.paths, task.case_id,
+            receipt_path=resolved.paths.report_path.with_suffix(".finalization.json"),
+        )
     return {
         "case_id": task.case_id,
         "attempt_id": resolved.paths.attempt_id,

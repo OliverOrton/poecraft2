@@ -1,0 +1,46 @@
+{
+  "corrections": "Matching frozen prerequisites materialized without recompilation; case stubs now identify selected request; job PID handles establish actual exit rather than delayed accounting. Corrections not rechecked yet.",
+  "failed": 29,
+  "failures_by_cause": {
+    "invalid_empty_case_stub": [
+      "test_native_expectation_miss_is_a_completed_measurement",
+      "test_case_command_forwards_product_verification_contract",
+      "test_native_controls_reach_worker_and_reject_changed_resume"
+    ],
+    "missing_matching_benchmark_prerequisite": [
+      "test_run_summary_exposes_bounded_action_envelope_evidence",
+      "test_analysis_surfaces_and_bundle_are_bounded_and_replay_stable",
+      "test_matrix_selection_is_bounded_sorted_and_idempotent",
+      "test_complete_idempotency_binding_for_mutation_families",
+      "test_idempotency_is_transactional_under_equal_and_unequal_races",
+      "test_json_cli_reports_changed_payload_idempotency_conflict",
+      "test_json_cli_discloses_canonical_action_envelope_identities",
+      "test_dispatch_refuses_each_changed_identity_component_before_attempt[source]",
+      "test_dispatch_refuses_each_changed_identity_component_before_attempt[executable]",
+      "test_dispatch_refuses_each_changed_identity_component_before_attempt[compiled_artifact]",
+      "test_dispatch_refuses_each_changed_identity_component_before_attempt[corpus]",
+      "test_dispatch_refuses_each_changed_identity_component_before_attempt[case]",
+      "test_dispatch_refuses_each_changed_identity_component_before_attempt[profile]",
+      "test_dispatch_refuses_each_changed_identity_component_before_attempt[economy]",
+      "test_dispatch_refuses_each_changed_identity_component_before_attempt[action_scope]",
+      "test_restored_identity_can_retry_without_rewriting_request",
+      "test_local_revision_disk_change_refuses_dispatch_before_attempt",
+      "test_requested_watchdog_is_forwarded_and_resources_are_split",
+      "test_terminal_publication_is_atomic_and_requires_hashed_evidence",
+      "test_preparation_failure_retains_lease_and_postcommit_replay_is_complete",
+      "test_valid_final_recovery_and_possible_live_quarantine",
+      "test_tampered_terminal_artifacts_are_rejected_by_every_evidence_surface",
+      "test_legacy_unindexed_terminal_is_disclosed_without_parsing",
+      "test_unattended_qualification_harness_writes_passing_isolated_ledger"
+    ],
+    "windows_job_exit_observation": [
+      "test_actual_crash_and_synthetic_os_oom_remain_distinct",
+      "test_owned_grandchild_is_cleaned_after_parent_exits[False]"
+    ]
+  },
+  "original_hosted_scheduling_cause": "still unresolved; these new failures do not diagnose hosted scheduling",
+  "passed": 122,
+  "survivor": false,
+  "timed_out": false,
+  "wall_ms": 21158.3172
+}

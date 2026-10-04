@@ -368,4 +368,13 @@ if(BUILD_TESTING)
             LABELS "native;solver;solver-corpus-validation"
             WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/..")
 
+    # Operational backstop; preserve every explicitly tighter test limit.
+    get_property(POECRAFT_NATIVE_TESTS DIRECTORY PROPERTY TESTS)
+    foreach(POECRAFT_NATIVE_TEST IN LISTS POECRAFT_NATIVE_TESTS)
+        get_property(POECRAFT_NATIVE_TIMEOUT TEST ${POECRAFT_NATIVE_TEST} PROPERTY TIMEOUT)
+        if(NOT POECRAFT_NATIVE_TIMEOUT OR POECRAFT_NATIVE_TIMEOUT GREATER 300)
+            set_tests_properties(${POECRAFT_NATIVE_TEST} PROPERTIES TIMEOUT 300)
+        endif()
+    endforeach()
+
 endif()

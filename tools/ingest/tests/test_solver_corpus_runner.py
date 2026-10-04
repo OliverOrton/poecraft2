@@ -210,7 +210,7 @@ def test_native_expectation_miss_is_a_completed_measurement(
 ) -> None:
     def fake_process(*args, **kwargs):
         output_flag = args[0].index("--output") + 1
-        _write_json(Path(args[0][output_flag]), {"cases": []})
+        _write_json(Path(args[0][output_flag]), {"cases": [{"id": args[0][args[0].index("--case") + 1]}]})
         return {
             "exit_code": 2,
             "timed_out": False,
@@ -249,7 +249,7 @@ def test_case_command_forwards_product_verification_contract(
     def fake_process(command, **kwargs):
         observed.extend(command)
         output_flag = command.index("--output") + 1
-        _write_json(Path(command[output_flag]), {"cases": []})
+        _write_json(Path(command[output_flag]), {"cases": [{"id": command[command.index("--case") + 1]}]})
         return {
             "exit_code": 0,
             "timed_out": False,
@@ -651,7 +651,7 @@ def test_native_controls_reach_worker_and_reject_changed_resume(
 
     def fake_process(command, **kwargs):
         observed.append((command, kwargs))
-        _write_json(Path(command[command.index("--output") + 1]), {"cases": []})
+        _write_json(Path(command[command.index("--output") + 1]), {"cases": [{"id": command[command.index("--case") + 1]}]})
         return {"exit_code": 0, "timed_out": False, "survivor": False,
                 "survivor_check": "test", "wall_ms": 1.0, "output": ""}
 
@@ -858,3 +858,17 @@ def test_factored_provenance_preserves_resume_shape(tmp_path: Path) -> None:
     assert identity["corpus"]["generator_config_sha256"] == "abc"
     assert identity["artifact"]["identity"] is None
     assert len(identity["executable"]["sha256"]) == 64
+
+
+def test_ordinary_finalization_refuses_missing_or_wrong_case_identity(tmp_path, monkeypatch):
+    def fake_process(command, **kwargs):
+        _write_json(Path(command[command.index("--output") + 1]), {"cases": [{"id": "wrong"}]})
+        return {"exit_code": 0, "timed_out": False, "survivor": False,
+                "survivor_check": "test", "wall_ms": 1.0, "output": ""}
+    monkeypatch.setattr("poecraft_ingest.solver_corpus_runner.run_isolated_process", fake_process)
+    with pytest.raises(ValueError, match="case identity mismatch"):
+        _run_case(CaseTask("requested", tmp_path / "case.json", 1.0, 100, "smoke"),
+                  executable=Path(sys.executable), artifact=tmp_path,
+                  corpus=tmp_path / "manifest.json", output_directory=tmp_path / "run",
+                  root=tmp_path, exact_evaluation=False)
+    assert not (tmp_path / "run/reports/requested.finalization.json").exists()

@@ -587,6 +587,7 @@ def load_run(run_directory: Path, *, allow_missing_reports: bool = False) -> tup
                 "corpus_id",
                 "schema_version",
                 "generator_config_sha256",
+                "case_inputs",
             )
         }
         if isinstance(ledger.get("corpus"), dict)
@@ -634,6 +635,11 @@ def load_run(run_directory: Path, *, allow_missing_reports: bool = False) -> tup
         case["_runner"] = {
             "status": record.get("status"),
             "observation_kind": observation_kind,
+            "report_sha256": hashlib.sha256(Path(path_value).read_bytes()).hexdigest(),
+            "source": ledger.get("source"),
+            "survivor": record.get("survivor", False),
+            "resolved_command": record.get("resolved_command"),
+            "ordinary_finalization": copy.deepcopy(record.get("ordinary_finalization")),
             "watchdog_seconds": record.get("watchdog_seconds"),
             "wall_ms": record.get("wall_ms"),
             "exit_code": record.get("exit_code"),
@@ -819,6 +825,166 @@ def _independently_evaluated_cost(case: dict[str, Any]) -> float | None:
     return cost if cost is not None and cost >= 0 else None
 
 
+def _retained_policy_evidence(case: dict[str, Any]) -> dict[str, Any]:
+    """Final export only. A historical finite upper is insufficient."""
+    summary = case.get("solve_summary") or {}
+    cost = _independently_evaluated_cost(case)
+    upper = _finite_number(summary.get("upper_bound"))
+    reasons = []
+    if _nested(case, "_runner", "status") != "completed":
+        reasons.append("runner_not_completed")
+    if _nested(case, "_runner", "survivor") is not False:
+        reasons.append("cleanup_not_qualified")
+    if case.get("errors"):
+        reasons.append("correctness_errors")
+    if summary.get("policy_status") not in {"bounded_feasible", "bounded_near_optimal", "exact"}:
+        reasons.append("unpublishable_policy_classification")
+    receipt = _nested(case, "_runner", "ordinary_finalization") or {}
+    if receipt.get("ordinary_report_sha256") != _nested(case, "_runner", "report_sha256"):
+        reasons.append("final_report_integrity_unqualified")
+    if summary.get("policy_available") is not True:
+        reasons.append("no_current_policy")
+    if cost is None or upper is None or upper < 0:
+        reasons.append("no_checked_finite_upper")
+    absolute, relative = _policy_cost_tolerances(case)
+    if cost is not None and upper is not None and abs(upper - cost) > absolute + relative * max(abs(upper), abs(cost)):
+        reasons.append("upper_cost_not_reconciled")
+    export_path = _nested(case, "compiled_graph", "strategy_output_path")
+    export_sha256 = None
+    if isinstance(export_path, str) and Path(export_path).is_file():
+        payload = Path(export_path).read_bytes()
+        export_sha256 = hashlib.sha256(payload).hexdigest()
+        retained = [item for item in receipt.get("strategy_files", [])
+                    if isinstance(item, dict) and item.get("name") == Path(export_path).name]
+        if len(retained) != 1 or retained[0].get("sha256") != export_sha256 or retained[0].get("size_bytes") != len(payload):
+            reasons.append("retained_export_integrity_unqualified")
+        try:
+            document = json.loads(payload)
+            if not isinstance(document, dict):
+                raise ValueError("strategy must be an object")
+            if len(payload) != _nested(case, "compiled_graph", "strategy_json_bytes"):
+                reasons.append("export_byte_identity_mismatch")
+        except (ValueError, UnicodeDecodeError):
+            reasons.append("export_invalid_json")
+    else:
+        reasons.append("retained_export_missing")
+    return {"passed": not reasons, "reasons": reasons, "checked_upper": upper,
+            "independently_evaluated_cost": cost, "export_sha256": export_sha256}
+
+
+def _policy_cost_tolerances(case: dict[str, Any]) -> tuple[float, float]:
+    absolute = _finite_number(_nested(case, "input", "verification", "exact_cost_absolute_tolerance"))
+    relative = _finite_number(_nested(case, "input", "verification", "exact_cost_relative_tolerance"))
+    return (absolute if absolute is not None and absolute >= 0 else 1e-7,
+            relative if relative is not None and relative >= 0 else 1e-9)
+
+
+def capability_profile(runs: dict[str, tuple[dict[str, Any], list[dict[str, Any]]]],
+                       profile: dict[str, Any]) -> dict[str, Any]:
+    """Pinned paid controls qualify bounded capability, never lower or closure."""
+    if profile.get("kind") != "checked_policy_capability_v1":
+        raise ValueError("unknown capability profile")
+    label, cohort = profile.get("candidate_run"), profile.get("cases")
+    if label not in runs or not isinstance(cohort, list) or not cohort:
+        raise ValueError("declare a candidate run and nonempty capability cohort")
+    ids = [requirement.get("id") for requirement in cohort if isinstance(requirement, dict)]
+    if len(ids) != len(cohort) or not all(isinstance(cid, str) and cid for cid in ids) or len(set(ids)) != len(ids):
+        raise ValueError("capability cohort must have unique case IDs")
+    indexed = {}
+    for run_label, (_, cases) in runs.items():
+        indexed[run_label] = {case["id"]: case for case in cases}
+        if len(indexed[run_label]) != len(cases):
+            raise ValueError("duplicate capability case reports")
+    rows = []
+    for requirement in cohort:
+        cid = requirement["id"]
+        candidate = indexed[label].get(cid)
+        row = {"id": cid, "quality_status": "unqualified", "passed": False,
+               "validity": None, "reasons": [], "control_quality_ceiling": None,
+               "first_feasible_policy_observed": None, "first_control_quality_policy_observed": None,
+               "optimality_authority": "unchanged"}
+        if candidate is None:
+            row["reasons"].append("candidate_report_missing")
+            rows.append(row)
+            continue
+        validity = _retained_policy_evidence(candidate)
+        row["validity"] = validity
+        row["final_exportable_checked_upper"] = validity["checked_upper"] if validity["passed"] else None
+        samples = _nested(candidate, "bound_trace", "samples", default=[]) or []
+        observed_uppers = [_finite_number(sample.get("upper_bound")) for sample in samples if isinstance(sample, dict)]
+        observed_uppers = [value for value in observed_uppers if value is not None]
+        row["historical_native_upper_min"] = min(observed_uppers) if observed_uppers else None
+        # Sparse upper traces carry no final-export identity. Only the final checked
+        # export supplies this observation; never backdate it to an earlier scalar.
+        observation = {
+            "elapsed_ms": _finite_number(_nested(candidate, "phase_wall_ms", "total")),
+            "work": copy.deepcopy(_nested(candidate, "solver_telemetry", "work")),
+            "states": copy.deepcopy(_nested(candidate, "solver_telemetry", "states")),
+            "coverage": "final_checked_export_only",
+        }
+        if validity["passed"]:
+            row["first_feasible_policy_observed"] = observation
+        row["candidate_pipeline"] = copy.deepcopy(_nested(candidate, "solver_telemetry", "incremental_action_envelope"))
+        row["memory"] = copy.deepcopy(candidate.get("memory"))  # absent remains unmeasured
+        row["activation"] = {
+            "effective_options": copy.deepcopy(_nested(candidate, "solver_telemetry", "effective_options")),
+            "product_action_ids": candidate.get("product_action_ids"),
+            "resolved_command": _nested(candidate, "_runner", "resolved_command"),
+        }
+        control_label = requirement.get("control_run")
+        if control_label is None:
+            row["reasons"].append("qualified_control_not_declared")
+            rows.append(row)
+            continue
+        allowance = requirement.get("quality_allowance_fraction")
+        pin = requirement.get("control_report_sha256")
+        if (isinstance(allowance, bool) or _finite_number(allowance) is None or allowance < 0
+                or not isinstance(pin, str) or len(pin) != 64
+                or any(char not in "0123456789abcdef" for char in pin)):
+            raise ValueError("predeclare a finite nonnegative quality allowance and exact control report hash")
+        control = indexed.get(control_label, {}).get(cid)
+        if control is None or _nested(control, "_runner", "report_sha256") != pin:
+            row["reasons"].append("control_report_pin_mismatch_or_missing")
+            rows.append(row)
+            continue
+        control_evidence = _retained_policy_evidence(control)
+        row["control"] = control_evidence
+        if not control_evidence["passed"]:
+            row["reasons"].append("control_not_qualified")
+            rows.append(row)
+            continue
+        identity = _comparison_identity(candidate)
+        mismatches = [key for key, value in identity.items()
+                      if _canonical(value) != _canonical(_comparison_identity(control).get(key))]
+        # Old reports lacking raw-request/economy hashes cannot qualify a new control.
+        raw_inputs = _nested(candidate, "_runner", "run_identity", "corpus", "case_inputs")
+        runtime = _nested(candidate, "_runner", "run_identity", "artifact", "manifest_sha256")
+        if mismatches or not raw_inputs or not runtime:
+            row["reasons"].append("comparison_identity_unqualified")
+            row["identity_mismatches"] = mismatches
+            rows.append(row)
+            continue
+        ceiling = control_evidence["checked_upper"] * (1.0 + allowance)
+        if not math.isfinite(ceiling):
+            raise ValueError("capability ceiling must remain finite")
+        absolute, relative = _policy_cost_tolerances(candidate)
+        tolerance = absolute + relative * max(abs(ceiling), abs(validity["checked_upper"] or 0))
+        row.update(control_quality_ceiling=ceiling, quality_allowance_fraction=allowance,
+                   numerical_tolerance=tolerance, quality_status="capability_miss")
+        if not validity["passed"]:
+            row["reasons"].append("current_checked_export_lost_or_invalid")
+        elif validity["checked_upper"] <= ceiling + tolerance:
+            row.update(passed=True, quality_status="passed",
+                       first_control_quality_policy_observed=copy.deepcopy(observation))
+        else:
+            row["reasons"].append("declared_capability_ceiling_missed")
+        rows.append(row)
+    return {"kind": profile["kind"], "candidate_run": label,
+            "profile_sha256": hashlib.sha256(_canonical(profile).encode()).hexdigest(),
+            "planned_cases": len(cohort), "passed": all(row["passed"] for row in rows),
+            "cases": rows, "lower_or_optimality_authority_added": False}
+
+
 def compare_runs(
     baseline_label: str,
     baseline_cases: Sequence[dict[str, Any]],
@@ -970,6 +1136,7 @@ def build_report(
     runs: dict[str, tuple[dict[str, Any], list[dict[str, Any]]]],
     pairs: Sequence[tuple[str, str]] = (),
     *, outcome_profile: dict[str, Any] | None = None,
+    capability: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     report = {
         "schema_version": REPORT_VERSION,
@@ -1008,6 +1175,9 @@ def build_report(
             label: exact_closure_profile(ledger, cases, outcome_profile)
             for label, (ledger, cases) in runs.items()
         }
+    if capability is not None:
+        report["capability_profile"] = copy.deepcopy(capability)
+        report["capability_qualification"] = capability_profile(runs, capability)
     return report
 
 
@@ -1349,6 +1519,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--pair", action="append", type=_parse_pair, default=[])
     parser.add_argument("--economic-gate", action="store_true",
         help="Exit1 unless every paired case has matched complete independent cost evidence and no cost increase")
+    parser.add_argument("--capability-profile", type=Path)
+    parser.add_argument("--capability-gate", action="store_true")
     parser.add_argument("--outcome-profile", type=Path)
     parser.add_argument("--research-series", type=Path)
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[3])
@@ -1356,7 +1528,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
     if args.research_series:
-        if args.run or args.pair or args.outcome_profile or args.economic_gate:
+        if args.run or args.pair or args.outcome_profile or args.economic_gate or args.capability_profile or args.capability_gate:
             parser.error("research series and legacy run reports are separate views")
         report = build_research_report(args.root, args.research_series)
         args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -1370,13 +1542,16 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("legacy reports require --run; --markdown requires --research-series")
     if args.economic_gate and not args.pair:
         parser.error("--economic-gate requires at least one --pair")
+    if args.capability_gate and not args.capability_profile:
+        parser.error("--capability-gate requires --capability-profile")
     runs: dict[str, tuple[dict[str, Any], list[dict[str, Any]]]] = {}
     for label, path in args.run:
         if label in runs:
             raise SystemExit(f"duplicate run label: {label}")
-        runs[label] = load_run(path, allow_missing_reports=args.outcome_profile is not None)
+        runs[label] = load_run(path, allow_missing_reports=args.outcome_profile is not None or args.capability_profile is not None)
     report = build_report(runs, args.pair,
-                          outcome_profile=_read_json(args.outcome_profile) if args.outcome_profile else None)
+                          outcome_profile=_read_json(args.outcome_profile) if args.outcome_profile else None,
+                          capability=_read_json(args.capability_profile) if args.capability_profile else None)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
         json.dumps(report, indent=2, sort_keys=True) + "\n",
@@ -1386,9 +1561,9 @@ def main(argv: list[str] | None = None) -> int:
         f"wrote {len(report['runs'])} run summaries and "
         f"{len(report['comparisons'])} paired comparisons to {args.output}"
     )
-    return int(args.economic_gate and any(
+    return int((args.economic_gate and any(
         not comparison["economic_gate"]["passed"] for comparison in report["comparisons"]
-    ))
+    )) or (args.capability_gate and not report["capability_qualification"]["passed"]))
 
 
 if __name__ == "__main__":
