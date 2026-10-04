@@ -18,6 +18,7 @@ enum class SelectiveCompletionVariant : std::uint8_t {
     ProtectedScourFill,
     EldritchGrowthRepair,
     EldritchGrowthWithBlocker,
+    PartialHeldRecoveryResearch, // No product/Finder proposal enumerates this.
 };
 
 struct SelectiveCompletionCandidate {
@@ -80,6 +81,10 @@ class SelectiveCompletionProducer {
     // Full graph evaluation and reached-entry validation own acceptance.
     std::uint32_t requested_acquisition_ = kNoId;
     std::uint32_t requested_held_side_ = kNoId;
+    // Non-default construction is accessible only to the private research owner.
+    friend class PartialHeldRecoveryProducer;
+    std::uint32_t requested_held_mask_ = 0;
+    bool reroll_without_target_progress_ = false;
     Phase phase_ = Phase::Begin;
     std::string status_ = "pending";
     std::optional<SelectiveCompletionCandidate> candidate_;
@@ -101,6 +106,61 @@ class SelectiveCompletionProducer {
                            std::uint32_t max_work_items);
     void build();
     void refuse(std::string reason);
+};
+
+/* Disabled construction experiment. Neither Current nor Finder creates this
+ * producer or enumerates its anchors. The explicit private gate is test-owned;
+ * a candidate has no checked upper, closure or publication authority.
+ * Two singleton anchors and four sequential existing stage templates bound the
+ * grammar; there is still at most one live native admission cursor. */
+struct PartialHeldRecoveryScope {
+    std::uint32_t held_side = kNoId; // The two-goal side.
+    std::array<std::uint32_t, 2> anchor_masks{};
+};
+std::optional<PartialHeldRecoveryScope> partial_held_recovery_scope(
+    const CalcContext& problem, const pc_item_state& original_start,
+    const SolveOptions& limits);
+
+class PartialHeldRecoveryProducer {
+  public:
+    PartialHeldRecoveryProducer(CalcContext& problem,
+        const pc_item_state& original_start,
+        const std::unordered_map<std::string, double>& prices,
+        const SolveOptions& limits, std::uint32_t anchor_mask,
+        bool private_gate = false);
+    bool advance(std::uint32_t max_work_items = 1);
+    bool done() const { return done_; }
+    const std::optional<SelectiveCompletionCandidate>& candidate() const {
+        return candidate_;
+    }
+    const std::string& status() const { return status_; }
+    std::uint64_t estimated_owned_bytes() const;
+
+  private:
+    CalcContext& problem_;
+    pc_item_state original_start_{};
+    const std::unordered_map<std::string, double>& prices_;
+    SolveOptions limits_;
+    std::uint32_t anchor_mask_ = 0;
+    std::optional<PartialHeldRecoveryScope> scope_;
+    std::uint32_t acquisition_ = kNoId;
+    double acquisition_price_ = 0;
+    std::uint32_t growth_ready_tiers_ = kNoId;
+    std::uint32_t final_original_ready_tiers_ = kNoId;
+    std::uint32_t final_growth_ready_tiers_ = kNoId;
+    std::uint32_t stage_ = 0;
+    bool begun_ = false;
+    bool done_ = false;
+    bool private_gate_ = false;
+    std::string status_ = "pending";
+    std::unique_ptr<SelectiveCompletionProducer> active_;
+    std::array<std::optional<SelectiveCompletionCandidate>, 4> stages_;
+    std::optional<SelectiveCompletionCandidate> candidate_;
+    void refuse(std::string reason);
+    void begin();
+    void begin_stage();
+    void finish_stage();
+    void compose();
 };
 
 /* Exact reached-entry admission checker for a compiled control. Finder and

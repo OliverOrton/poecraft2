@@ -1,197 +1,188 @@
 # Conquest and armour recovery execution (2026-10-04)
 
-Two parent-granted finite batches are preserved. At f038aa6f, build and
-routing25 pass; query2701 has six failed assertions. At deb65256, rebuild and
-expanded witness293 pass; query2714 has five failed assertions. Later checkpoint
-and metamod selectors were not invoked. Both LOCAL grants were released at
-terminal results with no survivors. The [second receipt](finite-r2-summary.json)
-retains exact failures; first evidence remains immutable.
+Native witness293 passes at deb65256. The latest finite batch at862bd1b builds
+and executes query2728 with one failure: development save refuses an unexpanded
+nonterminal representative. All budget/refusal/retry assertions reached before
+that prerequisite pass. Checkpoint and metamod selectors remain unrun. All three
+LOCAL grants were released on terminal results, with no survivors; no timed
+policy run has launched. Source changes following862bd1b are unbuilt.
 
-The narrow decoder repair compiles. Successful replay and malformed membership
-refusal remain unqualified because native save preconditions failed first.
-Source-only corrections now recreate the measured fresh context against the spent
-shared owner and split checkpoint coverage into two native prerequisites:
-a proper clean five-goal completion for nonempty query/full replay and malformed
-members; a terminal carrier for query-only empty membership with no full completion.
-Both must pass cardinality and native save checks before replay is attempted.
+## Evidence and process identity
 
-Independent f8888ff4 supports the former fresh-owner/five-goal carrier proposal.
-The final paired checkpoint assertions are a further source change and need review.
-The [next bounded request](proper-checkpoint-gate-request.json) is prepared for
-parent review and a later LOCAL grant. No new heavy command has launched.
-Controller generation, checker ownership, timed policies and activation remain held.
+|Batch|Source|Build|Witness|Query|Later selectors|
+|---|---|---|---|---|---|
+|[r1](finite-r1-summary.json)|f038aa6f|pass|25 pass|2701, six failures|unrun|
+|[r2](finite-r2-summary.json)|deb65256|pass|293 pass|2714, five failures|unrun|
+|[r3](finite-r3-summary.json)|862bd1b|pass|293 reused|2728, one failure|unrun|
 
-## Selected question and first gate
+Receipts retain binary/source/input identities, commands, bounded watchdogs,
+work/debit observations, cancellations and process cleanup. Earlier failures and
+source reviews3ba16daf/065bcaab/f8888ff4/1d45d13d stay associated with their exact
+sources. Review1d45d13d excludes nonempty query-only restoration at a nonterminal
+carrier. Frozen runtime manifest82fb60a2, strings463affab and game604e36ae remain
+unchanged. The correction uses existing native tooling and supervisor owners;
+there is no new orchestration layer or aggregate run ceiling.
 
-Can ordinary capability-derived controller construction preserve a proper subset
-of goal progress and emit the partial-held recovery decision, while preserving
-original-root and every-positive-entry acceptance? The first causal witness is
-Conquest's four natural affixes: T1 flat armour/evasion, T2 hybrid armour/evasion,
-T1 physical reduction and T2 suppression, with zero Eldritch tiers. Goal mask is
-expected to be 9: neither complete side is held. The historical first paid word
-is expected to be Ember1 then Eldritch Exalt; Current returns to Chaos.
+## Frozen partial-held witness and missing construction
 
-`--solver-partial-held-witness-only data/compiled/current` is prepared to load the
-actual frozen artifact and case, materialize this carrier, prove one positive
-Chaos pick ordering using the native count law and pools, and route both reference
-graphs with native compiled predicates. At `f038aa6f`, its original-root equality, exact carrier
-key and routing assertions passed; the receipt retains the full native key. The pick-order mass is a reachability
-witness, never an estimate of total carrier probability or a policy upper.
-The reference graphs are test inputs only; the producer remains unchanged.
+Conquest's carrier has T1 flat armour/evasion, T2 hybrid armour/evasion, T1 physical
+reduction and T2 suppression, no percentage prefix and no Eldritch tiers. Native
+goal mask9 satisfies neither complete side. One original-root Chaos pick ordering
+has positive mass2.4457291281364614e-9. Native compiled historical routing selects
+Ember1 then Eldritch Exalt; released routing selects Chaos. The exact native word
+has33 positive exits, mass1.0000000000000002 within1e-12, exactly two paid actions
+and exact resources. Every incoming affix remains; the lower hybrid blocks its
+T1 family. This is not a total-carrier probability or a checked policy upper.
 
-Source establishes the current construction cut: `begin()` binds the complete
-held-side goal mask, and `build()` sends each failed held-slot test to acquisition.
-The compiler/validator permit a nonempty proper subset, but still bind its side,
-source admission and exact preservation at every positive entry. The next route
-extension must use those contracts and ordinary native construction. Enabling
-proposal3 alone does not satisfy the programme.
+Current begin() binds the complete held side and failed held-slot tests return
+to acquisition. Compiler/validator accept nonempty subsets while retaining side,
+admission, source and preservation obligations. Ordinary generated recovery is
+therefore the selected construction question. Diagnostic blocker proposal3 alone
+cannot satisfy it. Parent permits a disabled/private bounded source prototype;
+Current/Finder proposal lists and incumbent/publication owners remain unchanged.
+Every positive entry and the original root must pass before an economic claim.
+The historical target remains85,970.67347138176c; smaller gains remain partial.
 
-## Finite query gate prepared
+## Runtime query evidence and optional checkpoint cut
 
-The existing selector retains all earlier equality, cache, scope, cancellation,
-refusal and retry assertions. Additional source fixtures cover mixed enabled
-families with an actual bench descriptor, nonuniform setup/action prices, cheap
-versus full query ordering, and independently filtered unrestricted semantics.
-They demand avoided work and fewer decision evaluations, rather than interpreting
-semantic equality alone as a resource win.
+The mixed enabled-family/nonuniform-price carrier preserves full selected native
+semantics, exits and resources, with typed work0 versus unrestricted92 and one
+versus seven decisions. This is a finite resource witness, not whole-solver
+performance. The corrected post-commit negative uses a pristine child and the
+same measured query against a spent shared owner. Fresh work60, owner debit124,
+retry60; refusal performs zero child work, rolls back publication and leaves old
+query/full memberships and committed debit unchanged.
 
-Checkpoint replay retains nonempty query/full membership exactly; a separate
-terminal-root checkpoint keeps the query-only/full-absent assertion. Interleaved
-query/full cancellation occurs after new operator staging and committed shared
-work: rollback preserves prior query membership and debit; full retry stays
-uncached. A fresh context repeats the measured Chaos intent against the already
-used owner, preserving both old completed memberships and debit before uncached
-retry. Exact retry work and complete native semantics must match the control.
-At `f038aa6f`, mixed semantics/work and cancellation checks passed, while the
-committed Exalt debit was zero and the uncached budget refusal assumptions failed.
-The checkpoint save refused incompatible cardinality before load. Measured
-Chaos work and exact modifier identity were tested in r2: committed work and
-no new query states pass, but native save compatibility still fails. All
-tolerances remain unchanged.
+The original six failures were fixture premises: paid Exalt does zero reforge
+work; an uncached query may reuse a cached native law. r2 corrected the first;
+r3 corrects all four exhaustion assertions without weakening accounting. Earlier
+save cardinality failures are retained. r3 reaches matching dimensions60 and an
+available policy, but save correctly refuses because every interned nonterminal
+self-representative must be expanded (development_checkpoint.cpp:608). Neither
+cardinality nor convergence supplies that authority. The receipt did not capture
+the blocked IDs; those IDs and admitted-transition reachability remain unmeasured.
+Do not call this export-only or manufacture expanded flags. Native admission
+interns kernel exits, while sparse expansion enqueues retained row successors;
+that source distinction suggests an investigation, not a proved cause.
 
-## Failure classification and source-supported correction
+The failed nonempty checkpoint stress retains its original native_save_ready
+assertion behind explicit --solver-admission-query-checkpoint-diagnostic-only.
+Its compact census projects unexpanded carriers, inbound retained rows and cached
+admitted positive-exit/choice reachability without performing new work. A negative
+cached projection cannot prove full-envelope unreachability. The default runtime
+query selector explicitly reports that exclusion and can reach its later scope,
+wrong-carrier, cancellation and retry negatives. No green claim exists yet.
+Production Current/Finder acceptance does not save/load development checkpoints;
+this optional capability does not block disabled source recovery construction.
 
-The six original failed assertions did not dynamically demonstrate the loader
-bug. The committed-work assertion assumed paid Exalt implies reforge work;
-native Exalt work is zero. The Chaos replacement passes in r2.
+The known-valid crafted-cleanup coarse checkpoint now tests completed **empty**
+query membership on its terminal successor, followed by uncached unrestricted
+admission. Its family mask remains CraftedCleanup and unchanged native solve/save
+guards apply. This is prepared source only; it cannot qualify nonempty Eldritch
+membership replay. The existing API Normal-to-Magic transmute/alteration/restart
+checkpoint selector is an independent known-valid closure control.
 
-Four budget assertions assumed uncached query membership requires an uncached
-native law. Both receipts instead show that this query can publish from existing
-law with unchanged committed work. The corrected negative recreates the first
-successful fresh-context Chaos control with the same session, root, goal,
-primitive envelope, prices and query. Before exhaustion it requires nonzero
-measured work and equality between the admission phase and the shared owner.
-The new context checks the explicit shared-owner pointer and pristine state,
-operator and automatic-work counts. The owner cap equals its actual committed
-debit after interleaved query/full work. Refusal must charge nothing and roll
-back operators; retry must match the positive control's exact debit and complete
-native resource/exit snapshot. Old committed query/full memberships stay cached.
-
-The sixth original failure was an earlier save guard: the retained coarse graph
-of a dirty dead-end solve did not match the current calculator cardinality.
-Exact identity prevented query state growth but did not make the older graph
-compatible in r2. The clean five-goal replacement is source-supported by native
-group blocking: prefixes0/3 and suffixes5/6 leave exactly prefix4 rollable. The
-new fixture independently executes that direct native law and requires one
-unit-probability goal exit. It then finishes the solve, checks all cache dimensions
-and performs a native save before adding a query. This is unrun, not a runtime fix.
-
-The production issue is separate: independent source review proves the old
-nonzero-query high-word guard rejects valid finite query IDs. The corrected
-decoder compiles, but its runtime acceptance/refusal remains unqualified.
-Neither failed resource premise demonstrated executed over-budget work.
-
-## Narrow checkpoint correction prepared
-
-Independent review `3ba16daf` identified the still-legacy `(key >> 32) <= 1`
-load guard. It rejects every defined nonzero query even though save preserves
-those keys. The correction decodes carrier, cheap bit and query before mutating
-the context; only query IDs below the finite count are accepted. Queried members
-must match native Eldritch side/final/directness and cannot populate cheap-only
-Eldritch membership. Unrestricted cache completion remains independent.
-
-Checksummed malformed saved members exercise unknown query IDs, reserved high
-bits, wrong carrier, forbidden cheap membership and wrong programme intent.
-Refusal must leave the fresh context unchanged and permit valid-load retry.
-The exact modifier-identity assertion passed at deb65256: query admission
-added no live states. The retained dirty-dead-end coarse graph was nevertheless
-incompatible before save. Successful replay and malformed-key tests remain unrun.
-
-Further source inspection found another fixture prerequisite. Normal coarse
-expansion requests unrestricted admission (solver_solve_expand.cpp:593,729,3104),
-whose completed publication has an independent carrier cache entry
-(solver_options_automatic.cpp:793). Thus its full membership must already be cached
-before nonempty query replay; restoration must match that actual pre-save full law.
-The erroneous full-absent expectation is relocated, not dropped.
-
-The second fixture starts at the exact native terminal exit from the first
-carrier. expand_one_unit stops at goals before admission
-(solver_solve_expand.cpp:3084), giving a completed native coarse graph without
-root unrestricted membership. Native admission publishes an empty completed query
-for a terminal carrier (solver_options_automatic.cpp:822), with no state growth.
-After native save/load, that query must be cached and empty; unrestricted admission
-must be uncached and only become cached after its own request. Both cases exercise
-the native cardinality/closure/row guards before query publication. There is no
-telemetry reset, cache erasure, imported graph or manufactured coarse authority.
-
-The first fixture retains all malformed nonempty member checks and exact
-resources/positive exits. The second proves query/full cache separation for empty
-completed membership; it does not supply another nonempty query-only checkpoint
-witness. These are bounded finite evidence, not exhaustive lifecycle qualification.
-Independent review of this final paired source is requested before the next grant.
-
-The expanded Conquest witness passes293 at `deb65256`, including native
-Ember1/Exalt legality, all33 positive exits, mass1 within1e-12, exact resources
-and actions, preservation of all four incoming affixes and native blocking by
-the below-tier hybrid family. Ordinary controller construction, every-entry
-acceptance and original-root economics remain separate unrun gates.
+The narrow decoder correction at deb65256 decodes carrier, cheap and finite query
+before import, refuses invalid query IDs/reserved bits/carriers/operators and
+checks native side/final/direct intent. It compiles but successful nonempty replay
+and malformed nonempty-member refusal remain unqualified. The diagnostic keeps
+all such assertions; no public replay/closure claim is extended.
 
 ## Diagnostic provenance correction
 
-The exact `c9335356...` graph was recovered from the prior local follow-up and
-matches the published 99,095.4091604038 diagnostic. Its preserved
-[probe source](diagnostic-probe.cpp) explicitly sets service orientation3; the
-[preserved request](diagnostic-request.json) identifies its executable, source,
-complete frozen case, runtime, economy, command and caps. The probe neither reads
-nor imports a historical strategy. Thus the reports' imported-controller label
-is contradicted by the available source. It remains a forced-proposal diagnostic,
-not ordinary enumeration, public activation, or historical economic recovery.
+The preserved [probe](diagnostic-probe.cpp) forces native Current service
+orientation3. Its exact c9335356 graph matches99,095.4091604038c and does not
+read/import a historical graph. The reports' import label conflicts with this
+source. It remains forced-proposal evidence, not ordinary enumeration, activation
+or historical recovery. The [complete request](diagnostic-request.json) binds
+source, binary, root, goals, prices, caps and native190-entry receipt. Old
+conquest5.json matches its b19c588 hash; product case49bc43 retains the same root,
+goals/prices/caps but adds product_action_envelope. That scope difference still
+blocks matched attribution. Query comparisons must hold route construction and
+fixed-unit source constant; route comparisons must hold query/accounting constant.
 
-The old canonical `conquest5.json` hash matches the recorded request. Root,
-session, goal, economy and case caps equal `conquest5-product.json`; the older
-case has no `product_action_envelope`. This scope-resolution difference remains
-an explicit matched-comparison gate. Do not transfer the old qualification or
-attribute combined source/scope differences to the finite query.
+## Disabled recovery implementation and boundedness argument
 
-## Ownership and remaining work
+PartialHeldRecoveryProducer is compiled source behind an explicit private gate
+(default false); only --solver-partial-held-recovery-only instantiates it. It
+wraps existing SelectiveCompletionProducer stages, compiler and validator. No
+Current/Finder consumer or proposal-count/mapping call site changes. The appended
+research enum cannot be fed directly into the ordinary single-stage producer.
+Its candidate status is constructed_private_unchecked, not retained/activated.
 
-Current still constructs the validator from the checker's borrowed census,
-destroys the validator first, then takes the full result. Releasing the checker
-earlier without stable owned result storage would invalidate that reference.
-No lifetime change is implemented. Reviewer-owned Finder budget and nonunit
-weighted-helper leads remain with that owner; coordinate through the parent
-before editing shared generation/entry-accounting code. Require a finite complete-result transfer,
-semantic/provenance equality, fast versus audited aggregate accounting and
-measured positive net release before permitting production cleanup or Helmet
-comparisons. Finder has a separate lifecycle and needs its compatibility gate.
+Capabilities require the existing product original-root scope, rare cap3,
+five distinct natural family goals in a pure3+2 shape, all requested clean goals,
+empty live rare root with zero quality/ordinary implicits/flags/influence,
+representable Eldritch tiers0..4, and a native reforge law whose positive count
+draws are at least4. There are exactly two singleton anchors on the two-goal
+side. Root acquisition is a priced, caller-permitted, legal native Chaos action.
+No base name, modifier key or reference policy enters production construction.
+The narrower metadata scope preserves the first frozen Conquest root and avoids
+claiming support for unrepresented root fields in this initial private slice.
 
-Request parent-routed source review and the next bounded two-job build plus serial
-query/checkpoint/metamod selectors. Reuse the unchanged293-check Conquest witness
-rather than rerun it. Native save prerequisites fail the gate before replay.
-Use the existing supervisor, declared watchdogs and survivor receipts; stop at
-the first failed selector without automatic retries or a cap change.
-If P0/P1 pass, implement the smallest bounded partial-held construction extension,
-then independently check every positive programme entry from the original root.
-No timed solver batch is ready or requested at this checkpoint.
+Four sequential templates comprise singleton-held growth, full-two-side growth,
+full-three-side repair at original tiers, and that repair at the first native
+setup's ready tiers. Only the composition friend may set the proper held subset
+and the private no-target-progress reroll switch; old masks and routes remain the
+default. Exact singleton guards exclude the other two-side goal so destructive
+native intent keys retain their complete preserved-goal identity. Exalt keeps
+only the pre-existing missing-goal rebind rule. No new condition vocabulary or
+validator semantic exception is introduced.
 
-Bow4/Bow5/Ring/Amulet and all four original armour fixtures remain preserved and
-unrun on this source. Query-only comparisons must hold route generation fixed;
-route comparisons must hold shared query/accounting source fixed. Preserve all
-original request/price/law/scope/cap identities, per-run safeguards and numerical
-rules. The historical target is 85,970.67347138176c; smaller partial gains remain
-partial. CI/integrator owns final regression, matching WASM and main publication.
+After compulsory paid acquisition, exact-goal ingress chooses full-three-side
+repair, full-two-side growth, singleton growth, or paid reacquisition. Target
+progress and capacity select reroll, Exalt or Annul using existing predicates.
+Native deterministic setup exits determine the handoff tier pair; all growth
+programmes and both held modes must agree or construction refuses. The complete
+three-goal side stays held in final repair. Native Chaos's minimum total4 then
+requires at least one opposite affix on a fully legal filled draw, and Annul runs
+only at opposite count3, yielding2. Every positive entry/root acceptance must
+confirm these native applicability/count premises; cardinality does not grant
+them. Final repair cannot return to acquisition: any unsupported tier/count
+fallback is failure and cannot pass exact acceptance. This bounds useful tiers
+to original, first ready, final-ready-from-original, and final-ready-from-first;
+there is no repeated tier-ratchet expansion.
 
-The reports are incorporated as programme questions and semantic gates; their
-old zero/four-run ceilings and unrun-query/hosted notes are superseded by Oliver's
-explicit approval and `2ce0a75b` evidence. No fixed aggregate run ceiling remains.
-Native execution and process safeguards remain in force. No owned process exists.
+Each template has one active admission cursor; completed graphs stay owned.
+Composition reserves at most the sum of four template node counts plus32 and
+their exact programme counts. Retained template heaps, the active child, final
+copied graph and a conservative assembly scratch reservation count against the
+existing memory ceiling; compiler/output/work/discovery caps remain independent.
+The disabled object's storage is charged, including real graph copies. This is
+not an early-checker-release change or a measured memory saving.
+
+Four finite synthetic variants cover both anchors, side reversal, nonuniform
+weights/prices and an already-dominant initial tier pair. They use engine-native
+pool, setup, laws, exact compiler/evaluator and complete positive-entry checker;
+they import no strategy JSON. Prepared negatives cover default gate, mislabeled
+single-stage enum, dirty/quality/disabled-family scope, tiny memory, missing price
+and tampered occurrence identity. A native eligibility-routing cut remains:
+under-capacity progress can have no rollable missing goal because of group
+blocking. Count/slot routing does not certify eligibility. Any positive native
+entry refusal stops the gate; it is not permission to broaden intent, merge
+states, suppress a tiny entry, or activate a proposal. Plain/blocked Exalt,
+Harvest composition, Finder attempt integration and whole Conquest economic
+recovery are deferred beyond this first private family. All new source is unbuilt.
+
+## Ownership and next qualification
+
+No checker-lifetime change exists. Current's validator still borrows the census;
+validator destruction precedes result extraction. Early release requires complete
+stable result ownership, provenance/resource equality, audited aggregate accounting
+and measured positive net release. Reviewer-owned Finder generation-budget and
+nonunit weighted-helper questions remain separate. No borrowed-census release,
+resource epsilon, tolerance change or approximate state merge is allowed.
+
+Next request: source review of the bounded private family and test separation;
+then a parent-granted two-job build and serial runtime-query, native-checkpoint,
+metamod, legacy-growth and private-construction gates. Keep the optional diagnostic failure lane
+separate and capture the actual blocked state/positive admitted reachability before
+classifying it. Stop on semantic/identity/resource mismatch; do not repeat failures
+just to get green. LOCAL is currently not granted to this owner, so only source
+work proceeds. No owned process exists.
+
+Bow4/Bow5/Ring/Amulet and all four frozen armour fixtures remain preserved and
+unrun on the new source. Finder attempt compatibility, finite every-entry/root
+acceptance, historical economic recovery, timed matched cohorts and WASM remain
+unqualified. CI/integrator owns final regression, integration and publication.
+No push, deployment, dev restart, canonical data edit or public proposal activation.

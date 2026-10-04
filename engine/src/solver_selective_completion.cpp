@@ -187,6 +187,10 @@ std::uint32_t product_completion_held_side(const CalcContext& problem,
 }
 
 void SelectiveCompletionProducer::begin() {
+    if (variant_ == SelectiveCompletionVariant::PartialHeldRecoveryResearch) {
+        refuse("private_partial_recovery_requires_composition_owner");
+        return;
+    }
     if (!problem_.goal().automatic_candidates ||
         (!uses_protected_scour(variant_) &&
          !problem_.session().eldritch_eligible) ||
@@ -247,6 +251,15 @@ void SelectiveCompletionProducer::begin() {
     }
     for (const std::uint32_t slot : side_slots_[held_side_])
         held_mask_ |= 1u << slot;
+    if (requested_held_mask_ != 0) {
+        if (variant_ != SelectiveCompletionVariant::EldritchGrowthRepair ||
+            (requested_held_mask_ & ~held_mask_) != 0 ||
+            requested_held_mask_ == held_mask_) {
+            refuse("private_partial_mask_is_not_a_proper_held_subset");
+            return;
+        }
+        held_mask_ = requested_held_mask_;
+    }
 
     const std::uint32_t root = problem_.intern_item(original_start_);
     bool selected_guarantee = false;
@@ -586,13 +599,14 @@ void SelectiveCompletionProducer::build() {
         ? bind(blocker_) : kNoId;
     const std::uint32_t goal = append(FinderControlKind::TestGoal);
     const bool clean_held = problem_.goal().terminal.extras == ExtraExplicitPolicy::ForbidUnmatched &&
-        side_slots_[held_side_].size() < 3;
+        side_slots_[held_side_].size() < 3 && requested_held_mask_ == 0;
     const auto held_junk = clean_held
         ? append(FinderControlKind::TestSideCountAtLeast,
             (held_side_ << 8u) | (side_slots_[held_side_].size() + 1)) : kNoId;
     std::vector<std::uint32_t> held_tests;
     for (const std::uint32_t slot : side_slots_[held_side_])
-        held_tests.push_back(append(FinderControlKind::TestSlot, slot));
+        if ((held_mask_ & (1u << slot)) != 0)
+            held_tests.push_back(append(FinderControlKind::TestSlot, slot));
     // Eldritch Chaos produces two or three target-side affixes. For a clean
     // one-affix target, annulling only at three traps the held controller in
     // the closed two/three-affix class. Continue repair at two as well; the
@@ -673,6 +687,18 @@ void SelectiveCompletionProducer::build() {
         }
         graph.nodes[repair_test].on_true = full_miss;
         graph.nodes[repair_test].on_false = fill_branch;
+        if (reroll_without_target_progress_) {
+            // This private composition distinguishes empty target progress
+            // below capacity too. The legacy proposals keep their old route.
+            auto below_miss = primary_branch;
+            for (const auto slot : side_slots_[target_side_]) {
+                const auto test = append(FinderControlKind::TestSlot, slot);
+                graph.nodes[test].on_true = fill_branch;
+                graph.nodes[test].on_false = below_miss;
+                below_miss = test;
+            }
+            graph.nodes[repair_test].on_false = below_miss;
+        }
         if (blocker_binding != kNoId) {
             const auto two = append(FinderControlKind::TestSideCountAtLeast,
                 (target_side_ << 8u) | 2u);
@@ -753,6 +779,278 @@ bool SelectiveCompletionProducer::advance(
         refuse(std::string("native_construction_refused:") + ex.what());
     }
     return done();
+}
+
+std::optional<PartialHeldRecoveryScope> partial_held_recovery_scope(
+        const CalcContext& problem, const pc_item_state& original_start,
+        const SolveOptions& limits) {
+    if (!product_original_root_continuation_scope(problem, original_start, limits) ||
+        !problem.session().eldritch_eligible || problem.session().rare_affix_cap != 3 ||
+        original_start.prefix_count != 0 || original_start.suffix_count != 0 ||
+        original_start.quality != 0 || original_start.implicit_count != 0 ||
+        original_start.item_flags != 0 || original_start.generic_influence_bits != 0 ||
+        original_start.searing_exarch_tier > 4 || original_start.eater_of_worlds_tier > 4 ||
+        problem.goal().slots.size() != 5 ||
+        problem.goal().terminal.extras != ExtraExplicitPolicy::ForbidUnmatched)
+        return std::nullopt;
+    // The count law is an engine capability, never a base-name predicate.
+    // Three preserved goals then imply at least one opposite affix after
+    // acquisition/reforge; final repair only annuls at opposite count three.
+    const auto law = rare_reforge_count_law(problem.session().rare_reforge_count_kind);
+    for (const auto& draw : law.draws)
+        if (draw.weight != 0 && draw.count < 4) return std::nullopt;
+    std::array<std::uint32_t, 2> masks{};
+    std::array<std::uint32_t, 5> families{};
+    for (std::uint32_t slot = 0; slot < 5; ++slot) {
+        const auto& goal = problem.goal().slots[slot];
+        const auto side = goal_slot_side(problem.session(), goal);
+        if (side != PC_SIDE_PREFIX && side != PC_SIDE_SUFFIX) return std::nullopt;
+        if (goal.family_id == kNoId || goal.group_id != kNoId ||
+            std::find(families.begin(), families.begin() + slot, goal.family_id) !=
+                families.begin() + slot ||
+            !mask_intersects(problem.layout().slots[slot].satisfying_mask,
+                problem.session().normal_random_roll_mask)) return std::nullopt;
+        families[slot] = goal.family_id;
+        masks[side] |= 1u << slot;
+    }
+    const auto small = std::popcount(masks[0]) == 2 && std::popcount(masks[1]) == 3
+        ? 0u : std::popcount(masks[1]) == 2 && std::popcount(masks[0]) == 3 ? 1u : kNoId;
+    if (small == kNoId) return std::nullopt;
+    PartialHeldRecoveryScope result;
+    result.held_side = small;
+    unsigned anchor = 0;
+    for (unsigned slot = 0; slot < 5; ++slot)
+        if ((masks[small] & (1u << slot)) != 0) result.anchor_masks[anchor++] = 1u << slot;
+    return result;
+}
+
+PartialHeldRecoveryProducer::PartialHeldRecoveryProducer(CalcContext& problem,
+        const pc_item_state& original_start,
+        const std::unordered_map<std::string, double>& prices,
+        const SolveOptions& limits, const std::uint32_t anchor_mask,
+        const bool private_gate)
+    : problem_(problem), original_start_(original_start), prices_(prices),
+      limits_(limits), anchor_mask_(anchor_mask), private_gate_(private_gate) {}
+
+void PartialHeldRecoveryProducer::refuse(std::string reason) {
+    status_ = std::move(reason);
+    done_ = true;
+}
+
+std::uint64_t PartialHeldRecoveryProducer::estimated_owned_bytes() const {
+    auto bytes = sizeof(*this) + status_.capacity();
+    const auto graph_bytes = [](const auto& candidate) -> std::uint64_t {
+        return candidate ? candidate->control.nodes.capacity() * sizeof(FinderControlNode) +
+            candidate->control.programs.capacity() * sizeof(FinderProgramBinding) : 0;
+    };
+    for (const auto& stage : stages_) bytes += graph_bytes(stage);
+    return bytes + graph_bytes(candidate_) + (active_ ? active_->estimated_owned_bytes() : 0);
+}
+
+void PartialHeldRecoveryProducer::begin() {
+    begun_ = true;
+    if (!private_gate_) { refuse("private_recovery_gate_disabled"); return; }
+    scope_ = partial_held_recovery_scope(problem_, original_start_, limits_);
+    if (!scope_ || std::find(scope_->anchor_masks.begin(), scope_->anchor_masks.end(),
+            anchor_mask_) == scope_->anchor_masks.end()) {
+        refuse("unsupported_partial_held_capability_or_anchor"); return;
+    }
+    const auto root = problem_.intern_item(original_start_);
+    for (const auto index : problem_.candidates()) {
+        if (index >= problem_.registry().actions.size()) continue;
+        const auto& action = problem_.registry().actions[index];
+        if (action.params.type != ActionType::Chaos || action.synthetic ||
+            action.uses_companion_state || solver_action_disabled(problem_.goal(), action) ||
+            !action_legal(problem_.session(), action, problem_.state(root))) continue;
+        double price = 0;
+        bool complete = true;
+        for (const auto& key : action.cost_keys) {
+            const auto it = prices_.find(key);
+            if (it == prices_.end() || !std::isfinite(it->second) || it->second < 0) {
+                complete = false; break;
+            }
+            price += it->second;
+        }
+        if (complete && std::isfinite(price) &&
+            (acquisition_ == kNoId || price < acquisition_price_)) {
+            acquisition_ = index;
+            acquisition_price_ = price;
+        }
+    }
+    if (acquisition_ == kNoId) refuse("no_priced_requested_chaos_acquisition");
+}
+
+void PartialHeldRecoveryProducer::begin_stage() {
+    auto stage_limits = limits_;
+    const auto retained = estimated_owned_bytes();
+    if (retained >= stage_limits.max_solver_owned_bytes ||
+        problem_.estimated_owned_bytes() >= stage_limits.max_solver_owned_bytes - retained)
+        throw std::length_error("partial recovery has no native stage memory");
+    stage_limits.max_solver_owned_bytes -= retained;
+    auto source = original_start_; // An admission proposal context, never a new original root.
+    if (stage_ == 3) {
+        source.searing_exarch_tier = static_cast<std::uint8_t>(growth_ready_tiers_ & 255u);
+        source.eater_of_worlds_tier = static_cast<std::uint8_t>(growth_ready_tiers_ >> 8u);
+    }
+    active_ = std::make_unique<SelectiveCompletionProducer>(problem_, source, prices_,
+        stage_limits, stage_ < 2 ? SelectiveCompletionVariant::EldritchGrowthRepair :
+            SelectiveCompletionVariant::RerollVersusRepair,
+        acquisition_, stage_ < 2 ? scope_->held_side : 1u - scope_->held_side);
+    if (stage_ == 0) active_->requested_held_mask_ = anchor_mask_;
+    if (stage_ < 2) active_->reroll_without_target_progress_ = true;
+}
+
+void PartialHeldRecoveryProducer::finish_stage() {
+    if (!active_->candidate_) {
+        refuse("partial_stage_" + std::to_string(stage_) + ":" + active_->status());
+        return;
+    }
+    const auto ready = packed_tiers(problem_.state(active_->primary_.ready));
+    if (ready != packed_tiers(problem_.state(active_->secondary_.ready)) ||
+        (stage_ < 2 && ready != packed_tiers(problem_.state(active_->tertiary_.ready)))) {
+        refuse("native_stage_setup_tiers_disagree"); return;
+    }
+    if (stage_ == 0) growth_ready_tiers_ = ready;
+    if (stage_ == 1 && ready != growth_ready_tiers_) {
+        refuse("singleton_and_full_growth_setup_disagree"); return;
+    }
+    if (stage_ == 2) final_original_ready_tiers_ = ready;
+    if (stage_ == 3) final_growth_ready_tiers_ = ready;
+    stages_[stage_] = std::move(active_->candidate_);
+    active_.reset(); // The next stage has a single new admission cursor.
+    ++stage_;
+}
+
+void PartialHeldRecoveryProducer::compose() {
+    std::size_t nodes = 32, programs = 0;
+    for (const auto& stage : stages_) {
+        nodes += stage->control.nodes.size();
+        programs += stage->control.programs.size();
+    }
+    if (nodes > limits_.max_compiled_nodes)
+        throw std::length_error("partial recovery exceeds bounded control node cap");
+    const auto assembly = nodes * sizeof(FinderControlNode) +
+        programs * sizeof(FinderProgramBinding) + 65536ull;
+    const auto retained = estimated_owned_bytes();
+    if (retained + assembly > limits_.max_solver_owned_bytes ||
+        problem_.estimated_owned_bytes() > limits_.max_solver_owned_bytes - retained - assembly)
+        throw std::length_error("partial recovery has no accounted composition memory");
+    FinderControlGraph graph;
+    graph.nodes.reserve(nodes);
+    graph.programs.reserve(programs);
+    const auto append = [&](const FinderControlKind kind, const std::uint32_t binding = kNoId) {
+        const auto node = static_cast<std::uint32_t>(graph.nodes.size());
+        graph.nodes.push_back({kind, binding});
+        return node;
+    };
+    const auto root_goal = append(FinderControlKind::TestGoal);
+    const auto acquire = append(FinderControlKind::RunPrimitive, acquisition_);
+    const auto success = append(FinderControlKind::GoalTerminal);
+    const auto failure = append(FinderControlKind::FailureTerminal);
+    const auto dispatch = append(FinderControlKind::TestGoal);
+    graph.entry = root_goal;
+    graph.nodes[root_goal].on_true = success;
+    graph.nodes[root_goal].on_false = acquire;
+    graph.nodes[acquire].next = dispatch;
+    graph.nodes[dispatch].on_true = success;
+    std::array<std::uint32_t, 4> entries{};
+    for (unsigned stage = 0; stage < 4; ++stage) {
+        const auto& source = stages_[stage]->control;
+        const auto node_offset = static_cast<std::uint32_t>(graph.nodes.size());
+        const auto program_offset = static_cast<std::uint32_t>(graph.programs.size());
+        const auto remap = [&](const std::uint32_t target) {
+            if (target == kNoId) return kNoId;
+            const auto& node = source.nodes.at(target);
+            if (node.kind == FinderControlKind::RunPrimitive && node.binding == acquisition_)
+                return stage < 2 ? acquire : failure;
+            return node_offset + target;
+        };
+        entries[stage] = node_offset + source.entry;
+        graph.programs.insert(graph.programs.end(), source.programs.begin(), source.programs.end());
+        for (auto node : source.nodes) {
+            if (node.kind == FinderControlKind::RunPrimitive && node.binding == acquisition_) {
+                node = {FinderControlKind::FailureTerminal}; // All incoming acquisition edges were remapped.
+            } else {
+                node.on_true = remap(node.on_true);
+                node.on_false = remap(node.on_false);
+                node.next = node.kind == FinderControlKind::RunNativeProgram ? dispatch : remap(node.next);
+                if (node.kind == FinderControlKind::RunNativeProgram) node.binding += program_offset;
+            }
+            graph.nodes.push_back(node);
+        }
+    }
+    const auto tier_entry = [&](const std::uint32_t source, const std::uint32_t ready,
+            const std::uint32_t entry, const std::uint32_t fallback) {
+        auto next = fallback;
+        const auto test = append(FinderControlKind::TestEldritchTiers, ready);
+        graph.nodes[test].on_true = entry;
+        graph.nodes[test].on_false = next;
+        next = test;
+        if (source != ready) {
+            const auto initial = append(FinderControlKind::TestEldritchTiers, source);
+            graph.nodes[initial].on_true = entry;
+            graph.nodes[initial].on_false = next;
+            next = initial;
+        }
+        return next;
+    };
+    const auto original_tiers = static_cast<std::uint32_t>(original_start_.searing_exarch_tier) |
+        (static_cast<std::uint32_t>(original_start_.eater_of_worlds_tier) << 8u);
+    auto final = tier_entry(growth_ready_tiers_, final_growth_ready_tiers_, entries[3], failure);
+    final = tier_entry(original_tiers, final_original_ready_tiers_, entries[2], final);
+    const auto all_slots = [&](const std::uint32_t side, const std::uint32_t hit,
+            const std::uint32_t miss) {
+        auto entry = hit;
+        for (unsigned slot = 0; slot < problem_.goal().slots.size(); ++slot) {
+            if (goal_slot_side(problem_.session(), problem_.goal().slots[slot]) != side) continue;
+            const auto test = append(FinderControlKind::TestSlot, slot);
+            graph.nodes[test].on_true = entry;
+            graph.nodes[test].on_false = miss;
+            entry = test;
+        }
+        return entry;
+    };
+    auto partial = entries[0];
+    for (unsigned slot = 0; slot < problem_.goal().slots.size(); ++slot) {
+        if (goal_slot_side(problem_.session(), problem_.goal().slots[slot]) != scope_->held_side) continue;
+        const auto test = append(FinderControlKind::TestSlot, slot);
+        if ((anchor_mask_ & (1u << slot)) != 0) {
+            graph.nodes[test].on_true = partial;
+            graph.nodes[test].on_false = acquire;
+        } else {
+            // Exact singleton identity: destructive programme keys include
+            // every satisfied opposite-side goal, not just the chosen anchor.
+            graph.nodes[test].on_true = acquire;
+            graph.nodes[test].on_false = partial;
+        }
+        partial = test;
+    }
+    const auto full_small = all_slots(scope_->held_side, entries[1], partial);
+    graph.nodes[dispatch].on_false = all_slots(1u - scope_->held_side, final, full_small);
+    if (graph.nodes.size() > nodes || graph.programs.size() != programs)
+        throw std::logic_error("partial recovery escaped its finite composition bound");
+    candidate_ = SelectiveCompletionCandidate{std::move(graph), acquisition_,
+        acquisition_price_, SelectiveCompletionVariant::PartialHeldRecoveryResearch};
+    status_ = "constructed_private_unchecked";
+    done_ = true;
+}
+
+bool PartialHeldRecoveryProducer::advance(const std::uint32_t max_work_items) {
+    if (done_) return true;
+    try {
+        if (!begun_) begin();
+        else if (stage_ == stages_.size()) compose();
+        else if (!active_) begin_stage();
+        else if (active_->advance(max_work_items)) finish_stage();
+    } catch (const SolverResourceLimit& error) {
+        if (problem_.reforge_work_budget_owner() && error.cap_name() == "max_reforge_work") throw;
+        refuse(std::string("private_recovery_capacity:") + error.what());
+    } catch (const std::length_error& error) {
+        refuse(std::string("private_recovery_capacity:") + error.what());
+    } catch (const std::exception& error) {
+        refuse(std::string("private_recovery_refused:") + error.what());
+    }
+    return done_;
 }
 
 SelectiveProgrammeEntryValidator::SelectiveProgrammeEntryValidator(

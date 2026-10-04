@@ -4378,7 +4378,7 @@ struct SolveWorkTestAccess {
 };
 }
 
-void run_solver_admission_query_tests() {
+void run_solver_admission_query_tests(const bool development_checkpoint_diagnostic) {
     // Exhaust the finite request identity, including the uint32 state boundary.
     // This protects the existing full/cheap cache namespaces from query aliases.
     std::set<std::uint64_t> keys;
@@ -4702,208 +4702,284 @@ void run_solver_admission_query_tests() {
         static_cast<unsigned long long>(debit_before_refusal),
         static_cast<unsigned long long>(exhaustion_retry.phases.reforge_logical_work_v1));
 
-    // A completed typed membership round-trips through the existing coarse
-    // checkpoint without creating completion for the unrestricted envelope.
-    // A proper clean completion gives the nonempty replay/malformed-member
-    // witness. Ordinary expansion also admits the unrestricted envelope;
-    // the query-only absence obligation has a separate terminal carrier below.
-    auto checkpoint_root = root; checkpoint_root.searing_exarch_tier = 1;
-    PC_CHECK(pc_item_remove_at(&checkpoint_root,PC_SIDE_SUFFIX,1) == PC_RESULT_OK);
-    PC_CHECK(pc_item_add_mod(&checkpoint_root,PC_SIDE_SUFFIX,6,
-        session->primary_group[6],0,nullptr) == PC_RESULT_OK);
-    auto checkpoint_goal = goal;
-    GoalSlot flat; flat.family_id = session->family_id[0]; flat.min_tier = 1;
-    checkpoint_goal.slots.push_back(flat);
-    const auto direct_exalt = registry.index_by_id.at("eldritch_exalt");
-    CalcContext saved(session,checkpoint_goal,registry,{direct_exalt},false,false,true,
-        std::nullopt,{},false,{},true);
-    const auto saved_state = saved.intern_item(checkpoint_root);
-    // Establish native applicability and proper one-step closure before solve.
-    const auto& direct_law = saved.outcomes(saved_state,direct_exalt);
-    const bool proper_direct = direct_law.supported && direct_law.applicable &&
-        direct_law.entries.size() == 1 && direct_law.choice_groups.empty() &&
-        direct_law.entries.front().probability == 1.0 &&
-        saved.is_goal_state(saved.state(direct_law.entries.front().state));
-    PC_CHECK(!saved.is_goal_state(saved.state(saved_state)) && proper_direct);
-    if (!proper_direct) return;
-    pc_item_state terminal_carrier;
-    const bool native_terminal = saved.materialize(direct_law.entries.front().state,terminal_carrier);
-    PC_CHECK(native_terminal);
-    if (!native_terminal) return;
-    SolveOptions checkpoint_caps;
-    checkpoint_caps.max_states = checkpoint_caps.max_discovered_states = 10000;
-    checkpoint_caps.max_expanded_states = 10000;
-    checkpoint_caps.max_solver_owned_bytes = 256ull << 20;
-    checkpoint_caps.max_reforge_work = 1000000;
-    SolveWork checkpoint_work(saved,checkpoint_root,prices,checkpoint_caps);
-    for (unsigned step = 0; step < 40000 && !checkpoint_work.progress().done; ++step)
-        checkpoint_work.step(8);
-    PC_CHECK(checkpoint_work.progress().done);
-    if (!checkpoint_work.progress().done) return;
-    const auto checkpoint_result = checkpoint_work.finish();
-    PC_CHECK(checkpoint_result.policy_available);
-    const auto cache = saved.solve_transition_cache();
-    const bool native_cardinality = cache &&
-        cache->discovered_states == saved.state_count() &&
-        cache->expanded.size() == saved.state_count() &&
-        cache->state_rows.size() == saved.state_count();
-    PC_CHECK(native_cardinality);
-    std::printf("query checkpoint preflight: states=%zu cache_states=%u expanded=%zu row_spans=%zu policy=%u\n",
-        static_cast<std::size_t>(saved.state_count()),cache ? cache->discovered_states : 0,
-        cache ? cache->expanded.size() : 0,cache ? cache->state_rows.size() : 0,
-        checkpoint_result.policy_available ? 1u : 0u);
-    if (!native_cardinality || !checkpoint_result.policy_available) return;
-    const auto path = std::filesystem::temp_directory_path() / "poecraft-eldritch-query-membership.pcsg";
-    bool native_save_ready = false;
-    try {
-        // Exercise all native row/arena/closure checks before adding the query.
-        saved.save_development_solve_checkpoint(path.string(),"eldritch-query-native-fixture-v1");
-        native_save_ready = true;
-    } catch (const std::exception& error) {
-        std::printf("query checkpoint prerequisite: %s\n",error.what());
-    }
-    PC_CHECK(native_save_ready);
-    if (!native_save_ready) return;
-    const auto full_before_query = saved.admit_state_local_automatic_candidates(saved_state,limits);
-    PC_CHECK(full_before_query.cached);
-    if (!full_before_query.cached) return;
-    auto checkpoint_query = limits;
-    checkpoint_query.query = eldritch_admission_query(PC_SIDE_PREFIX,ActionType::EldritchExalt,true);
-    const auto checkpoint_states = saved.state_count();
-    const auto saved_query = saved.admit_state_local_automatic_candidates(saved_state,checkpoint_query);
-    PC_CHECK(saved.state_count() == checkpoint_states);
-    PC_CHECK(!saved_query.cached && !saved_query.admitted_operators.empty());
-    if (saved.state_count() != checkpoint_states || saved_query.cached ||
-        saved_query.admitted_operators.empty()) return;
-    bool checkpoint_loaded = false;
-    CalcContext replay(session,checkpoint_goal,registry,{direct_exalt},false,false,true,
-        std::nullopt,{},false,{},true);
-    try {
-        saved.save_development_solve_checkpoint(path.string(),"eldritch-query-native-fixture-v1");
-        replay.load_development_solve_checkpoint(path.string(),"eldritch-query-native-fixture-v1");
-        checkpoint_loaded = true;
-    } catch (const std::exception& error) {
-        std::printf("query checkpoint witness: %s\n",error.what());
-    }
-    PC_CHECK(checkpoint_loaded);
-    if (!checkpoint_loaded) return;
-    if (checkpoint_loaded) {
-        const auto loaded_query = replay.admit_state_local_automatic_candidates(saved_state,checkpoint_query);
-        PC_CHECK(loaded_query.cached && loaded_query.admitted_operators == saved_query.admitted_operators);
-        compare(snapshot(saved,saved_state,saved_query),snapshot(replay,saved_state,loaded_query));
-        const auto loaded_full = replay.admit_state_local_automatic_candidates(saved_state,limits);
-        PC_CHECK(loaded_full.cached && loaded_full.query == AutomaticAdmissionQuery::Unrestricted);
-        PC_CHECK(loaded_full.admitted_operators == full_before_query.admitted_operators);
-        compare(snapshot(saved,saved_state,full_before_query),snapshot(replay,saved_state,loaded_full));
-        PC_CHECK(replay.admit_state_local_automatic_candidates(saved_state,limits).cached);
-        for (const auto index : loaded_query.admitted_operators)
-            PC_CHECK(replay.is_candidate_operator_admitted_for_state(saved_state,index));
-        // Mutate the serialized carrier-key member and recompute its checksum:
-        // these are semantic key refusals, not generic damaged-file failures.
-        // The complete key plus operator vector identifies the saved member.
-        std::ifstream input(path,std::ios::binary);
-        std::ostringstream buffer; buffer << input.rdbuf();
-        const auto bytes = buffer.str();
-        const auto original_key = automatic_admission_key(saved_state,false,checkpoint_query.query);
-        const std::uint64_t member_count = saved_query.admitted_operators.size();
-        std::string member(reinterpret_cast<const char*>(&original_key),sizeof(original_key));
-        member.append(reinterpret_cast<const char*>(&member_count),sizeof(member_count));
-        for (const auto index : saved_query.admitted_operators)
-            member.append(reinterpret_cast<const char*>(&index),sizeof(index));
-        const auto key_offset = bytes.find(member);
-        PC_CHECK(key_offset != std::string::npos && bytes.find(member,key_offset+1) == std::string::npos);
-        const auto bad_path = std::filesystem::temp_directory_path() / "poecraft-eldritch-query-invalid-key.pcsg";
-        const std::vector<std::pair<std::uint64_t,std::string>> malformed{
-            {std::uint64_t{kAutomaticAdmissionQueryCount} << 33,"carrier admission mismatch"},
-            {original_key | (1ull << 63),"carrier admission mismatch"},
-            {(original_key & 0xffffffff00000000ull) | checkpoint_states,"carrier admission mismatch"},
-            {original_key | (1ull << 32),"query membership mismatch"},
-            {automatic_admission_key(saved_state,false,eldritch_admission_query(
-                PC_SIDE_SUFFIX,ActionType::EldritchAnnul,true)),"query membership mismatch"}};
-        if (key_offset != std::string::npos) for (const auto& [bad_key,reason] : malformed) {
-            auto changed = bytes;
-            std::copy_n(reinterpret_cast<const char*>(&bad_key),sizeof(bad_key),changed.begin()+key_offset);
-            // Format 7's fixed header: magic, version/endian, nine layout sizes,
-            // payload length and FNV-1a checksum. Its layout is checked on load.
-            constexpr std::size_t checksum_offset = 16 + 11 * sizeof(std::uint32_t) + sizeof(std::uint64_t);
-            constexpr std::size_t payload_offset = checksum_offset + sizeof(std::uint64_t);
-            std::uint64_t checksum = 14695981039346656037ull;
-            for (std::size_t i = payload_offset; i < changed.size(); ++i) {
-                checksum ^= static_cast<unsigned char>(changed[i]);
-                checksum *= 1099511628211ull;
+    // Optional development persistence is a separate capability. The failed
+    // coarse-closure fixture remains available through an explicit diagnostic;
+    // it never grants authority to the in-memory production query consumers.
+    if (!development_checkpoint_diagnostic)
+        std::printf("runtime query lane excludes optional development checkpoint stress; use explicit diagnostic selector\n");
+    if (development_checkpoint_diagnostic) {
+        // A completed typed membership round-trips through the existing coarse
+        // checkpoint without creating completion for the unrestricted envelope.
+        // A proper clean completion gives the nonempty replay/malformed-member
+        // witness. Ordinary expansion also admits the unrestricted envelope;
+        // the query-only absence obligation has a separate terminal carrier below.
+        auto checkpoint_root = root; checkpoint_root.searing_exarch_tier = 1;
+        PC_CHECK(pc_item_remove_at(&checkpoint_root,PC_SIDE_SUFFIX,1) == PC_RESULT_OK);
+        PC_CHECK(pc_item_add_mod(&checkpoint_root,PC_SIDE_SUFFIX,6,
+            session->primary_group[6],0,nullptr) == PC_RESULT_OK);
+        auto checkpoint_goal = goal;
+        GoalSlot flat; flat.family_id = session->family_id[0]; flat.min_tier = 1;
+        checkpoint_goal.slots.push_back(flat);
+        const auto direct_exalt = registry.index_by_id.at("eldritch_exalt");
+        CalcContext saved(session,checkpoint_goal,registry,{direct_exalt},false,false,true,
+            std::nullopt,{},false,{},true);
+        const auto saved_state = saved.intern_item(checkpoint_root);
+        // Establish native applicability and proper one-step closure before solve.
+        const auto& direct_law = saved.outcomes(saved_state,direct_exalt);
+        const bool proper_direct = direct_law.supported && direct_law.applicable &&
+            direct_law.entries.size() == 1 && direct_law.choice_groups.empty() &&
+            direct_law.entries.front().probability == 1.0 &&
+            saved.is_goal_state(saved.state(direct_law.entries.front().state));
+        PC_CHECK(!saved.is_goal_state(saved.state(saved_state)) && proper_direct);
+        if (!proper_direct) return;
+        pc_item_state terminal_carrier;
+        const bool native_terminal = saved.materialize(direct_law.entries.front().state,terminal_carrier);
+        PC_CHECK(native_terminal);
+        if (!native_terminal) return;
+        SolveOptions checkpoint_caps;
+        checkpoint_caps.max_states = checkpoint_caps.max_discovered_states = 10000;
+        checkpoint_caps.max_expanded_states = 10000;
+        checkpoint_caps.max_solver_owned_bytes = 256ull << 20;
+        checkpoint_caps.max_reforge_work = 1000000;
+        SolveWork checkpoint_work(saved,checkpoint_root,prices,checkpoint_caps);
+        for (unsigned step = 0; step < 40000 && !checkpoint_work.progress().done; ++step)
+            checkpoint_work.step(8);
+        PC_CHECK(checkpoint_work.progress().done);
+        if (!checkpoint_work.progress().done) return;
+        const auto checkpoint_result = checkpoint_work.finish();
+        PC_CHECK(checkpoint_result.policy_available);
+        const auto cache = saved.solve_transition_cache();
+        const bool native_cardinality = cache &&
+            cache->discovered_states == saved.state_count() &&
+            cache->expanded.size() == saved.state_count() &&
+            cache->state_rows.size() == saved.state_count();
+        PC_CHECK(native_cardinality);
+        std::printf("query checkpoint preflight: states=%zu cache_states=%u expanded=%zu row_spans=%zu policy=%u\n",
+            static_cast<std::size_t>(saved.state_count()),cache ? cache->discovered_states : 0,
+            cache ? cache->expanded.size() : 0,cache ? cache->state_rows.size() : 0,
+            checkpoint_result.policy_available ? 1u : 0u);
+        if (native_cardinality) {
+            std::vector<std::uint32_t> inbound(saved.state_count(),0);
+            for (const auto state : cache->successors) ++inbound.at(state);
+            for (const auto state : cache->choice_successors) ++inbound.at(state);
+            std::vector<std::vector<std::uint32_t>> positive_edges(saved.state_count());
+            for (const auto& row : cache->rows) {
+                auto& next = positive_edges.at(row.owner_state);
+                for (std::uint32_t edge = 0; edge < row.transition_count; ++edge)
+                    if (cache->probabilities.at(row.transition_offset+edge) > 0)
+                        next.push_back(cache->successors.at(row.transition_offset+edge));
+                for (std::uint32_t choice = 0; choice < row.choice_count; ++choice) {
+                    const auto& group = cache->choices.at(row.choice_offset+choice);
+                    if (group.probability <= 0) continue;
+                    for (std::uint32_t edge = 0; edge < group.successor_count; ++edge)
+                        next.push_back(cache->choice_successors.at(group.successor_offset+edge));
+                }
             }
-            std::copy_n(reinterpret_cast<const char*>(&checksum),sizeof(checksum),changed.begin()+checksum_offset);
-            { std::ofstream output(bad_path,std::ios::binary); output.write(changed.data(),changed.size()); }
-            CalcContext invalid(session,checkpoint_goal,registry,{direct_exalt},false,false,true,
-                std::nullopt,{},false,{},true);
-            const auto initial_operators = invalid.operators().size();
-            bool refused_key = false;
-            try { invalid.load_development_solve_checkpoint(bad_path.string(),"eldritch-query-native-fixture-v1"); }
-            catch (const std::runtime_error& error) {
-                refused_key = std::string(error.what()) == "solver development checkpoint " + reason;
+            for (std::uint32_t source = 0; source < saved.state_count(); ++source)
+                for (std::uint32_t option = static_cast<std::uint32_t>(registry.actions.size());
+                     option < saved.operators().size(); ++option) {
+                    if (!saved.is_candidate_operator_admitted_for_state(source,option)) continue;
+                    const auto* kernel = saved.cached_option_kernel(source,option);
+                    if (!kernel) continue;
+                    for (const auto& exit : kernel->exits)
+                        if (exit.probability > 0) positive_edges[source].push_back(exit.state);
+                    for (const auto& group : kernel->observation_choice_groups)
+                        if (group.probability > 0) positive_edges[source].insert(
+                            positive_edges[source].end(),group.states.begin(),group.states.end());
+                }
+            std::vector<std::uint8_t> cached_reachable(saved.state_count(),0);
+            std::vector<std::uint32_t> frontier{cache->start_state};
+            cached_reachable.at(cache->start_state) = 1;
+            for (std::size_t cursor = 0; cursor < frontier.size(); ++cursor)
+                for (const auto next : positive_edges.at(frontier[cursor]))
+                    if (!cached_reachable.at(next)) { cached_reachable[next] = 1; frontier.push_back(next); }
+            std::printf("checkpoint reachability projection: retained rows plus cached admitted positive exits/choices; absence is not full-envelope unreachability\n");
+            std::uint32_t unexpanded = 0;
+            for (std::uint32_t state = 0; state < saved.state_count(); ++state) {
+                const auto representative = cache->behavioral_representative_by_state.empty()
+                    ? state : cache->behavioral_representative_by_state.at(state);
+                if (cache->expanded[state] || saved.is_goal_state(saved.state(state)) ||
+                    (representative != state && representative < saved.state_count())) continue;
+                ++unexpanded;
+                std::uint32_t kernel_exits = 0, admitted_exits = 0;
+                for (std::uint32_t source = 0; source < saved.state_count(); ++source)
+                    for (std::uint32_t option = registry.actions.size();
+                         option < saved.operators().size(); ++option) {
+                        const auto* kernel = saved.cached_option_kernel(source,option);
+                        if (!kernel) continue;
+                        for (const auto& exit : kernel->exits) if (exit.state == state && exit.probability > 0) {
+                            ++kernel_exits;
+                            admitted_exits += saved.is_candidate_operator_admitted_for_state(source,option);
+                        }
+                    }
+                const auto& item = saved.state(state);
+                std::printf("checkpoint unexpanded: state=%u prefixes=%u suffixes=%u goal_mask=%u tiers=%u,%u representative=%u rows=%u inbound_rows=%u cached_kernel_exits=%u admitted_kernel_exits=%u cached_positive_reachable=%u\n",
+                    state,unsigned(item.prefix_count),unsigned(item.suffix_count),satisfied_goal_mask(item),
+                    unsigned(item.searing_exarch_tier),unsigned(item.eater_of_worlds_tier),
+                    representative,cache->state_rows[state].count,inbound[state],kernel_exits,admitted_exits,
+                    unsigned(cached_reachable[state]));
+                std::printf("checkpoint carrier key state=%u:",state);
+                for (const auto word : exact_abstract_state_key(item,kNoId))
+                    std::printf("%016llx,",static_cast<unsigned long long>(word));
+                std::printf("\n");
             }
-            PC_CHECK(refused_key && invalid.state_count() == 0 && invalid.operators().size() == initial_operators);
-            invalid.load_development_solve_checkpoint(path.string(),"eldritch-query-native-fixture-v1");
-            PC_CHECK(invalid.admit_state_local_automatic_candidates(saved_state,checkpoint_query).cached);
+            std::printf("checkpoint closure summary: unexpanded_nonterminal_representatives=%u reusable=%u focused=%u constructive_pruned=%llu\n",
+                unexpanded,cache->reusable_closure ? 1u : 0u,cache->focused_partial ? 1u : 0u,
+                static_cast<unsigned long long>(checkpoint_result.diagnostics.constructive_state_operators_pruned));
         }
-        std::error_code bad_remove_error;
-        std::filesystem::remove(bad_path,bad_remove_error);
-        PC_CHECK(!bad_remove_error);
-    }
-    std::error_code remove_error;
-    std::filesystem::remove(path,remove_error);
-    PC_CHECK(!remove_error);
+        if (!native_cardinality || !checkpoint_result.policy_available) return;
+        const auto path = std::filesystem::temp_directory_path() / "poecraft-eldritch-query-membership.pcsg";
+        bool native_save_ready = false;
+        try {
+            // Exercise all native row/arena/closure checks before adding the query.
+            saved.save_development_solve_checkpoint(path.string(),"eldritch-query-native-fixture-v1");
+            native_save_ready = true;
+        } catch (const std::exception& error) {
+            std::printf("query checkpoint prerequisite: %s\n",error.what());
+        }
+        PC_CHECK(native_save_ready);
+        if (!native_save_ready) return;
+        const auto full_before_query = saved.admit_state_local_automatic_candidates(saved_state,limits);
+        PC_CHECK(full_before_query.cached);
+        if (!full_before_query.cached) return;
+        auto checkpoint_query = limits;
+        checkpoint_query.query = eldritch_admission_query(PC_SIDE_PREFIX,ActionType::EldritchExalt,true);
+        const auto checkpoint_states = saved.state_count();
+        const auto saved_query = saved.admit_state_local_automatic_candidates(saved_state,checkpoint_query);
+        PC_CHECK(saved.state_count() == checkpoint_states);
+        PC_CHECK(!saved_query.cached && !saved_query.admitted_operators.empty());
+        if (saved.state_count() != checkpoint_states || saved_query.cached ||
+            saved_query.admitted_operators.empty()) return;
+        bool checkpoint_loaded = false;
+        CalcContext replay(session,checkpoint_goal,registry,{direct_exalt},false,false,true,
+            std::nullopt,{},false,{},true);
+        try {
+            saved.save_development_solve_checkpoint(path.string(),"eldritch-query-native-fixture-v1");
+            replay.load_development_solve_checkpoint(path.string(),"eldritch-query-native-fixture-v1");
+            checkpoint_loaded = true;
+        } catch (const std::exception& error) {
+            std::printf("query checkpoint witness: %s\n",error.what());
+        }
+        PC_CHECK(checkpoint_loaded);
+        if (!checkpoint_loaded) return;
+        if (checkpoint_loaded) {
+            const auto loaded_query = replay.admit_state_local_automatic_candidates(saved_state,checkpoint_query);
+            PC_CHECK(loaded_query.cached && loaded_query.admitted_operators == saved_query.admitted_operators);
+            compare(snapshot(saved,saved_state,saved_query),snapshot(replay,saved_state,loaded_query));
+            const auto loaded_full = replay.admit_state_local_automatic_candidates(saved_state,limits);
+            PC_CHECK(loaded_full.cached && loaded_full.query == AutomaticAdmissionQuery::Unrestricted);
+            PC_CHECK(loaded_full.admitted_operators == full_before_query.admitted_operators);
+            compare(snapshot(saved,saved_state,full_before_query),snapshot(replay,saved_state,loaded_full));
+            PC_CHECK(replay.admit_state_local_automatic_candidates(saved_state,limits).cached);
+            for (const auto index : loaded_query.admitted_operators)
+                PC_CHECK(replay.is_candidate_operator_admitted_for_state(saved_state,index));
+            // Mutate the serialized carrier-key member and recompute its checksum:
+            // these are semantic key refusals, not generic damaged-file failures.
+            // The complete key plus operator vector identifies the saved member.
+            std::ifstream input(path,std::ios::binary);
+            std::ostringstream buffer; buffer << input.rdbuf();
+            const auto bytes = buffer.str();
+            const auto original_key = automatic_admission_key(saved_state,false,checkpoint_query.query);
+            const std::uint64_t member_count = saved_query.admitted_operators.size();
+            std::string member(reinterpret_cast<const char*>(&original_key),sizeof(original_key));
+            member.append(reinterpret_cast<const char*>(&member_count),sizeof(member_count));
+            for (const auto index : saved_query.admitted_operators)
+                member.append(reinterpret_cast<const char*>(&index),sizeof(index));
+            const auto key_offset = bytes.find(member);
+            PC_CHECK(key_offset != std::string::npos && bytes.find(member,key_offset+1) == std::string::npos);
+            const auto bad_path = std::filesystem::temp_directory_path() / "poecraft-eldritch-query-invalid-key.pcsg";
+            const std::vector<std::pair<std::uint64_t,std::string>> malformed{
+                {std::uint64_t{kAutomaticAdmissionQueryCount} << 33,"carrier admission mismatch"},
+                {original_key | (1ull << 63),"carrier admission mismatch"},
+                {(original_key & 0xffffffff00000000ull) | checkpoint_states,"carrier admission mismatch"},
+                {original_key | (1ull << 32),"query membership mismatch"},
+                {automatic_admission_key(saved_state,false,eldritch_admission_query(
+                    PC_SIDE_SUFFIX,ActionType::EldritchAnnul,true)),"query membership mismatch"}};
+            if (key_offset != std::string::npos) for (const auto& [bad_key,reason] : malformed) {
+                auto changed = bytes;
+                std::copy_n(reinterpret_cast<const char*>(&bad_key),sizeof(bad_key),changed.begin()+key_offset);
+                // Format 7's fixed header: magic, version/endian, nine layout sizes,
+                // payload length and FNV-1a checksum. Its layout is checked on load.
+                constexpr std::size_t checksum_offset = 16 + 11 * sizeof(std::uint32_t) + sizeof(std::uint64_t);
+                constexpr std::size_t payload_offset = checksum_offset + sizeof(std::uint64_t);
+                std::uint64_t checksum = 14695981039346656037ull;
+                for (std::size_t i = payload_offset; i < changed.size(); ++i) {
+                    checksum ^= static_cast<unsigned char>(changed[i]);
+                    checksum *= 1099511628211ull;
+                }
+                std::copy_n(reinterpret_cast<const char*>(&checksum),sizeof(checksum),changed.begin()+checksum_offset);
+                { std::ofstream output(bad_path,std::ios::binary); output.write(changed.data(),changed.size()); }
+                CalcContext invalid(session,checkpoint_goal,registry,{direct_exalt},false,false,true,
+                    std::nullopt,{},false,{},true);
+                const auto initial_operators = invalid.operators().size();
+                bool refused_key = false;
+                try { invalid.load_development_solve_checkpoint(bad_path.string(),"eldritch-query-native-fixture-v1"); }
+                catch (const std::runtime_error& error) {
+                    refused_key = std::string(error.what()) == "solver development checkpoint " + reason;
+                }
+                PC_CHECK(refused_key && invalid.state_count() == 0 && invalid.operators().size() == initial_operators);
+                invalid.load_development_solve_checkpoint(path.string(),"eldritch-query-native-fixture-v1");
+                PC_CHECK(invalid.admit_state_local_automatic_candidates(saved_state,checkpoint_query).cached);
+            }
+            std::error_code bad_remove_error;
+            std::filesystem::remove(bad_path,bad_remove_error);
+            PC_CHECK(!bad_remove_error);
+        }
+        std::error_code remove_error;
+        std::filesystem::remove(path,remove_error);
+        PC_CHECK(!remove_error);
 
-    // A terminal carrier gives a native completed coarse graph without any
-    // ordinary expansion admission: expand_one_unit stops at the goal first.
-    // Its completed empty query must round-trip without manufacturing full
-    // completion. This retains the absence assertion under its actual premise.
-    CalcContext query_only(session,checkpoint_goal,registry,{direct_exalt},false,false,true,
-        std::nullopt,{},false,{},true);
-    const auto query_only_state = query_only.intern_item(terminal_carrier);
-    PC_CHECK(query_only.is_goal_state(query_only.state(query_only_state)));
-    SolveWork terminal_work(query_only,terminal_carrier,prices,checkpoint_caps);
-    for (unsigned step = 0; step < 40000 && !terminal_work.progress().done; ++step)
-        terminal_work.step(8);
-    PC_CHECK(terminal_work.progress().done);
-    if (!terminal_work.progress().done) return;
-    const auto terminal_result = terminal_work.finish();
-    PC_CHECK(terminal_result.policy_available);
-    const auto terminal_cache = query_only.solve_transition_cache();
-    const bool terminal_cardinality = terminal_cache &&
-        terminal_cache->discovered_states == query_only.state_count() &&
-        terminal_cache->expanded.size() == query_only.state_count() &&
-        terminal_cache->state_rows.size() == query_only.state_count();
-    PC_CHECK(terminal_cardinality);
-    if (!terminal_cardinality || !terminal_result.policy_available) return;
-    bool terminal_save_ready = false;
-    try {
+        // A terminal carrier gives a native completed coarse graph without any
+        // ordinary expansion admission: expand_one_unit stops at the goal first.
+        // Its completed empty query must round-trip without manufacturing full
+        // completion. This retains the absence assertion under its actual premise.
+        CalcContext query_only(session,checkpoint_goal,registry,{direct_exalt},false,false,true,
+            std::nullopt,{},false,{},true);
+        const auto query_only_state = query_only.intern_item(terminal_carrier);
+        PC_CHECK(query_only.is_goal_state(query_only.state(query_only_state)));
+        SolveWork terminal_work(query_only,terminal_carrier,prices,checkpoint_caps);
+        for (unsigned step = 0; step < 40000 && !terminal_work.progress().done; ++step)
+            terminal_work.step(8);
+        PC_CHECK(terminal_work.progress().done);
+        if (!terminal_work.progress().done) return;
+        const auto terminal_result = terminal_work.finish();
+        PC_CHECK(terminal_result.policy_available);
+        const auto terminal_cache = query_only.solve_transition_cache();
+        const bool terminal_cardinality = terminal_cache &&
+            terminal_cache->discovered_states == query_only.state_count() &&
+            terminal_cache->expanded.size() == query_only.state_count() &&
+            terminal_cache->state_rows.size() == query_only.state_count();
+        PC_CHECK(terminal_cardinality);
+        if (!terminal_cardinality || !terminal_result.policy_available) return;
+        bool terminal_save_ready = false;
+        try {
+            query_only.save_development_solve_checkpoint(path.string(),"eldritch-query-only-fixture-v1");
+            terminal_save_ready = true;
+        } catch (const std::exception& error) {
+            std::printf("query-only checkpoint prerequisite: %s\n",error.what());
+        }
+        PC_CHECK(terminal_save_ready);
+        if (!terminal_save_ready) return;
+        const auto terminal_states = query_only.state_count();
+        const auto empty_query = query_only.admit_state_local_automatic_candidates(query_only_state,checkpoint_query);
+        PC_CHECK(!empty_query.cached && empty_query.admitted_operators.empty());
+        PC_CHECK(query_only.state_count() == terminal_states);
         query_only.save_development_solve_checkpoint(path.string(),"eldritch-query-only-fixture-v1");
-        terminal_save_ready = true;
-    } catch (const std::exception& error) {
-        std::printf("query-only checkpoint prerequisite: %s\n",error.what());
+        CalcContext query_only_replay(session,checkpoint_goal,registry,{direct_exalt},false,false,true,
+            std::nullopt,{},false,{},true);
+        query_only_replay.load_development_solve_checkpoint(path.string(),"eldritch-query-only-fixture-v1");
+        const auto restored_empty_query = query_only_replay.admit_state_local_automatic_candidates(
+            query_only_state,checkpoint_query);
+        PC_CHECK(restored_empty_query.cached && restored_empty_query.admitted_operators.empty());
+        const auto full_after_query_restore = query_only_replay.admit_state_local_automatic_candidates(
+            query_only_state,limits);
+        PC_CHECK(!full_after_query_restore.cached &&
+            full_after_query_restore.query == AutomaticAdmissionQuery::Unrestricted &&
+            full_after_query_restore.admitted_operators.empty());
+        PC_CHECK(query_only_replay.admit_state_local_automatic_candidates(query_only_state,limits).cached);
+        std::filesystem::remove(path,remove_error);
+        PC_CHECK(!remove_error);
     }
-    PC_CHECK(terminal_save_ready);
-    if (!terminal_save_ready) return;
-    const auto terminal_states = query_only.state_count();
-    const auto empty_query = query_only.admit_state_local_automatic_candidates(query_only_state,checkpoint_query);
-    PC_CHECK(!empty_query.cached && empty_query.admitted_operators.empty());
-    PC_CHECK(query_only.state_count() == terminal_states);
-    query_only.save_development_solve_checkpoint(path.string(),"eldritch-query-only-fixture-v1");
-    CalcContext query_only_replay(session,checkpoint_goal,registry,{direct_exalt},false,false,true,
-        std::nullopt,{},false,{},true);
-    query_only_replay.load_development_solve_checkpoint(path.string(),"eldritch-query-only-fixture-v1");
-    const auto restored_empty_query = query_only_replay.admit_state_local_automatic_candidates(
-        query_only_state,checkpoint_query);
-    PC_CHECK(restored_empty_query.cached && restored_empty_query.admitted_operators.empty());
-    const auto full_after_query_restore = query_only_replay.admit_state_local_automatic_candidates(
-        query_only_state,limits);
-    PC_CHECK(!full_after_query_restore.cached &&
-        full_after_query_restore.query == AutomaticAdmissionQuery::Unrestricted &&
-        full_after_query_restore.admitted_operators.empty());
-    PC_CHECK(query_only_replay.admit_state_local_automatic_candidates(query_only_state,limits).cached);
-    std::filesystem::remove(path,remove_error);
-    PC_CHECK(!remove_error);
 
     // A query cannot grant a family disabled by the original request.
     auto disabled_goal = goal; disabled_goal.automatic_candidate_kind_mask = 0;
@@ -5136,6 +5212,215 @@ void run_solver_partial_held_witness_tests(const char* artifact_dir) {
     for (const auto word : exact_item_state_key(carrier))
         std::printf("%016llx,",static_cast<unsigned long long>(word));
     std::printf("\n");
+}
+
+// This is deliberately an explicit research selector, not the normal suite.
+// No imported control graph, public proposal or retained incumbent is modified.
+void run_solver_partial_held_recovery_tests() {
+    for (unsigned fixture = 0; fixture < 4; ++fixture) {
+        auto session = make_compile_session();
+        const bool reverse = (fixture & 1u) != 0;
+        const unsigned anchor_slot = fixture < 2 ? 3 : 4;
+        // Realistic lower-tier blockers on each side. Keep native pool/group
+        // resolution authoritative; the fixture defines no transition law.
+        session->family_id[2] = session->family_id[4];
+        session->primary_group[2] = session->primary_group[4];
+        session->family_tier_index[2] = 2;
+        const auto other_suffix = anchor_slot == 3 ? 6u : 5u;
+        session->family_id[7] = session->family_id[other_suffix];
+        session->primary_group[7] = session->primary_group[other_suffix];
+        session->family_tier_index[7] = 2;
+        session->group_ids.clear();
+        session->group_offsets.clear();
+        session->group_masks.assign(32,{});
+        for (unsigned mod = 0; mod < session->mod_count; ++mod) {
+            session->group_offsets.push_back(static_cast<std::uint32_t>(session->group_ids.size()));
+            session->group_ids.push_back(session->primary_group[mod]);
+            if (mod < 8) {
+                auto& mask = session->group_masks[session->primary_group[mod]];
+                if (mask.empty()) mask.assign(session->words,0);
+                pc_bitset_set(mask.data(),mod);
+            }
+        }
+        session->group_offsets.push_back(static_cast<std::uint32_t>(session->group_ids.size()));
+        session->base_spawn_weight = {7,11,19,23,31,37,43,101,53,59};
+        session->base_roll_weight = session->base_spawn_weight;
+        if (reverse) {
+            for (auto& side : session->gen_type) side = 1 - side;
+            std::swap(session->prefix_mask,session->suffix_mask);
+        }
+        // Synthetic native setup capabilities must include the paid tier switch
+        // when the controller changes the side it preserves. No fake tier flags.
+        for (unsigned tier = 1; tier <= 4; ++tier) {
+            session->eldritch_searing_tier_mod_ids[tier] = {0};
+            session->eldritch_eater_tier_mod_ids[tier] = {5};
+        }
+        const auto registry = build_action_registry(*session);
+        const auto chaos = registry.index_by_id.at("chaos");
+        GoalSpec goal; goal.rarity = PC_RARITY_RARE; goal.automatic_candidates = true;
+        goal.automatic_candidate_kind_mask = automatic_candidate_kind_bit(AutomaticCandidateKind::EldritchSide);
+        for (const auto mod : {0u,3u,4u,5u,6u}) {
+            GoalSlot slot; slot.family_id = session->family_id[mod]; slot.min_tier = 1;
+            goal.slots.push_back(slot);
+        }
+        SolveOptions limits; apply_solve_profile_defaults(limits,SolveProfile::CalculatorProductV1);
+        limits.max_discovered_states = 10000; limits.max_expanded_states = 10000;
+        limits.max_state_action_rows = 100000; limits.max_transitions = 1000000;
+        limits.max_reforge_work = 1000000; limits.max_solver_owned_bytes = 256ull << 20;
+        limits.allow_economic_restart = false;
+        std::unordered_map<std::string,double> prices{{"chaos",100},{"eldritch_chaos",3},
+            {"eldritch_annul",2},{"eldritch_exalt",1}};
+        for (unsigned tier = 1; tier <= 4; ++tier) {
+            prices["eldritch_ember:"+std::to_string(tier)] = .07 * tier;
+            prices["eldritch_ichor:"+std::to_string(tier)] = .11 * tier;
+        }
+        pc_item_state root; pc_item_clear(&root); root.rarity = PC_RARITY_RARE;
+        if (fixture == 3) root.eater_of_worlds_tier = 1;
+        CalcContext calc(session,goal,registry,{chaos},false,false,false,std::nullopt,{},false,{},true);
+        calc.set_solve_resource_caps(limits.max_discovered_states,limits.max_reforge_work,
+            false,limits.max_solver_owned_bytes);
+        const auto scope = partial_held_recovery_scope(calc,root,limits);
+        PC_CHECK(scope && scope->held_side == (reverse ? PC_SIDE_PREFIX : PC_SIDE_SUFFIX));
+        PC_CHECK(scope && scope->anchor_masks == (std::array<std::uint32_t,2>{1u << 3,1u << 4}));
+        PC_CHECK(product_completion_proposal_count(calc) == 3);
+        PC_CHECK(product_completion_proposal_variant(calc,2) == SelectiveCompletionVariant::EldritchGrowthRepair);
+        PC_CHECK(product_completion_proposal_variant(calc,3) == SelectiveCompletionVariant::EldritchGrowthWithBlocker);
+        if (!scope) return;
+        const auto states_before_gate = calc.state_count();
+        PartialHeldRecoveryProducer disabled(calc,root,prices,limits,1u << anchor_slot);
+        PC_CHECK(disabled.advance() && !disabled.candidate() &&
+            disabled.status() == "private_recovery_gate_disabled");
+        PC_CHECK(calc.state_count() == states_before_gate);
+        SelectiveCompletionProducer mislabeled(calc,root,prices,limits,
+            SelectiveCompletionVariant::PartialHeldRecoveryResearch);
+        PC_CHECK(mislabeled.advance() && !mislabeled.candidate() &&
+            mislabeled.status() == "private_partial_recovery_requires_composition_owner");
+        auto quality_root = root; quality_root.quality = 20;
+        PC_CHECK(!partial_held_recovery_scope(calc,quality_root,limits));
+        auto dirty_root = root;
+        PC_CHECK(pc_item_add_mod(&dirty_root,session->gen_type[0],0,session->primary_group[0],0,nullptr) == PC_RESULT_OK);
+        PC_CHECK(!partial_held_recovery_scope(calc,dirty_root,limits));
+        auto no_family = goal; no_family.automatic_candidate_kind_mask = 0;
+        CalcContext disabled_family(session,no_family,registry,{chaos});
+        PC_CHECK(!partial_held_recovery_scope(disabled_family,root,limits));
+        auto tiny = limits; tiny.max_solver_owned_bytes = 1;
+        PartialHeldRecoveryProducer capped(calc,root,prices,tiny,1u << anchor_slot,true);
+        for (unsigned step = 0; step < 10 && !capped.done(); ++step) capped.advance();
+        PC_CHECK(capped.done() && !capped.candidate());
+        auto incomplete_prices = prices; incomplete_prices.erase("chaos");
+        PartialHeldRecoveryProducer unpriced(calc,root,incomplete_prices,limits,1u << anchor_slot,true);
+        PC_CHECK(unpriced.advance() && !unpriced.candidate() &&
+            unpriced.status() == "no_priced_requested_chaos_acquisition");
+        PartialHeldRecoveryProducer producer(calc,root,prices,limits,1u << anchor_slot,true);
+        for (unsigned step = 0; step < 40000 && !producer.done(); ++step) producer.advance();
+        if (!producer.candidate()) std::printf("private partial fixture=%u construction=%s\n",fixture,producer.status().c_str());
+        PC_CHECK(producer.done() && producer.candidate());
+        if (!producer.candidate()) return;
+        const auto& control = producer.candidate()->control;
+        PC_CHECK(producer.candidate()->variant == SelectiveCompletionVariant::PartialHeldRecoveryResearch);
+        PC_CHECK(product_completion_proposal_count(calc) == 3);
+        PC_CHECK(calc.fast_estimated_owned_bytes() == calc.audited_estimated_owned_bytes());
+        PC_CHECK(producer.estimated_owned_bytes() >= sizeof(producer) +
+            control.nodes.capacity() * sizeof(FinderControlNode) +
+            control.programs.capacity() * sizeof(FinderProgramBinding));
+        const auto graph = compile_finder_control_json(calc,root,control,limits);
+        const auto prepared = prepare_finder_candidate(calc,session,root,graph,&control);
+        PC_CHECK(prepared.ready() && !prepare_finder_candidate(calc,session,root,graph).ready());
+        if (!prepared.ready()) return;
+        auto carrier = root;
+        for (const auto mod : {0u,2u,anchor_slot == 3 ? 5u : 6u,7u})
+            PC_CHECK(pc_item_add_mod(&carrier,session->gen_type[mod],mod,
+                session->primary_group[mod],0,nullptr) == PC_RESULT_OK);
+        const auto carrier_state = calc.intern_item(carrier);
+        PC_CHECK(satisfied_goal_mask(calc.state(carrier_state)) == ((1u << 0) | (1u << anchor_slot)));
+        // Route from the successor of the compulsory original-root acquisition,
+        // never pass an already-acquired carrier off as the original request.
+        const auto acquire = std::find_if(control.nodes.begin(),control.nodes.end(),
+            [&](const auto& node) { return node.kind == FinderControlKind::RunPrimitive && node.binding == chaos; });
+        PC_CHECK(acquire != control.nodes.end());
+        if (acquire == control.nodes.end()) return;
+        auto node = prepared.strategy->node_by_id.at("c"+std::to_string(acquire->next));
+        for (unsigned step = 0; step <= prepared.strategy->nodes.size(); ++step) {
+            const auto& current = prepared.strategy->nodes.at(node);
+            if (current.kind == StrategyNodeKind::Operation || current.kind == StrategyNodeKind::Terminal) break;
+            const auto edge = std::find_if(current.edges.begin(),current.edges.end(),[&](const auto& edge) {
+                return edge.is_default || evaluate_compiled_condition(edge.condition,*session,carrier);
+            });
+            PC_CHECK(edge != current.edges.end());
+            if (edge == current.edges.end()) return;
+            node = edge->target;
+        }
+        const auto& routed = prepared.strategy->nodes.at(node);
+        const auto held_run = std::find_if(control.nodes.begin(),control.nodes.end(),[&](const auto& current) {
+            return current.kind == FinderControlKind::RunNativeProgram &&
+                routed.id == "c"+std::to_string(&current - control.nodes.data());
+        });
+        PC_CHECK(held_run != control.nodes.end());
+        if (held_run == control.nodes.end()) return;
+        const auto& binding = control.programs.at(held_run->binding);
+        const auto& option = calc.operators().at(binding.operator_index);
+        PC_CHECK(binding.held_goal_mask == (1u << anchor_slot));
+        PC_CHECK(registry.actions.at(option.primitive_program.back()).params.type == ActionType::EldritchExalt);
+        const auto word = execute_attempt(calc,option.primitive_program,carrier_state);
+        PC_CHECK(word.supported && word.fully_legal && word.choice_groups.empty());
+        PC_CHECK(word.expected_primitive_actions == option.primitive_program.size());
+        PC_CHECK(word.expected_resources == aggregate_resources(registry,option.primitive_program));
+        double mass = 0;
+        for (const auto& exit : word.entries) {
+            PC_CHECK(exit.probability > 0);
+            const auto& after = calc.state(exit.state);
+            PC_CHECK((satisfied_goal_mask(after) & (1u << anchor_slot)) != 0);
+            PC_CHECK((reverse ? after.suffix_count : after.prefix_count) == 3);
+            mass += exit.probability;
+        }
+        PC_CHECK(std::abs(mass-1) <= 1e-12);
+        auto economy = std::make_shared<EconomyImpl>(); economy->prices = prices;
+        StrategyEvalOptions eval; eval.economy = economy;
+        eval.max_states = limits.max_discovered_states; eval.max_pairs = limits.max_state_action_rows;
+        eval.max_transitions = limits.max_transitions; eval.max_owned_bytes = limits.max_solver_owned_bytes;
+        eval.max_reforge_work = limits.max_reforge_work;
+        eval.continuation_entries.push_back({calc.intern_item(root),0,1,root,false});
+        eval.graph_local_provenance.strategy_json = graph;
+        for (unsigned index = 0; index < control.nodes.size(); ++index) {
+            const auto& current = control.nodes[index];
+            if (current.kind != FinderControlKind::RunNativeProgram) continue;
+            const auto key = finder_program_occurrence_key(calc,control.programs.at(current.binding));
+            const auto id = "c"+std::to_string(index);
+            eval.graph_local_provenance.decisions.push_back({id,key,false,false});
+            StrategyPolicyDecisionRequest request; request.compiled_node_id = id;
+            request.selected_operator_identity = key; request.graph_local = true;
+            eval.policy_decision_entries.push_back(std::move(request));
+        }
+        const auto checked = evaluate_strategy(*prepared.strategy,eval);
+        PC_CHECK(finder_evaluation_accepted(checked));
+        if (!finder_evaluation_accepted(checked)) return;
+        for (const auto key : {"chaos","eldritch_exalt","eldritch_annul","eldritch_chaos"})
+            PC_CHECK(checked.expected_consumption.contains(key) && checked.expected_consumption.at(key) > 0);
+        unsigned entries = 0;
+        try {
+            SelectiveProgrammeEntryValidator validator(calc,session,control,checked.policy_entries,prices,limits);
+            for (unsigned step = 0; step < 40000 && !validator.done(); ++step) validator.advance();
+            PC_CHECK(validator.done() && validator.validated_entries() == checked.policy_entries.entries.size());
+            entries = validator.positive_entries();
+            PC_CHECK(entries > 0);
+        } catch (const std::exception& error) {
+            std::printf("private partial fixture=%u entry_refusal=%s\n",fixture,error.what());
+            PC_CHECK(false); return; // A positive entry is a stop, never a grammar relaxation.
+        }
+        auto tampered = checked.policy_entries;
+        PC_CHECK(!tampered.entries.empty());
+        if (tampered.entries.empty()) return;
+        tampered.entries.front().selected_operator_identity.push_back(7);
+        bool refused = false;
+        try {
+            SelectiveProgrammeEntryValidator validator(calc,session,control,tampered,prices,limits);
+            for (unsigned step = 0; step < 40000 && !validator.done(); ++step) validator.advance();
+        } catch (const StrategyEvalUnsupported&) { refused = true; }
+        PC_CHECK(refused);
+        std::printf("private partial fixture=%u anchor=%u original_root_cost=%.12g positive_entries=%u nodes=%zu programs=%zu owned=%llu\n",
+            fixture,anchor_slot,checked.total_expected_cost,entries,control.nodes.size(),control.programs.size(),
+            static_cast<unsigned long long>(producer.estimated_owned_bytes()));
+    }
 }
 
 void run_solver_growth_tests(const bool blocker) {

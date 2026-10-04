@@ -1,16 +1,15 @@
-# Armour native witness passes; corrected finite fixtures prepared (2026-10-04)
+# Armour recovery: witness qualified, optional checkpoint held (2026-10-04)
 
-Isolated dot/sol61-armour-recovery-20261004: deb65256 rebuild passes,
-full native partial-held witness293/293 passes; query2714 fails five assertions.
-Original f038aa6f query2701/six failures remain preserved and classified in the
-[living programme](docs/active/2026-10-04-sol61-armour-recovery/README.md).
-Both LOCAL grants released immediately, no survivors. No timed policy run.
-Source-only corrections recreate the measured fresh context against the spent
-shared owner with exact retry debit/semantics, and pair proper clean completion
-query/full replay with a terminal-root query-only checkpoint. Native cardinality
-and save prerequisites must pass first. Request final source review and bounded
-query/checkpoint/metamod gate when LOCAL is available; runtime remains unqualified.
-Controller/result ownership are held; CI alone owns main publication.
+Isolated dot/sol61-armour-recovery-20261004: native witness293 passes at deb65256.
+At862bd1b build passes; query2728 has one native development-save prerequisite
+failure (unexpanded nonterminal representative), after budget/retry checks pass.
+Earlier failed receipts remain in the [living record](docs/active/2026-10-04-sol61-armour-recovery/README.md).
+All grants released, no survivors, no timed policy run. Blocked state IDs and
+admitted-transition reachability are unmeasured; do not relax the save guard.
+Optional nonempty replay stays held behind an explicit diagnostic selector;
+known-valid empty terminal membership/control source is prepared and unbuilt.
+Parent allows disabled/private bounded recovery source work. Default Current/Finder
+proposals and checker ownership remain unchanged; CI alone owns publication.
 
 # Qualified solver CI repair (2026-10-03)
 

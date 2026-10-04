@@ -73,6 +73,16 @@ int main(int argc, char** argv) {
         std::printf("solver partial held witness tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
         return pctest::g_failures == 0 ? 0 : 1;
     }
+    if (argc > 1 && std::string(argv[1]) == "--solver-partial-held-recovery-only") {
+        run_solver_partial_held_recovery_tests();
+        std::printf("private partial held recovery tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
+    if (argc > 1 && std::string(argv[1]) == "--solver-admission-query-checkpoint-diagnostic-only") {
+        run_solver_admission_query_tests(true);
+        std::printf("optional admission query checkpoint diagnostic: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     if (argc > 1 && std::string(argv[1]) == "--solver-admission-query-only") {
         run_solver_admission_query_tests();
         std::printf("solver admission query tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);

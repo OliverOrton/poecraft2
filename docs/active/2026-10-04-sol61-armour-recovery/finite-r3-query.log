@@ -1,0 +1,6 @@
+mixed admission witness: typed_work=0 full_work=92 typed_decisions=1 full_decisions=7
+post-commit budget prerequisite: fresh_control_work=60 spent_owner=124 retry_work=60
+query checkpoint preflight: states=60 cache_states=60 expanded=60 row_spans=60 policy=1
+query checkpoint prerequisite: invalid solver development checkpoint graph: nonterminal representative state is not expanded
+FAIL C:/Users/Oliver/Documents/poecraft2-sol61-armour-20261004/engine/tests/test_solver_compile.cpp:4765: native_save_ready
+solver admission query tests: 2728 checks, 1 failures

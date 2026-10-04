@@ -147,6 +147,19 @@ void run_solver_metamod_recovery_tests(const char* artifact_dir) {
             PC_CHECK(work.progress().done);
             const auto saved_cheap = saved.admit_state_local_automatic_candidates(saved_state,limits);
             const auto saved_full = saved.admit_state_local_automatic_candidates(saved_state,full);
+            PC_CHECK(saved_full.admitted_operators.size() == 1);
+            if (saved_full.admitted_operators.empty()) continue;
+            const auto& native_cleanup = saved.option_kernel(saved_state,saved_full.admitted_operators.front());
+            PC_CHECK(native_cleanup.exits.size() == 1);
+            if (native_cleanup.exits.empty()) continue;
+            const auto terminal_state = native_cleanup.exits.front().state;
+            PC_CHECK(saved.is_goal_state(saved.state(terminal_state)));
+            auto typed = full;
+            typed.query = eldritch_admission_query(PC_SIDE_PREFIX,ActionType::EldritchExalt,true);
+            const auto before_query_states = saved.state_count();
+            const auto terminal_query = saved.admit_state_local_automatic_candidates(terminal_state,typed);
+            PC_CHECK(!terminal_query.cached && terminal_query.admitted_operators.empty());
+            PC_CHECK(saved.state_count() == before_query_states);
             const auto path = std::filesystem::temp_directory_path() /
                 "poecraft-metamod-staged-admission.pcsg";
             saved.save_development_solve_checkpoint(path.string(),"metamod-staged-admission");
@@ -165,6 +178,11 @@ void run_solver_metamod_recovery_tests(const char* artifact_dir) {
                 PC_CHECK(cheap_replay.cached && full_replay.cached);
                 PC_CHECK(cheap_replay.admitted_operators == saved_cheap.admitted_operators);
                 PC_CHECK(full_replay.admitted_operators == saved_full.admitted_operators);
+                const auto query_replay = replay.admit_state_local_automatic_candidates(terminal_state,typed);
+                PC_CHECK(query_replay.cached && query_replay.admitted_operators.empty());
+                const auto terminal_full = replay.admit_state_local_automatic_candidates(terminal_state,full);
+                PC_CHECK(!terminal_full.cached && terminal_full.admitted_operators.empty());
+                PC_CHECK(replay.admit_state_local_automatic_candidates(terminal_state,full).cached);
             }
             std::filesystem::remove(path);
         }

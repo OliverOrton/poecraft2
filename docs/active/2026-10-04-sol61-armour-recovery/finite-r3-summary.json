@@ -1,0 +1,88 @@
+{
+  "source_commit": "862bd1b30eedcab61bfb1be5e01055005f9b7c16",
+  "stages": [
+    {
+      "phase": "build",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 86616,
+      "process_identity_token": "86616:134355680973487090",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 20183.645999990404
+    },
+    {
+      "phase": "admission-query",
+      "exit_code": 1,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 48088,
+      "process_identity_token": "48088:134355681181173051",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 363.77809988334775
+    }
+  ],
+  "unrun": [
+    "checkpoint",
+    "metamod-recovery"
+  ],
+  "owned_processes": [],
+  "local_slot": "RELEASED at terminal batch result",
+  "finished_utc": "2026-10-04T06:15:18.181415+00:00",
+  "schema": "sol61_armour_finite_gate_v1",
+  "binary": {
+    "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_engine_tests.exe",
+    "sha256": "087585f856b5777f02e3237ac4a99bcef1e9f8abd06822945295012c7dd2040f",
+    "source_commit": "862bd1b30eedcab61bfb1be5e01055005f9b7c16"
+  },
+  "source_review": "1d45d13df4870633f45705796a9f36d6465f1183",
+  "query": {
+    "checks": 2728,
+    "failures": 1,
+    "mixed": {
+      "typed_work": 0,
+      "full_work": 92,
+      "typed_decisions": 1,
+      "full_decisions": 7
+    },
+    "post_commit": {
+      "fresh_control_work": 60,
+      "spent_owner": 124,
+      "retry_work": 60,
+      "refusal_rollback_and_debit": "passed"
+    },
+    "checkpoint": {
+      "states": 60,
+      "cache_states": 60,
+      "expanded_dimension": 60,
+      "row_spans_dimension": 60,
+      "policy_available": true,
+      "save_refusal": "nonterminal representative state is not expanded",
+      "unexpanded_state_ids": "unmeasured: old receipt did not project them",
+      "load_and_malformed_members": "unrun"
+    }
+  },
+  "partial_held_witness_reused": {
+    "source": "deb65256",
+    "checks": 293,
+    "failures": 0,
+    "fixture_and_frozen_inputs_unchanged": true
+  },
+  "raw_artifacts": {
+    "out/sol61-armour/finite-r3/admission-query.log": "3f1d13b0b506d5c9487c50f27a8081e1bdd0ec565ef5eaf69e290bef63ed8038",
+    "out/sol61-armour/finite-r3/admission-query.receipt.json": "202577ad95b6ca0af2c5b9e388177625c03dc01ddcd1a5ff1c260fae71ebe01c",
+    "out/sol61-armour/finite-r3/admission-query.started.json": "9a2d0354467f2b5bfff98b2889789f819c75234f2a9da85e17f638a31c242eca",
+    "out/sol61-armour/finite-r3/binary-identity.json": "a79c1ca29b7fdc724bf903354e80ed1f886a0940dcc6209ec2579b2156e626b6",
+    "out/sol61-armour/finite-r3/build.log": "2257944e124ab128029973d017363a4914c936848283aecdb29fbd1ab2db0eb2",
+    "out/sol61-armour/finite-r3/build.receipt.json": "89281b603df8fb4a42c41c18086aff61e789cb6382bba55e95258d0b7bccc4e3",
+    "out/sol61-armour/finite-r3/build.started.json": "8b8ea061aa2ac573e2a15f96778a1bf39e525cd45bf53785273b02bf00c93d5d",
+    "out/sol61-armour/finite-r3/completion.json": "94583b15085f13e2894e996c5f5354d72f597e0829d02b32cf6f51a3884b6d04",
+    "out/sol61-armour/finite-r3/request.json": "d36f9efc8ce06d073ea5cf2889a951d1de9f389ae853f899cd7cffaec2f3d22c"
+  }
+}
