@@ -12,9 +12,13 @@ Its clean build, immutable package and full legacy static-host/browser gate pass
 in installed Chrome. LOCAL was released immediately after the batch. A source-only
 Dockview token bridge was subsequently committed source-only as
 `70ef59e11398742c9256d659f42a5acd6ab4a114` after screenshot review exposed the
-library's remaining Abyss page/tab colors. Its rendered qualification still needs
-a new serialized LOCAL slot; overall C2 palette cleanup is not yet complete. New A/B and actual-output adapters
-are absent from this source and remain an integration-dependent extension.
+library's remaining Abyss page/tab colors. The focused gate at `b8e92472` passed
+TypeScript/Vite and package integrity but failed its rendered color assertion.
+Dependency-source inspection identified the inner theme root created by BaseGrid;
+source-only correction `e6359fe4838f657c0bdaa913f6fe3afc2792fd35` extends the same
+selector to that root. Its focused rerun needs a new LOCAL slot. Overall C2 palette
+cleanup is not yet qualified. New A/B and actual-output adapters are absent from
+this source and remain an integration-dependent extension.
 
 ## Presentation owners
 
@@ -64,7 +68,8 @@ Archive: `dist/public-artifacts/web/<archive>/deployment-manifest.json`.
 | Prior 33-command web suite | All commands passed across initial run and Chrome continuation on `2a46b1b3`; the initial aggregate `npm test` invocation failed at unavailable pinned Chromium, `web-tests.log`, `web-tests-chrome-tail.log` |
 | Pinned Chromium / Firefox | Not installed/qualified; no browser download or user-profile access |
 | New A/B/trace adapters | Absent from this source, not implemented or qualified here |
-| Dockview token bridge `70ef59e1` | Source-reviewed/committed; focused rendered scope prepared, not run |
+| Dockview gate at `b8e92472` | TypeScript/Vite/package passed; rendered color failed, `dock-b8e92472/` |
+| Nested-root correction `e6359fe4` | Source-reviewed/committed; rendered assertions unchanged; focused rerun pending |
 
 The full browser gate includes native item round-trip, probability sum tolerance
 `1e-9`, exact convergence/cancellation, three-size Emulator/Calculator layout,
@@ -117,6 +122,20 @@ The remainder exposed fixture assumptions, investigated before each rerun:
   passed. Browser comparison uses DOM textContent because existing CSS capitalizes
   the displayed rarity.
 
+The Dockview-only gate on clean `b8e92472` preserved the failure rather than
+weakening acceptance: actual group background `rgb(0,12,24)` versus expected
+`rgb(16,21,27)`. `BaseGrid` constructs an inner div and DockviewComponent applies
+the theme class there; explicit inner variables override inherited host values.
+`e6359fe4` applies the identical token bridge to both scoped roots. No color,
+geometry, library/controller behavior or rendered assertion changed.
+
+Attempt evidence: `dock-b8e92472/preflight.json`, `build.log`, `package.log`,
+`verify.log`, `browser.log`, `outcome.json`, `screenshots/chromium-failure.png`.
+Build ID `54aa483747750bfc3c9cd4fe8cafaac1914abf2c736d39bc149385b889465bcf`;
+verified archive `14ae2971e89b0cae64e3f707b7a66a3aa78fd5ee8da31bf820cad0147c3aa3a8`
+(667 files) is an unqualified rendered candidate, separate from qualified legacy
+archive `1b2308c4...`. No prior PNGs or archives were overwritten.
+
 Raw failures stay in `remaining-cache-fixed`, `remaining-routing-focus`,
 `remaining-artwork-diagnostic`, `remaining-artwork-visible`,
 `remaining-history-diagnostic`, `remaining-distinct-history`,
@@ -150,7 +169,8 @@ stress and all new A/B/trace views remain a later integrated-source review.
 The delivered source chain includes `5b0e71ef`, `0ffc425d`, `5a531639`, `366219cc`,
 `2a46b1b3`, documentation checkpoints, narrow cache `1be4c20c`, shared rarity
 `5cd7b742`, qualified legacy browser checks `c03aaebb`, and separate source-only
-Dockview bridge `70ef59e1`. All commits stay local.
+Dockview bridge `70ef59e1` and its source-only root-scope correction `e6359fe4`.
+All commits stay local.
 The Builder branch's appended `.pc-edge-path.is-item-supply` rule must be preserved.
 
 Parent handoff `ffa93611`, runtime source pin `9736e766de959070b0c89fcb71281438ebd6f64c`,
@@ -166,7 +186,8 @@ feeder receipts, child/native known-cost completeness without double counting,
 consumed/unavailable states and seven execution slots distinct from 32 planner
 catalogue entries. No frontend synthesis of constraints, costs or native mechanics.
 
-The smallest requested LOCAL continuation is a clean TypeScript/Vite build,
+The smallest requested LOCAL continuation is the unchanged focused gate on the
+corrected `e6359fe4` source: clean TypeScript/Vite build,
 existing immutable package/integrity owners, then the existing static-host runner
 with `POECRAFT_UI_SMOKE_SCOPE=dock-theme`,
 `POECRAFT_TEST_BROWSER_CHANNEL=chrome`, `POECRAFT_SMOKE_BROWSERS=chromium`,
@@ -186,7 +207,10 @@ immediately after heavy work ends, before documentation. Do not rerun the full
 legacy gate solely for the token bridge. Combine new A/B/trace qualification only
 when parent supplies coherent component source and matching qualified artifacts.
 
-No heavy command ran for `70ef59e1`. `git diff --check` passed. No process is
-active, LOCAL remains released, and the qualified `c03aaebb` package/receipts are
-preserved. There is no new supervisor or fixed aggregate run cap. Retain causal
-failures before deciding another batch.
+The `b8e92472` attempt ended with supervised PIDs 64744 (build), 70028 (package),
+9260 (verify), 17680 (browser) exited, confirmed through read-only process lookup.
+Browser/server finally cleanup completed and no Node/Python/Chrome process
+references this UI worktree. LOCAL was released promptly before source correction.
+No heavy command ran for `e6359fe4`; `git diff --check` passed. The qualified
+`c03aaebb` package/receipts remain preserved. There is no new supervisor or fixed
+aggregate run cap. Retain causal failures before deciding another batch.
