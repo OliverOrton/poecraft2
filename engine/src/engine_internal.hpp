@@ -2,6 +2,8 @@
 #define POECRAFT_SRC_ENGINE_INTERNAL_HPP
 
 #include <array>
+#include <functional>
+#include <optional>
 #include <cstdint>
 #include <limits>
 #include <memory>
