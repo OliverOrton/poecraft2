@@ -25,7 +25,10 @@ export async function readItemCard(client: EngineClient, data: number, catalog: 
             enchantments: await slots((info.enchantment_mod_ids as number[]) ?? [], "enchantments"),
             implicits: await slots(info.implicit_mod_ids as number[], "implicits")};
     } finally {
-        if (item) await client.closeItem(item);
-        await client.closeSession(session);
+        try {
+            if (item) await client.closeItem(item);
+        } finally {
+            await client.closeSession(session);
+        }
     }
 }

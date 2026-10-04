@@ -3677,6 +3677,24 @@ pc-run-trace {
     margin-top: 0;
 }
 
+.pc-trace-item-preview {
+    margin-top: var(--pc-space-3);
+    min-width: 0;
+}
+
+.pc-trace-item-meta {
+    display: grid;
+    gap: var(--pc-space-1);
+    margin-bottom: var(--pc-space-2);
+    color: var(--pc-text-dim);
+    font-size: var(--pc-type-meta);
+    overflow-wrap: anywhere;
+}
+
+.pc-trace-item-meta strong { color: var(--pc-text-strong); }
+.pc-trace-item-status { color: var(--pc-text-dim); font-size: var(--pc-type-meta); }
+.pc-trace-item-status[role="alert"] { color: var(--pc-status-danger); }
+
 .pc-trace-detail details {
     margin-top: 8px;
 }

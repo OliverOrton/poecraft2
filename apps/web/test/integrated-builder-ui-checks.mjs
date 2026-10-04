@@ -176,7 +176,8 @@ function cardFacts(model) {
         prefixes: rows('prefixes'), suffixes: rows('suffixes'), implicits: rows('implicits'), enchantments: rows('enchantments')};
 }
 
-/** Proposed shared trace-card adapter contract, absent from cfea56c0/d0f5df2f.
+/** Shared trace-card adapter contract. Source implementation follows d0f5df2f;
+ * rendered/native qualification remains pending.
  * nativeModel must come from readItemCard using this exact resource's native
  * base/level/item, not a template. Caller supplies the adapter wrapper selector.
  * Session-local mod IDs are deliberately not compared across imported sessions.

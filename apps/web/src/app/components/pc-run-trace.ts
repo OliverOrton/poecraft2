@@ -1,4 +1,9 @@
-import { StrategyResult, StrategyTrace } from "../engine-protocol";
+import type {BaseInfo, Catalog, StrategyResult, StrategyTrace} from "../engine-protocol";
+import type {EngineClient} from "../engine-client";
+import {readItemCard} from "../item-preview";
+import {traceResourceSnapshot, type TraceResource} from "../trace-item-preview";
+import type {PcModList} from "./pc-mod-list";
+import "./pc-mod-list";
 const RESOURCE_ACTION_NAMES: Record<number, string> = {
     1003: "Acquire resource", 1004: "Awakener", 1100: "Run feeder",
     1101: "Move / recycle item", 1102: "Discard item", 1103: "Recombine pair",
@@ -50,9 +55,30 @@ export class PcRunTrace extends HTMLElement {
     private mode: ResultMode = "distribution";
     private traceIndex = 0;
     private stepIndex = 0;
+    private previewContext: {client: EngineClient; data: number; catalog: Catalog | null; bases: BaseInfo[]} | null = null;
+    private previewVersion = 0;
+    private previewDisposed = false;
+    private previewWork: Promise<void> = Promise.resolve();
 
     connectedCallback(): void {
         this.render();
+    }
+
+    disconnectedCallback(): void { this.previewVersion += 1; }
+
+    async disposeItemPreview(): Promise<void> {
+        this.previewDisposed = true;
+        this.previewVersion += 1;
+        this.previewContext = null;
+        await this.previewWork;
+    }
+
+    setItemPreviewContext(client: EngineClient, data: number, catalog: Catalog | null, bases: BaseInfo[]): void {
+        if (this.previewDisposed) return;
+        const old = this.previewContext;
+        if (old?.client === client && old.data === data && old.catalog === catalog && old.bases === bases) return;
+        this.previewContext = {client, data, catalog, bases};
+        if (this.mode === "trace" && this.isConnected) this.render();
     }
 
     setResult(result: StrategyResult | null): void {
@@ -65,6 +91,7 @@ export class PcRunTrace extends HTMLElement {
     }
 
     private render(): void {
+        this.previewVersion += 1;
         this.innerHTML = `
             <div class="pc-results-tabs" role="tablist">
                 <button data-mode="distribution"
@@ -90,7 +117,10 @@ export class PcRunTrace extends HTMLElement {
                 this.emitHighlight();
             });
         });
-        if (this.mode === "trace") this.bindTrace();
+        if (this.mode === "trace") {
+            this.bindTrace();
+            this.readTraceItem();
+        }
     }
 
     private renderDistribution(): string {
@@ -159,6 +189,7 @@ export class PcRunTrace extends HTMLElement {
             Math.max(0, trace.entries.length - 1),
         );
         const entry = trace.entries[this.stepIndex];
+        if (!entry) return `<div class="pc-run-trace-empty" role="status">No retained steps are available for this trace.</div>`;
         const actualOutput = entry.resources?.find(resource => resource.active_output);
         return `
             <div class="pc-trace-toolbar">
@@ -173,9 +204,9 @@ export class PcRunTrace extends HTMLElement {
                             .join("")}
                     </select>
                 </label>
-                <button data-cmd="prev" ${this.stepIndex === 0 ? "disabled" : ""}>←</button>
+                <button data-cmd="prev" aria-label="Previous step" ${this.stepIndex === 0 ? "disabled" : ""}>←</button>
                 <span>Step ${this.stepIndex + 1} / ${trace.entries.length}</span>
-                <button data-cmd="next" ${this.stepIndex >= trace.entries.length - 1 ? "disabled" : ""}>→</button>
+                <button data-cmd="next" aria-label="Next step" ${this.stepIndex >= trace.entries.length - 1 ? "disabled" : ""}>→</button>
             </div>
             <div class="pc-trace-body">
                 <ol class="pc-trace-steps">
@@ -198,6 +229,7 @@ export class PcRunTrace extends HTMLElement {
                         <div><dt>Actions</dt><dd>${entry.cumulative_actions}</dd></div>
                         <div><dt>Known cost</dt><dd>${entry.known_cumulative_cost.toFixed(2)}${entry.cost_complete ? "" : " +"}</dd></div>
                     </dl>
+                    ${actualOutput ? this.renderItemPreview(actualOutput) : ""}
                     <details>
                         <summary>${actualOutput ? "Actual output item — " + escapeHtml(actualOutput.base_key ?? actualOutput.resource_id) : "Current item snapshot"}</summary>
                         <pre>${escapeHtml(JSON.stringify(actualOutput ?? entry.item, null, 2))}</pre>
@@ -205,6 +237,69 @@ export class PcRunTrace extends HTMLElement {
                     ${entry.resources?.length ? `<details><summary>Resource inventory</summary><pre>${escapeHtml(JSON.stringify(entry.resources, null, 2))}</pre></details>` : ""}
                 </div>
             </div>`;
+    }
+
+    private renderItemPreview(resource: TraceResource): string {
+        const provenance = resource.feeder
+            ? `Feeder: ${resource.feeder.strategy_id} / ${resource.feeder.revision} \u00b7 Output ${resource.feeder.output_accepted ? "accepted" : "rejected"}${resource.feeder.cost_complete ? "" : " \u00b7 Feeder cost incomplete"}`
+            : resource.recombination
+                ? `Recombination: ${resource.recombination.model_id} \u00b7 Game odds estimated \u00b7 Gold/dust costs incomplete`
+                : "";
+        return `<section class="pc-trace-item-preview" aria-label="Actual output item at this step"
+            data-resource-id="${escapeAttribute(resource.resource_id)}"
+            data-resource-identity="${escapeAttribute(resource.identity ?? "")}">
+            <div class="pc-trace-item-meta">
+                <strong>Actual output at this step</strong>
+                <span>Resource: ${escapeHtml(resource.resource_id)}</span>
+                <span>Physical identity: ${escapeHtml(resource.identity ?? "Unavailable")}</span>
+                ${provenance ? `<span>${escapeHtml(provenance)}</span>` : ""}
+            </div>
+            <div class="pc-trace-item-card" aria-busy="true">
+                <p class="pc-trace-item-status" role="status">Reading native item snapshot…</p>
+            </div>
+        </section>`;
+    }
+
+    private readTraceItem(): void {
+        const entry = this.result?.traces[this.traceIndex]?.entries[this.stepIndex];
+        const resource = entry?.resources?.find(value => value.active_output);
+        const host = this.querySelector<HTMLElement>(".pc-trace-item-card");
+        if (!resource || !host || !this.isConnected || this.previewDisposed) return;
+        const version = this.previewVersion, context = this.previewContext;
+        const current = () => !this.previewDisposed && version === this.previewVersion && this.isConnected && host.isConnected;
+        const unavailable = (message: string, failed = false) => {
+            if (!current()) return;
+            host.setAttribute("aria-busy", "false");
+            const status = document.createElement("p");
+            status.className = "pc-trace-item-status";
+            status.setAttribute("role", failed ? "alert" : "status");
+            status.textContent = message;
+            host.replaceChildren(status);
+        };
+        const snapshot = traceResourceSnapshot(resource);
+        if (!snapshot) {
+            unavailable("Item preview unavailable: native base, level, physical identity or item snapshot is missing. Raw receipt retained below.");
+            return;
+        }
+        if (!context) {
+            unavailable("Item preview unavailable until the engine is ready. Raw receipt retained below.");
+            return;
+        }
+        // One imported preview at a time. Rapid navigation skips superseded queued
+        // reads; already acquired native handles finish through readItemCard's finally.
+        this.previewWork = this.previewWork.then(async () => {
+            if (!current()) return;
+            try {
+                const name = context.bases.find(base => base.path === snapshot.base)?.name ?? snapshot.base;
+                const model = await readItemCard(context.client, context.data, context.catalog, snapshot, name);
+                if (!current()) return;
+                host.replaceChildren(document.createElement("pc-mod-list"));
+                host.querySelector<PcModList>("pc-mod-list")!.setModel({...model, readOnly: true});
+                host.setAttribute("aria-busy", "false");
+            } catch (error) {
+                unavailable(`Item preview unavailable: ${error instanceof Error ? error.message : String(error)}. Raw receipt retained below.`, true);
+            }
+        });
     }
 
     private bindTrace(): void {
@@ -286,3 +381,7 @@ function escapeHtml(value: string): string {
 }
 
 customElements.define("pc-run-trace", PcRunTrace);
+
+function escapeAttribute(value: string): string {
+    return escapeHtml(value).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}

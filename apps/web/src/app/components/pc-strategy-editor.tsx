@@ -665,6 +665,7 @@ export class PcStrategyEditor extends HTMLElement {
             progress: this.progress,
             result: this.result,
         });
+        if (this.engineReady) this.trace.setItemPreviewContext(this.client, this.dataId, this.catalog, this.bases);
         if (this.traceResult !== this.result) {
             this.traceResult = this.result;
             this.trace.setResult(this.result);
@@ -2001,6 +2002,7 @@ export class PcStrategyEditor extends HTMLElement {
     private async disposeDocument(): Promise<void> {
         if (this.disposed) return;
         this.disposed = true;
+        const tracePreview = this.querySelector<PcRunTrace>("pc-run-trace")?.disposeItemPreview();
         window.clearTimeout(this.persistTimer);
         window.clearTimeout(this.evalTimer);
         this.evalRequestVersion += 1;
@@ -2019,6 +2021,7 @@ export class PcStrategyEditor extends HTMLElement {
         if (this.evaluationPromises.size) {
             await Promise.allSettled([...this.evaluationPromises]);
         }
+        await tracePreview;
         disposeReact(this);
     }
 
