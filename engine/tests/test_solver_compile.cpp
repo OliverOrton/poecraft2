@@ -6160,6 +6160,8 @@ void run_solver_entry_budget_tests() {
     auto below_peak = limits; below_peak.max_solver_owned_bytes = control_audited_peak-1;
     SelectiveProgrammeEntryValidator peak_capped(source,session,control,census,prices,below_peak);
     bool peak_refused = false;
+    std::string peak_refusal, peak_detail;
+    std::uint64_t peak_refusal_limit = 0;
     unsigned peak_steps = 0;
     try {
         while (!peak_capped.done() && peak_steps < 40000) {
@@ -6167,11 +6169,18 @@ void run_solver_entry_budget_tests() {
             PC_CHECK(peak_capped.estimated_owned_bytes() >= peak_capped.audited_estimated_owned_bytes());
         }
     } catch (const SolverResourceLimit& error) {
-        peak_refused = error.cap_name() == "max_solver_owned_bytes";
+        // Native scratch must fit before the next work unit commits. Preserve
+        // its native cap identity, not the later batch-publication cap name.
+        peak_refusal = error.cap_name(); peak_refusal_limit = error.limit(); peak_detail = error.what();
+        peak_refused = peak_refusal == "max_owned_bytes";
     } catch (const std::length_error& error) {
-        peak_refused = std::string(error.what()).find("no exact admission memory") != std::string::npos;
+        peak_refusal = "unclassified_capacity"; peak_detail = error.what();
     }
+    std::printf("native entry selected peak caught: cap=%s limit=%llu detail=%s\n",
+        peak_refusal.c_str(),static_cast<unsigned long long>(peak_refusal_limit),peak_detail.c_str());
     PC_CHECK(peak_refused && !peak_capped.done());
+    PC_CHECK(peak_refusal_limit > 0 && peak_refusal_limit < below_peak.max_solver_owned_bytes);
+    PC_CHECK(peak_capped.validated_entries() == 0 && peak_capped.logical_work() == 0 && peak_capped.active_work() == 0);
     // At least one successful checkpoint distinguishes native growth refusal
     // from a constructor-only refusal that never exercised the live cursor.
     PC_CHECK(peak_steps > 0);
@@ -6180,6 +6189,52 @@ void run_solver_entry_budget_tests() {
         static_cast<unsigned long long>(control_audited_peak),static_cast<unsigned long long>(below_peak.max_solver_owned_bytes),
         peak_refused,peak_steps,peak_capped.validated_entries(),peak_capped.positive_entries(),
         static_cast<unsigned long long>(peak_capped.logical_work()));
+    // Repeat the finite headroom boundary with an actual shared work owner.
+    // Derive its peak from a complete full-audited control, so this witness does
+    // not infer private forwarding-owner storage or reset/refund prior work.
+    CalcContext memory_owner(session,goal,registry,{chaos});
+    memory_owner.set_solve_resource_caps(10000,1000000,false,256ull << 20);
+    source.set_reforge_work_budget_owner(&memory_owner);
+    std::uint64_t shared_full_peak = 0;
+    {
+        SelectiveProgrammeEntryValidator full_control(source,session,control,census,prices,limits);
+        for (unsigned step = 0; step < 40000 && !full_control.done(); ++step) {
+            full_control.advance(1);
+            const auto full = full_control.audited_estimated_owned_bytes();
+            PC_CHECK(full_control.estimated_owned_bytes() >= full);
+            shared_full_peak = std::max(shared_full_peak,full);
+        }
+        PC_CHECK(full_control.done() && full_control.validated_entries() == census.entries.size());
+        PC_CHECK(full_control.logical_work() == 48 && memory_owner.telemetry().reforge_logical_work_v1 == 48);
+    }
+    PC_CHECK(shared_full_peak > 1);
+    const auto shared_debit_before = memory_owner.telemetry().reforge_logical_work_v1;
+    auto shared_pressure = limits; shared_pressure.max_solver_owned_bytes = shared_full_peak-1;
+    SelectiveProgrammeEntryValidator shared_capped(source,session,control,census,prices,shared_pressure);
+    unsigned shared_pressure_steps = 0;
+    std::string shared_refusal, shared_detail;
+    std::uint64_t shared_refusal_limit = 0;
+    try {
+        while (!shared_capped.done() && shared_pressure_steps < 40000) {
+            shared_capped.advance(1); ++shared_pressure_steps;
+            PC_CHECK(shared_capped.estimated_owned_bytes() >= shared_capped.audited_estimated_owned_bytes());
+        }
+    } catch (const SolverResourceLimit& error) {
+        shared_refusal = error.cap_name(); shared_refusal_limit = error.limit(); shared_detail = error.what();
+    } catch (const std::length_error& error) {
+        shared_refusal = "unclassified_capacity"; shared_detail = error.what();
+    }
+    PC_CHECK(shared_refusal == "max_owned_bytes" && !shared_capped.done() && shared_pressure_steps > 0);
+    PC_CHECK(shared_refusal_limit > 0 && shared_refusal_limit < shared_pressure.max_solver_owned_bytes);
+    PC_CHECK(shared_capped.validated_entries() == 0 && shared_capped.logical_work() == 0 && shared_capped.active_work() == 0);
+    PC_CHECK(memory_owner.telemetry().reforge_logical_work_v1 == shared_debit_before && shared_debit_before == 48);
+    PC_CHECK(shared_capped.estimated_owned_bytes() >= shared_capped.audited_estimated_owned_bytes());
+    source.set_reforge_work_budget_owner(nullptr);
+    std::printf("native entry shared scratch refusal: full_peak=%llu cap=%llu native_cap=%s native_limit=%llu detail=%s steps=%u validated=%u logical=%llu committed_before=%llu committed_after=%llu checker_retained=1\n",
+        static_cast<unsigned long long>(shared_full_peak),static_cast<unsigned long long>(shared_pressure.max_solver_owned_bytes),
+        shared_refusal.c_str(),static_cast<unsigned long long>(shared_refusal_limit),shared_detail.c_str(),shared_pressure_steps,
+        shared_capped.validated_entries(),static_cast<unsigned long long>(shared_capped.logical_work()),
+        static_cast<unsigned long long>(shared_debit_before),static_cast<unsigned long long>(memory_owner.telemetry().reforge_logical_work_v1));
     // Explicitly destroy an admission suspended AFTER committed native work.
     // Only the child is released: the stable problem/checker and their immutable
     // census stay owned, while the external shared work owner keeps its debit.

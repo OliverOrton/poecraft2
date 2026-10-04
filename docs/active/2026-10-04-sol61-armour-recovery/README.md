@@ -889,3 +889,37 @@ must keep that exact debit; source/checker selected bytes and session references
 must return to baseline while the complete immutable census remains owned.
 Every mutable checkpoint is independently audited before destruction. New tests
 and all finite stages remain UNRUN; reviewer/LOCAL clearance still required.
+
+
+## Observer finite R1: test cap classification failure, no production regression established
+
+[R1 failure receipt](entry-observer-finite-r1-summary.json) retains source1998b03d,
+binaryf3f71820...cef73,195.624s two-job build and.353s first finite selector:
+298checks/1failure. Both full/ledger observers pass all36checks (30suspended/
+sixcompleted), allsix entries and exact48logical/active work, no selected ledger
+undercount. Post-commit suspended destruction keeps48shared debit and complete
+checker census/fixed ownership/session references. The below-peak case stops
+atthree successful checkpoints, zero validated entries and zerowork, but its
+caught error does not match the fixture's expected max_solver_owned_bytes.
+The original catch discarded the actual cap/message, so R1 does not independently
+record its runtime identity. Five later selectors and fullroot remain UNRUN;
+no survivors; LOCAL release13:31:02UTC was reported immediately before docs.
+
+Native require_reforge_scratch_bytes explicitly throws max_owned_bytes before
+work when owned/scratch exceeds its headroom. Batch publication separately uses
+max_solver_owned_bytes, and the validator preserves the native cap/limit.
+Independent review44461dc52f0dcf9262492c89942ed5d67f3ed7e9 clears production
+2ff+1998's debit/lifetime/memory enforcement and confirms the fixture mismatch.
+The source-only correction requires strict max_owned_bytes, prints actual
+name/limit/message, and adds zeroentry/zero logical/active-work assertions.
+A real shared-owner/full-audited control separately derives its own selected
+peak; pressure refusal must keep its already committed48debit unchanged.
+No production/source budget/price/entry/lifetime change or any-cap waiver.
+Runtime confirmation of the corrected classification is still UNRUN.
+
+Parent assigns LOCAL after CI's short rendered gate. The existing serial owner
+may run the corrected two-job build+six selectors, stopping any unexpected
+failure, then ONE samecandidate root only after clean finite results and reviewed
+source clearance. Inputs/graph/laws/caps remain pinned; no unchanged failure
+rerun, cap increase, memory omission or policy activation. On terminal result
+return LOCAL/no-survivor/result to parent immediately before more documentation.

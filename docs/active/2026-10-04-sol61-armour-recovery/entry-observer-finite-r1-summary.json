@@ -1,0 +1,110 @@
+{
+  "schema": "sol61_entry_observer_finite_r1_failure_v1",
+  "source_commit": "1998b03dcac6eb16102442e9ab5cd9418d0b556c",
+  "checks": 298,
+  "failures": 1,
+  "binary": {
+    "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_engine_tests.exe",
+    "sha256": "f3f71820c034bacdc3030fdd3c6f4f734f030f6383125988201da252052cef73",
+    "source_commit": "1998b03dcac6eb16102442e9ab5cd9418d0b556c"
+  },
+  "completion": {
+    "source_commit": "1998b03dcac6eb16102442e9ab5cd9418d0b556c",
+    "stages": [
+      {
+        "phase": "build-tests",
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 26212,
+        "process_identity_token": "26212:134355940662837487",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 195624.15979988873
+      },
+      {
+        "phase": "exact-entry-work-observer-and-selected-peak-safety",
+        "exit_code": 1,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 35932,
+        "process_identity_token": "35932:134355942624722490",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 352.91139991022646
+      }
+    ],
+    "unrun": [
+      "query-membership-semantic-and-allocation-rollback-controls",
+      "same-request-paired-final-fill-sixteen-finite-roots-and-every-checkpoint-audit",
+      "unchanged-eight-root-and-878-entry-control-with-checkpoint-audits",
+      "legacy-blocker-shared-native-consumer",
+      "finder-protected-shared-validator-compatibility"
+    ],
+    "owned_processes": [],
+    "local_slot": "RELEASED at terminal batch result",
+    "stop_requested": false,
+    "finished_utc": "2026-10-04T13:31:02.512284+00:00"
+  },
+  "failure": "peak_refused && !peak_capped.done(); peak_refused false because fixture only recognized max_solver_owned_bytes; actual caught message/cap was discarded, so runtime cap name is UNCONFIRMED in R1 log",
+  "observed_peak_case": {
+    "full_selected_peak": 159315,
+    "cap": 159314,
+    "successful_checkpoints": 3,
+    "validated_entries": 0,
+    "positive_entries": 6,
+    "logical_work": 0
+  },
+  "observer_pair": {
+    "steps": 36,
+    "suspended_audits": 30,
+    "completed_audits": 6,
+    "positive_entries": 6,
+    "logical_work": 48,
+    "active_work": 48,
+    "full_selected_peak": 159315,
+    "ledger_selected_peak": 159331,
+    "undercount_detected": false
+  },
+  "suspended_cleanup": {
+    "after_committed_work": true,
+    "successful_checkpoints": 3,
+    "shared_committed_before": 48,
+    "shared_committed_after": 48,
+    "checker_retained": true,
+    "census_entries": 6,
+    "fixed_ownership_unchanged": true,
+    "session_references_returned": true
+  },
+  "source_contract": {
+    "owner": "engine/src/solver_calc.cpp:2459 require_reforge_scratch_bytes",
+    "guard": "owned >= cap OR requested scratch > cap - owned",
+    "native_exception": "SolverResourceLimit(\"max_owned_bytes\", cap)",
+    "publication_guard": "engine/src/solver_options_automatic.cpp uses max_solver_owned_bytes separately; validator propagates exact batch.resource_cap/resource_limit"
+  },
+  "disposition": "test-only expected classification correction; strict max_owned_bytes for this native scratch witness, exact cap/limit/message logged on next invocation, no any-cap acceptance or production/budget/entry/debit change; retain R1 failure and unrun stages",
+  "independent_review": "44461dc52f0dcf9262492c89942ed5d67f3ed7e9: no production debit/lifetime/enforcement blocker in2ff+1998; confirms wrong fixture cap expectation; LOCAL grant stands for corrected finite then conditional root",
+  "bulk_directory": "out/sol61-armour/entry-observer-finite-r1",
+  "bulk_files": {
+    "out/sol61-armour/entry-observer-finite-r1/request.json": {
+      "sha256": "578c86ad336b5ba661a299a9acea1fd22d9f0728b1851c8c372441c15b80a7e8",
+      "bytes": 14176
+    },
+    "out/sol61-armour/entry-observer-finite-r1/completion.json": {
+      "sha256": "08474d935f655129aad899862ebf97326d0670601bbc2ae7670a9666d2034407",
+      "bytes": 1414
+    },
+    "out/sol61-armour/entry-observer-finite-r1/exact-entry-work-observer-and-selected-peak-safety.log": {
+      "sha256": "351810afcc77aa4fd4cb09650451c68128e73462784064d6fabe66a7f32c7197",
+      "bytes": 1964
+    },
+    "out/sol61-armour/entry-observer-finite-r1/exact-entry-work-observer-and-selected-peak-safety.receipt.json": {
+      "sha256": "88319c04ec861c907b8e48812130a9674dbaa6a0f07b8498ec524327c1995fc9",
+      "bytes": 316
+    }
+  }
+}

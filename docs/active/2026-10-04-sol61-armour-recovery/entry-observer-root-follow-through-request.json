@@ -1,8 +1,8 @@
 {
   "schema": "sol61_entry_observer_same_candidate_root_request_v1",
-  "status": "CONDITIONAL FOLLOW-THROUGH PREPARED; UNRUN, finite observer gate/reviewer clearance/parent LOCAL assignment required",
-  "basis_commit": "2ff1adc5e0ccec7ac1fb4bf8f6cfd9f7bbc36ae8",
-  "parent_LOCAL_grant": "NOT YET ASSIGNED: source-only parent direction selects preparation; CI owns LOCAL. Execute only after finite qualification and parent serial slot grant.",
+  "status": "AUTHORIZED conditional ONE changed-observer samecandidate root follow-through after CLEAN corrected finite gate; current invocation UNRUN",
+  "basis_commit": "1998b03dcac6eb16102442e9ab5cd9418d0b556c",
+  "parent_LOCAL_grant": "Parent explicitly grants corrected finite and conditional samecandidate root after finite+review pass. Review44461 clears production2ff+1998 and identifies fixture scratch-cap name; production source unchanged.",
   "source_files_sha256": {
     "engine/src/solver_compile.cpp": "35838754a73d7bc320c1265e12eed88a5fff32bc6bf5eb836ba881d6aeaea05a",
     "engine/src/solver_compile_contracts.hpp": "b156eed5a8e3c13a1159365b0a3e4ccd6a50234927d07f3c9d506789409735f3",
@@ -10,7 +10,7 @@
     "engine/src/solver_selective_completion.hpp": "cff99b2e0a96ba91f5dd8c3ce5b07d4cc1b5529d72befdb1c2644d351b24cdda",
     "engine/benchmarks/solver_benchmark.cpp": "2b4a392126999be3650d315b7cc88a81d8c04fee0748bff6abf6494d187340cc",
     "engine/tests/test_main.cpp": "82a2aae41073c57633bad1647f5b1facf4c320596ed3ace802f0bfb32d4369b7",
-    "engine/tests/test_solver_compile.cpp": "5b58a40d7733df7f151ae6a730ee0afc14ba63d9bbb00697074fddafbf25f68f",
+    "engine/tests/test_solver_compile.cpp": "13a0cda987bf3ac3e87458af6564ff8753c609831edbcce5609107bab2eeeed9",
     "engine/tests/tests.hpp": "f6d8cde9c553dd80a174c9b9081b4a29d7d314ec7d9ec91a295075337b2beb05",
     "engine/src/solver_calc.cpp": "41198cac24afe47b3c65fc07094b6fffa4138f5f69fb656e2339a2a52d3e34b1",
     "engine/src/solver_calc_types.hpp": "2035b3939d546fb868578b00ee86f358978cbac32d804a4b63a9e2f47fdadd02",
@@ -57,9 +57,9 @@
     "reuse_scope": "fully identified original-root cost/resource diagnostic only; unchanged native evaluation laws/prices/input/graph arithmetic; not a qualified upper, matched-source speed/memory or all-entry performance control",
     "no_repeat": "do not rerun unchanged failed R11 to get green or reconstruct its diagnostics"
   },
-  "finite_qualification": "entry-observer-finite-request.json stages ALL UNRUN; independent reviewer before native run",
+  "finite_qualification": "corrected entry-observer-finite-request.json stages UNRUN; only CLEAN result permits root; priorR1 failure retained",
   "slots": {
-    "LOCAL": "CI owns now; finite gates and parent assignment required",
+    "LOCAL": "Parent assigned finite then conditional ONE root, original limits; no root on finite failure",
     "compiler_jobs": 2,
     "execution": "serial; ONE changed observer case; stop on failure"
   },
@@ -169,5 +169,8 @@
     "observer": "full component ownership scan",
     "reuse": "matched graph/request/prices/laws/caps; R1 cost/root/census control reused, do not repeat unchanged failed full-observer arm"
   },
-  "reviewer_follow_up": "Reviewer87d678876a038e24c5e5ab1065220a4ec00a0cf2: cache only fixed outer/checker if any; live validator at EVERY checkpoint, preserve caps/headroom/scratch/allentries/debit; finite growth refusal and suspended cleanup. Implementation adds NO outer/checker cache; existing measurements remain live, exact native ledger covers mutable child."
+  "reviewer_follow_up": "Reviewer87d678876a038e24c5e5ab1065220a4ec00a0cf2: cache only fixed outer/checker if any; live validator at EVERY checkpoint, preserve caps/headroom/scratch/allentries/debit; finite growth refusal and suspended cleanup. Implementation adds NO outer/checker cache; existing measurements remain live, exact native ledger covers mutable child.",
+  "prior_failed_gate": "entry-observer-finite-r1-summary.json:298checks1fail retained; wrong expected scratch cap name, runtime caught text unlogged; five later selectors/root UNRUN",
+  "independent_source_review": "44461dc52f0dcf9262492c89942ed5d67f3ed7e9: no production debit/lifetime/memory-enforcement blocker, live ledger no stale cache; wrong native scratch cap fixture confirmed from source",
+  "fixture_correction": "Only test expectation/diagnostics: require exact max_owned_bytes from native scratch contract, print exact native name/limit/what(), require no completed entry/logical/active work at refusal; independently full-audited real shared-owner control then pressure refusal keeps already committed48 debit unchanged. Production observer/caps/scope/price/lifetime source unchanged."
 }

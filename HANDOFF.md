@@ -1,30 +1,28 @@
-# Armour: source-only exact entry observer prepared; review/LOCAL pending
+# Armour: corrected observer finite gate authorized; conditional samegraph root
 
-Original-root generic final-fill R1 at8ce6db84 matches ordinary generated
-7602779656003707844/bedc2a47...49337a. Root cost210090.72616079813/success1,
-but native150s stops entry validation976/12658: no qualified upper/retention/
-activation or economic gain versus released101311/historical85970. Full memory
-observations consume141.157s of144.575sentry phase. [R1 receipt](docs/active/2026-10-04-sol61-armour-recovery/generic-final-fill-root-r1-summary.json)
-retains source/binary/phases/work/input/graph identity, sampled-memory gap and
-zero-survivor LOCAL release13:04:31UTC. Parent was notified immediately; CI owns LOCAL.
+Observer finite R1 source1998b03d builds;298checks/1failure in below-peak cap
+classification. All36 full/ledger checkpoints (30suspended/6completed), exact48
+work/all6entries and postcommit suspended cleanup/debit/census pass. Native
+scratch cap is max_owned_bytes; fixture recognized only max_solver_owned_bytes
+and discarded actual message. [R1 failure](docs/active/2026-10-04-sol61-armour-recovery/entry-observer-finite-r1-summary.json)
+retains evidence/unrun5selectors/root, zero-survivor LOCAL release13:31:02UTC.
 
-Parent selects existing exact selected-allocation ledger for validator hot
-observation, with full traversal retained for independent audit. Source prepared;
-new finite [request](docs/active/2026-10-04-sol61-armour-recovery/entry-observer-finite-request.json)
-requires every suspended/completed audit, refusal below full selected peak,
-query staging/cancellation/reset/retry audits, unchanged paired/legacy roots and
-blocker/Finder compatibility. Reviewer87d67887 follow-up adds explicit post-growth cap refusal and post-commit
-suspended validator destruction/debit/census lifetime controls. No outer/checker
-cache added; all mutable checkpoints stay live/audited. ALL new native stages
-UNRUN; reviewer and parent slot clearance required. [Same-graph follow-through](docs/active/2026-10-04-sol61-armour-recovery/entry-observer-root-follow-through-request.json)
-is conditional after finite pass, ONE invocation, original150native/165host/
-50Mwork/1GiB, retained checker/census and every12658entry; no unchanged R1 repeat.
+Reviewer44461 clears production observer/debit/lifetime/enforcement and confirms
+fixture mismatch. Test-only correction requires exact scratch cap, logs name/
+limit/message, asserts zeroentry/logical/active work and real shared owner's
+prior48debit preservation. Runtime confirmation remains UNRUN. Parent grants
+LOCAL for corrected [finite gate](docs/active/2026-10-04-sol61-armour-recovery/entry-observer-finite-request.json)
+(max2jobs/build+6selectors), then conditional ONE [samegraph root](docs/active/2026-10-04-sol61-armour-recovery/entry-observer-root-follow-through-request.json)
+only after clean finite+review clearance; unchanged150native/165host/50M/1GiB,
+live mutable ledger EVERY checkpoint, checker/census owned, every12658entry.
+Stop unexpected failures; immediate terminal parent result/release before docs.
 
-Prior20708/zero finite candidate checks at6097f93d remain separately pinned.
-Historical plain-fill selector961/1 remains negative. Private producer default
-off, public proposals/incumbents unchanged. Full aggregate transient peak,
-economic/controller recovery, cohort/Finder/WASM/publication gaps remain open.
-[Living record](docs/active/2026-10-04-sol61-armour-recovery/README.md) owns details.
+Root control8ce6db84 graph7602779656003707844/bedc2a47 has diagnostic
+210090.72616079813/success1 but976/12658entries/time150; no qualified upper/
+retention/activation or economic gain over released101311/historical85970.
+Complete aggregate peak remains open. Historical plain-fill negative preserved,
+private producer defaultoff/public proposals/incumbents unchanged; cohort/Finder/
+WASM/publication remain separate. [Living record](docs/active/2026-10-04-sol61-armour-recovery/README.md).
 
 # Qualified solver CI repair (2026-10-03)
 
