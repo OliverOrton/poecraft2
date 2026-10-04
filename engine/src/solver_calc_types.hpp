@@ -1047,6 +1047,9 @@ class CalcContext {
     CalcContext* reforge_work_budget_owner() const {
         return reforge_work_budget_owner_;
     }
+    // Read the genuine remaining allowance through the existing acyclic owner
+    // chain. Automatic children forward units before execution to these owners.
+    std::uint64_t remaining_reforge_work_budget() const;
     ReforgeProvenanceCheckpoint begin_reforge_provenance(
         ReforgeRowOwner owner,
         std::optional<ReforgeRowFamily> family_override = std::nullopt);

@@ -1,0 +1,180 @@
+{
+  "schema": "sol61_generated_conquest_root_request_v1",
+  "status": "SOURCE ONLY; unbuilt/unrun; parent controls LOCAL and requests precise gate when ready",
+  "basis_commit": "d452cef2f15075adb2c629dd4202d29f20c4ee63",
+  "prior_qualified_source": "1cc4f8ffa48d2bfdb2f99116120300a9455e2905",
+  "independent_prior_review": "2e68974a0d2f2cbfd426ee98852019056bb179b7",
+  "accounting_prerequisite": "review5d35ab6c generic unowned/stricter-local reached-entry owner and explicit discovery cap; Finder generation/attachment lifecycle and early checker release deferred",
+  "source_files_sha256": {
+    "engine/src/solver_compile.cpp": "35838754a73d7bc320c1265e12eed88a5fff32bc6bf5eb836ba881d6aeaea05a",
+    "engine/src/solver_compile_contracts.hpp": "b156eed5a8e3c13a1159365b0a3e4ccd6a50234927d07f3c9d506789409735f3",
+    "engine/src/solver_selective_completion.cpp": "5995a4243c9af62c7a04fa53a5178857d98dcdf58de63e842f46ddd16a024bad",
+    "engine/src/solver_selective_completion.hpp": "c1d91dc2c83ebc112888b32f58386fa3246b1f0d0bd9660df9fa545d4d1ef3f1",
+    "engine/benchmarks/solver_benchmark.cpp": "26738d370360a3f29ab095bb3e4ffee7d7796a41bd000a2ed303c3cacea80530",
+    "engine/tests/test_main.cpp": "b4ac51fd0cf645bd29e874501ff2af6b6c5b0f54fc78d0144c044094167c076e",
+    "engine/tests/test_solver_compile.cpp": "df496283f4f338286f1cc56a725c3633790bad12e3fb5bdfa10d1061e342d52c",
+    "engine/tests/tests.hpp": "b17c4b3f436b11e77016afccff6f7ae54d06b92d3bd3499f7ae63d4aa2dc02ca",
+    "engine/src/solver_calc.cpp": "41198cac24afe47b3c65fc07094b6fffa4138f5f69fb656e2339a2a52d3e34b1",
+    "engine/src/solver_calc_types.hpp": "2035b3939d546fb868578b00ee86f358978cbac32d804a4b63a9e2f47fdadd02"
+  },
+  "runtime_files_sha256": {
+    "manifest.json": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "strings.json": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6",
+    "game-data.json": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e"
+  },
+  "conquest_inputs": {
+    "docs/active/2026-10-03-sol61-recovery/qualification/law3/cases/conquest5-product.json": {
+      "sha256": "49bc43f7fa8616ab0f798d8e5c5a2e0c3e79342a51a1636446f2d80e65147642",
+      "bytes": 7942
+    },
+    "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json": {
+      "sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92",
+      "bytes": 141941
+    },
+    "docs/active/2026-10-04-sol61-armour-recovery/conquest-construction-manifest.json": {
+      "sha256": "9cdfc766842410dfac2c4aaa7a0e96342cf724cd7cea5dcf633293661d3c7607",
+      "bytes": 1125
+    }
+  },
+  "slots": {
+    "LOCAL": "not yet granted for this request",
+    "compiler_jobs": 2,
+    "execution": "serial; first failure stops dependent stages"
+  },
+  "owner": "existing dev-engine/test selectors/native benchmark and poecraft_ingest.solver_worker.run_isolated_process",
+  "stages": [
+    {
+      "phase": "build-tests",
+      "argv": [
+        "powershell",
+        "-NoProfile",
+        "-File",
+        "scripts/dev-engine.ps1",
+        "-Task",
+        "Tests",
+        "-Jobs",
+        "2"
+      ],
+      "host_watchdog_seconds": 600
+    },
+    {
+      "phase": "generic-entry-budget",
+      "argv": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-entry-budget-only"
+      ],
+      "host_watchdog_seconds": 180
+    },
+    {
+      "phase": "guarded-recovery-owner-compatibility",
+      "argv": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-partial-held-guarded-only"
+      ],
+      "host_watchdog_seconds": 180
+    },
+    {
+      "phase": "legacy-blocker-and-entry-compatibility",
+      "argv": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-blocker-growth-only"
+      ],
+      "host_watchdog_seconds": 180
+    },
+    {
+      "phase": "build-benchmark",
+      "argv": [
+        "powershell",
+        "-NoProfile",
+        "-File",
+        "scripts/dev-engine.ps1",
+        "-Task",
+        "Benchmark",
+        "-Jobs",
+        "2"
+      ],
+      "host_watchdog_seconds": 600
+    },
+    {
+      "phase": "generated-conquest-original-root-and-entries",
+      "argv": [
+        "build/engine/poecraft_solver_benchmark.exe",
+        "--artifact",
+        "data/compiled/current",
+        "--corpus",
+        "docs/active/2026-10-04-sol61-armour-recovery/conquest-construction-manifest.json",
+        "--case",
+        "sol61-trace-conquest5-currentmodel-120",
+        "--partial-held-root-check",
+        "--output",
+        "<fresh batch>/conquest-root.json"
+      ],
+      "host_watchdog_seconds": 165
+    }
+  ],
+  "finite_gate": {
+    "native_request": "same reviewer retention root, exact four natural T1 goals3,4,5,6, actual accepted original-root six-entry census; prices .17 Ember tiers/2.3 Ichor tiers, Chaos100/EChaos3/EAnnul2/EExalt1",
+    "checker_lifetime": "held stable throughout component tests; no transfer/early release",
+    "boundaries": [
+      "unowned work1 and47 refuse;48 complete all6 with48 work",
+      "exhausted shared owner refuses before child work, owner debit1 preserved",
+      "live shared owner with stricter local1 enforces both ceilings",
+      "live exact shared48 completes all6 and reports48",
+      "discovery1 named refusal",
+      "memory1 refusal before kernel work",
+      "effective remaining chain includes exhausted parent; no reset/refund"
+    ],
+    "caps": {
+      "max_states": 10000,
+      "max_discovered_states": 10000,
+      "max_rows": 100000,
+      "max_transitions": 1000000,
+      "max_reforge_work": 1000000,
+      "max_owned_bytes": 268435456,
+      "consider_imprint_programs": false
+    },
+    "controls": "eight qualified private recovery roots must keep semantic/cost/entry behavior; existing blocker and native entry tests retain legacy caller compatibility"
+  },
+  "full_conquest_gate": {
+    "generation": "regenerate actual bounded private candidate from exact original request/action envelope/prices; no graph read/import",
+    "pinned_generated_graph_fnv1a64": "2424103896900201902",
+    "R8_graph_sha256": "7f2c12941904762444da1ecf95ef77f8456e2ab170cd74465c5aba50bbd4461e",
+    "original_root": "empty rare ilvl86 Conquest, five clean natural T1 families, original Eldritch tiers; complete native root and every positive programme entry",
+    "action_scope": "same create_case_objects product envelope; no mutation; record actual resolved primitive IDs",
+    "aggregate_logical_work_cap": 50000000,
+    "aggregate_owned_bytes_cap": 1073741824,
+    "row_cap": 1215000,
+    "transition_cap": 10000000,
+    "resolve_defaults": "owner.options preserved; record resolved discovery/expansion/candidate checker/output caps",
+    "epsilon": 1e-12,
+    "root_acceptance_tolerance": 1e-09,
+    "requested_finish_seconds": 120,
+    "final_exact_allowance_seconds": 30,
+    "native_deadline_seconds": 150,
+    "host_watchdog_seconds": 165,
+    "native_step_work_items": 8,
+    "entry_step_work_items": 1,
+    "economic_restart": false,
+    "checker_budget": "genuine exclusive owner-chain remainder after generation; incremental committed diagnostic debit exactly once and before validation",
+    "entry_budget": "same parent owner, genuine remaining local ceiling, discovery/memory limits and full positive census",
+    "memory": "parent solver/private generation context/producer graph/control/prepared graph plus live checker complete result/census and validator simultaneously; selected component accounting and conservative3*outputcap reservation; audit available parent/context owners; no early release or claimed memory savings",
+    "reported_outcomes": [
+      "named phase/cap/refusal; logical and active work separately",
+      "root probabilities and full known costs/resources",
+      "all census/positive/validated entries",
+      "live component overlap and reserved peak; no sum of phase peaks",
+      "full captured generated graph and exact occurrence/carrier keys",
+      "fully checked feasible upper only after root AND every-entry acceptance; target85970.67347138176 is supplied historical reference threshold",
+      "uncompetitive valid candidate distinguished from cap/refusal/time censoring; no public retention/activation"
+    ]
+  },
+  "stop_on": "first semantic/resource/identity disagreement, accounting/debit mismatch, graph drift, capacity/time/watchdog or survivor; preserve terminal receipts; no cap increase/automatic rerun",
+  "exclusions": [
+    "historical graph import",
+    "consumer activation/retention",
+    "approximate merging or omitted positive entries",
+    "Finder generation/accounting lifecycle repair",
+    "early checker release",
+    "other armour/timed controls or WASM release qualification"
+  ]
+}

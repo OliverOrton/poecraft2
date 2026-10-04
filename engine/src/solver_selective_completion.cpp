@@ -1110,7 +1110,8 @@ std::uint64_t SelectiveProgrammeEntryValidator::active_work() const {
 }
 
 std::uint64_t SelectiveProgrammeEntryValidator::estimated_owned_bytes() const {
-    return sizeof(*this) + (calc_ == nullptr ? 0 :
+    return sizeof(*this) + (work_budget_ == nullptr ? 0 :
+        work_budget_->estimated_owned_bytes()) + (calc_ == nullptr ? 0 :
         calc_->estimated_owned_bytes());
 }
 
@@ -1118,18 +1119,32 @@ bool SelectiveProgrammeEntryValidator::advance(
         const std::uint32_t max_work_items) {
     if (done()) return true;
     if (calc_ == nullptr) {
+        auto* owner = problem_.reforge_work_budget_owner();
+        if (owner == nullptr || owner->remaining_reforge_work_budget() > limits_.max_reforge_work) {
+            // No rows execute in this owner: forwarded automatic units enter its
+            // ordinary cap before the child commits either native ledger. Keep
+            // it across all entries/slices and chain any existing parent.
+            work_budget_ = std::make_unique<CalcContext>(session_,GoalSpec{},
+                problem_.registry(),std::vector<std::uint32_t>{},true,false);
+            work_budget_->set_solve_resource_caps(0,limits_.max_reforge_work,false);
+            work_budget_->set_reforge_work_budget_owner(owner);
+            owner = work_budget_.get();
+        }
         calc_ = std::make_unique<CalcContext>(
             session_, problem_.goal(), problem_.registry(),
             problem_.candidates(), false, false, false,
             std::nullopt, std::vector<CountObservation>{}, false,
             std::vector<std::uint64_t>{}, true);
-        calc_->set_reforge_work_budget_owner(
-            problem_.reforge_work_budget_owner());
+        calc_->set_reforge_work_budget_owner(owner);
+        calc_->set_solve_owned_bytes_budget_owner(calc_.get());
         if (estimated_owned_bytes() >= limits_.max_solver_owned_bytes)
             throw std::length_error(
                 "native programme has no exact admission memory");
+        const auto owner_bytes = work_budget_ == nullptr ? 0 : work_budget_->estimated_owned_bytes();
         admission_.max_solver_owned_bytes =
-            limits_.max_solver_owned_bytes - sizeof(*this);
+            limits_.max_solver_owned_bytes - sizeof(*this) - owner_bytes;
+        calc_->set_solve_resource_caps(limits_.max_discovered_states,
+            limits_.max_reforge_work,false,admission_.max_solver_owned_bytes);
         admission_.max_state_action_rows = limits_.max_state_action_rows;
         admission_.max_transitions = limits_.max_transitions;
         admission_.max_imprint_program_depth =

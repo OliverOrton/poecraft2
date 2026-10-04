@@ -73,6 +73,11 @@ int main(int argc, char** argv) {
         std::printf("solver partial held witness tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
         return pctest::g_failures == 0 ? 0 : 1;
     }
+    if (argc > 1 && std::string(argv[1]) == "--solver-entry-budget-only") {
+        run_solver_entry_budget_tests();
+        std::printf("native entry budget tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     if (argc > 1 && std::string(argv[1]) == "--solver-partial-held-persistent-blocker-only") {
         run_solver_partial_held_recovery_tests(false,true,true);
         std::printf("private persistent blocker rejection tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);

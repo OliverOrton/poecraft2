@@ -2233,6 +2233,19 @@ void CalcContext::refresh_solve_owned_bytes_cap(
     }
 }
 
+std::uint64_t CalcContext::remaining_reforge_work_budget() const {
+    auto remaining = std::numeric_limits<std::uint64_t>::max();
+    for (const auto* context = this; context != nullptr;
+         context = context->reforge_work_budget_owner_) {
+        if (context->solve_reforge_work_cap_) {
+            const auto cap = *context->solve_reforge_work_cap_;
+            remaining = std::min(remaining,cap -
+                std::min(cap,context->telemetry_.reforge_logical_work_v1));
+        }
+    }
+    return remaining;
+}
+
 void CalcContext::consume_reforge_work(
     const std::uint64_t active_amount,
     const std::uint64_t logical_v1_amount) {

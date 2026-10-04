@@ -196,6 +196,9 @@ class SelectiveProgrammeEntryValidator {
     const StrategyPolicyEntryCertificate& census_;
     const std::unordered_map<std::string, double>& prices_;
     SolveOptions limits_;
+    // Declared before the child so child/admission destruction comes first.
+    // Only unowned or more tightly capped callers need a private forwarding owner.
+    std::unique_ptr<CalcContext> work_budget_;
     std::unique_ptr<CalcContext> calc_;
     AutomaticAdmissionLimits admission_;
     std::size_t cursor_ = 0;

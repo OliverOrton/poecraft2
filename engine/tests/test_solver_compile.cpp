@@ -2359,8 +2359,8 @@ void run_synthetic_gate() {
 
     /* A tag-discriminating layout must still route every sampled result
      * exactly. Q3 may prove a junk identity unobservable under this deliberately
-     * tiny action set, so the executable policyâ€”not a redundant serialized
-     * mod-count predicateâ€”is the contract. */
+     * tiny action set, so the executable policy—not a redundant serialized
+     * mod-count predicate—is the contract. */
     {
         ActionRegistry tagged_registry = registry;
         tagged_registry.actions[transmute].discriminating_tag_ids = {3};
@@ -5708,6 +5708,118 @@ void run_solver_partial_held_recovery_tests(const bool compound_blocker_only, co
             fixture,anchor_slot,checked.total_expected_cost,entries,control.nodes.size(),control.programs.size(),
             static_cast<unsigned long long>(producer.estimated_owned_bytes()));
     }
+}
+
+// Same native six-entry request/census as independent review5d35ab6c.
+// Keep the checker/result stable through all component validation controls.
+void run_solver_entry_budget_tests() {
+    auto session = make_compile_session(); const auto registry = build_action_registry(*session);
+    const auto chaos = registry.index_by_id.at("chaos");
+    GoalSpec goal; goal.rarity = PC_RARITY_RARE; goal.automatic_candidates = true;
+    goal.automatic_candidate_kind_mask = automatic_candidate_kind_bit(AutomaticCandidateKind::EldritchSide);
+    for (const auto id : {3u,4u,5u,6u}) {
+        GoalSlot slot; slot.family_id = session->family_id.at(id); slot.min_tier = 1;
+        goal.slots.push_back(slot);
+    }
+    SolveOptions limits; apply_solve_profile_defaults(limits,SolveProfile::CalculatorProductV1);
+    limits.max_states = limits.max_discovered_states = limits.max_expanded_states = 10000;
+    limits.max_state_action_rows = 100000; limits.max_transitions = 1000000;
+    limits.max_reforge_work = 1000000; limits.max_solver_owned_bytes = 256ull << 20;
+    limits.consider_imprint_programs = false;
+    std::unordered_map<std::string,double> prices{{"chaos",100},{"eldritch_chaos",3},
+        {"eldritch_annul",2},{"eldritch_exalt",1}};
+    for (unsigned tier = 1; tier <= 4; ++tier) {
+        prices["eldritch_ember:"+std::to_string(tier)] = .17*tier;
+        prices["eldritch_ichor:"+std::to_string(tier)] = 2.3*tier;
+    }
+    pc_item_state root; pc_item_clear(&root); root.rarity = PC_RARITY_RARE;
+    CalcContext source(session,goal,registry,{chaos},false,false,false,std::nullopt,{},false,{},true);
+    source.set_solve_resource_caps(10000,1000000,false,256ull << 20);
+    SelectiveCompletionProducer producer(source,root,prices,limits,SelectiveCompletionVariant::RetentionControl);
+    for (unsigned step = 0; step < 40000 && !producer.done(); ++step) producer.advance();
+    PC_CHECK(producer.done() && producer.candidate()); if (!producer.candidate()) return;
+    const auto& control = producer.candidate()->control;
+    const auto graph = compile_finder_control_json(source,root,control,limits);
+    const auto prepared = prepare_finder_candidate(source,session,root,graph,&control);
+    PC_CHECK(prepared.ready()); if (!prepared.ready()) return;
+    auto economy = std::make_shared<EconomyImpl>(); economy->prices = prices;
+    StrategyEvalOptions eval; eval.economy = economy; eval.epsilon = 1e-12;
+    eval.max_states = 10000; eval.max_pairs = 100000; eval.max_transitions = 1000000;
+    eval.max_owned_bytes = 256ull << 20; eval.max_reforge_work = 1000000;
+    eval.continuation_entries.push_back({source.intern_item(root),0,1,root,false});
+    eval.graph_local_provenance.strategy_json = graph;
+    for (unsigned node = 0; node < control.nodes.size(); ++node) {
+        const auto& current = control.nodes[node];
+        if (current.kind != FinderControlKind::RunNativeProgram) continue;
+        const auto key = finder_program_occurrence_key(source,control.programs.at(current.binding));
+        const auto id = "c"+std::to_string(node);
+        eval.graph_local_provenance.decisions.push_back({id,key,false,false});
+        StrategyPolicyDecisionRequest occurrence; occurrence.compiled_node_id = id;
+        occurrence.selected_operator_identity = key; occurrence.graph_local = true;
+        eval.policy_decision_entries.push_back(std::move(occurrence));
+    }
+    StrategyEvalWork checker(prepared.strategy,eval);
+    for (unsigned step = 0; step < 40000 && !checker.progress().done; ++step) checker.step(1);
+    PC_CHECK(checker.progress().done()); if (!checker.progress().done()) return;
+    const auto& checked = checker.result();
+    PC_CHECK(finder_evaluation_accepted(checked)); if (!finder_evaluation_accepted(checked)) return;
+    const auto& census = checked.policy_entries;
+    PC_CHECK(census.entries.size() == 6 && census.refused_entries == 0);
+    const auto run = [&](const char* label, const SolveOptions& cap, const bool expected_done,
+                         const char* expected_refusal, const std::uint64_t maximum_work) {
+        SelectiveProgrammeEntryValidator validator(source,session,control,census,prices,cap);
+        std::string refusal;
+        try { for (unsigned step = 0; step < 40000 && !validator.done(); ++step) validator.advance(1); }
+        catch (const SolverResourceLimit& error) { refusal = error.cap_name(); }
+        catch (const std::length_error&) { refusal = "max_owned_bytes"; }
+        PC_CHECK(validator.done() == expected_done);
+        PC_CHECK(refusal == expected_refusal);
+        PC_CHECK(validator.logical_work() <= maximum_work);
+        PC_CHECK(expected_done ? validator.validated_entries() == census.entries.size() :
+            validator.validated_entries() < census.entries.size());
+        if (expected_done) PC_CHECK(validator.logical_work() == 48);
+        std::printf("native entry budget: %s done=%u refusal=%s logical=%llu validated=%u positive=%u owned=%llu\n",
+            label,validator.done(),refusal.c_str(),static_cast<unsigned long long>(validator.logical_work()),
+            validator.validated_entries(),validator.positive_entries(),
+            static_cast<unsigned long long>(validator.estimated_owned_bytes()));
+    };
+    for (const auto budget : {1ull,47ull,48ull}) {
+        auto cap = limits; cap.max_reforge_work = budget;
+        run(("unowned-"+std::to_string(budget)).c_str(),cap,budget == 48,
+            budget == 48 ? "" : "max_reforge_work",budget);
+    }
+    CalcContext owner(session,goal,registry,{chaos});
+    owner.set_solve_resource_caps(10000,1,false,256ull << 20); owner.consume_reforge_work(1,1);
+    source.set_reforge_work_budget_owner(&owner);
+    auto tiny = limits; tiny.max_reforge_work = 1;
+    run("exhausted-shared",tiny,false,"max_reforge_work",0);
+    PC_CHECK(owner.telemetry().reforge_logical_work_v1 == 1);
+    source.set_reforge_work_budget_owner(nullptr);
+    CalcContext live(session,goal,registry,{chaos});
+    live.set_solve_resource_caps(10000,100,false,256ull << 20);
+    source.set_reforge_work_budget_owner(&live);
+    run("stricter-local",tiny,false,"max_reforge_work",1);
+    PC_CHECK(live.telemetry().reforge_logical_work_v1 <= 1);
+    source.set_reforge_work_budget_owner(nullptr);
+    CalcContext exact(session,goal,registry,{chaos});
+    exact.set_solve_resource_caps(10000,48,false,256ull << 20);
+    source.set_reforge_work_budget_owner(&exact);
+    auto exact_cap = limits; exact_cap.max_reforge_work = 48;
+    run("exact-shared",exact_cap,true,"",48);
+    PC_CHECK(exact.telemetry().reforge_logical_work_v1 == 48 && exact.remaining_reforge_work_budget() == 0);
+    source.set_reforge_work_budget_owner(nullptr);
+    auto discovery = limits; discovery.max_discovered_states = 1;
+    run("discovery-one",discovery,false,"max_discovered_states",limits.max_reforge_work);
+    auto memory = limits; memory.max_solver_owned_bytes = 1;
+    run("memory-one",memory,false,"max_owned_bytes",0);
+    CalcContext chained(session,goal,registry,{chaos});
+    chained.set_solve_resource_caps(10000,100,false); chained.consume_reforge_work(11,11);
+    PC_CHECK(chained.remaining_reforge_work_budget() == 89);
+    chained.set_reforge_work_budget_owner(&exact);
+    PC_CHECK(chained.remaining_reforge_work_budget() == 0);
+    chained.set_reforge_work_budget_owner(nullptr);
+    // The original immutable result and all six positive entries stayed alive.
+    PC_CHECK(finder_evaluation_accepted(checker.result()) && checker.result().policy_entries.entries.size() == 6);
 }
 
 void run_solver_growth_tests(const bool blocker) {

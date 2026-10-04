@@ -426,3 +426,72 @@ Generic and public qualification is held until these respective gates pass.
 Prior R4/R5/R7 and query-checkpoint failures remain recorded, with no green rerun
 attributed to identical failed premises. Parent can give queued CI its LOCAL slot;
 this programme has no running process or new heavy batch launched.
+
+## Next source: generic entry owner prerequisite and full generated Conquest check
+
+Parent selected this continuation after R8 and independent review2e68974a
+verified5944checks/878entries, all pins and no new routing blocker. That result
+remains pinned to1cc4f8ff; new source is unbuilt/unrun. The unrelated corrupted
+test comment near2362 is restored to e669ddd7's exact bytes. No routing,
+programme construction, native law, prices, actions or query membership changes.
+
+Reviewer5d35ab6c established two inherited accounting gaps. Only the generic
+entry-validator prerequisite is corrected here. Automatic admission forwards
+work to an owner but can use unbounded local kernel caps, so setting only its
+ordinary cap is insufficient. If no owner exists, or the validator's allowance
+is stricter than the existing owner's genuine remaining work, a persistent
+bounded private CalcContext forwards to that parent. It executes no rows and
+has zero automatic-scope depth: consume_reforge_work enforces the cap before
+each forwarded unit, across all entries/slices. An exhausted/stricter existing
+owner is reused directly. No fresh allowance replaces exhaustion; no debit is
+refunded or clamped. A read-only remainder accessor takes the minimum over the
+existing acyclic owner chain with saturating remainder arithmetic. The private
+owner is counted in live bytes, declared before the admission child and
+therefore destroyed after it. All attachments are to fresh children before
+admission; no cached context is retargeted and no new scoped attachment helper
+is needed. Finder's separate generation/telemetry/lifetime defect remains open.
+
+The validator now explicitly sets its exact child discovery and memory caps,
+and uses the child as aggregate admission-scratch owner. Private budget storage
+is deducted from its allowance. Existing native key/resource/held-goal and every
+strictly positive entry checks are unchanged. The new finite selector recreates
+the review's actual six-entry accepted root and tests1/47/48 work boundaries,
+exhausted/live shared owners, stricter local ceilings, discovery1 and memory1.
+The complete checker result remains stable throughout these component controls.
+Eight R8 private roots plus existing blocker/entry consumer fixtures are the
+focused compatibility controls. No old synthetic census or native mass is edited.
+
+The existing benchmark gains --partial-held-root-check. It uses the identical
+original request resolver and ordinary private generation, captures graph/word
+receipt and rejects drift from R8's generated FNV graph identity2424103896900201902.
+It imports no graph. Current-style exact evaluation binds the original root,
+original prices/action scope/goal ingress and every programme decision occurrence.
+The checker receives the genuine parent-owner remainder. Phases are exclusive;
+its committed diagnostic delta is debited exactly once on every slice/exit,
+before the validator can execute. Validation uses the same owner and remaining
+work/memory, and borrows the immutable census from a checker kept alive until
+validation ends. No result move, early checker release or memory-saving claim.
+
+Aggregate accounting retains the parent solver, private context, all producer
+stage/control graphs, compiled graph, retained word, checker and complete result,
+validator/private budget/admission scratch, plus the existing conservative
+compiler/serialization reservation. Available parent/context fast counts are
+audited before checking. Peak is observed simultaneous ownership with reservation,
+not added phase peaks or a subtracted checker peak. Checker allocation is bounded
+by the remaining unchanged1GiB cap; entry allocation gets only its remaining
+headroom. Native work uses the unchanged50M total ceiling,1215000 rows,10M
+transitions and original resolved defaults. Full-root/entry work is eight/one
+native units per slice. Requested finish120s records the final exact30s allowance;
+150s native stop and165s existing host cleanup watchdog bound the single case.
+
+Complete cost/resources/probabilities and full actual census diagnostics are
+captured on disk. A feasible upper and economic comparison appear only after
+original-root acceptance AND every-positive-entry admission. A price below the
+supplied85970.67347138176 reference is reported as a threshold result, not proof
+of historical graph reconstruction or public incumbent retention. Valid but
+expensive, root-refused, entry-refused, capped and time-censored outcomes remain
+distinct. The [precise native request](conquest-root-finite-request.json) pins
+all source/runtime/request/economy bytes and serial finite/build/full-root phases.
+All are currently UNRUN; LOCAL is free per parent but not yet granted to this
+request. Stop at first failure; no cap increase or automatic experiment repeats.
+Final economic control cohort, consumer activation and matching WASM remain later.

@@ -67,6 +67,7 @@ struct Arguments {
     fs::path fixed_graph_check_pair;
     std::string fixed_graph_hash;
     bool partial_held_construction_witness = false;
+    bool partial_held_root_check = false;
     fs::path development_checkpoint_save;
     fs::path development_checkpoint_load;
     std::string case_id;
@@ -3225,6 +3226,239 @@ void create_case_objects(
 }
 
 
+// Full fixed-policy check of a freshly generated native candidate. The caller
+// retains graph/control/prices and the checker owns its complete result/census
+// until the validator is destroyed. No imported graph or consumer activation.
+int check_generated_partial_root(poecraft::solver::CalcContext& calc,
+        poecraft::solver::SolveWorkTestAccess::Impl& owner,
+        poecraft::solver::PartialHeldRecoveryProducer& producer,
+        const std::string& graph, const std::shared_ptr<poecraft::StrategyImpl>& strategy,
+        const std::shared_ptr<poecraft::EconomyImpl>& economy,
+        const poecraft::solver::SolveOptions& limits, const pc_item_state& root,
+        const Value& specification, const Arguments& args, const Clock::time_point began,
+        const std::uint64_t retained_word_bytes, const std::uint64_t reservation) {
+    using namespace poecraft;
+    using namespace poecraft::solver;
+    auto& parent = owner.calc;
+    // Freeze the already observed generated policy in this named diagnostic,
+    // not production dispatch or admission. Generic owner fixes must not change it.
+    if (finder_candidate_graph_hash(graph) != "2424103896900201902")
+        throw std::runtime_error("generated Conquest graph differs from pinned R8 candidate");
+    const auto output = fs::absolute(args.output);
+    const auto details = fs::path(output.string()+".eval.json");
+    if (fs::exists(details)) throw std::runtime_error("generated root check refuses existing details");
+    const auto requested_seconds = optional_nonnegative_double(specification,"requested_bounded_finish_seconds",120);
+    const auto native_seconds = optional_nonnegative_double(specification,"watchdog_seconds",150);
+    if (native_seconds != requested_seconds+30)
+        throw std::runtime_error("generated check requires the frozen 120+30 native finish protocol");
+    const auto requested_deadline = began+std::chrono::duration_cast<Clock::duration>(std::chrono::duration<double>(requested_seconds));
+    const auto deadline = began+std::chrono::duration_cast<Clock::duration>(std::chrono::duration<double>(native_seconds));
+    const auto generation_work = parent.telemetry().reforge_logical_work_v1;
+    std::uint64_t charged_active = 0,charged_work = 0,peak = 0,peak_selected = 0;
+    std::uint64_t validation_work = 0,validation_active = 0;
+    std::uint32_t validated_entries = 0,positive_entries = 0;
+    bool root_accepted = false,entries_accepted = false,finish_requested = false;
+    std::string status = "checking",phase = "checker",refusal,cap_reason,details_path;
+    std::unique_ptr<StrategyEvalWork> checker;
+    std::unique_ptr<SelectiveProgrammeEntryValidator> validator; // Destroy before checker.
+    StrategyEvalProgress progress;
+    // The reservation already covers bounded construction/prepare/serialization
+    // copies. Count their observed buffers too, conservatively; never subtract
+    // a checker phase peak or omit its retained result/census during validation.
+    const auto outer = [&](const bool audited) {
+        return (audited ? owner.audited_estimated_owned_bytes() : owner.fast_estimated_owned_bytes())+
+            (audited ? calc.audited_estimated_owned_bytes() : calc.fast_estimated_owned_bytes())+
+            producer.estimated_owned_bytes()+graph.capacity()+1+
+            refinement::strategy_impl_owned_bytes(*strategy)+retained_word_bytes;
+    };
+    const auto memory = [&] {
+        const auto selected = outer(false)+(checker ? checker->live_owned_bytes() : 0)+
+            (validator ? validator->estimated_owned_bytes() : 0);
+        peak_selected = std::max(peak_selected,selected);
+        peak = std::max(peak,selected+reservation);
+        if (selected+reservation >= limits.max_solver_owned_bytes)
+            throw SolverResourceLimit("max_solver_owned_bytes",limits.max_solver_owned_bytes);
+        return limits.max_solver_owned_bytes-selected-reservation;
+    };
+    const auto charge_checker = [&] {
+        if (!checker) return;
+        const auto& used = checker->diagnostic_result();
+        if (used.reforge_work < charged_active || used.reforge_logical_work_v1 < charged_work)
+            throw std::logic_error("generated checker committed ledger regressed");
+        const auto logical = used.reforge_logical_work_v1-charged_work;
+        const auto active = used.reforge_work-charged_active;
+        if (logical > parent.remaining_reforge_work_budget())
+            throw std::logic_error("generated checker exceeded its exclusive owner remainder");
+        parent.consume_reforge_work(active,logical);
+        charged_active = used.reforge_work; charged_work = used.reforge_logical_work_v1;
+    };
+    const auto within_time = [&] {
+        const auto now = Clock::now();
+        finish_requested |= now >= requested_deadline;
+        return now < deadline;
+    };
+    StrategyEvalOptions eval;
+    eval.economy = economy; eval.epsilon = 1e-12; eval.max_sweeps = limits.max_sweeps;
+    eval.max_states = std::min(limits.max_discovered_states,
+        limits.candidate_evaluation_limits.max_states == 0 ? limits.max_discovered_states :
+            limits.candidate_evaluation_limits.max_states);
+    eval.max_pairs = static_cast<std::uint32_t>(std::min<std::uint64_t>(UINT32_MAX,
+        std::min(limits.max_state_action_rows,limits.candidate_evaluation_limits.max_pairs == 0 ?
+            limits.max_state_action_rows : limits.candidate_evaluation_limits.max_pairs)));
+    eval.max_transitions = static_cast<std::uint32_t>(std::min<std::uint64_t>(UINT32_MAX,
+        std::min(limits.max_transitions,limits.candidate_evaluation_limits.max_transitions == 0 ?
+            limits.max_transitions : limits.candidate_evaluation_limits.max_transitions)));
+    eval.max_reforge_work = parent.remaining_reforge_work_budget();
+    eval.max_output_json_bytes = limits.max_strategy_json_bytes;
+    eval.continuation_entries.push_back({calc.intern_item(root),0,1,root,false});
+    eval.graph_local_provenance.strategy_json = graph;
+    const auto& control = producer.candidate()->control;
+    for (unsigned node = 0; node < control.nodes.size(); ++node) {
+        const auto& current = control.nodes[node];
+        if (current.kind != FinderControlKind::RunNativeProgram) continue;
+        const auto key = finder_program_occurrence_key(calc,control.programs.at(current.binding));
+        const auto id = "c"+std::to_string(node);
+        eval.graph_local_provenance.decisions.push_back({id,key,false,false});
+        StrategyPolicyDecisionRequest occurrence; occurrence.compiled_node_id = id;
+        occurrence.selected_operator_identity = key; occurrence.graph_local = true;
+        eval.policy_decision_entries.push_back(std::move(occurrence));
+    }
+    try {
+        if (outer(false) < outer(true))
+            throw std::logic_error("generated root outer accounting audit exceeded fast count");
+        const auto headroom = memory();
+        eval.max_owned_bytes = std::min(headroom,
+            limits.candidate_evaluation_limits.max_owned_bytes == 0 ? headroom :
+                limits.candidate_evaluation_limits.max_owned_bytes);
+        checker = std::make_unique<StrategyEvalWork>(strategy,eval);
+        charge_checker(); memory();
+        while (!checker->progress().done && within_time()) {
+            checker->step(8); charge_checker(); memory();
+        }
+        charge_checker(); progress = checker->progress();
+        if (!progress.done) {
+            status = "censored_time";
+        } else if (!finder_evaluation_accepted(checker->result())) {
+            status = "refused_exact_graph_check";
+        } else {
+            root_accepted = true; phase = "positive_entries";
+            auto allowance = limits;
+            allowance.max_solver_owned_bytes = memory();
+            allowance.max_reforge_work = parent.remaining_reforge_work_budget();
+            // The result/census is frozen in the live checker throughout this
+            // validator. No vector/optional move or early checker release.
+            validator = std::make_unique<SelectiveProgrammeEntryValidator>(
+                calc,calc.shared_session(),control,checker->result().policy_entries,economy->prices,allowance);
+            positive_entries = validator->positive_entries(); memory();
+            while (!validator->done() && within_time()) {
+                validator->advance(1); memory();
+            }
+            validated_entries = validator->validated_entries();
+            validation_work = validator->logical_work(); validation_active = validator->active_work();
+            entries_accepted = validator->done() &&
+                validated_entries == checker->result().policy_entries.entries.size();
+            status = entries_accepted ? "checked_root_and_all_positive_entries" : "censored_time";
+            validator.reset(); // Borrowed census references end before checker/result changes.
+            memory();
+        }
+    } catch (const SolverResourceLimit& error) {
+        status = "censored_capacity"; refusal = error.what(); cap_reason = error.cap_name();
+    } catch (const std::length_error& error) {
+        status = "censored_capacity"; refusal = error.what();
+    } catch (const StrategyEvalUnsupported& error) {
+        status = "refused_unsupported"; refusal = error.what();
+    } catch (const std::exception& error) {
+        status = "rejected_error"; refusal = error.what();
+    }
+    if (validator) {
+        validated_entries = validator->validated_entries(); positive_entries = validator->positive_entries();
+        validation_work = validator->logical_work(); validation_active = validator->active_work();
+        validator.reset();
+    }
+    // Preserve executed checker units on every exit, with the same watermark.
+    try { charge_checker(); }
+    catch (const std::exception& error) { status = "rejected_accounting"; refusal = error.what(); entries_accepted = false; }
+    if (checker) {
+        progress = checker->progress();
+        try {
+            memory(); // Reservation covers bounded full-result serialization.
+            const auto document = serialize_strategy_eval(progress.done ? checker->result() : checker->diagnostic_result());
+            if (document.size() > limits.max_strategy_json_bytes)
+                throw std::length_error("generated evaluation details exceed original output cap");
+            write_file_atomic(details,document); details_path = details.string();
+        } catch (const std::exception& error) {
+            if (root_accepted && entries_accepted) status = "censored_diagnostic_output";
+            refusal += std::string(":diagnostic_output:")+error.what(); entries_accepted = false;
+        }
+    }
+    const auto* result = checker ? &(progress.done ? checker->result() : checker->diagnostic_result()) : nullptr;
+    if (parent.telemetry().reforge_logical_work_v1 != generation_work+charged_work+validation_work) {
+        status = "rejected_accounting"; refusal += ":aggregate committed debit disagrees with phase work";
+        entries_accepted = false;
+    }
+    const bool complete = root_accepted && entries_accepted;
+    const double target = 85970.67347138176;
+    std::ostringstream report; report<<std::setprecision(17)
+        <<"{\"kind\":\"generated_partial_held_root_check_v1\",\"case\":"<<escape_json(required_string(specification,"id"))
+        <<",\"status\":"<<escape_json(status)<<",\"phase\":"<<escape_json(phase)
+        <<",\"refusal\":"<<escape_json(refusal)<<",\"cap_reason\":"<<escape_json(cap_reason)
+        <<",\"case_request\":"<<json_of(specification)<<",\"economy_id\":"<<escape_json(economy->id)
+        <<",\"construction_receipt\":"<<escape_json(output.string()+".construction.json")
+        <<",\"graph_hash\":"<<escape_json(finder_candidate_graph_hash(graph))
+        <<",\"root_accepted\":"<<(root_accepted?"true":"false")
+        <<",\"all_positive_entries_accepted\":"<<(entries_accepted?"true":"false")
+        <<",\"checked_feasible_upper\":"<<(complete?"true":"false")
+        <<",\"root_cost\":"<<(result && result->cost_complete ? SolveWorkTestAccess::Impl::finite_json(result->total_expected_cost) : "null")
+        <<",\"checked_cost\":"<<(complete ? SolveWorkTestAccess::Impl::finite_json(result->total_expected_cost) : "null")
+        <<",\"supplied_historical_reference_cost\":"<<target
+        <<",\"meets_supplied_reference_cost\":"<<(complete && result->total_expected_cost <= target ? "true" : "false")
+        <<",\"consumer_retention_or_activation\":false,\"historical_graph_imported\":false"
+        <<",\"positive_entries\":"<<positive_entries<<",\"validated_entries\":"<<validated_entries
+        <<",\"census_entries\":"<<(result ? result->policy_entries.entries.size() : 0)
+        <<",\"census_refused_entries\":"<<(result ? result->policy_entries.refused_entries : 0)
+        <<",\"success\":"<<(result ? SolveWorkTestAccess::Impl::finite_json(result->success_probability) : "null")
+        <<",\"unresolved\":"<<(result ? SolveWorkTestAccess::Impl::finite_json(result->unresolved_probability) : "null")
+        <<",\"failure\":"<<(result ? SolveWorkTestAccess::Impl::finite_json(result->failure_probability) : "null")
+        <<",\"stop\":"<<(result ? SolveWorkTestAccess::Impl::finite_json(result->stop_probability) : "null")
+        <<",\"not_applied\":"<<(result ? SolveWorkTestAccess::Impl::finite_json(result->action_not_applied_probability) : "null")
+        <<",\"no_matching_edge\":"<<(result ? SolveWorkTestAccess::Impl::finite_json(result->no_matching_edge_probability) : "null")
+        <<",\"generation_logical_work\":"<<generation_work<<",\"checker_logical_work\":"<<charged_work
+        <<",\"checker_active_work\":"<<charged_active<<",\"entry_logical_work\":"<<validation_work
+        <<",\"entry_active_work\":"<<validation_active<<",\"aggregate_committed_logical_work\":"
+        <<parent.telemetry().reforge_logical_work_v1<<",\"aggregate_work_cap\":"<<limits.max_reforge_work
+        <<",\"aggregate_selected_peak\":"<<peak_selected<<",\"aggregate_reserved_peak\":"<<peak
+        <<",\"transient_reservation\":"<<reservation<<",\"aggregate_memory_cap\":"<<limits.max_solver_owned_bytes
+        <<",\"checker_live_bytes\":"<<(checker ? checker->live_owned_bytes() : 0)
+        <<",\"checker_internal_peak_bytes\":"<<(checker ? checker->peak_owned_bytes() : 0)
+        <<",\"checker_retained_for_census\":true,\"requested_finish_observed\":"<<(finish_requested?"true":"false")
+        <<",\"requested_seconds\":"<<requested_seconds<<",\"native_seconds\":"<<native_seconds
+        <<",\"step_work_items\":8,\"details_path\":"<<escape_json(details_path)
+        <<",\"checker_limits\":{\"states\":"<<eval.max_states<<",\"pairs\":"<<eval.max_pairs
+        <<",\"transitions\":"<<eval.max_transitions<<",\"owned_bytes\":"<<eval.max_owned_bytes
+        <<",\"logical_work\":"<<eval.max_reforge_work<<"}"
+        <<",\"resolved_limits\":{\"max_states\":"<<limits.max_states
+        <<",\"max_discovered_states\":"<<limits.max_discovered_states
+        <<",\"max_expanded_states\":"<<limits.max_expanded_states
+        <<",\"max_rows\":"<<limits.max_state_action_rows<<",\"max_transitions\":"<<limits.max_transitions
+        <<",\"max_compiled_nodes\":"<<limits.max_compiled_nodes<<",\"max_compiled_edges\":"<<limits.max_compiled_edges
+        <<",\"max_strategy_json_bytes\":"<<limits.max_strategy_json_bytes
+        <<",\"max_telemetry_json_bytes\":"<<limits.max_telemetry_json_bytes<<"}"
+        <<",\"resolved_actions\":[";
+    bool first = true; for (const auto action : parent.candidates()) {
+        if (!first) report<<','; first = false;
+        report<<escape_json(parent.registry().actions.at(action).id);
+    }
+    report<<"],\"wall_ms\":"<<milliseconds(began,Clock::now())<<"}\n";
+    const auto document = report.str();
+    if (document.size() > limits.max_telemetry_json_bytes)
+        throw std::length_error("generated root compact receipt exceeds original output cap");
+    write_file_atomic(output,document);
+    checker.reset();
+    // A bounded cap/time/semantic refusal is a terminal recorded experiment,
+    // not permission to repeat or to publish an unchecked financial result.
+    return complete ? 0 : 2;
+}
+
 // Construction-only diagnostic on the frozen original request. The existing
 // benchmark resolves session, product actions, prices and request identity;
 // no reference graph is imported and no upper/cost is published.
@@ -3237,7 +3471,9 @@ int run_partial_held_construction_witness(pc_data_handle data, const Value& spec
         std::chrono::duration<double>(optional_nonnegative_double(specification,"requested_bounded_finish_seconds",120)));
     const auto output=fs::absolute(args.output);
     const auto graph_path=fs::path(output.string()+".strategy.json");
-    if (fs::exists(output) || fs::exists(graph_path))
+    const auto construction_path=args.partial_held_root_check ?
+        fs::path(output.string()+".construction.json") : output;
+    if (fs::exists(output) || fs::exists(construction_path) || fs::exists(graph_path))
         throw std::runtime_error("construction witness refuses existing output");
     NativeHandles handles; pc_item_state root;
     std::vector<std::string> actions;
@@ -3326,7 +3562,7 @@ int run_partial_held_construction_witness(pc_data_handle data, const Value& spec
     };
     while (!producer.done()) {memory();producer.advance(1);}
     if (!producer.candidate()) {
-        std::ofstream(output)<<"{\"kind\":\"partial_held_construction_witness_v1\",\"case\":"
+        std::ofstream(construction_path)<<"{\"kind\":\"partial_held_construction_witness_v1\",\"case\":"
             <<escape_json(required_string(specification,"id"))<<",\"status\":"<<escape_json(producer.status())
             <<",\"constructed\":false,\"original_root_acceptance\":\"unrun\",\"economic_qualification\":false}\n";
         return 2;
@@ -3391,7 +3627,7 @@ int run_partial_held_construction_witness(pc_data_handle data, const Value& spec
         resources<<escape_json(key)<<':'<<quantity;
     }
     resources<<'}';
-    std::ofstream report(output);report<<std::setprecision(17)
+    std::ofstream report(construction_path);report<<std::setprecision(17)
         <<"{\"kind\":\"partial_held_construction_witness_v1\",\"case\":"<<escape_json(required_string(specification,"id"))
         <<",\"constructed\":true,\"graph_hash\":"<<escape_json(finder_candidate_graph_hash(graph))
         <<",\"route\":"<<escape_json(routed_node.id)<<",\"held_mask\":8,\"ordering_mass\":"<<ordering_mass
@@ -3404,7 +3640,14 @@ int run_partial_held_construction_witness(pc_data_handle data, const Value& spec
         <<",\"generation_work\":"<<parent.telemetry().reforge_logical_work_v1
         <<",\"conservative_reserved_peak\":"<<peak<<",\"transient_reservation\":"<<transient_reservation<<",\"nodes\":"<<control.nodes.size()<<",\"programs\":"<<control.programs.size()
         <<",\"original_root_acceptance\":\"unrun\",\"every_positive_entry_acceptance\":\"unrun\",\"economic_qualification\":false}\n";
-    return report && std::ifstream(graph_path).good() ? 0 : 1;
+    const bool captured = report && std::ifstream(graph_path).good();
+    report.close();
+    if (!captured) return 1;
+    if (args.partial_held_root_check)
+        return check_generated_partial_root(calc,owner,producer,graph,prepared.strategy,
+            handles.economy->impl,limits,root,specification,args,began,
+            imprint_attempt_kernel_nested_bytes(word),transient_reservation);
+    return 0;
 }
 
 // Native-only fixed-graph checking through the same Finder binding and exact
@@ -6764,6 +7007,7 @@ Arguments parse_arguments(int argc, char** argv) {
         else if (argument == "--fixed-graph-check-pair") args.fixed_graph_check_pair=value("--fixed-graph-check-pair");
         else if (argument == "--fixed-graph-hash") args.fixed_graph_hash=value("--fixed-graph-hash");
         else if (argument == "--partial-held-construction-witness") args.partial_held_construction_witness=true;
+        else if (argument == "--partial-held-root-check") args.partial_held_root_check=true;
         else if (argument == "--partial-output") {
             args.partial_output = value("--partial-output");
         }
@@ -6976,7 +7220,7 @@ Arguments parse_arguments(int argc, char** argv) {
             args.exact_strategy_evaluation_time_limit_seconds!=0 || args.goal_progress_gated_reforges)
             throw std::runtime_error("fixed-graph pair requires one Finder case, input/hash/output and no solve/verification diagnostic alterations");
     }
-    if (args.partial_held_construction_witness &&
+    if ((args.partial_held_construction_witness || args.partial_held_root_check) &&
         (args.case_id != "sol61-trace-conquest5-currentmodel-120" || args.output.empty() ||
          args.solver_mode != "current" || args.validate_only || args.action_layout_diagnostic ||
          args.action_coverage_diagnostic || args.checked_potential_estimate != 0 ||
@@ -6991,7 +7235,8 @@ Arguments parse_arguments(int argc, char** argv) {
          args.native_goal_terminal != "legacy-clean" || args.native_goal_proof != "ordinary-clean" ||
          args.native_selective_completion_service || args.neutral_extra_ordering ||
          args.seed_progress_observation || args.native_execution_action_price != 0 ||
-         args.proof_handoff_seconds != 0))
+         args.proof_handoff_seconds != 0 ||
+         (args.partial_held_construction_witness && args.partial_held_root_check)))
         throw std::runtime_error("partial-held construction witness requires the frozen original Current case and no other treatment");
     if (args.artifact.empty()) throw std::runtime_error("--artifact is required");
     if (args.corpus.empty()) throw std::runtime_error("--corpus is required");
@@ -7160,7 +7405,7 @@ int main(int argc, char** argv) {
                 throw std::runtime_error("unknown corpus case: " + args.case_id);
             }
 
-            if (args.partial_held_construction_witness) {
+            if (args.partial_held_construction_witness || args.partial_held_root_check) {
                 if (specifications.size()!=1) throw std::runtime_error("partial-held construction witness requires exactly one case");
                 const int result=run_partial_held_construction_witness(data,specifications.front(),args);
                 pc_data_destroy(data);

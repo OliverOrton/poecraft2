@@ -1,21 +1,20 @@
-# Armour recovery: bounded native route gate completed (2026-10-04)
+# Armour recovery: full generated Conquest gate source ready (2026-10-04)
 
-Isolated dot/sol61-armour-recovery-20261004 source1cc4f8ff completed R8:5944
-finite checks, eight accepted synthetic roots/878 positive entries. Fresh
-retained-side-blocker old route leaves84.0% unresolved; bounded ALL-target
-compatibility guard pays original Chaos and completes both orientations with
-all77 entries each. Prior six results unchanged. Actual frozen Conquest ordinary
-native construction now produces partial-held Ember1+EldritchExalt at the P0
-carrier (102nodes/20programmes,33wordexits). No graph import or public activation.
-[Finite receipt](docs/active/2026-10-04-sol61-armour-recovery/finite-r8-summary.json)
-and [Conquest receipt](docs/active/2026-10-04-sol61-armour-recovery/conquest-construction-r8-summary.json)
-pin source/binaries/full graph/inputs. R7 benchmark failure stays preserved.
-LOCAL released2026-10-04T09:57:34UTC, no survivors; queued CI may run.
-[living record](docs/active/2026-10-04-sol61-armour-recovery/README.md) owns the
-argument and all failures. Whole Conquest root/entry/economic, accounting/lifetime,
-Current/Finder activation, final controls and WASM remain held/unrun. No deploy,
-dev restart, frozen data change or main publication. Next bounded work needs
-parent scheduling; no new heavy batch has launched.
+Isolated dot/sol61-armour-recovery-20261004 retains R8 at1cc4f8ff:5944checks,
+eight roots/878positiveentries and native partial-held Conquest construction;
+review2e68974a verified all pins and no new routing blocker. New UNBUILT source
+adds a generic bounded unowned/stricter-local entry owner plus explicit discovery/
+memory caps; native semantics/routing remain unchanged. Full Conquest benchmark
+mode regenerates and pins the R8 private graph, binds original frozen request/
+prices/root/scope and checks the complete root then every positive entry. Checker
+is retained for its borrowed census; parent work is charged once before validation,
+all overlapping ownership is counted/reserved, no caps raised or policy imported.
+[Precise next request](docs/active/2026-10-04-sol61-armour-recovery/conquest-root-finite-request.json)
+declares serial two-job Tests, finite budget/compatibility selectors, Benchmark,
+one120+30/150native/165host full case under50M/1GiB. Parent schedules LOCAL;
+no command launched and no process running. [Living record](docs/active/2026-10-04-sol61-armour-recovery/README.md)
+owns arguments/failures. Finder generation/attachment lifecycle and early checker
+release remain separate; public economic/control/consumer/WASM qualification open.
 
 # Qualified solver CI repair (2026-10-03)
 
