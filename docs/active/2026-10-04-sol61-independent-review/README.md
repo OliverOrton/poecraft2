@@ -1,10 +1,11 @@
 # Independent solver review checkpoint (2026-10-04)
 
-**NATIVE ENGINE BUILT; ALL REVIEW WITNESS MODES UNRUN.** Two standalone
-links failed with terminal no-survivor receipts. The canonical review module is
-source-prepared, unbuilt and awaiting parent LOCAL. Production remains at2ce0a75b;
-owner bd3c5b3 default-off recovery was reviewed at source only.
-No production patch, data refresh, main merge or push was made. The review worktree starts at main
+**CANONICAL BUILD PASSED; TWO ACCOUNTING DEFECTS DEMONSTRATED.** Weighted
+unit controls pass23/23; Finder generation and unowned reached-entry accounting
+fail their retained caps. Four native processes are proved absent; LOCAL released.
+Exact finite-r3 receipts are retained. Production remains2ce0a75b; last-reviewed
+owner recoverybd3c5b3 was source-only. No production correction, data refresh,
+main merge or push was made. The review worktree starts at main
 `29d9e666b9d11dbe9ba58959f2598df9495dc49d` and advances only its isolated branch
 to requested query checkpoint `2ce0a75b4e98b2c5fff59be60f269df745bd63bc`.
 Candidate `f038aa6f26f33adbd9c93669d3291cc86ad3b4da` was inspected through Git:
@@ -658,3 +659,158 @@ Recommendation: source is suitable for the declared finite falsification batch,
 with compound-blocker refusal still untested and all build/runtime results pending.
 No public activation, frozen Conquest controller/economic result, wider closure,
 whole-consumer lifetime/peak accounting or WASM qualification is recommended.
+
+
+## Canonical finite results and source-only correction plan
+
+Actual f442b4d8 canonical Tests build passed in83.971774s with28 test translation
+units, verified Release compiler/object/link inputs and the unchanged native
+archive179a3c... . Tests executable SHA256de666d4ebe0a2dcf640c56135bf968b379376952d22d32210528c4c629044dbe.
+The three serial modes then finished in0.295171s,0.025426s and0.031209s.
+All four processes exited with no timeout, cancellation or supervisor survivor;
+the existing identity observer proved them absent. The original build receipt
+retains an extra creation-token check=true, which was incorrectly treated as
+liveness in the wrapper. Existing observe_process_identity handles exited
+Windows processes with retained handles; reconciliation proved absence before
+resuming only the modes. No build or mode was repeated. LOCAL was released before
+documentation. Compact exact receipts and summary are committed as finite-r3-*;
+raw build log and all prior failures remain under out/sol61-independent-review.
+
+R2/P2 is now demonstrated for ordinary Finder generation: native work88 (40
+ordinary+48 automatic) exceeded cap50 while progress reported40. Its actual
+public-product constructor used eight attempts and conditional-protected-scour,
+and automatic admission was reached. Four checks had two expected contract
+failures; cancellation retained both committed native ledgers. The reached-entry
+component separately completed all six actual native positive entries, consuming
+48 despite cap1 when unowned. Its original-root graph succeeded with native
+probability1 and cost2397.8834314550018. The same immutable census with a genuinely
+exhausted shared owner refused before any child work and preserved owner debit1.
+Three checks had one contract failure. The committed census JSON is a projection
+of those actual entries; validation used the complete native object, never this
+projection, a scaled entry or synthetic visitation count.
+
+R3 unit controls pass23/23 checks, including unequal weights, positive1e-18
+distinct exit, repeated synthetic descriptor cost keys and shared native renewal.
+Shared native exit mass1.0000000000000004 meets the retained1e-12 contract.
+Nonunit probes reproduce normalization toK with weighted rewards but are labeled
+diagnostics, not contract failures. No production weighted-helper defect remains
+established. Do not propose a probability/resource-law change from those probes.
+
+### Proposed correction: explicit existing resource owners, no mechanics edits
+
+This is a source-only plan, not an implemented or qualified repair. Production
+files remain unchanged and the solver owner holds LOCAL for recovery. Minimal
+consumer changes are solver_finder.cpp/.hpp and solver_selective_completion.cpp/
+.hpp; the narrowly necessary owner-attachment/lifetime helper is in
+solver_calc_types.hpp and solver_calc.cpp. Tests use the existing canonical review
+module. No change is proposed to solver_solve_selective_completion.cpp, the
+recovery grammar, automatic-candidate/query eligibility, native kernels, prices,
+checkpoint authority, or weighted helper.
+
+1. Finder owns an explicit request budget using the existing CalcContext owner
+   mechanism, capped at limits.max_reforge_work. This ordinary budget context
+   performs no native rows, so its automatic-scope depth stays zero and existing
+   consume_reforge_work checks the cap before every forwarded native unit.
+   Chain any prior external owner rather than replacing/refunding it; maintain
+   the stricter local and parent ceilings. Do not attach a context to itself or
+   create a cycle. Root, registry, goal, actions, programme indices and caches in
+   problem_ stay unchanged. The request budget starts at zero for new Finder
+   work; existing caller/parent ledgers are never reset or overwritten.
+
+2. Attach that budget to generation before native work begins. Automatic child
+   and comparison contexts already inherit the owner at
+   solver_options_automatic.cpp:1063,2085; their wide local caps therefore do not
+   authorize work beyond the explicit owner. Parent automatic-scope forwarding
+   at solver_calc.cpp:2239-2251 likewise debits it first. Keep separate native
+   ordinary/automatic diagnostics; sum them for independent measurement, not a
+   second budget charge. Reconcile Finder progress/telemetry to the authoritative
+   cumulative request-owner debit on every returned slice and all exits. Remove
+   ordinary-only accounting at finder:794-805 and post-hoc min-to-cap masking.
+
+3. Once the evaluator is created, give it only the genuine remaining allowance,
+   including any stricter pre-existing owner. The existing evaluator has no
+   owner hook; it uses its own max_reforge_work (solver_eval_types.hpp:391ff).
+   Reuse Current's exclusive-phase pattern: reserve/bound that allowance and
+   transfer diagnostic committed deltas with a per-checker watermark, after each
+   slice and BEFORE reached-entry validation begins. Restore unused reservation
+   only if an explicit reservation is used; never refund consumed work. This
+   avoids current full-amount charging at finder:1260-1267 and the window where
+   validation begins before checker work is charged. Repeated completion,
+   exception and finish cleanup must transfer only the not-yet-charged delta.
+   Budget/report/remaining authority is the versioned committed logical ledger;
+   legacy active-ledger saturation remains refusal-proximity diagnostics. Never
+   infer spent work from that active field or structural primitive counts.
+   Effective remaining is cap-min(cap,spent), never unsigned cap-spent after an
+   overrun. A small read-only effective-remainder accessor on the existing
+   owner chain is preferable to resetting parent caps or changing evaluator
+   mechanics. Because phases are exclusive, generation/validation cannot spend
+   the checker allowance concurrently; preserve that invariant explicitly.
+
+4. SelectiveProgrammeEntryValidator keeps forwarding each native unit to any
+   existing shared owner before execution. Reuse that owner directly when its
+   effective remainder is already no larger than this validator's local ceiling;
+   do not replace an exhausted shared owner with a fresh allowance. For an
+   unowned caller, lazily create a bounded fallback owner capped at
+   limits.max_reforge_work and attach the exact child before native admission.
+   If an owned caller supplies a stricter local ceiling, use a bounded private
+   owner that forwards to the existing owner, so both ceilings apply. Setting only
+   the child's ordinary cap is insufficient: automatic admission uses separate
+   ledgers and local UINT64_MAX caps. The fallback persists across ALL entries,
+   resumes and retries; never restart its allowance for another positive entry.
+   Include its bytes in estimated_owned_bytes and memory headroom. Destroy/cancel
+   admission children before the fallback owner. Preserve the existing positive
+   entry, item/scope, semantic-key, held-goal and resource comparisons exactly.
+
+5. Finder validators inherit the same request owner, so their native units are
+   already debited and release_validation must not add child work again or clamp
+   it away (finder:626-632). Synchronize reporting after success, unsupported
+   entry, capacity refusal, bounded finish and destructor cleanup; leave best_
+   and already checked artifacts intact. In particular, the generation
+   length_error catch at872-880 currently skips charge(): owner-synchronized
+   cleanup must retain every committed unit even on that path.
+
+6. Owner lifetime is part of the fix. Current's owner setter stores only the root
+   pointer; cached/comparison children can retain a previous pointer. A scoped
+   Finder attachment must restore the prior owner through existing retained
+   children after canceling any active cursor, without erasing their caches or
+   query/full membership. Extend only that private setter/restore helper to
+   propagate owner changes (same traversal pattern as accounting at calc:2196ff);
+   future contexts already inherit it. Use constructor-safe RAII so exceptions
+   restore pointers before request-owner destruction. Include the owner context
+   in Finder live/peak bytes. Do not clear native caches or reset telemetry to
+   avoid a dangling pointer or to manufacture budget headroom.
+
+### Precise retained regressions for the implementing owner
+
+- Same f442b4d8 Finder root/goal/actions/prices/grammar and cap50: actual committed
+  request work must stay <=50, progress must equal that debit after every returned
+  slice and cleanup, and refusal must precede the next unaffordable native unit.
+  It need not spend exactly50: native units may not fit the last remainder.
+  Update ONLY the review fixture's old diagnostic premise that the constructor
+  leaves problem_.owner==nullptr; a correct scoped owner intentionally invalidates
+  that premise. Retain the actual product caller and independent debit equality.
+- Same native six-entry validator census and cap1: unowned validation must refuse
+  max_reforge_work before exceeding1; logical work records only executed units.
+  Same exhausted shared owner stays refused, child0 and owner1, without fallback
+  substitution. Budget48 should complete all six with debit48; budget47 should
+  refuse before its disallowed unit, preserve its actual debit<=47 and remain
+  unqualified. These boundary expectations derive from measured native work48.
+  Also retain a live shared owner with headroom but a stricter validator ceiling:
+  both ceilings apply and the parent receives each executed unit exactly once.
+- Report cumulative generation+evaluator+validation work exactly once. Advance
+  repeatedly, then finish/cancel/destroy on an actual capacity refusal; committed
+  debit must not shrink or be charged again. Include evaluator-to-validator
+  handoff with evaluator work already visible in remaining allowance. A genuine
+  completed cache hit costs zero; force no artificial work by clearing a cache.
+- A cold retry needing new work under the genuinely spent owner must refuse and
+  leave incomplete query work unpublished; cancellation rolls back staged state/
+  operator/cache mutations but does not refund consumed work. Preserve previous
+  completed query/full membership and exact native operator identity.
+- Pre-existing caller work and an attached stricter external owner remain intact;
+  the new request reports only its own additional debit. Constructor failure,
+  bounded finish and destructor restore the prior attachment and leave no child
+  pointing at a freed owner. Capped proposals preserve any checked incumbent.
+- Reuse weighted23/23 unchanged; no probability/resource law fix. After parent
+  assigns LOCAL, use the canonical target and focused accounting cases first.
+  Recovery's existing owned-path finite gates then check cross-consumer impact;
+  public Finder/Current/WASM qualification remains separate. No test is run now.

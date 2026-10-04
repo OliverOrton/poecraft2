@@ -1,0 +1,10 @@
+{
+  "preflight": "PASS",
+  "request_sha256": "3dadb93fe71f6d49bd1db7ffad34f005ef039edf361e58f26e7d9804dc6ff9f9",
+  "review_commit": "f442b4d8a354f6c0cd2beab6c960299360ccd694",
+  "source_pins_verified": 20,
+  "production_pins_verified": 147,
+  "prior_failed_link_pins_verified": 4,
+  "local": "GRANTED_BY_PARENT",
+  "compiler_jobs_max": 2
+}

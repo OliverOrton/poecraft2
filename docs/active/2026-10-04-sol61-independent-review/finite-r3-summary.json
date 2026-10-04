@@ -1,0 +1,79 @@
+{
+  "status": "COMPLETE_WITH_TWO_DEMONSTRATED_ACCOUNTING_DEFECTS",
+  "review_commit": "f442b4d8a354f6c0cd2beab6c960299360ccd694",
+  "production_commit": "2ce0a75b4e98b2c5fff59be60f269df745bd63bc",
+  "request_sha256": "3dadb93fe71f6d49bd1db7ffad34f005ef039edf361e58f26e7d9804dc6ff9f9",
+  "build": {
+    "exit_code": 0,
+    "wall_ms": 83971.773999976,
+    "test_translation_units": 28,
+    "archive_bytes_reused": true,
+    "artifact_hashes": {
+      "build/engine/poecraft_engine_tests.exe": "de666d4ebe0a2dcf640c56135bf968b379376952d22d32210528c4c629044dbe",
+      "build/engine/libpoecraft_engine.a": "179a3cfbeaa1ba8d9a542b1728d05b39333c231bb6fe558e86c9e5d6c30e2ab9",
+      "build/engine/CMakeCache.txt": "eb0960eb051d0227ae3992624326a661ebdd12f1a011367d3c8069a1ff24147b",
+      "build/engine/build.ninja": "68d4d8ba2f93cdc1faf04812f6db255c77a6d645566d1261b81a17d757b815ab",
+      "build/engine/CMakeFiles/rules.ninja": "7e6b0e90b82cc14fcc7a9b8b48d407d91491c95fc93255213ed3df6bec9c00f2",
+      "build/engine/compile_commands.json": "e0461dfd921df2c66cf55cec440b9e4f2e223189d498a41a7e30b0fe5dcaeed0",
+      "build/engine/generated/harvest_crafts.generated.hpp": "1f092eb6c642a9ab8b727720b18cdad065944e1103f49f04c2daf2040e248722"
+    }
+  },
+  "weighted": {
+    "exit_code": 0,
+    "checks": 23,
+    "failures": 0,
+    "unit_controls_passed": 4,
+    "nonunit_cases": "diagnostic-only outside inferred unit-mass precondition; no demonstrated production defect"
+  },
+  "finder_generation": {
+    "exit_code": 1,
+    "checks": 4,
+    "failures": 2,
+    "cap": 50,
+    "ordinary_work": 40,
+    "automatic_work": 48,
+    "actual_work": 88,
+    "reported_work": 40,
+    "actual_default_product_constructor": true
+  },
+  "validator_budget": {
+    "exit_code": 1,
+    "checks": 3,
+    "failures": 1,
+    "cap": 1,
+    "native_positive_census_entries": 6,
+    "root_success": 1,
+    "root_expected_cost": 2397.8834314550018,
+    "unowned_complete": true,
+    "unowned_work": 48,
+    "exhausted_owner_refused": true,
+    "owned_child_work": 0,
+    "retained_owner_work": 1
+  },
+  "cleanup": {
+    "all_four_exited": true,
+    "timeouts": 0,
+    "cancellations": 0,
+    "supervisor_survivors": 0,
+    "all_processes_proved_absent": true,
+    "build_creation_token_pause": "extra identity-only check falsely classified a retained token; existing supervisor classifier reconciled absence; build never rerun"
+  },
+  "qualification_limits": [
+    "component generation/validator resource accounting",
+    "no public recovery activation or frozen economic qualification",
+    "no broad native suite/benchmark/WASM/browser",
+    "census JSON is a projection and was never used as replay or fabricated validator input"
+  ],
+  "retained_receipts_sha256": {
+    "finite-r3-processes.json": "6c7a8858f09dc379cabcd7f2ca9759bfeadae2dc9ff9747bab3f93b8d2d110d5",
+    "finite-r3-preflight.json": "2544a26dac09f4d5345e9520cfe46be103fbf154d4cfe291c34691ff9fd6fd94",
+    "finite-r3-target-identity.json": "385a802722288cef685d8a2eeeb475d22aad500b8b2c4c736e8794fb6e715ed0",
+    "finite-r3-build-reconciliation.json": "2fdc50d61d1dcf5caa0aa133ba255394de52c56e794a4a795f22002c1b13e630",
+    "finite-r3-weighted.log": "78e394c544aaae82be07c287085a055a3eae2b0d67d47fd4e20077bc1f744480",
+    "finite-r3-finder-generation.log": "1dd3a48045e77e79fa7b7ffd29707f8fd89451e3f6587959a4fd6ac73c9b5af2",
+    "finite-r3-validator-budget.log": "f8a587ae1827f3e89e3be4cc9ec9c566fa5105b204cc6ec8b841f59e3c3bc54a",
+    "finite-r3-finder-telemetry.json": "22a6e74822439854798b3ee4338d969e32c824d67232da0efe92388fbbaab627",
+    "finite-r3-validator-census-projection.json": "443dd1b9b2ff532fd2abc267ce10ee9ae8d808a5e158dfc65094f2463ab4e3d4",
+    "finite-r3-validator-original-root.strategy.json": "3299de8fc1d3aedaa9bbb6acbfd1b020a9493d4d2a47e1546c3b32383334b3b6"
+  }
+}

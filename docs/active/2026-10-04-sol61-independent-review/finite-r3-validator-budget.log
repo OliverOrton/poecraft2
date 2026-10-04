@@ -1,0 +1,3 @@
+{"mode":"validator-budget","cap":1,"census_entries":6,"unowned_complete":true,"unowned_refused":false,"unowned_work":48,"exhausted_owner_refused":true,"owned_child_work":0,"committed_owner_work":1}
+FAIL C:/Users/Oliver/Documents/poecraft2-sol61-independent-review-20261004/engine/tests/test_solver_independent_review.cpp:285: unowned_refused && unowned_work<=tiny.max_reforge_work
+{"mode":"validator-budget","checks":3,"contract_failures":1}

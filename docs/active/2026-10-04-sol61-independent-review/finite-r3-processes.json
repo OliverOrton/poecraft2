@@ -1,0 +1,86 @@
+[
+  {
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 22624,
+    "process_identity_token": "22624:134355759069776173",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 83971.773999976,
+    "stage": "build-tests",
+    "command": [
+      "powershell",
+      "-NoProfile",
+      "-File",
+      "scripts/dev-engine.ps1",
+      "-Task",
+      "Tests",
+      "-Jobs",
+      "2"
+    ],
+    "same_process_identity_present_after_return": true
+  },
+  {
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 816,
+    "process_identity_token": "816:134355761372776605",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 295.17060006037354,
+    "stage": "weighted",
+    "command": [
+      "build/engine/poecraft_engine_tests.exe",
+      "--solver-independent-review-only",
+      "weighted",
+      "out/sol61-independent-review/canonical-r3/weighted"
+    ],
+    "process_observation_after_return": "proved_absent"
+  },
+  {
+    "exit_code": 1,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 16488,
+    "process_identity_token": "16488:134355761373052834",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 25.42579988949001,
+    "stage": "finder-generation",
+    "command": [
+      "build/engine/poecraft_engine_tests.exe",
+      "--solver-independent-review-only",
+      "finder-generation",
+      "out/sol61-independent-review/canonical-r3/finder-generation"
+    ],
+    "process_observation_after_return": "proved_absent"
+  },
+  {
+    "exit_code": 1,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 40880,
+    "process_identity_token": "40880:134355761373319602",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 31.209200154989958,
+    "stage": "validator-budget",
+    "command": [
+      "build/engine/poecraft_engine_tests.exe",
+      "--solver-independent-review-only",
+      "validator-budget",
+      "out/sol61-independent-review/canonical-r3/validator-budget"
+    ],
+    "process_observation_after_return": "proved_absent"
+  }
+]

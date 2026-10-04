@@ -1,0 +1,4 @@
+{"mode":"finder-generation","cap":50,"ordinary_work":40,"automatic_work":48,"actual_generation_work":88,"reported_finder_work":40,"native_admission_reached":true,"generation_exceeded_cap":true}
+FAIL C:/Users/Oliver/Documents/poecraft2-sol61-independent-review-20261004/engine/tests/test_solver_independent_review.cpp:200: actual<=limits.max_reforge_work
+FAIL C:/Users/Oliver/Documents/poecraft2-sol61-independent-review-20261004/engine/tests/test_solver_independent_review.cpp:201: reported==actual
+{"mode":"finder-generation","checks":4,"contract_failures":2}
