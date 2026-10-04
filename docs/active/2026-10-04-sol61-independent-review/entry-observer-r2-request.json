@@ -1,0 +1,332 @@
+{
+  "schema": "sol61_entry_observer_finite_request_v1",
+  "status": "AUTHORIZED corrected finite gate; current stages UNRUN; parent LOCAL granted after CI render/no survivors; reviewer44461 cleared unchanged production source",
+  "basis_commit": "1998b03dcac6eb16102442e9ab5cd9418d0b556c",
+  "source_files_sha256": {
+    "engine/src/solver_compile.cpp": "35838754a73d7bc320c1265e12eed88a5fff32bc6bf5eb836ba881d6aeaea05a",
+    "engine/src/solver_compile_contracts.hpp": "b156eed5a8e3c13a1159365b0a3e4ccd6a50234927d07f3c9d506789409735f3",
+    "engine/src/solver_selective_completion.cpp": "55aae11d9143570808f4543dce066e824940441c87857249d1dbe6f877b00433",
+    "engine/src/solver_selective_completion.hpp": "cff99b2e0a96ba91f5dd8c3ce5b07d4cc1b5529d72befdb1c2644d351b24cdda",
+    "engine/benchmarks/solver_benchmark.cpp": "2b4a392126999be3650d315b7cc88a81d8c04fee0748bff6abf6494d187340cc",
+    "engine/tests/test_main.cpp": "82a2aae41073c57633bad1647f5b1facf4c320596ed3ace802f0bfb32d4369b7",
+    "engine/tests/test_solver_compile.cpp": "13a0cda987bf3ac3e87458af6564ff8753c609831edbcce5609107bab2eeeed9",
+    "engine/tests/tests.hpp": "f6d8cde9c553dd80a174c9b9081b4a29d7d314ec7d9ec91a295075337b2beb05",
+    "engine/src/solver_calc.cpp": "41198cac24afe47b3c65fc07094b6fffa4138f5f69fb656e2339a2a52d3e34b1",
+    "engine/src/solver_calc_types.hpp": "2035b3939d546fb868578b00ee86f358978cbac32d804a4b63a9e2f47fdadd02",
+    "engine/src/solver_options_automatic.cpp": "e85c97e4d6ba591f4b00882864d2d9d7a60ab120b7a7788169c4a7f8523766a0",
+    "engine/src/solver_options_helpers.hpp": "575d705635d48d9c24543bbefd506180c3d1f83bc2ba621f7ac845cbbdbed15e"
+  },
+  "runtime_files_sha256": {
+    "manifest.json": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "strings.json": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6",
+    "game-data.json": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e"
+  },
+  "conquest_inputs": {
+    "docs/active/2026-10-03-sol61-recovery/qualification/law3/cases/conquest5-product.json": {
+      "sha256": "49bc43f7fa8616ab0f798d8e5c5a2e0c3e79342a51a1636446f2d80e65147642",
+      "bytes": 7942
+    },
+    "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json": {
+      "sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92",
+      "bytes": 141941
+    },
+    "docs/active/2026-10-04-sol61-armour-recovery/conquest-construction-manifest.json": {
+      "sha256": "9cdfc766842410dfac2c4aaa7a0e96342cf724cd7cea5dcf633293661d3c7607",
+      "bytes": 1125
+    }
+  },
+  "parent_direction": "Remove redundant full ownership scans using exact incremental/cached accounting; use existing30suspended+6completed controls and cover allocation/lifetime changes; preserve memory enforcement/every12658entry/checker ownership; do not skip accounting or increase deadline. CI owns LOCAL.",
+  "source_delta": "shared SelectiveProgrammeEntryValidator estimated_owned_bytes now delegates to existing CalcContext fast ledgers; full traversal retained as full_estimated_owned_bytes and audited_estimated_owned_bytes. No new cache, approximation, allocation elision, budget/lifetime/intent/routing/price change. Benchmark labels observer explicitly.",
+  "allocation_owners": [
+    "CalcContext constructor initialize_owned_bytes_ledger: complete selected base initialized from full traversal once",
+    "dynamic_shallow_owned_bytes: live container capacity/node overhead, telemetry allocations and live cursor/task/checkpoint/scratch context",
+    "account_new_operator/state hash collision/state-local operator ledgers: added operator payload and state/membership changes",
+    "distribution retain/release/reforge payload and option cache/template ledgers: shared allocation identity counted once; retained copies separately",
+    "activate/deactivate/refresh automatic contexts: active context live traversal, inactive contexts cached at lifetime boundaries; current admission retains zero cold contexts",
+    "rollback transaction: destroy coroutine frame before restoring staged operators/cache templates; reconcile retained shared payload ownership; exact committed work kept",
+    "reset_solve_telemetry and retry: existing cache/context refresh and family/query membership boundaries, no incomplete publication reuse",
+    "validator child/forwarding-owner destruction before borrowed checker census; no transferred result or early checker release"
+  ],
+  "slots": {
+    "LOCAL": "Parent explicitly assigned corrected finite gate, max2jobs and six focused selectors; then ONE samecandidate root after clean finite + review pass; stop on unexpected failure",
+    "compiler_jobs": 2,
+    "execution": "existing isolated serial supervisor; bounded selectors; stop first semantic/ownership/cap/identity failure"
+  },
+  "owner": "scripts/dev-engine.ps1, existing test selectors, poecraft_ingest.solver_worker.run_isolated_process; no new runner",
+  "stages": [
+    {
+      "phase": "build-tests",
+      "argv": [
+        "powershell",
+        "-NoProfile",
+        "-File",
+        "scripts/dev-engine.ps1",
+        "-Task",
+        "Tests",
+        "-Jobs",
+        "2"
+      ],
+      "host_watchdog_seconds": 600
+    },
+    {
+      "phase": "exact-entry-work-observer-and-selected-peak-safety",
+      "argv": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-entry-budget-only"
+      ],
+      "host_watchdog_seconds": 180
+    },
+    {
+      "phase": "query-membership-semantic-and-allocation-rollback-controls",
+      "argv": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-admission-query-only"
+      ],
+      "host_watchdog_seconds": 180
+    },
+    {
+      "phase": "same-request-paired-final-fill-sixteen-finite-roots-and-every-checkpoint-audit",
+      "argv": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-partial-held-final-fill-only"
+      ],
+      "host_watchdog_seconds": 180
+    },
+    {
+      "phase": "unchanged-eight-root-and-878-entry-control-with-checkpoint-audits",
+      "argv": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-partial-held-guarded-only"
+      ],
+      "host_watchdog_seconds": 180
+    },
+    {
+      "phase": "legacy-blocker-shared-native-consumer",
+      "argv": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-blocker-growth-only"
+      ],
+      "host_watchdog_seconds": 180
+    },
+    {
+      "phase": "finder-protected-shared-validator-compatibility",
+      "argv": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-protected-finder-only"
+      ],
+      "host_watchdog_seconds": 180
+    },
+    {
+      "phase": "build-benchmark",
+      "argv": [
+        "powershell",
+        "-NoProfile",
+        "-File",
+        "scripts/dev-engine.ps1",
+        "-Task",
+        "Benchmark",
+        "-Jobs",
+        "2"
+      ],
+      "host_watchdog_seconds": 600
+    },
+    {
+      "phase": "generated-final-fill-original-root-and-all-entries",
+      "argv": [
+        "build/engine/poecraft_solver_benchmark.exe",
+        "--artifact",
+        "data/compiled/current",
+        "--corpus",
+        "docs/active/2026-10-04-sol61-armour-recovery/conquest-construction-manifest.json",
+        "--case",
+        "sol61-trace-conquest5-currentmodel-120",
+        "--partial-held-root-check",
+        "--partial-held-final-fill",
+        "--output",
+        "<fresh batch>/generic-final-fill-root.json"
+      ],
+      "host_watchdog_seconds": 165
+    }
+  ],
+  "finite_gate": {
+    "observer_pair": "Same immutable six-entry root graph/census/prices/scope/caps and retained checker. Full traversal versus actual hot ledger; full audit after EVERY suspended/completed cursor checkpoint. Require same36steps,30suspended/6completed,48logical/active work, no selected allocation undercount and exact full entry coverage. Existing discovery/work/refusal boundaries retained.",
+    "peak_safety": "Both original unowned and real shared-owner full-audited peak-minus-one scratch boundaries must refuse strictly max_owned_bytes after successful checkpoints and before ANY logical/active work or validated entry. Print actual cap/limit/message, require native headroom bound positive below aggregate selected cap; shared owner retains earlier complete control48 debit exactly. Audit storage after rollback; no complete aggregate transient peak claim.",
+    "roots": "All sixteen paired/eight legacy finite roots retain published cost/positive-entry baselines at receipt precision; exact native resource/semantic and acceptance obligations remain. Audit hot ledger against complete component traversal after every checkpoint; every guard/positive entry and tamper negative remain.",
+    "admission_allocations": "Audit all selected semantic snapshots/cache hits, mixed-family/nonuniform-price and query/full ordering; interleaved cursor checkpoints and staged post-commit cancellation; work/memory rollback, retry and reset boundaries.",
+    "consumer": "Legacy blocker and actual protected Finder shared validator path; original graph acceptance/provenance/resource/scope gates unchanged.",
+    "suspended_cleanup": "Explicitly destroy a validator suspended after positive committed work. External shared work owner retains exactly that debit; original source/checker selected bytes and session reference count return to their prior baseline; full immutable six-entry census remains checker-owned. Audit mutable validator at EVERY checkpoint before destruction. No cache added, no positive-entry skipping authority."
+  },
+  "exclusions": [
+    "optional development checkpoint diagnostic (separate prior failed persistence obligation remains)",
+    "all-entry skipping/approximate merging",
+    "early checker/result release",
+    "Current/Finder producer activation",
+    "full aggregate peak qualification",
+    "WASM/browser/control-cohort/publication"
+  ],
+  "stop_on": "first semantic/resource/identity/selected-ledger undercount/lost or double work debit/memory refusal bypass/entry mismatch, timeout/cancel/survivor; preserve failure and unrun stages; no automatic unchanged retry or cap increase",
+  "next": "Only after finite pass and reviewer/parent clearance, one samecandidate7602779656003707844/bedc2a47 original Conquest fullroot follow-through under original150native165host50Mwork1GiB, checker owned/all12658entries required; separate request.",
+  "reviewer_follow_up": "Reviewer87d678876a038e24c5e5ab1065220a4ec00a0cf2: cache only fixed outer/checker if any; live validator at EVERY checkpoint, preserve caps/headroom/scratch/allentries/debit; finite growth refusal and suspended cleanup. Implementation adds NO outer/checker cache; existing measurements remain live, exact native ledger covers mutable child.",
+  "prior_failed_gate": "entry-observer-finite-r1-summary.json:298checks1fail retained; wrong expected scratch cap name, runtime caught text unlogged; five later selectors/root UNRUN",
+  "independent_source_review": "44461dc52f0dcf9262492c89942ed5d67f3ed7e9: no production debit/lifetime/memory-enforcement blocker, live ledger no stale cache; wrong native scratch cap fixture confirmed from source",
+  "fixture_correction": "Only test expectation/diagnostics: require exact max_owned_bytes from native scratch contract, print exact native name/limit/what(), require no completed entry/logical/active work at refusal; independently full-audited real shared-owner control then pressure refusal keeps already committed48 debit unchanged. Production observer/caps/scope/price/lifetime source unchanged.",
+  "conditional_follow_through": {
+    "request": "entry-observer-root-follow-through-request.json",
+    "allowed_only_if": "all seven finite stages exit0/no timeout/cancel/survivor AND review44461 source clearance; source pins/frozen inputs/runtime must match",
+    "case_invocations": 1,
+    "parent_authorization": "LOCAL grant stands for corrected finite then conditional samecandidate fullroot under original150native165host50M1GiB",
+    "reviewer_blocker_stop": "batch-local stop-requested.txt is the existing isolated supervisor cancellation owner"
+  },
+  "conditional_root_request_sha256": "51ca885240da81155db4df75a50097eb2adbda9e6fcba5bbb153bf11b03046a4",
+  "conditional_root_request": "docs\\active\\2026-10-04-sol61-armour-recovery\\entry-observer-root-follow-through-request.json",
+  "source_commit": "db4ad864c362ba48da41552757b91771a21e0c54",
+  "created_utc": "2026-10-04T13:43:29.791889+00:00",
+  "declared_request_sha256": "6347b0f4bd9bd8a61f09114d4afb601e8e25360e266b625cc63c3e9d88f923fc",
+  "machine": "KIDS",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "parent_LOCAL_grant": "Parent LOCAL grant stands for corrected db4ad864 finite gate plus ONE samecandidate root iff all finite phases pass; reviewer44461 clears unchanged production2ff+1998 source and wrong scratch-cap test expectation; two compiler jobs, unchanged150native165host50M1GiB, no cap increase or graph/input/price alteration",
+  "compiler_jobs": 2,
+  "serial": true,
+  "outer_client_yield_contract": "120-second exec yields retain same deterministic supervisor; longest supported empty-input wait",
+  "cancel_owner": "existing isolated supervisor callback checks batch-local stop-requested.txt",
+  "phases": [
+    {
+      "phase": "build-tests",
+      "command": {
+        "argv": [
+          "powershell",
+          "-NoProfile",
+          "-File",
+          "scripts/dev-engine.ps1",
+          "-Task",
+          "Tests",
+          "-Jobs",
+          "2"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004",
+        "host_watchdog_seconds": 600,
+        "host_reservation": {},
+        "identity_sha256": "1fd91f659b4cd7dcf0fc64dbec7477458207eb9277a8b3218ef3029cd3e563db"
+      }
+    },
+    {
+      "phase": "exact-entry-work-observer-and-selected-peak-safety",
+      "command": {
+        "argv": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_engine_tests.exe",
+          "--solver-entry-budget-only"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004",
+        "host_watchdog_seconds": 180,
+        "host_reservation": {},
+        "identity_sha256": "2b4a976c9653ad8fb85588ec763b262659922758ffa6b00833527b8b7659dd53"
+      }
+    },
+    {
+      "phase": "query-membership-semantic-and-allocation-rollback-controls",
+      "command": {
+        "argv": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_engine_tests.exe",
+          "--solver-admission-query-only"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004",
+        "host_watchdog_seconds": 180,
+        "host_reservation": {},
+        "identity_sha256": "6d94ff65ca12056bce76022e8625cc82d8582f62b19e7f9a9aaa7a3170d47720"
+      }
+    },
+    {
+      "phase": "same-request-paired-final-fill-sixteen-finite-roots-and-every-checkpoint-audit",
+      "command": {
+        "argv": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_engine_tests.exe",
+          "--solver-partial-held-final-fill-only"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004",
+        "host_watchdog_seconds": 180,
+        "host_reservation": {},
+        "identity_sha256": "6acf1820688861d5d70467c270207e40142bb82b63a5def58b9e699de387d0e6"
+      }
+    },
+    {
+      "phase": "unchanged-eight-root-and-878-entry-control-with-checkpoint-audits",
+      "command": {
+        "argv": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_engine_tests.exe",
+          "--solver-partial-held-guarded-only"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004",
+        "host_watchdog_seconds": 180,
+        "host_reservation": {},
+        "identity_sha256": "533fa5dd75e89ed79a6fff8c59a8278764203590fb9ee0d06e626c6a973531ae"
+      }
+    },
+    {
+      "phase": "legacy-blocker-shared-native-consumer",
+      "command": {
+        "argv": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_engine_tests.exe",
+          "--solver-blocker-growth-only"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004",
+        "host_watchdog_seconds": 180,
+        "host_reservation": {},
+        "identity_sha256": "cb73bf7750833241afd90057baa919c75bb996283f56f71b0d3df85fe214f025"
+      }
+    },
+    {
+      "phase": "finder-protected-shared-validator-compatibility",
+      "command": {
+        "argv": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_engine_tests.exe",
+          "--solver-protected-finder-only"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004",
+        "host_watchdog_seconds": 180,
+        "host_reservation": {},
+        "identity_sha256": "8e18761608f1557791dd78d4ff6e811dd89d13a0c3019c8f7769a9669b0c5164"
+      }
+    },
+    {
+      "phase": "build-benchmark",
+      "command": {
+        "argv": [
+          "powershell",
+          "-NoProfile",
+          "-File",
+          "scripts/dev-engine.ps1",
+          "-Task",
+          "Benchmark",
+          "-Jobs",
+          "2"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004",
+        "host_watchdog_seconds": 600,
+        "host_reservation": {},
+        "identity_sha256": "998a5e1a87ce560960ebe53bf8be11f14ce115c1c72196d6d643832d686b0a30"
+      }
+    },
+    {
+      "phase": "generated-final-fill-original-root-and-all-entries",
+      "command": {
+        "argv": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_solver_benchmark.exe",
+          "--artifact",
+          "data/compiled/current",
+          "--corpus",
+          "docs/active/2026-10-04-sol61-armour-recovery/conquest-construction-manifest.json",
+          "--case",
+          "sol61-trace-conquest5-currentmodel-120",
+          "--partial-held-root-check",
+          "--partial-held-final-fill",
+          "--output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\out\\sol61-armour\\entry-observer-r2\\generic-final-fill-root.json"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004",
+        "host_watchdog_seconds": 165,
+        "host_reservation": {},
+        "identity_sha256": "4764c1ad7af26dd099979608cf79bbbadaf1d176ebc8f0b812970a2481e877a7"
+      }
+    }
+  ]
+}

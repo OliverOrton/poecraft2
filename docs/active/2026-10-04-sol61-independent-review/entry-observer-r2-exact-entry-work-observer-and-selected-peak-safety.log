@@ -1,0 +1,16 @@
+native entry budget: unowned-1 done=0 refusal=max_reforge_work logical=1 validated=0 positive=6 owned=80830
+native entry budget: unowned-47 done=0 refusal=max_reforge_work logical=47 validated=0 positive=6 owned=81506
+native entry budget: unowned-48 done=1 refusal= logical=48 validated=6 positive=6 owned=90621
+native entry budget: exhausted-shared done=0 refusal=max_reforge_work logical=0 validated=0 positive=6 owned=47125
+native entry budget: stricter-local done=0 refusal=max_reforge_work logical=1 validated=0 positive=6 owned=80830
+native entry budget: exact-shared done=1 refusal= logical=48 validated=6 positive=6 owned=56916
+native entry budget: discovery-one done=0 refusal=max_discovered_states logical=26 validated=0 positive=6 owned=80830
+native entry capacity detail: native programme has no exact admission memory
+native entry budget: memory-one done=0 refusal=max_owned_bytes logical=0 validated=0 positive=6 owned=70082
+native entry accounting witness: observer=full steps=36 entries=6 logical=48 active=48 observation_ns=29500 advance_ns=1223800 audited_ns=41500 audits=36 suspended_audits=30 completed_audits=6 validator_selected_peak=159315 checker_retained=1
+native entry accounting witness: observer=ledger steps=36 entries=6 logical=48 active=48 observation_ns=7700 advance_ns=1206200 audited_ns=46600 audits=36 suspended_audits=30 completed_audits=6 validator_selected_peak=159331 checker_retained=1
+native entry selected peak caught: cap=max_owned_bytes limit=125121 detail=solver exceeded max_owned_bytes (125121)
+native entry selected peak safety: full_peak=159315 cap=159314 refused=1 steps=3 validated=0 positive=6 logical=0 checker_retained=1 complete_aggregate_peak=0
+native entry shared scratch refusal: full_peak=125618 cap=125617 native_cap=max_owned_bytes native_limit=125129 detail=solver exceeded max_owned_bytes (125129) steps=3 validated=0 logical=0 committed_before=48 committed_after=48 checker_retained=1
+native entry suspended cleanup: suspended_after_work=1 steps=3 committed_before=48 committed_after=48 checker_retained=1 census_entries=6 validator_released=1 fixed_ownership_unchanged=1
+native entry budget tests: 347 checks, 0 failures

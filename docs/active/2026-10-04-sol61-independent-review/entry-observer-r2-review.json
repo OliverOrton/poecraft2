@@ -1,0 +1,265 @@
+{
+  "schema": "sol61_independent_review_entry_observer_r2_v1",
+  "source_commit": "db4ad864c362ba48da41552757b91771a21e0c54",
+  "scope": "Read-only source and owner-run receipt/binary/artifact review; no reviewer heavy run or production edit. CI owns LOCAL.",
+  "source_review": {
+    "production": "unchanged from reviewed2ff1adc5; db4 changes only tests/docs",
+    "fixture_diff": "1998b03d..db4ad864 engine/tests/test_solver_compile.cpp; 57 additions/2 deletions",
+    "references": [
+      "engine/tests/test_solver_compile.cpp:6169-6240",
+      "engine/src/solver_calc.cpp:2460-2471",
+      "engine/src/solver_selective_completion.cpp:1264-1268",
+      "engine/benchmarks/solver_benchmark.cpp:3272-3296,3400-3416,3518-3519",
+      "engine/src/solver_eval.cpp:9740-9747",
+      "engine/src/solver_eval_types.hpp:360-385"
+    ]
+  },
+  "verified": {
+    "source_pins": 12,
+    "process_receipts": 9,
+    "finite_native_selectors": 6,
+    "total_native_checks": 39066,
+    "failures": 0,
+    "timeouts": 0,
+    "cancellations": 0,
+    "owned_survivors": 0,
+    "build_tests_exit": 0,
+    "build_benchmark_exit": 0,
+    "root_exit": 2,
+    "root_exit_classification": "native capacity refusal; not a watchdog failure",
+    "frozen_inputs": 3,
+    "actual_binary_sha256": {
+      "Tests": "f0f18d9aa8a5303f7b2b30782fc60683a6fdab313ec5d54119a1b084f0ddedb7",
+      "Benchmark": "b1f2259755e5b64cd0aa81829a3a908713d6af678792b628362c7fdbe716e2a3"
+    },
+    "no_reviewer_native_execution": true
+  },
+  "native_finite": {
+    "checks_by_selector": {
+      "entry_observer": 347,
+      "query_membership_and_rollback": 2919,
+      "paired_final_fill": 23982,
+      "unchanged_eight_roots": 11581,
+      "legacy_blocker": 171,
+      "protected_finder_shared_validator": 66
+    },
+    "paired_observers": {
+      "each_steps": 36,
+      "each_entries": 6,
+      "each_logical_work": 48,
+      "each_active_work": 48,
+      "each_audits": 36,
+      "each_suspended_audits": 30,
+      "each_completed_audits": 6,
+      "full_observation_ns": 29500,
+      "ledger_observation_ns": 7700,
+      "full_selected_peak": 159315,
+      "ledger_selected_peak": 159331,
+      "qualification": "finite checkpoints only; selected conservative allocation estimate, not complete aggregate/process peak"
+    },
+    "private_growth_refusal": {
+      "native_cap": "max_owned_bytes",
+      "native_limit": 125121,
+      "full_control_peak": 159315,
+      "batch_cap": 159314,
+      "successful_checkpoints": 3,
+      "validated_entries": 0,
+      "logical_work": 0,
+      "active_work": 0
+    },
+    "shared_growth_refusal": {
+      "native_cap": "max_owned_bytes",
+      "native_limit": 125129,
+      "full_control_peak": 125618,
+      "batch_cap": 125617,
+      "successful_checkpoints": 3,
+      "validated_entries": 0,
+      "logical_work": 0,
+      "committed_before": 48,
+      "committed_after": 48
+    },
+    "suspended_cleanup": {
+      "after_positive_work": true,
+      "steps": 3,
+      "committed_before": 48,
+      "committed_after": 48,
+      "census_entries_retained": 6,
+      "fixed_ownership_unchanged": true,
+      "child_released": true
+    }
+  },
+  "findings": [
+    {
+      "id": "R9",
+      "severity": "P2 fixture reliability",
+      "disposition": "Closed on this finite native witness",
+      "evidence": "Actual scratch max_owned_bytes is recognized/logged; generic length_error remains unclassified failure. Production authority unchanged."
+    },
+    {
+      "id": "R10",
+      "severity": "P3 fixture coverage",
+      "disposition": "Closed on this finite native witness",
+      "evidence": "Three completed checkpoints establish live cursor growth before refusal; shared committed48 preserved. Separate suspended-after-work child release preserves census/fixed ownership."
+    },
+    {
+      "id": "R6",
+      "severity": "P2 measurement limitation",
+      "disposition": "Open and explicitly qualified",
+      "evidence": "aggregate_memory_observation_complete:false remains; reported boundary estimates/reservation do not establish complete transient peak. No native memory-cap bypass/overrun demonstrated."
+    },
+    {
+      "id": "R2-Finder",
+      "severity": "P2 existing shared owner defect",
+      "disposition": "Not repaired/qualified by this batch",
+      "evidence": "66 shared-validator compatibility checks do not establish Finder generation/scoped automatic budget owner lifecycle; original reviewer cap50/charged88 witness remains separate."
+    }
+  ],
+  "root_result": {
+    "status": "censored_capacity",
+    "phase": "positive_entries",
+    "cap_reason": "max_solver_owned_bytes",
+    "refusal": "solver exceeded max_solver_owned_bytes (702645053)",
+    "root_cost": 210090.72616079813,
+    "root_accepted": true,
+    "all_positive_entries_accepted": false,
+    "checked_feasible_upper": false,
+    "positive_entries": 12658,
+    "validated_entries": 1717,
+    "census_entries": 12658,
+    "graph_hash": "7602779656003707844",
+    "generation_logical_work": 233575,
+    "checker_logical_work": 933384,
+    "entry_logical_work": 717735,
+    "aggregate_committed_logical_work": 1884694,
+    "aggregate_work_cap": 50000000,
+    "entry_live_memory_observation_ns": 786803400,
+    "memory_observation_ns": 974475500,
+    "memory_observation_calls": 20349,
+    "entry_advances": 10305,
+    "wall_ms": 11107.5309,
+    "generation_wall_ms": 344.2032,
+    "checker_wall_ms": 5104.8423,
+    "entry_wall_ms": 5594.2051,
+    "aggregate_selected_peak": 872063327,
+    "aggregate_reserved_peak": 1073652575,
+    "transient_reservation": 201589248,
+    "aggregate_memory_cap": 1073741824,
+    "aggregate_memory_observation_complete": false,
+    "checker_live_bytes": 87596436,
+    "checker_internal_peak_bytes": 133064129,
+    "checker_retained_for_census": true,
+    "checker_limits": {
+      "states": 800000,
+      "pairs": 1215000,
+      "transitions": 10000000,
+      "owned_bytes": 790241977,
+      "logical_work": 49766425
+    },
+    "resolved_limits": {
+      "max_states": 800000,
+      "max_discovered_states": 800000,
+      "max_expanded_states": 200000,
+      "max_rows": 1215000,
+      "max_transitions": 10000000,
+      "max_compiled_nodes": 100000,
+      "max_compiled_edges": 400000,
+      "max_strategy_json_bytes": 67108864,
+      "max_telemetry_json_bytes": 2097152
+    }
+  },
+  "same_candidate_control": {
+    "source": "8ce6db846eab51ec9734f47e2a113970e8dd9d5f",
+    "root_report": "out/sol61-armour/generic-final-fill-root-r1/generic-final-fill-root.json",
+    "verified_equal_fields": [
+      "case_request",
+      "resolved_actions",
+      "graph_hash",
+      "root_cost",
+      "positive_entries",
+      "census_entries",
+      "generation_logical_work",
+      "checker_logical_work",
+      "entry_logical_work",
+      "aggregate_committed_logical_work"
+    ],
+    "graph_sha256": "bedc2a4718e4622a301b0efd9159335fbe41db46f1b521c8d3bdac619249337a",
+    "old_coverage": [
+      976,
+      12658
+    ],
+    "new_coverage": [
+      1717,
+      12658
+    ],
+    "old_entry_live_observation_ns": 141156879500,
+    "new_entry_live_observation_ns": 786803400,
+    "interpretation": "Measured observation cost falls on this identical request. Later resource refusal replaces earlier deadline stop; neither is full entry qualification. More cached entries can validate without increasing already committed native work; no unit structural overwrite."
+  },
+  "next_budget_recommendation": {
+    "authorization": "Parent reports user-approved restoration within previously released3.1GiB aggregate; no repeated permission request",
+    "recommended_next_cut": "Retain checker/census; restore explicitly typed approved aggregate byte budget using existing request/tooling; preserve complete entry census, native owners, reservation and all other identities/caps",
+    "exact_approved_byte_value": "Not supplied or independently verified yet; do not guess from3.1GiB prose",
+    "frozen_case_policy": "Original case cap and verification.exact_max_owned_bytes are1GiB and unchanged. Pin a separate typed resource identity/request; record exactly which budget authority changes and its provenance. No silent frozen-case edit.",
+    "fixed_protocol": "Same graph, original root/goal/action/probability/resource/price identities and numerical acceptance;50M work,150s native/165s host, other resolved discovery/row/transitions/output limits unless explicit separately authorized",
+    "no_projected_completion": "Do not linearly extrapolate remaining12658 entry memory/time or claim all-entry upper before completion."
+  },
+  "checker_release_review_requirements": {
+    "status": "No concrete release source reviewed; proposal alone is not approved",
+    "current_live_checker_bytes": 87596436,
+    "peak_not_headroom": 133064129,
+    "maximum_possible_release": "At most current live bytes before retaining the complete owned result/census; net saving is smaller. Do not subtract internal phase peak.",
+    "premises": [
+      "StrategyEvalWork::take_result requires Done and moves complete output; retain every owned vector/string and certificate semantic identity, dependency/selected-kernel and occurrence provenance.",
+      "Transfer checked result/certificate into an owning stable-address object before validator construction and preserve it until validator is destroyed; no moving its borrowed storage.",
+      "Charge checker committed watermark once before release; retain phase totals. Refactor all later diagnostic/result/serialization access to moved result, never moved-from/destroyed checker.",
+      "Count the complete retained output/census and any overlapping move/handoff owners plus original reservation; measurements distinguish current live ownership from phase peaks.",
+      "Keep original problem/control/session/registry/economy/graph owners and all strictly positive entries, including tiny probabilities. No borrowed dangling evaluator IDs/views, reset/refund, omission or resource bypass.",
+      "Qualify exact full census/handoff, refusal/cancel/suspended cleanup, same native root/resources/cost and shared debit; separate consumers/activation require their own evidence."
+    ]
+  },
+  "release_recommendation": "Approve the reviewed observer correction for continued native qualification and authorized budget-only follow-through with retained checker, contingent on concrete exact typed resource request/source review. No financial upper, production Current/Finder activation, complete aggregate peak, full-envelope closure, final cohort or WASM recommendation. Historical plain-fill correspondence failure remains false; generic finite economic result remains separate.",
+  "artifacts": {
+    "request.json": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\out\\sol61-armour\\entry-observer-r2\\request.json",
+      "bytes": 18617,
+      "sha256": "7307e0ec7f90aad643a13a95ac2263b7ba56f7282e99ae79484fa31683eb7ef6",
+      "local_review_copy": "entry-observer-r2-request.json"
+    },
+    "completion.json": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\out\\sol61-armour\\entry-observer-r2\\completion.json",
+      "bytes": 4118,
+      "sha256": "8bdec68960f258b60fc5ff4cdf1d1d60112c99b6187b3b3a7576b5e348323306",
+      "local_review_copy": "entry-observer-r2-completion.json"
+    },
+    "generic-final-fill-root.json": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\out\\sol61-armour\\entry-observer-r2\\generic-final-fill-root.json",
+      "bytes": 11280,
+      "sha256": "e9c5b592a329524941e7716cd66d64e138b8241b2c63c8dd8deb53457227c356",
+      "local_review_copy": "entry-observer-r2-generic-final-fill-root.json"
+    },
+    "exact-entry-work-observer-and-selected-peak-safety.log": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\out\\sol61-armour\\entry-observer-r2\\exact-entry-work-observer-and-selected-peak-safety.log",
+      "bytes": 2186,
+      "sha256": "a236d8621a34d5a8d78254c58610f3d8865b9ac1aa68fbde39f2ffc8477d6795",
+      "local_review_copy": "entry-observer-r2-exact-entry-work-observer-and-selected-peak-safety.log"
+    },
+    "generic-final-fill-root.json.eval.json": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\out\\sol61-armour\\entry-observer-r2\\generic-final-fill-root.json.eval.json",
+      "bytes": 305434,
+      "sha256": "1b64f1f3b8b644cbe2000d68aa19db83ab8fad3f94f556377f276f42514b57e7",
+      "retained_on_owner_disk": true
+    },
+    "generic-final-fill-root.json.strategy.json": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\out\\sol61-armour\\entry-observer-r2\\generic-final-fill-root.json.strategy.json",
+      "bytes": 39418,
+      "sha256": "bedc2a4718e4622a301b0efd9159335fbe41db46f1b521c8d3bdac619249337a",
+      "retained_on_owner_disk": true
+    },
+    "generic-final-fill-root.json.construction.json": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\out\\sol61-armour\\entry-observer-r2\\generic-final-fill-root.json.construction.json",
+      "bytes": 1689,
+      "sha256": "93f77ff7008a945ff725de213fbf7c11937f347740ed214e62f2e3f809d46de9",
+      "retained_on_owner_disk": true
+    }
+  }
+}

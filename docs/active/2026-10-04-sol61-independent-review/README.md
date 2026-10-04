@@ -1294,3 +1294,55 @@ under parent LOCAL. Actual finite results precede samegraph/root/all12658-entry
 follow-through under unchanged150/165/50M/1GiB. No stale validator total, census
 release/skip, new cache or cap widening is introduced. R6 complete transient peak
 remains open. No performance/economics, activation/full closure/cohort/WASM claim.
+
+
+## Corrected observer finite evidence and original-root capacity stop
+
+Reviewed db4ad864c362ba48da41552757b91771a21e0c54 source/test correction and
+actual entry-observer-r2 owner evidence. All12 source pins, nine process receipts,
+actual Tests/Benchmark bytes, three frozen inputs and graph/report artifacts verify.
+39066 native checks pass (347+2919+23982+11581+171+66); builds pass, root exit2
+is a native capacity refusal, no timeout/cancel/survivor. No reviewer heavy command.
+Exact review/projections and selected raw evidence are entry-observer-r2-*; bulk
+evaluation/graph remain on owner disk. Prior failed R1 is retained unchanged.
+
+R9/P2 and R10/P3 close on these finite witnesses: actual scratch max_owned_bytes
+125121 after three successful checkpoints, no completed entry or committed work;
+shared pressure max_owned_bytes125129 keeps prior committed48 unchanged. Suspended
+child destruction after positive work retains census6, fixed ownership/references
+and committed48. Full and ledger each audit36 boundaries (30suspended/6completed),
+validate6entries and commit48logical/active. This is independent allocation audit,
+not fast-vs-fast; conservative selected memory, not complete transient peak.
+
+Same generated graph FNV7602779656003707844/SHA bedc2a47, same original frozen
+request/action/prices, rootcost210090.72616079813, success1 and census12658. Entry
+live observation141.157s -> .787s is measured on this one matched request; total
+pipeline11.108s then native max_solver_owned_bytes702645053 refusal. Only1717/12658
+entries validate, so checked upper FALSE. Work233575+933384+717735=1884694/50M
+unchanged; additional cache hits do not imply charged work is lost. Sampled
+reserved1073652575 includes201589248 reservation within1GiB; complete aggregate
+peak remains explicitly unproved (R6). Protected Finder shared-validator66 checks
+do not close the independent Finder generation/scoped-owner R2 defect.
+
+Parent now reports user approval to restore within the previously released3.1GiB
+aggregate. Recommend retained checker/census and an explicit typed budget-only
+cut using existing tooling; source/typed request needs review, not new approval.
+Exact approved byte value/provenance is still unsupplied: do not guess its conversion
+or silently rewrite frozen1GiB case/verification budget. Preserve50M,150/165, every
+positive entry, other resolved caps, all acceptance tolerances and all semantic
+identities. No predicted completion or projected savings from entry counts.
+
+Checker release remains a separate unreviewed ownership proposal. Current live
+checker87596436B bounds potential saving BEFORE complete owned result/census;
+internal peak133064129B is not headroom. take_result requires Done and moves the
+output (eval9740-47); certificate owns decisions/entries/selected_kernels and
+semantic identity (eval_types360-385). Any concrete release must retain complete
+stable-address result/census until validator destruction, charge committed checker
+work once, replace all later checker result/diagnostic serialization accesses,
+count retained/output overlap/reservation and prove refusal/cancel/suspended cleanup.
+No released borrowed census, dropped entries, debit refund or cap bypass.
+
+Recommendation limited to reviewed native observer correction and authorized
+budget-only qualification with retained checker after exact request review. No
+financial upper, complete peak, historical correspondence, Current/Finder activation,
+full-envelope closure, final control cohort, WASM or main merge/push approval.

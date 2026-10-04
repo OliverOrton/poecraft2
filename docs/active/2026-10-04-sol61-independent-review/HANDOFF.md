@@ -1,22 +1,26 @@
 # Independent review handoff
 
-Latest actual review:production2ff1adc5 + test-only1998b03d.12 pins verify in both
-prepared requests; no reviewer heavy command; CI owns LOCAL.
+Latest actual review:db4ad864 source/test correction + entry-observer-r2 actual
+receipts/binaries/artifacts.39066 native checks0fail; two builds pass; no survivors.
+No reviewer heavy commands; parent/CI controls LOCAL.
 
-No new production debit/lifetime/identity/enforcement blocker found. Observer
-uses existing mutable live ledger every call; full audit preserved. No outer/
-checker cache added; all12658 entries/checker ownership/caps preserved. Shared
-Current/Finder validator observation changes, so compatibility gates matter.
+R9 native scratch classifier and R10 live-growth/suspended cleanup close on finite
+witnesses; shared committed48 preserved. Existing live ledger observer production
+2ff unchanged, independently audited at every finite checkpoint. No new blocker.
 
-R9/P2 fixture classifier remains open at1998 compile test6170: recognizes only
-max_solver_owned_bytes but legitimate scratch max_owned_bytes is preserved by
-validator. Correct/log cap authority before finite gate. R10 growth checkpoint
-assertion and suspended destruction/debit/census witness added in source; unrun.
+Same graph/root/prices/census12658 and native work1884694/50M. Root diagnostic
+210090.72616079813; only1717entries validate, checked upper FALSE. Native memory
+refusal702645053 after11.108s, sampled reserved1073652575/1GiB. Entry live memory
+observation141.157 -> .787s measured; complete aggregate peak R6 remains unproved.
 
-[Living record](README.md) / [actual review](entry-observer-1998-source-review.json).
-After R9 correction, finite gate first under parent LOCAL, then same graph/root
-all-entry follow-through only after native qualification:150/165/50M/1GiB.
-Prior root8ce:210090.72616079813 diagnostic,976/12658 entries;141.157s observation
-cost measured. No upper. Prior20708 finite checks passed; R7/R8 finite cuts only.
-R6 complete peak and Finder generation R2 open; historical R3 remains failed.
-No speed/economic/activation/closure/final cohort/WASM approval or main merge/push.
+Parent reports user-approved restoration within prior released3.1GiB. Recommend
+retained checker/census, exact typed budget-only request/source reviewed first.
+Exact approved byte cap/provenance still unsupplied; preserve frozen case, all
+semantic/acceptance identities,50M/150/165/othercaps. Do not ask approval again.
+Checker release source not yet reviewed; complete owned result/census, stable
+lifetimes, debit, later result accesses and live-memory accounting need proof.
+
+[Living record](README.md) / [actual review](entry-observer-r2-review.json).
+Finder generation/scoped-owner R2 and complete peak R6 stay open; historical
+correspondence R3 remains failed. No financial upper, activation, full closure,
+final cohort/WASM recommendation or main merge/push. Await actual next request.
