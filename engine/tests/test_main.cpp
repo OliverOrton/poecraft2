@@ -8,6 +8,11 @@ int g_failures = 0;
 } // namespace pctest
 
 int main(int argc, char** argv) {
+    if (argc > 1 && std::string(argv[1]) == "--recombination-solver-only") {
+        run_recombination_solver_tests(argc > 2 ? argv[2] : nullptr);
+        std::printf("recombination inventory solver tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     if (argc > 1 && std::string(argv[1]) == "--random-recombination-only") {
         run_two_input_result_tests();
         run_random_recombination_tests(argc > 2 ? argv[2] : nullptr);
@@ -381,6 +386,7 @@ int main(int argc, char** argv) {
     run_action_tests(artifact_dir);
     run_two_input_result_tests();
     run_random_recombination_tests(artifact_dir);
+    run_recombination_solver_tests(artifact_dir);
     run_bestiary_tests();
     run_simulator_tests(artifact_dir);
     run_solver_abstract_tests(artifact_dir);

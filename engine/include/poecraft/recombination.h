@@ -5,12 +5,21 @@
 extern "C" {
 #endif
 #define PC_RECOMBINATION_PAIR_VERSION 1u
+#define PC_RECOMBINATION_CONSTRAINT_VERSION 1u
+/* Metadata facts and known output conflicts, including unsupported pairs.
+ * Count/order laws and special weights remain explicitly unassigned. No RNG,
+ * preparation of a probabilistic pair, or inventory mutation. Query length
+ * excludes NUL. Version pins this inspector's constraint projection. */
+pc_result pc_recombination_constraints_json(const pc_craft_resource* input_a,
+    const pc_craft_resource* input_b, uint32_t constraint_version,
+    char* buffer, size_t buffer_size, size_t* out_length, pc_error_info* out_error);
 typedef struct pc_recombination_pair* pc_recombination_pair_handle;
 
 /* Current Random only. Inputs are snapshotted with their distinct workspace
  * identities and interpreting sessions. No RNG draw or mutation occurs here.
- * Model v1 estimates spawn-proportional selection and preserves selected tiers
- * and recorded rolls, without unverified upgrade bonuses. */
+ * Models estimate spawn-proportional selection and preserve selected tiers and
+ * recorded rolls, without unverified upgrades. v1 ordinary and bounded v2
+ * native-constraints scope are identified explicitly in Calculate/Apply. */
 pc_result pc_recombination_pair_create(const pc_craft_resource* input_a,
     const pc_craft_resource* input_b, uint32_t pair_version,
     pc_recombination_pair_handle* out_pair, pc_error_info* out_error);
@@ -26,7 +35,7 @@ pc_result pc_recombination_pair_output_session(pc_recombination_pair_handle pair
  * outcomes contain canonical selected occurrences and native full output items.
  * Each output session must be obtained with the preceding mapping API.
  * Native shared-goal observers consume these outcomes in their own sessions;
- * there is no automatic solver or rolled-stat/defence-percentile goal scope. */
+ * this pair endpoint performs no search or rolled-stat/defence-percentile goals. */
 pc_result pc_recombination_pair_calculate_json(pc_recombination_pair_handle pair,
     char* buffer, size_t buffer_size, size_t* out_length, pc_error_info* out_error);
 

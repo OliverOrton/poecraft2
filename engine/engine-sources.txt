@@ -11,8 +11,11 @@ src/memory_contract.cpp
 src/hinekora.cpp
 src/multi_item.cpp
 src/recombination.cpp
+src/recombination_constraints.cpp
 src/recombination_api.cpp
 src/recombination_calculator.cpp
+src/recombination_solver.cpp
+src/recombination_solver_api.cpp
 src/actions_bestiary.cpp
 src/bestiary_api.cpp
 src/simulator.cpp

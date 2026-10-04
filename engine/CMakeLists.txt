@@ -225,6 +225,7 @@ if(BUILD_TESTING)
         tests/test_session_builder.cpp
         tests/test_actions.cpp
         tests/test_recombination.cpp
+        tests/test_recombination_solver.cpp
         tests/test_bestiary.cpp
         tests/test_simulator.cpp
         tests/test_solver_abstract.cpp
@@ -264,6 +265,10 @@ if(BUILD_TESTING)
     add_test(NAME poecraft_core
         COMMAND poecraft_engine_tests --core-only
             "${POECRAFT_COMPILED_ARTIFACT}" "${POECRAFT_SPEC_FIXTURES}")
+    add_test(NAME poecraft_recombination_inventory
+        COMMAND poecraft_engine_tests --recombination-solver-only
+            "${POECRAFT_COMPILED_ARTIFACT}")
+    set_tests_properties(poecraft_recombination_inventory PROPERTIES LABELS "native;recombination;solver-policy")
     add_test(NAME poecraft_solver_abstract
         COMMAND poecraft_engine_tests --solver-abstract-only
             "${POECRAFT_COMPILED_ARTIFACT}")

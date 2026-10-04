@@ -1,4 +1,5 @@
 #include "recombination.hpp"
+#include "recombination_constraints.hpp"
 #include <algorithm>
 #include <functional>
 #include <map>
@@ -11,13 +12,13 @@ void require(bool ok, const char* reason) {
     if (!ok) throw std::invalid_argument(reason);
 }
 bool conflict(const RecombOccurrence& a, const RecombOccurrence& b) {
-    if (a.global_mod_id == b.global_mod_id) return true;
-    for (auto g : a.groups)
-        if (std::find(b.groups.begin(), b.groups.end(), g) != b.groups.end()) return true;
-    return false;
+    return !recombination_mods_can_coexist(a, a.exclusive ? RecombExclusivity::Exclusive : RecombExclusivity::NonExclusive,
+        b, b.exclusive ? RecombExclusivity::Exclusive : RecombExclusivity::NonExclusive);
 }
 void validate_pool(const std::vector<RecombOccurrence>& pool) {
     require(pool.size() <= 6, "Random recombination side exceeds six physical occurrences");
+    require(std::count_if(pool.begin(), pool.end(), [](const auto& o) { return o.exclusive; }) <= 1,
+            "Multiple-exclusive count law is unresolved; physical padding cannot use the ordinary row");
     std::set<std::pair<unsigned, unsigned>> identities;
     for (const auto& o : pool) {
         require(o.input < 2 && o.slot < 3 && o.global_mod_id != PC_MOD_NONE &&
@@ -62,47 +63,44 @@ void remap_slots(const SessionImpl& from, const SessionImpl& to,
     }
 }
 void validate_ordinary_input(const CraftResource& resource) {
-    validate_craft_resource(resource);
-    const auto& s = *resource.session;
-    const auto& d = *s.data;
-    const auto& item = resource.item;
-    require(!s.is_cluster() && s.base_index < d.base_count && s.rare_affix_cap == 3 &&
-            d.base_session_support.at(s.base_index) == PC_SESSION_SUPPORT_ORDINARY,
-            "Random recombination currently supports ordinary equipment carriers");
-    require(s.item_level >= 1 && s.item_level <= 100 && item.rarity == PC_RARITY_RARE,
-            "Random recombination currently requires rare inputs at represented levels");
+    validate_recombination_item_structure(resource);
+    const auto& s = *resource.session; const auto& item = resource.item;
+    validate_random_recomb_carrier_session(s);
     require(!(item.item_flags & ~(PC_ITEM_SPLIT | PC_ITEM_SYNTHESISED)) &&
             item.generic_influence_bits == 0,
             "Random recombination input category is unsupported");
-    std::set<std::uint32_t> occupied;
+
     const auto check = [&](const pc_mod_slot* slots, unsigned count) {
         for (unsigned i = 0; i < count; ++i) {
             const auto& slot = slots[i];
             const auto id = slot.mod_id;
             require(slot.flags == 0 && slot.veiled_option_count == 0 &&
-                    slot.veiled_chosen_mod_id == PC_MOD_NONE &&
-                    s.flags.at(id) == 0 && s.special_kind.at(id) < 0 &&
-                    s.metamod_type.at(id) < 0 && s.influence_code.at(id) <= 0,
-                    "Random recombination special/fractured/exclusive classification is unresolved");
-            const auto p = s.global_index.at(id);
-            require(d.mod_domain_code.at(p) == d.base_domain_code.at(s.base_index) &&
-                    s.base_spawn_weight.at(id) > 0,
-                    "Random recombination ordinary source eligibility is unsupported");
-            require(s.group_offsets.at(id) < s.group_offsets.at(id + 1),
-                    "Random recombination modifier has no canonical exclusion group");
-            for (auto j = s.group_offsets.at(id); j < s.group_offsets.at(id + 1); ++j)
-                require(occupied.insert(s.group_ids.at(j)).second,
-                        "Random recombination input contains conflicting physical modifiers");
+                    slot.veiled_chosen_mod_id == PC_MOD_NONE && s.influence_code.at(id) <= 0,
+                    "Random recombination fractured/crafted/veiled-slot/influence output treatment is unsupported");
+            const auto category = classify_recombination_mod(s,id);
+            require(category.exclusivity != RecombExclusivity::Unresolved,
+                    "Random recombination modifier exclusivity is unresolved; inspect native constraints");
+            const bool natural = category.origin == RecombOrigin::Natural;
+            const bool single_special = category.origin == RecombOrigin::EssenceOnly ||
+                category.origin == RecombOrigin::Unveiled || category.origin == RecombOrigin::Delve ||
+                category.origin == RecombOrigin::BeastAspect;
+            require(natural || single_special, "Random recombination known category still requires output/weight authority");
+            if (natural) require(category.natural_on_source || category.guaranteed_natural_essence_source,
+                    "Random recombination non-native source requires a native guaranteed Essence origin");
         }
     };
     check(item.prefixes, item.prefix_count); check(item.suffixes, item.suffix_count);
 }
 void validate_pair_projection(const RandomRecombPair& pair) {
-    require(pair.version == 1 && pair.game_odds_estimated && pair.full_item_apply_supported,
+    require(pair.version == 1 && (pair.model_id == kRandomRecombModel || pair.model_id == kRandomRecombExtendedModel) &&
+            pair.game_odds_estimated && pair.full_item_apply_supported,
             "Unsupported random recombination projection/model version");
     for (const auto& carrier : pair.carriers) {
         require(carrier.output_session != nullptr, "Random recombination output session is missing");
         validate_pool(carrier.sides[0]); validate_pool(carrier.sides[1]);
+        unsigned exclusive = 0;
+        for (const auto& side : carrier.sides) for (const auto& mod : side) exclusive += mod.exclusive;
+        require(exclusive <= 1, "Multiple-exclusive joint count/side-order law is unresolved");
         for (const auto& p : carrier.sides[0]) for (const auto& s : carrier.sides[1])
             require(!conflict(p, s), "Random recombination cross-side group order is unresolved");
     }
@@ -172,21 +170,11 @@ RecombSideOutcome sample_random_recomb_side(Rng& rng, const std::vector<RecombOc
 }
 RandomRecombPair prepare_random_recomb_pair(const CraftResource& a, const CraftResource& b) {
     validate_ordinary_input(a); validate_ordinary_input(b);
-    require(a.identity != b.identity && !a.identity.empty() && !b.identity.empty(),
-            "Random recombination requires distinct physical input identities");
-    require(a.role != b.role && !a.role.empty() && !b.role.empty(),
-            "Random recombination requires distinct input roles");
+    validate_recombination_resource_pair(a,b);
     const auto& da = *a.session->data;
-    const auto& db = *b.session->data;
     const auto identity = [](const DataImpl& d) { return std::array<std::string, 4>{
         d.artifact_data_hash, d.artifact_source_hash, d.artifact_game_data_hash, d.artifact_strings_hash}; };
-    if (a.session->data != b.session->data) {
-        const auto hashes = identity(da);
-        require(std::all_of(hashes.begin(), hashes.end(), [](const auto& h) { return !h.empty(); }) &&
-                hashes == identity(db), "Random recombination data identities differ or are incomplete");
-    }
-    require(da.base_item_class_id.at(a.session->base_index) == db.base_item_class_id.at(b.session->base_index),
-            "Random recombination input classes differ");
+
     const bool exceptional = (a.item.prefix_count == 1 && a.item.suffix_count == 0 &&
                               b.item.prefix_count == 0 && b.item.suffix_count == 1) ||
                              (b.item.prefix_count == 1 && b.item.suffix_count == 0 &&
@@ -194,6 +182,18 @@ RandomRecombPair prepare_random_recomb_pair(const CraftResource& a, const CraftR
     require(!exceptional, "Random recombination 1p0s plus 0p1s joint law is unresolved");
     RandomRecombPair pair;
     pair.inputs = {a, b}; pair.data_identity = identity(da);
+    unsigned exclusive_count = 0;
+    for (const auto& resource : pair.inputs) for (unsigned side = 0; side < 2; ++side) {
+        const auto slots = side ? resource.item.suffixes : resource.item.prefixes;
+        const auto count = side ? resource.item.suffix_count : resource.item.prefix_count;
+        for (unsigned i = 0; i < count; ++i) {
+            const auto category = classify_recombination_mod(*resource.session, slots[i].mod_id);
+            exclusive_count += category.exclusivity == RecombExclusivity::Exclusive;
+            if (category.exclusivity == RecombExclusivity::Exclusive || !category.natural_on_source)
+                pair.model_id = kRandomRecombExtendedModel;
+        }
+    }
+    require(exclusive_count <= 1, "Multiple-exclusive joint count/side-order law is unresolved");
     const auto level = random_recomb_item_level(a.session->item_level, b.session->item_level);
     for (unsigned c = 0; c < 2; ++c) {
         const auto& carrier = pair.inputs[c];
@@ -237,6 +237,9 @@ RandomRecombPair prepare_random_recomb_pair(const CraftResource& a, const CraftR
                 o.global_mod_id = global_id(s, slots[i]);
                 o.output_mod_id = output_session->session_id_by_global_id.at(o.global_mod_id);
                 o.spawn_weight = output_session->base_spawn_weight.at(o.output_mod_id);
+                o.exclusive = classify_recombination_mod(s, slots[i].mod_id).exclusivity == RecombExclusivity::Exclusive;
+                require(!o.exclusive || o.spawn_weight > 0,
+                        "Known exclusive modifier has no carrier spawn proxy; special selection weights are unresolved");
                 o.groups.assign(s.group_ids.begin() + s.group_offsets.at(slots[i].mod_id),
                                 s.group_ids.begin() + s.group_offsets.at(slots[i].mod_id + 1));
                 out.sides[side].push_back(std::move(o));

@@ -5,9 +5,11 @@
 
 namespace poecraft {
 inline constexpr char kRandomRecombModel[] = "poe1-random-spawn-proxy-preserve-tier-roll-no-upgrade-v1";
+inline constexpr char kRandomRecombExtendedModel[] = "poe1-random-spawn-proxy-native-constraints-preserve-tier-roll-no-upgrade-v2";
 inline constexpr char kRandomRecombProjection[] = "structural-output-preserve-tier-roll-v1";
 
 // Exact thousandths of the adopted estimated coefficients, never game-exact.
+std::string random_recomb_item_json(const pc_item_state&, const SessionImpl&);
 const std::array<unsigned, 4>& random_recomb_count_row(unsigned physical_count);
 std::uint32_t random_recomb_item_level(std::uint32_t a, std::uint32_t b);
 
@@ -17,6 +19,7 @@ struct RecombOccurrence {
     std::uint32_t output_mod_id = PC_MOD_NONE;
     std::uint32_t spawn_weight = 0; // zero means ineligible on this carrier
     std::vector<std::uint32_t> groups; // full canonical membership
+    bool exclusive = false; // known output constraint; never an inferred count/order law
 };
 struct RecombSideOutcome {
     double probability = 0;
@@ -38,6 +41,7 @@ struct RandomRecombCarrier {
 };
 struct RandomRecombPair {
     std::uint32_t version = 1;
+    std::string model_id = kRandomRecombModel;
     std::array<CraftResource, 2> inputs;
     std::array<RandomRecombCarrier, 2> carriers;
     std::array<std::string, 4> data_identity;
