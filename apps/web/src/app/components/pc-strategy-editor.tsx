@@ -428,11 +428,16 @@ export class PcStrategyEditor extends HTMLElement {
      * key (what the engine's has_mod_group condition resolves). Cached per
      * base/iLvl and pushed to a live condition editor when it finishes.
      */
+    private modifierRequestKey(): string {
+        const state = this.strategy.base_state;
+        return `${state.base_key}|${state.item_level}|${JSON.stringify(state.cluster ?? null)}`;
+    }
+
     private async ensureModifiers(): Promise<void> {
         if (!this.engineReady || !this.catalog || this.modifierLoading) return;
         const base = this.strategy.base_state.base_key;
         const itemLevel = this.strategy.base_state.item_level;
-        const key = `${base}|${itemLevel}|${JSON.stringify(this.strategy.base_state.cluster ?? null)}`;
+        const key = this.modifierRequestKey();
         if (key === this.modifierBaseKey && this.modifierOptions.length) return;
         this.modifierLoading = true;
         try {
@@ -450,7 +455,7 @@ export class PcStrategyEditor extends HTMLElement {
                     ),
                 );
                 if (this.disposed) return;
-                if (`${this.strategy.base_state.base_key}|${this.strategy.base_state.item_level}` !== key) return;
+                if (this.modifierRequestKey() !== key) return;
                 this.modifierOptions = buildModifierOptions(mods, this.catalog);
                 this.modifierFamilyLabels = familyLabelsById(mods);
                 this.unveilOptions = mods
@@ -476,7 +481,7 @@ export class PcStrategyEditor extends HTMLElement {
             // can still author other condition types or use advanced JSON.
         } finally {
             this.modifierLoading = false;
-            if (!this.disposed && `${this.strategy.base_state.base_key}|${this.strategy.base_state.item_level}` !== key) {
+            if (!this.disposed && this.modifierRequestKey() !== key) {
                 void this.ensureModifiers();
             }
         }
