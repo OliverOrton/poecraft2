@@ -1,0 +1,35 @@
+[
+  {
+    "exit_code": 1,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 64752,
+    "process_identity_token": "64752:134355716437493007",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 54213.98439980112,
+    "stage": "compile",
+    "command": [
+      "C:/msys64/ucrt64/bin/g++.exe",
+      "-O0",
+      "-std=c++20",
+      "-ffp-contract=off",
+      "-ffunction-sections",
+      "-fdata-sections",
+      "-static-libstdc++",
+      "-static-libgcc",
+      "-Iengine/include",
+      "-Iengine/src",
+      "-Ibuild/engine/generated",
+      "docs/active/2026-10-04-sol61-independent-review/review-native-witness.cpp",
+      "engine/tests/test_solver_solve.cpp",
+      "build/engine/libpoecraft_engine.a",
+      "-Wl,--gc-sections",
+      "-lPsapi",
+      "-o",
+      "out/sol61-independent-review/recheck-r2/review-native-witness.exe"
+    ]
+  }
+]

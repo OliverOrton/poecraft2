@@ -232,6 +232,7 @@ if(BUILD_TESTING)
         tests/test_solver_metamod_recovery.cpp
         tests/test_solver_solve.cpp
         tests/test_solver_compile.cpp
+        tests/test_solver_independent_review.cpp
         tests/test_solver_s8_3.cpp
         tests/test_solver_eval.cpp
         tests/test_solver_api.cpp

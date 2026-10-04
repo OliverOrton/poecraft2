@@ -6412,3 +6412,8 @@ void run_solver_uniform_removal_tests() {
     nonexclusive->family_id[3]=nonexclusive->family_id[0];
     PC_CHECK(!prove_uniform_removal_goals(*nonexclusive,goal).has_value());
 }
+
+// Reuse the canonical finite factory without including this translation unit.
+std::shared_ptr<SessionImpl> make_solver_compile_review_session() {
+    return make_compile_session();
+}

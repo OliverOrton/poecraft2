@@ -63,6 +63,7 @@ void run_solver_bounded_finish_tests();
 void run_solver_proof_handoff_tests();
 void run_solver_compile_tests(const char* artifact_dir);
 void run_solver_finder_binding_tests();
+int run_solver_independent_review_tests(const char* mode, const char* output_directory);
 void run_solver_native_blocker_entry_tests(const char* artifact_dir);
 void run_solver_compile_metadata_tests();
 void run_solver_return_bridge_tests();

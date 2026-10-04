@@ -1,8 +1,10 @@
 # Independent solver review checkpoint (2026-10-04)
 
-**SOURCE REVIEW ONLY; HOLD QUERY REPLAY QUALIFICATION.** No native build,
-test, solve, browser, WASM, data refresh, merge to main or push was performed.
-No LOCAL slot was granted. The review worktree starts at main
+**NATIVE ENGINE BUILT; ALL REVIEW WITNESS MODES UNRUN.** Two standalone
+links failed with terminal no-survivor receipts. The canonical review module is
+source-prepared, unbuilt and awaiting parent LOCAL. Production remains at2ce0a75b;
+owner bd3c5b3 default-off recovery was reviewed at source only.
+No production patch, data refresh, main merge or push was made. The review worktree starts at main
 `29d9e666b9d11dbe9ba58959f2598df9495dc49d` and advances only its isolated branch
 to requested query checkpoint `2ce0a75b4e98b2c5fff59be60f269df745bd63bc`.
 Candidate `f038aa6f26f33adbd9c93669d3291cc86ad3b4da` was inspected through Git:
@@ -72,28 +74,29 @@ an explicit parent owner before generation and validation
 transfer to Finder. Coordinate any repair through the parent; no Finder source
 is edited by this review.
 
-### R3 / P3: the general attempt helper's uniform-terminal shortcut loses nonunit entry mass
+### R3 / diagnostic: uniform terminal shortcuts presume unit entry mass
 
-**Confidence: source-proven local algebra; production nonunit reachability not
-established. Consumer: internal weighted attempt helper; current ordinary
-Imprint discovery supplies unit-mass support. Inherited, not a query regression.**
+**Confidence: source-proven algebraic precondition; no demonstrated production
+bug. Consumer: internal attempt helper, whose inspected callers preserve whole
+unit-mass support.** This supersedes the original P3 contract-defect wording.
 
-`execute_attempt_cooperatively` accepts weighted `entry_support`. A one-step
-supported/legal deterministic word with entry weight 0.125 returns weighted
-resource/action rewards 0.125, but `solver_options_helpers.hpp:1645-1652` replaces
-its already weighted exits with the unscaled unit kernel. The expected exit mass
-0.125 becomes 1. The shared single-action reforge shortcut similarly assigns
-unscaled exits at lines 1451-1476. The newly retained growth fixture checks
-weighted rewards only (`test_solver_compile.cpp:4790-4798`), so it cannot detect
-this mismatch.
+The terminal simplification at solver_options_helpers.hpp:1645-1652 explicitly
+uses the identity that a probability distribution composed with a uniform kernel
+K gives K. That identity presumes unit entry mass. The one-step shared-reforge
+shortcut similarly returns canonical K at1451-1476. Weighted resources retain
+entry weights, which can be unequal while summing to one; that does not establish
+an API promise for arbitrary subprobability or occupancy measures.
 
-Small witness for a future parent-LOCAL fixture: a one-step legal Bench from one
-entry weighted 0.125; compare every returned exit to direct native K(s,t)*0.125,
-not another helper using the same shortcut. Also exercise two compatible entries
-whose total is 0.125 for the shared reforge path. Either enforce an explicit
-unit-mass-only helper precondition (and separate the weighted contract), or scale
-exits consistently. This is not evidence of a reachable production solver error
-or a reason to re-open prior Imprint results without a production counterexample.
+Current production callers are the fixed wrapper, initialized with {state,1},
+and Imprint extensions receiving the whole prior native exit distribution at2548.
+Unsupported, illegal, observed-choice or empty extensions are rejected as a whole
+at2568-2573. Retained supports are moved intact at2604-2609; no conditioning or
+partial mass extraction was found. Thus a single input of0.125 or1e-18 is an
+out-of-domain diagnostic under this inferred unit-distribution precondition,
+not a production probability defect. No production caller with intentional
+nonunit support has been established; floating-law normalization remains unrun.
+The canonical module tests valid unit controls independently of the attempt
+recurrence and only records nonunit probe outputs. No production fix is proposed.
 
 ## Partial-held lead and candidate fixture review
 
@@ -530,3 +533,128 @@ the next independent mode; compile/setup failure, unexpected exit, timeout,
 cancellation or survivor stop the remainder. Each mode is attempted once.
 Additional timed policy runs, whole Finder/Current qualification, WASM and all
 broader suites remain excluded. LOCAL is requested; not held or consumed.
+
+
+## Canonical target repair, offline reconciliation and request
+
+Second standalone link recheck at4d45875 also stopped before any mode: exit1,
+54.2139844s, no timeout/cancellation/survivor. The full log starts with PE
+IMAGE_REL_AMD64_REL32 relocation overflows, before undefined template/refptr
+symbols. Canonical Tests settings differ from the failed command: Release
+-O3/-DNDEBUG/-std=gnu++20, ordinary object sections without --gc-sections,
+complete CMake-owned test translation units and native library/Windows inputs.
+Both use static libstdc++/libgcc. These mismatches are established; the precise
+linker failure mechanism is not. Stop the standalone link loop rather than
+inventing symbols or changing production/toolchain flags.
+
+Parent authorized canonical test-only registration in this review worktree.
+engine/tests/test_solver_independent_review.cpp is now a normal module in the
+existing poecraft_engine_tests target. It includes headers instead of an entire
+test translation unit and does not define another main or test counters.
+The focused --solver-independent-review-only MODE OUTPUT_DIRECTORY selector
+returns before all other suites. A real exported test-only adapter beside
+make_compile_session reuses that unchanged synthetic factory. No CTest suite,
+production consumer, action or frozen input is changed. The previous standalone
+source and both link receipts are preserved; finite-r2-processes.json retains
+second-batch metadata. All modes remain UNRUN.
+
+On KIDS reconnect, all20 review source pins,147 native production input pins and
+4 failed-link evidence hashes matched the saved canonical request. Engine archive
+remained179a3cfbeaa1ba8d9a542b1728d05b39333c231bb6fe558e86c9e5d6c30e2ab9.
+Existing supervisor process_identity_token reads found no matching identity for
+build54232, failed link73880 or failed link64752; no new process was started or
+killed. No canonical-r3 runtime receipt existed. CI owns LOCAL; this reconciliation
+and all subsequent preparation are source-only.
+
+Header audit: solver_internal.hpp includes solver_compile_contracts.hpp, which
+includes solver_solve_contracts.hpp; apply_solve_profile_defaults is declared/
+defined there at294. The explicit Finder, selective completion, option-helper,
+handles, JSON and item headers supply the remaining fixture types and functions.
+Only canonical test_main owns pctest globals and main. The wrapper/selector
+signatures match and each registration is unique. Source audit is not a compile.
+
+review-canonical-request.json is the complete build/link/fixture plan: existing
+scripts/dev-engine.ps1 -Task Tests -Jobs2,600s watchdog, then3 serial invocations
+of build/engine/poecraft_engine_tests.exe --solver-independent-review-only using
+the same75s host/45s native/40000-continuation bounds. CMake regenerates its target
+registration and owns compiler definitions, all object inputs and compatibility.
+Reuse unchanged native objects/archive where compatible; permit only dependencies
+that canonical Tests requires rather than suppressing a correct rebuild. Record
+the resulting archive/executable/config/generated/compile-command identities.
+No manual linker command, Engine-only stage, broad suite, Simulator, benchmark,
+WASM or browser is requested. First build/setup/identity failure, unexpected exit,
+timeout, cancellation or survivor stops the remainder. Preserve genuine contract
+failures, attempt each mode once and release LOCAL before documentation.
+
+Weighted preconditions: qualified controls are unit distributions within the
+existing1e-12 normalization tolerance: deterministic unit, unequal.125/.875,
+tiny1e-18 distinct native exit with companion1.0 (rounded unit mass), and shared
+Chaos.5/.5. Dyadic/deterministic controls retain exact comparisons. Independent
+composition oracle enumerates native primitive leaves per exact entry and
+applies entry_probability*exit_probability directly; it does not validate the
+primitive mechanic independently of that native leaf. Duplicate Ember cost keys
+are explicit synthetic descriptor probes, not production currency changes.
+Nonunit supports are labeled nonunit_diagnostic_only and do not trigger helper
+contract-failure assertions. No tolerance or resource-weight acceptance changes.
+
+Finder mode must actually reach automatic admission using the ordinary product
+constructor/eight attempts/conditional-protected-scour grammar and original
+four-goal root. It compares native ordinary+automatic debit to cap50 and the
+Finder report, then cancels while borrowed Finder prices remain alive and checks
+no committed debit refund. Validator mode requires an actually accepted native
+original-root RetentionControl evaluation and immutable complete positive-entry
+census with exact occurrence/item identities, not fabricated or scaled masses.
+The same census/request/word/prices compare unowned cap1 with a genuinely spent
+shared owner cap1. Setup refusal gives no intended accounting claim. Neither
+mode qualifies the whole Finder service, incumbent, aggregate peak or Current.
+
+## Default-off recovery review: bd3c5b3
+
+Inspected actual commit bd3c5b3c1b54805d9469c41f75f2befa5cccb430, source and
+finite selector; owner HEAD remained that commit on reconnect. No production
+edit or native run by this reviewer. Optional development checkpoint remains a
+separate held capability, never acceptance or envelope-closure evidence.
+
+P2 qualification gap, high source confidence: native Exalt requires carrier-local
+missing-goal rollability, not progress plus free capacity
+(solver_options_helpers.hpp:695-716). New dispatch at
+solver_selective_completion.cpp:690-700 can choose Exalt below capacity based only
+on goal presence. The existing validator remains fail-closed: all reached entries
+must be available and strictly positive with no epsilon skip at1122-1126; it uses
+the original goal, registry, actions and exact item, rederives typed membership,
+then throws if there is no matching admitted native intent. No widening or entry
+mass deletion was found. This is a coverage gap, not a proved acceptance defect.
+
+Minimal proposed negative for fixture0: give native modifier2 both groups13 and10
+(current primary13), use prefixes{3,2}, suffixes{5,7}, chosen anchor5. Modifier3 is
+one satisfied target goal; modifier2 blocks missing goals0 and4 while target count
+is only2. The anchor is present and the other held goal is below-tier blocked.
+Dispatch selects growth Exalt, but native rollable_missing is empty and admission
+refuses it. Preserve native groups/masks, establish a positive original-root Chaos
+entry with native enumeration, and require whole-candidate refusal with the same
+incumbent and committed debit. Reachability/mass and refusal are UNRUN here.
+The four current fixtures use one primary group per modifier and therefore do
+not exercise this compound-blocker boundary. Feedback was sent to parent.
+
+P3 capability limit, high source confidence: final stages2/3 are existing
+RerollVersusRepair templates. With the three-goal side complete and one useful
+small-side goal below capacity, their inherited route at711-716 selects Chaos
+rather than available progress-preserving Exalt. This bounds the private policy;
+it does not mean the native primitive or broader Current/Finder search is absent.
+No original-root economic benefit or regression is established from this review.
+
+Construction is structurally bounded: two singleton anchor identities, four
+sequential existing stage producers, one active admission cursor, node/program
+reservation bound and retained+assembly memory checks. Original root/goal/action/
+price identities remain bound to the composed graph and full native evaluation;
+stage3's tier copy is an admission proposal context. Singleton versus both-goal
+held identities are dispatched separately; every native stage returns through
+original-goal dispatch. Exact tier setup/direct words and native resource keys
+are retained. The producer has no incumbent/publication API and is default-off;
+Current/Finder proposal count and vocabulary selection are unchanged. Candidate
+construction alone confers no properness, checked upper, lower or exact authority.
+
+Recommendation: source is suitable for the declared finite falsification batch,
+with compound-blocker refusal still untested and all build/runtime results pending.
+No public activation, frozen Conquest controller/economic result, wider closure,
+whole-consumer lifetime/peak accounting or WASM qualification is recommended.

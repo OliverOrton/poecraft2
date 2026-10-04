@@ -8,6 +8,13 @@ int g_failures = 0;
 } // namespace pctest
 
 int main(int argc, char** argv) {
+    if (argc > 1 && std::string(argv[1]) == "--solver-independent-review-only") {
+        if (argc != 4) {
+            std::fprintf(stderr, "independent review requires MODE OUTPUT_DIRECTORY\n");
+            return 2;
+        }
+        return run_solver_independent_review_tests(argv[2], argv[3]);
+    }
     if (argc > 1 && std::string(argv[1]) == "--random-recombination-only") {
         run_two_input_result_tests();
         run_random_recombination_tests(argc > 2 ? argv[2] : nullptr);
