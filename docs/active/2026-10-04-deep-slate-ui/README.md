@@ -7,6 +7,10 @@ The complete delivered plan was read through Library as text; the reference
 image was not inspected. No native, goal, price, action or persistence contract
 changes were made. One parent-authorized LOCAL qualification window completed;
 LOCAL was released to recombination. Further work is source-only until a new grant.
+Current source includes the reviewed owner cache correction as `1be4c20c`; it
+and the prepared browser test delta have not been run on this branch. The last
+built/package-qualified UI source remains `2a46b1b3`. See the final source-boundary
+section for the exact remainder and its integration prerequisites.
 
 ## Owners and migrated consumers
 
@@ -200,3 +204,51 @@ The current additional source slice updates only the audited style owner;
 actual/authoring item and trace adapters are still pending on a coherent Builder
 source base. The completed LOCAL window qualified the pilot only as detailed
 above; Builder-specific rendered checks remain open.
+
+## Cache correction incorporated; next source boundary
+
+The parent supplied owner commit `63ff9c1242b49d0aed7002cb19c3c5749d8c9757`.
+Its complete editor/package/regression diff was source-reviewed and cherry-picked
+cleanly as `1be4c20c`. One `modifierRequestKey()` now preserves the same exact
+base/item-level/cluster JSON identity for cache hits, stale-result rejection and
+follow-up requests. Session cleanup and disposal guards remain intact. The new
+regression checks stable publication/cache hits, cluster-only asynchronous races,
+cleanup on disposal and unchanged A/B resource templates. The owner reported its
+regression, pre-fix negative control and TypeScript passed; none has run on this
+UI branch yet. The prior two-comparison patch remains historical, unapplied
+proposal evidence, superseded by this owner's shared-key correction.
+
+The native module/runtime pins above remain unchanged. Only the narrow cache
+commit was incorporated; the feature owner's newer connector, graph, runtime
+output and execution changes were not imported. Thus the declared next local
+gate can unblock this branch's existing Builder and Stash checks using its
+original ABI-3 module. It cannot qualify new A/B connectors or actual-output
+adapters that are absent from this source. Those require explicit integrated
+component source, and matching engine artifacts wherever integration needs them.
+Do not reinterpret legacy `top: 48px` checks as A/B coverage.
+
+The unrun test delta now also checks populated edge rows after tier/history edits,
+waits for settled Stash records and compares the same native item's base/level,
+rarity and actual influence labels across live and saved views. Capture selection
+uses `POECRAFT_UI_CAPTURE_ONLY` so a remainder run need not overwrite or recapture
+passed unchanged views. Both test files remain unstaged and unqualified:
+`apps/web/test/ui-continuity-checks.mjs` and
+`apps/web/test/ui-presentation-checks.mjs`. Their combined reviewable snapshot is
+`out/deep-slate-ui/unrun-remainder-browser-gate.patch`; the earlier checkpoint-only
+snapshot remains separately preserved. No new browser supervisor or server.
+
+After the next LOCAL grant, preflight the unchanged frozen bytes, run the focused
+`strategy-modifier-cache.test.ts` on this branch, then the existing TypeScript/web
+build and packaging owners. Run the existing static-host runner against that
+build with `POECRAFT_TEST_BROWSER_CHANNEL=chrome`,
+`POECRAFT_SMOKE_BROWSERS=chromium`, `POECRAFT_UI_CAPTURE_ONLY=builder,stash,failure`
+and a fresh `POECRAFT_UI_CAPTURE_DIR` under `out/deep-slate-ui/remaining-<source>`.
+The runner still performs its necessary deterministic setup and preserves every
+existing assertion; only repeated screenshot capture is filtered. Use the same
+120-second build/focused-check, 60-second package and 240-second browser
+watchdogs. Preserve all failures; release LOCAL immediately when heavy work ends.
+
+A/B and trace-adapter qualification remain a separate integrated-source remainder
+as listed above. There is no claim that merely importing the cache fix supplies
+those components, refreshes data, qualifies new-native WASM, or completes the
+full browser gate.
