@@ -230,3 +230,29 @@ Parent renewed LOCAL for the same600s build/180s serial native gate, maxJobs2,
 and authorized straightforward compile/fixture corrections within scope. Stop
 on semantic contradiction, identity/resource disagreement or production redesign.
 No unrelated accounting repair, query/checkpoint run or policy activation added.
+
+## Finite-r5 native carrier finding and fixture contract correction
+
+Source dbd943cb compiled in38.562s, binary34b531976f675069f64779ce488eb129b3caad4703ca5f08f9825a2139ef3de6.
+Compound selector142 checks/3 failures in0.346s; both owned PIDs49452/75648 gone.
+Immutable out/sol61-armour/finite-r5 preserves full source/runtime/command pins,
+carrier key, logs and receipts. Positive variants and legacy growth stayed unrun.
+
+The exact compound carrier is positively root-reachable: native single ordering
+mass0.00021919330543368763, complete Chaos carrier mass0.017031484841614736.
+No missing prefix goal is rollable, yet composed route c20 runs Exalt with held
+mask8; typed native intent completes with zero members. Root success is
+0.79346875709748854, not-applied0; actual census99 entries is refused at the
+validator's complete-census guard. This proves a routing observation gap, not
+recovery or a complete positive-entry validation receipt.
+
+Three failed fixture assumptions are corrected without changing production:
+empty native EldritchExalt pools are paid self-loops (solver_calc.cpp), not illegal
+operations; root rejection is unresolved probability, not action-not-applied;
+selected-owned fast accounting is conservative and the audit throws on an
+undercount, permitting positive excess. Preserve the failed exact-equality check;
+new witness prints both estimates and tests the actual no-undercount contract.
+This is no measured release/saving or broad accounting qualification. Native word
+exits must equal the exact setup-only item, mass1 within1e-12; root unresolved mass
+must cover the carrier mass. Actual refused census stays unchanged. The parent
+authorizes these routine fixture-contract corrections inside the same finite gate.

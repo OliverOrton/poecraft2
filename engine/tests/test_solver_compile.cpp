@@ -5400,7 +5400,14 @@ void run_solver_partial_held_recovery_tests(const bool compound_blocker_only) {
         const auto& control = producer.candidate()->control;
         PC_CHECK(producer.candidate()->variant == SelectiveCompletionVariant::PartialHeldRecoveryResearch);
         PC_CHECK(product_completion_proposal_count(calc) == 3);
-        PC_CHECK(calc.fast_estimated_owned_bytes() == calc.audited_estimated_owned_bytes());
+        // Native selected-owned accounting allows conservative overestimation;
+        // the audit itself rejects an undercount. This is not a memory saving.
+        const auto audited_bytes = calc.audited_estimated_owned_bytes();
+        const auto fast_bytes = calc.fast_estimated_owned_bytes();
+        PC_CHECK(fast_bytes >= audited_bytes);
+        std::printf("private recovery native accounting: fast=%llu audited=%llu conservative_excess=%llu\n",
+            static_cast<unsigned long long>(fast_bytes),static_cast<unsigned long long>(audited_bytes),
+            static_cast<unsigned long long>(fast_bytes-audited_bytes));
         PC_CHECK(producer.estimated_owned_bytes() >= sizeof(producer) +
             control.nodes.capacity() * sizeof(FinderControlNode) +
             control.programs.capacity() * sizeof(FinderProgramBinding));
@@ -5438,7 +5445,30 @@ void run_solver_partial_held_recovery_tests(const bool compound_blocker_only) {
         PC_CHECK(registry.actions.at(option.primitive_program.back()).params.type == ActionType::EldritchExalt);
         const auto word = execute_attempt(calc,option.primitive_program,carrier_state);
         if (compound_blocker) {
-            PC_CHECK(word.supported && !word.fully_legal);
+            // Empty eligible pools are native paid no-op self-loops, not illegal
+            // actions. Preserve that law and prove the word changes only setup.
+            PC_CHECK(word.supported && word.fully_legal && word.choice_groups.empty());
+            PC_CHECK(word.expected_primitive_actions == option.primitive_program.size());
+            PC_CHECK(word.expected_resources == aggregate_resources(registry,option.primitive_program));
+            auto setup_only = carrier;
+            for (const auto action : option.primitive_program) {
+                const auto& params = registry.actions.at(action).params;
+                if (params.type == ActionType::EldritchEmber)
+                    setup_only.searing_exarch_tier = static_cast<std::uint8_t>(params.tier);
+                else if (params.type == ActionType::EldritchIchor)
+                    setup_only.eater_of_worlds_tier = static_cast<std::uint8_t>(params.tier);
+                else PC_CHECK(params.type == ActionType::EldritchExalt);
+            }
+            double no_progress_mass = 0;
+            for (const auto& exit : word.entries) {
+                pc_item_state after;
+                PC_CHECK(calc.materialize(exit.state,after));
+                PC_CHECK(exact_item_state_key(after) == exact_item_state_key(setup_only));
+                no_progress_mass += exit.probability;
+            }
+            PC_CHECK(std::abs(no_progress_mass-1) <= 1e-12);
+            std::printf("compound blocker native word: supported=%u fully_legal=%u no_progress_mass=%.17g paid_steps=%.17g\n",
+                word.supported,word.fully_legal,no_progress_mass,word.expected_primitive_actions);
             AutomaticAdmissionLimits query;
             query.prices = &prices;
             query.consider_imprint_programs = false;
@@ -5485,10 +5515,14 @@ void run_solver_partial_held_recovery_tests(const bool compound_blocker_only) {
         }
         const auto checked = evaluate_strategy(*prepared.strategy,eval);
         if (compound_blocker) {
-            // A reachable illegal native action must prevent original-root
-            // acceptance. This is a rejection witness, never a checked upper.
+            // A positive native no-progress loop must prevent original-root
+            // acceptance. Preserve its actual incomplete census, never manufacture
+            // a complete one to claim entry-by-entry validation of this controller.
             PC_CHECK(!finder_evaluation_accepted(checked));
-            PC_CHECK(checked.action_not_applied_probability > 1e-9);
+            PC_CHECK(checked.unresolved_probability > 1e-9);
+            PC_CHECK(checked.unresolved_probability + 1e-12 >= compound_root_mass);
+            PC_CHECK(checked.action_not_applied_probability == 0);
+            PC_CHECK(checked.policy_entries.refused_entries > 0);
             bool entry_rejected = false;
             try {
                 SelectiveProgrammeEntryValidator validator(calc,session,control,
@@ -5500,9 +5534,9 @@ void run_solver_partial_held_recovery_tests(const bool compound_blocker_only) {
             }
             PC_CHECK(entry_rejected);
             PC_CHECK(product_completion_proposal_count(calc) == 3);
-            std::printf("compound blocker root rejection: success=%.17g not_applied=%.17g root_mass=%.17g entries=%zu no_retention_or_activation\n",
-                checked.success_probability,checked.action_not_applied_probability,
-                compound_root_mass,checked.policy_entries.entries.size());
+            std::printf("compound blocker root rejection: success=%.17g unresolved=%.17g not_applied=%.17g root_mass=%.17g entries=%zu refused_entries=%u no_retention_or_activation\n",
+                checked.success_probability,checked.unresolved_probability,checked.action_not_applied_probability,
+                compound_root_mass,checked.policy_entries.entries.size(),checked.policy_entries.refused_entries);
             continue;
         }
         PC_CHECK(finder_evaluation_accepted(checked));

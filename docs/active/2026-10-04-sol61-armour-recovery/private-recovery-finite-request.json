@@ -1,13 +1,13 @@
 {
   "schema": "sol61_armour_finite_request_v1",
   "status": "RENEWED LOCAL; precise compile fixture repair; same bounded finite gate",
-  "basis_commit": "7cd2a5d8a0914e55ffe25b84e15e573f6bea8e2a",
+  "basis_commit": "dbd943cba1409f8365849fa481b487c10aea39bc",
   "source_files_sha256": {
     "engine/src/solver_selective_completion.hpp": "c35661b9449eb8caf6d6272a05aa78718fe282d457caefeea931cb3bc5c25c78",
     "engine/src/solver_selective_completion.cpp": "74cb6f0391d1426cf9a832bb8863f1008e1bd49fe3861e972ac3bd5bb2184e65",
     "engine/src/solver_development_checkpoint.cpp": "5fbd67b5f1f285f96c741a6713ec8292757b47371c52d7791724475e6dfd12a0",
     "engine/tests/test_main.cpp": "5b7aeb7960961be15a130468a79de1c50bfb8f96b062467b7b2a9800546dfd1d",
-    "engine/tests/test_solver_compile.cpp": "9368287b324c899e373f38a2b0a79f374e9de7ef073cd354b46dfe7a5f6b9c6f",
+    "engine/tests/test_solver_compile.cpp": "b794944204112164e2e3c3bc1a873ffd668f3de90e5abe038f0eaeef6575e15e",
     "engine/tests/test_solver_metamod_recovery.cpp": "5cae556520d62df2d52076e60178006b7398c6e4099cb844495b18cc92f7d9ce",
     "engine/tests/tests.hpp": "5cbf8b6c24dac9a828399ef1e83c62ada645b8b9a790d8a656ff6d3723a5671f"
   },
@@ -125,10 +125,10 @@
     "held_anchor_modifier": 5,
     "reachability": "native per-pick pool positive ordering, then complete native original-root Chaos exact item mass",
     "native_eligibility": "authoritative ordinary pool intersected with missing prefix goal masks; expected zero",
-    "expected_rejection": "compiled growth route still selects Exalt; native intent absent; original-root not-applied probability positive and reached-entry validator rejects",
+    "expected_rejection": "Paid native no-progress self-loop; absent typed intent; positive original-root unresolved probability; actual incomplete census refused without manufacturing entry completeness",
     "authority": "No synthetic complete certificate; use actual root evaluator census. A root resource/identity/unsupported failure is not a passing rejection witness.",
     "fixture_prerequisite": "restore independent natural junk suffix9 and disable its veiled placeholder role in this in-memory fixture only",
-    "runtime_status": "UNRUN"
+    "runtime_status": "r5 reachability/admission absence/root refusal confirmed; exact refusal and conservative-accounting fixture premises corrected for same bounded continuation"
   },
   "recoverable_compile_failure": {
     "source": "7cd2a5d8a0914e55ffe25b84e15e573f6bea8e2a",
@@ -136,5 +136,16 @@
     "error": "test_solver_compile.cpp:5379 passed state ID where temporary_followup_eligible_mask requires const pc_item_state&",
     "repair": "pass exact carrier item; all other new helper calls checked against declarations; native source objects had compiled successfully",
     "authorization": "parent renewed LOCAL; correct straightforward compile/fixture contract errors within the same gate, stop semantic contradictions/redesign"
+  },
+  "fixture_contract_correction": {
+    "failed_receipt": "out/sol61-armour/finite-r5/completion.json",
+    "checks": 142,
+    "failures": 3,
+    "scope": "test assertions only; no native mechanics/accounting changes",
+    "source_contracts": [
+      "solver_calc.cpp EldritchExalt empty-pool self_loop",
+      "solver_calc.cpp audited_estimated_owned_bytes rejects fast undercount, permits conservative excess",
+      "SelectiveProgrammeEntryValidator constructor rejects refused_entries census"
+    ]
   }
 }
