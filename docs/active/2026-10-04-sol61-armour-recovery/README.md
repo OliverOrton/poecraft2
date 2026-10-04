@@ -1,11 +1,18 @@
 # Conquest and armour recovery execution (2026-10-04)
 
-Source-only checkpoint on `dot/sol61-armour-recovery-20261004`, isolated from
-normal main/dev-server work. Foundation is qualified research `2ce0a75b`;
-available main, cached origin/main and the closing read-only remote query are `29d9e666`. No production edit,
-heavy command, timed case, WASM build, activation or publication occurred.
-CI owns the initial parent-controlled LOCAL slot; no grant has reached this task.
-The [source audit](source-audit.json) binds prepared fixtures and frozen inputs.
+The first finite batch ran at `f038aa6f` after a parent LOCAL grant. Two-job
+Tests build and the native partial-held routing witness pass (25 checks). The
+query selector fails 6/2701 new-fixture assertions; that negative is preserved in
+[finite-r1-summary.json](finite-r1-summary.json) and its raw witness/query logs.
+LOCAL was released immediately with no survivors, before documentation.
+
+The next source change corrects the checkpoint loader's finite query decoder,
+fixture preconditions and adds full native word/malformed-key obligations.
+Those additions are **unrun**. The [corrected finite request](corrected-gate-request.json)
+predeclares the next batch; a new parent LOCAL grant is required. Route generation
+and checker lifetime remain unchanged. No timed policy, WASM or public activation
+has occurred. Main/remote were verified `29d9e666` at the prior checkpoint.
+The [original source audit](source-audit.json) remains pinned to `f038aa6f`.
 
 ## Selected question and first gate
 
@@ -20,8 +27,8 @@ is expected to be Ember1 then Eldritch Exalt; Current returns to Chaos.
 `--solver-partial-held-witness-only data/compiled/current` is prepared to load the
 actual frozen artifact and case, materialize this carrier, prove one positive
 Chaos pick ordering using the native count law and pools, and route both reference
-graphs with native compiled predicates. Its original-root equality, exact carrier
-key and routing assertions are **unrun**. The pick-order mass is a reachability
+graphs with native compiled predicates. At `f038aa6f`, its original-root equality, exact carrier
+key and routing assertions passed; the receipt retains the full native key. The pick-order mass is a reachability
 witness, never an estimate of total carrier probability or a policy upper.
 The reference graphs are test inputs only; the producer remains unchanged.
 
@@ -47,7 +54,31 @@ query/full cancellation occurs after new operator staging and committed shared
 work: rollback preserves prior query membership and debit; full retry stays
 uncached. A different query then exhausts that already-used owner, preserving
 completed membership and debit, before an uncached correctly charged retry.
-All these additions are **unrun**, with existing tolerances unchanged.
+At `f038aa6f`, mixed semantics/work and cancellation checks passed, while the
+committed Exalt debit was zero and the uncached budget refusal assumptions failed.
+The checkpoint save refused state cardinality growth before load. The corrected
+fixtures use measured Chaos work and exact modifier identity; they remain unrun,
+with existing tolerances unchanged.
+
+## Narrow checkpoint correction prepared
+
+Independent review `3ba16daf` identified the still-legacy `(key >> 32) <= 1`
+load guard. It rejects every defined nonzero query even though save preserves
+those keys. The correction decodes carrier, cheap bit and query before mutating
+the context; only query IDs below the finite count are accepted. Queried members
+must match native Eldritch side/final/directness and cannot populate cheap-only
+Eldritch membership. Unrestricted cache completion remains independent.
+
+Checksummed malformed saved members exercise unknown query IDs, reserved high
+bits, wrong carrier, forbidden cheap membership and wrong programme intent.
+Refusal must leave the fresh context unchanged and permit valid-load retry.
+The valid round trip now shares exact modifier identity with the coarse Exalt
+closure and asserts no admission state growth. These new tests are unrun.
+
+The Conquest witness now also executes the native Ember1/Exalt word, checking
+legality, complete positive exits, exact resources/actions, preservation of all
+four incoming affixes and blocking by the below-tier hybrid family. This added
+word test remains unrun; the 25-check routing result does not imply it.
 
 ## Diagnostic provenance correction
 
@@ -71,12 +102,14 @@ attribute combined source/scope differences to the finite query.
 Current still constructs the validator from the checker's borrowed census,
 destroys the validator first, then takes the full result. Releasing the checker
 earlier without stable owned result storage would invalidate that reference.
-No lifetime change is implemented. Require a finite complete-result transfer,
+No lifetime change is implemented. Reviewer-owned Finder budget and nonunit
+weighted-helper leads remain with that owner; coordinate through the parent
+before editing shared generation/entry-accounting code. Require a finite complete-result transfer,
 semantic/provenance equality, fast versus audited aggregate accounting and
 measured positive net release before permitting production cleanup or Helmet
 comparisons. Finder has a separate lifecycle and needs its compatibility gate.
 
-Request LOCAL for the audit's two-job Tests build and serial finite selectors,
+Request LOCAL for the corrected gate's two-job Tests build and serial finite selectors,
 using `run_isolated_process`, declared watchdogs and survivor receipts. Stop on
 a semantic/identity/assertion failure; preserve it before deciding any correction.
 If P0/P1 pass, implement the smallest bounded partial-held construction extension,

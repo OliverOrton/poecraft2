@@ -4630,7 +4630,7 @@ void run_solver_admission_query_tests() {
     interleaved.set_reforge_work_budget_owner(&interleaved_owner);
     const auto interleaved_state = interleaved.intern_item(root);
     auto committed_request = limits;
-    committed_request.query = eldritch_admission_query(PC_SIDE_PREFIX,ActionType::EldritchExalt,false);
+    committed_request.query = eldritch_admission_query(PC_SIDE_PREFIX,ActionType::EldritchChaos,false);
     const auto committed = interleaved.admit_state_local_automatic_candidates(interleaved_state,committed_request);
     const auto committed_semantics = snapshot(interleaved,interleaved_state,committed);
     const auto committed_operators = interleaved.operators().size();
@@ -4686,7 +4686,8 @@ void run_solver_admission_query_tests() {
     // so the completed coarse graph already owns all its native exact exits.
     auto checkpoint_root = root; checkpoint_root.searing_exarch_tier = 1;
     const auto direct_exalt = registry.index_by_id.at("eldritch_exalt");
-    CalcContext saved(session,goal,registry,{direct_exalt},false,false,true);
+    CalcContext saved(session,goal,registry,{direct_exalt},false,false,true,
+        std::nullopt,{},false,{},true);
     const auto saved_state = saved.intern_item(checkpoint_root);
     SolveOptions checkpoint_caps;
     checkpoint_caps.max_states = checkpoint_caps.max_discovered_states = 10000;
@@ -4699,11 +4700,14 @@ void run_solver_admission_query_tests() {
     PC_CHECK(checkpoint_work.progress().done);
     auto checkpoint_query = limits;
     checkpoint_query.query = eldritch_admission_query(PC_SIDE_PREFIX,ActionType::EldritchExalt,true);
+    const auto checkpoint_states = saved.state_count();
     const auto saved_query = saved.admit_state_local_automatic_candidates(saved_state,checkpoint_query);
+    PC_CHECK(saved.state_count() == checkpoint_states);
     PC_CHECK(!saved_query.cached && !saved_query.admitted_operators.empty());
     const auto path = std::filesystem::temp_directory_path() / "poecraft-eldritch-query-membership.pcsg";
     bool checkpoint_loaded = false;
-    CalcContext replay(session,goal,registry,{direct_exalt},false,false,true);
+    CalcContext replay(session,goal,registry,{direct_exalt},false,false,true,
+        std::nullopt,{},false,{},true);
     try {
         saved.save_development_solve_checkpoint(path.string(),"eldritch-query-native-fixture-v1");
         replay.load_development_solve_checkpoint(path.string(),"eldritch-query-native-fixture-v1");
@@ -4721,6 +4725,57 @@ void run_solver_admission_query_tests() {
         PC_CHECK(replay.admit_state_local_automatic_candidates(saved_state,limits).cached);
         for (const auto index : loaded_query.admitted_operators)
             PC_CHECK(replay.is_candidate_operator_admitted_for_state(saved_state,index));
+        // Mutate the serialized carrier-key member and recompute its checksum:
+        // these are semantic key refusals, not generic damaged-file failures.
+        // The complete key plus operator vector identifies the saved member.
+        std::ifstream input(path,std::ios::binary);
+        std::ostringstream buffer; buffer << input.rdbuf();
+        const auto bytes = buffer.str();
+        const auto original_key = automatic_admission_key(saved_state,false,checkpoint_query.query);
+        const std::uint64_t member_count = saved_query.admitted_operators.size();
+        std::string member(reinterpret_cast<const char*>(&original_key),sizeof(original_key));
+        member.append(reinterpret_cast<const char*>(&member_count),sizeof(member_count));
+        for (const auto index : saved_query.admitted_operators)
+            member.append(reinterpret_cast<const char*>(&index),sizeof(index));
+        const auto key_offset = bytes.find(member);
+        PC_CHECK(key_offset != std::string::npos && bytes.find(member,key_offset+1) == std::string::npos);
+        const auto bad_path = std::filesystem::temp_directory_path() / "poecraft-eldritch-query-invalid-key.pcsg";
+        const std::vector<std::pair<std::uint64_t,std::string>> malformed{
+            {std::uint64_t{kAutomaticAdmissionQueryCount} << 33,"carrier admission mismatch"},
+            {original_key | (1ull << 63),"carrier admission mismatch"},
+            {(original_key & 0xffffffff00000000ull) | checkpoint_states,"carrier admission mismatch"},
+            {original_key | (1ull << 32),"query membership mismatch"},
+            {automatic_admission_key(saved_state,false,eldritch_admission_query(
+                PC_SIDE_SUFFIX,ActionType::EldritchAnnul,true)),"query membership mismatch"}};
+        if (key_offset != std::string::npos) for (const auto& [bad_key,reason] : malformed) {
+            auto changed = bytes;
+            std::copy_n(reinterpret_cast<const char*>(&bad_key),sizeof(bad_key),changed.begin()+key_offset);
+            // Format 7's fixed header: magic, version/endian, nine layout sizes,
+            // payload length and FNV-1a checksum. Its layout is checked on load.
+            constexpr std::size_t checksum_offset = 16 + 11 * sizeof(std::uint32_t) + sizeof(std::uint64_t);
+            constexpr std::size_t payload_offset = checksum_offset + sizeof(std::uint64_t);
+            std::uint64_t checksum = 14695981039346656037ull;
+            for (std::size_t i = payload_offset; i < changed.size(); ++i) {
+                checksum ^= static_cast<unsigned char>(changed[i]);
+                checksum *= 1099511628211ull;
+            }
+            std::copy_n(reinterpret_cast<const char*>(&checksum),sizeof(checksum),changed.begin()+checksum_offset);
+            { std::ofstream output(bad_path,std::ios::binary); output.write(changed.data(),changed.size()); }
+            CalcContext invalid(session,goal,registry,{direct_exalt},false,false,true,
+                std::nullopt,{},false,{},true);
+            const auto initial_operators = invalid.operators().size();
+            bool refused_key = false;
+            try { invalid.load_development_solve_checkpoint(bad_path.string(),"eldritch-query-native-fixture-v1"); }
+            catch (const std::runtime_error& error) {
+                refused_key = std::string(error.what()) == "solver development checkpoint " + reason;
+            }
+            PC_CHECK(refused_key && invalid.state_count() == 0 && invalid.operators().size() == initial_operators);
+            invalid.load_development_solve_checkpoint(path.string(),"eldritch-query-native-fixture-v1");
+            PC_CHECK(invalid.admit_state_local_automatic_candidates(saved_state,checkpoint_query).cached);
+        }
+        std::error_code bad_remove_error;
+        std::filesystem::remove(bad_path,bad_remove_error);
+        PC_CHECK(!bad_remove_error);
     }
     std::error_code remove_error;
     std::filesystem::remove(path,remove_error);
@@ -4925,6 +4980,31 @@ void run_solver_partial_held_witness_tests(const char* artifact_dir) {
     const auto& next = historical->nodes[old_route].edges;
     PC_CHECK(next.size() == 1 && next.front().is_default);
     if (next.size() == 1) PC_CHECK(historical->nodes[next.front().target].action.type == ActionType::EldritchExalt);
+    const auto ember = registry.index_by_id.at("eldritch_ember:1");
+    const auto exalt = registry.index_by_id.at("eldritch_exalt");
+    PC_CHECK(registry.actions[ember].params.tier == 1);
+    const auto attempt = execute_attempt(calc,{ember,exalt},carrier_state);
+    PC_CHECK(attempt.supported && attempt.fully_legal && attempt.choice_groups.empty());
+    PC_CHECK(attempt.expected_primitive_actions == 2 &&
+        attempt.expected_resources == aggregate_resources(registry,{ember,exalt}));
+    double native_mass = 0;
+    for (const auto& exit : attempt.entries) {
+        PC_CHECK(exit.probability > 0);
+        pc_item_state item; PC_CHECK(calc.materialize(exit.state,item));
+        PC_CHECK(item.prefix_count == 3 && item.suffix_count == 2 && item.searing_exarch_tier == 1);
+        const auto contains = [&](const auto id) {
+            const auto* mods = session->gen_type[id] == PC_SIDE_PREFIX ? item.prefixes : item.suffixes;
+            const auto count = session->gen_type[id] == PC_SIDE_PREFIX ? item.prefix_count : item.suffix_count;
+            for (unsigned i=0; i<count; ++i) if (mods[i].mod_id == id) return true;
+            return false;
+        };
+        for (const auto id : picks) PC_CHECK(contains(id));
+        PC_CHECK(!contains(mod("LocalIncreasedArmourAndEvasionAndStunRecovery6")));
+        native_mass += exit.probability;
+    }
+    PC_CHECK(std::abs(native_mass-1.0) <= 1e-12);
+    std::printf("partial held native word: steps=2 exits=%zu mass=%.17g all_four_original_affixes_preserved\n",
+        attempt.entries.size(),native_mass);
     std::printf("partial held native witness: law=%llu ordering_mass=%.17g goal_mask=%u historical=%s current=%s key=",
         static_cast<unsigned long long>(kRareReforgeCountLawVersion),ordering_mass,
         satisfied_goal_mask(calc.state(carrier_state)),historical->nodes[old_route].id.c_str(),

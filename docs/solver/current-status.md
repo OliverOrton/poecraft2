@@ -1,6 +1,6 @@
 # Solver current status
 
-**Reviewed capability snapshot — qualification remains scoped to its receipts.**
+**Reviewed capability snapshot â€” qualification remains scoped to its receipts.**
 Reviewed code: `ae24e0bb8797fb953cb8b9eb5c8ef040fbba203c`.
 The later [IC native follow-up](../active/2026-09-27-current-incumbent-continuity/README.md#continued-native-repair)
 changes initial renewal checking, one-affix selective cleanup and private-service
@@ -272,9 +272,10 @@ start rarity, source and profile must accompany every reused number.
 ## Unresolved or incompletely qualified
 
 The selected [Conquest/armour recovery execution](../active/2026-10-04-sol61-armour-recovery/README.md)
-is source-only from qualified query `2ce0a75b`. Native partial-held routing and
-additional query fixtures await the parent-controlled LOCAL slot; controller
-generation, ownership transfer, new economics and matching WASM are unqualified.
+starts from qualified query `2ce0a75b`: native partial-held routing passes25
+at `f038aa6f`, while six expanded query-fixture assertions fail. Corrected native
+checkpoint decoding and finite fixtures await the parent-controlled LOCAL slot;
+controller generation, ownership transfer, economics and matching WASM remain unqualified.
 
 
 **Ordinary lower reconciliation:** U4 enabled `native_retention_diagnostic=reuse`
@@ -323,7 +324,7 @@ savings nor refute all heterogeneous-role strategies. Ring capacity trials did
 more work without improving the selected ordinary policy. The aggregate
 [research dispositions](research.md) link their originals.
 
-The 24-run P0–P9 allowance is exhausted. A new session does not renew it.
+The 24-run P0â€“P9 allowance is exhausted. A new session does not renew it.
 Detailed unresolved claims remain in [research](research.md#open-obligations)
 and the claim histories, not in a growing duplicate list here.
 

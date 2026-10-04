@@ -981,15 +981,47 @@ void CalcContext::load_development_solve_checkpoint(
         throw std::runtime_error(
             "solver development checkpoint planner index out of range");
     }
+    std::unordered_set<std::uint64_t> carrier_keys;
     for (const auto& [state, operators] : carrier_operators) {
-        // The low word is the carrier; the high word selects full (0) or
-        // cheap-only (1) admission. Validate both parts without interpreting
-        // the stage tag as a native state ID.
-        if ((state >> 32) > 1 ||
+        // Low 32 bits bind the exact carrier, bit 32 the cheap/full stage,
+        // and the remaining bits the defined finite query. Check the complete
+        // encoding and membership before importing any saved native operator.
+        const std::uint64_t query_word = state >> 33;
+        const bool cheap_only = ((state >> 32) & 1u) != 0;
+        if (query_word >= kAutomaticAdmissionQueryCount ||
             static_cast<std::uint32_t>(state) >= states.size() ||
-            !std::all_of(operators.begin(), operators.end(), index_in_range)) {
+            !std::all_of(operators.begin(), operators.end(), index_in_range) ||
+            !carrier_keys.insert(state).second) {
             throw std::runtime_error(
                 "solver development checkpoint carrier admission mismatch");
+        }
+        if (query_word == 0) continue;
+        const auto query = static_cast<AutomaticAdmissionQuery>(query_word);
+        for (const auto index : operators) {
+            const auto& option = index < initial_operator_count_
+                ? operators_.at(index)
+                : dynamic_operators.at(index - initial_operator_count_);
+            // Cheap-only admission never evaluates the Eldritch family.
+            // A query's restored membership cannot grant another family,
+            // side, final action, or setup-bearing direct intent.
+            if (cheap_only || option.kind != PlannerOperatorKind::FixedOption ||
+                option.option_kind != FixedOptionKind::EldritchSideIntent ||
+                option.automatic_kind != AutomaticCandidateKind::EldritchSide ||
+                (option.intended_side != PC_SIDE_PREFIX && option.intended_side != PC_SIDE_SUFFIX) ||
+                option.primitive_program.empty() ||
+                option.primitive_program.back() >= registry_.actions.size()) {
+                throw std::runtime_error(
+                    "solver development checkpoint query membership mismatch");
+            }
+            const auto final = registry_.actions[option.primitive_program.back()].params.type;
+            if ((final != ActionType::EldritchAnnul && final != ActionType::EldritchChaos &&
+                 final != ActionType::EldritchExalt) ||
+                (query != eldritch_admission_query(option.intended_side, final, false) &&
+                 !(option.primitive_program.size() == 1 &&
+                   query == eldritch_admission_query(option.intended_side, final, true)))) {
+                throw std::runtime_error(
+                    "solver development checkpoint query membership mismatch");
+            }
         }
     }
     validate_cache(

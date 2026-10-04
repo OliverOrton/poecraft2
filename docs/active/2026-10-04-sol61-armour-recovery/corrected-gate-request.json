@@ -1,0 +1,50 @@
+{
+  "schema": "sol61_armour_corrected_finite_gate_request_v1",
+  "base_commit": "f038aa6f26f33adbd9c93669d3291cc86ad3b4da",
+  "created_utc": "2026-10-04T04:41:29.399616+00:00",
+  "qualification": "SOURCE_PREPARED_UNRUN",
+  "source_files_sha256": {
+    "engine/src/solver_development_checkpoint.cpp": "5fbd67b5f1f285f96c741a6713ec8292757b47371c52d7791724475e6dfd12a0",
+    "engine/tests/test_solver_compile.cpp": "2c335049eb64f406cee5fb1e763de3af1b44ee94c0645adabd571bd4a6ca1a78",
+    "engine/tests/test_main.cpp": "25d53853b5877cba993ba36bcf417b227adef42ad5760cdf8ec232b6c18bfa94",
+    "engine/tests/tests.hpp": "f996892603d40071ecd2d5dea3a8ceea4e01892b11d84f5daab567b555d2914f"
+  },
+  "compiler_jobs": 2,
+  "serial": true,
+  "build_host_watchdog_seconds": 600,
+  "tests": [
+    {
+      "args": [
+        "--solver-partial-held-witness-only",
+        "data/compiled/current"
+      ],
+      "host_watchdog_seconds": 60
+    },
+    {
+      "args": [
+        "--solver-admission-query-only"
+      ],
+      "host_watchdog_seconds": 180
+    },
+    {
+      "args": [
+        "--solver-checkpoint-only",
+        "data/compiled/current"
+      ],
+      "host_watchdog_seconds": 180
+    },
+    {
+      "args": [
+        "--solver-metamod-recovery-only",
+        "data/compiled/current"
+      ],
+      "host_watchdog_seconds": 180
+    }
+  ],
+  "caps_preserved_from": "source-audit.json finite_batch_request",
+  "runtime_manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+  "supervisor": "poecraft_ingest.solver_worker.run_isolated_process",
+  "stop": "First failed gate, identity disagreement, timeout or survivor; preserve before diagnosis. No timed policy runs or automatic retries.",
+  "local_slot": "REQUESTED; not granted after finite-r1 release",
+  "rationale": "Changed checkpoint decoder and corrected preconditions are a new causal premise. The expanded word and malformed-key assertions plus existing checkpoint/metamod controls qualify the changed native layer without a policy solve."
+}
