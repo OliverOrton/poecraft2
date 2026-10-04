@@ -677,6 +677,7 @@ class _WindowsProcessJob:
         import ctypes
         from ctypes import wintypes
         self.ctypes = ctypes
+        self.last_live_processes = []
         self.kernel = ctypes.WinDLL("kernel32", use_last_error=True)
         handles = {"CreateJobObjectW": ([ctypes.c_void_p, wintypes.LPCWSTR], wintypes.HANDLE),
                    "SetInformationJobObject": ([wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD], wintypes.BOOL),
@@ -686,7 +687,8 @@ class _WindowsProcessJob:
                    "CloseHandle": ([wintypes.HANDLE], wintypes.BOOL),
                    "OpenProcess": ([wintypes.DWORD, wintypes.BOOL, wintypes.DWORD], wintypes.HANDLE),
                    "WaitForSingleObject": ([wintypes.HANDLE, wintypes.DWORD], wintypes.DWORD),
-                   "IsProcessInJob": ([wintypes.HANDLE, wintypes.HANDLE, ctypes.POINTER(wintypes.BOOL)], wintypes.BOOL)}
+                   "IsProcessInJob": ([wintypes.HANDLE, wintypes.HANDLE, ctypes.POINTER(wintypes.BOOL)], wintypes.BOOL),
+                   "QueryFullProcessImageNameW": ([wintypes.HANDLE, wintypes.DWORD, wintypes.LPWSTR, ctypes.POINTER(wintypes.DWORD)], wintypes.BOOL)}
         for name, (args, result) in handles.items():
             getattr(self.kernel, name).argtypes = args
             getattr(self.kernel, name).restype = result
@@ -784,6 +786,7 @@ class _WindowsProcessJob:
             if info.Count > capacity:
                 raise OSError("invalid owned process list length")
             handles = []
+            observed = []
             try:
                 for pid in info.Ids[:info.Count]:
                     handle = api.OpenProcess(0x00100000 | 0x1000, False, pid)
@@ -799,6 +802,12 @@ class _WindowsProcessJob:
                             continue
                         state = api.WaitForSingleObject(handle, 0)
                         if state == 258:  # WAIT_TIMEOUT: actually live
+                            image = ctypes.create_unicode_buffer(32768)
+                            length = wintypes.DWORD(len(image))
+                            image_ok = api.QueryFullProcessImageNameW(handle, 0, image, ctypes.byref(length))
+                            observed.append({"pid": int(pid), "exit_signal": "live",
+                                             "image": image.value if image_ok else None,
+                                             "owned_job_member": True})
                             handles.append(handle)
                             handle = None
                         elif state != 0:  # WAIT_OBJECT_0: proved exited
@@ -806,6 +815,7 @@ class _WindowsProcessJob:
                     finally:
                         if handle:
                             api.CloseHandle(handle)
+                self.last_live_processes = observed
                 return handles
             except BaseException:
                 for handle in handles:
@@ -879,6 +889,7 @@ def run_isolated_process(
     process = None
     process_job = None
     descendants_after_parent_exit = False
+    descendant_observations = []
     timed_out = canceled = drain_timed_out = False
     cleanup_error = None
     cancellation_mode = None
@@ -956,6 +967,8 @@ def run_isolated_process(
             except subprocess.TimeoutExpired:
                 if process_job is not None and process.poll() is not None and process_job.active_processes():
                     descendants_after_parent_exit = True
+                    descendant_observations.append({"parent_pid": process.pid, "parent_exit_code": process.returncode,
+                                                   "live_owned_processes": getattr(process_job, "last_live_processes", [])})
                     force_cleanup()
                     break
                 continue
@@ -963,6 +976,8 @@ def run_isolated_process(
             force_cleanup()
         if process_job is not None and process.poll() is not None and process_job.active_processes():
             descendants_after_parent_exit = True
+            descendant_observations.append({"parent_pid": process.pid, "parent_exit_code": process.returncode,
+                                           "live_owned_processes": getattr(process_job, "last_live_processes", [])})
             force_cleanup()
     except BaseException:
         # Callback and observer errors must also terminate the owned process.
@@ -994,6 +1009,7 @@ def run_isolated_process(
         "survivor": parent_survivor or drain_timed_out or cleanup_error is not None,
         "parent_survivor": parent_survivor,
         "descendants_after_parent_exit": descendants_after_parent_exit,
+        "descendant_observations": descendant_observations,
         "process_tree_owner": "windows_job" if process_job is not None else "process_group",
         "cleanup_drain_timed_out": drain_timed_out,
         "cleanup_error": cleanup_error,

@@ -75,3 +75,16 @@ actual exit signals, and waits on retained handles under the existing cleanup
 bound. This is intended to distinguish delayed job accounting from a live child;
 qualification remains pending. Native capability and sentinel negatives remain
 unbuilt. The matching-source release verifier is a subsequent source slice.
+
+Corrected batch at5f0cec03:151 passed,1 failed in38.37s (outer38.91s),
+without timeout or survivor. Prerequisite, finalization and live-grandchild
+negatives pass. The plain os._exit(7) case still records a live job member after
+parent exit, overriding the native-crash classification. The retained receipt
+contains no member PID/image; it cannot distinguish an OS observation issue
+from real owned helper lifetime. This remains a blocker.
+
+A narrow pending diagnostic slice records live owned PID/image/exit-state at the
+actual parent-exit observation and preserves all membership, cleanup and survivor
+checks. Paired0/7 exit codes and streamed/piped transports expose the distinction.
+No failure-kind precedence is changed to obtain a pass. A focused recheck is
+required; the original hosted scheduler cause remains independently open.

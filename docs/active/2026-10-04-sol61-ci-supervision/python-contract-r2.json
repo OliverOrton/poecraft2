@@ -1,0 +1,33 @@
+{
+  "canceled": false,
+  "cancellation_ack_ms": null,
+  "cancellation_mode": null,
+  "cleanup_drain_timed_out": false,
+  "cleanup_error": null,
+  "descendants_after_parent_exit": true,
+  "exit_code": 1,
+  "failed_tests": 1,
+  "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2-ci-supervision-20261004\\out\\sol61-ci-supervision\\python-contract-r2\\pytest.log",
+  "parent_survivor": false,
+  "passed_tests": 151,
+  "process_id": 54080,
+  "process_identity_token": "54080:134355676563660524",
+  "process_tree_owner": "windows_job",
+  "purpose": "Corrected causal Python recheck after classified29 failures",
+  "qualification": "Focused151-pass subset only; remaining worker failure blocks integration.",
+  "remaining_failure": "test_actual_crash_and_synthetic_os_oom_remain_distinct: unexpected_descendant_lifetime vs process_crash_or_native_error",
+  "source": "5f0cec0378000e4b9eca982246c138c4ed6fd867",
+  "survivor": false,
+  "survivor_check": "owned_windows_job_drained",
+  "targets": [
+    "test_solver_lab_supervisor.py",
+    "test_solver_worker_cleanup.py",
+    "test_ci_validation.py",
+    "test_ci_changes.py",
+    "test_solver_reports.py",
+    "test_solver_corpus_runner.py",
+    "test_solver_lab_unattended_hardening.py"
+  ],
+  "timed_out": false,
+  "wall_ms": 38913.26289996505
+}

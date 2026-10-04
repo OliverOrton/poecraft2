@@ -204,7 +204,7 @@ def test_actual_crash_and_synthetic_os_oom_remain_distinct(tmp_path: Path) -> No
     )
 
     assert crash_class.status == "failed"
-    assert crash_class.failure_kind == "process_crash_or_native_error"
+    assert crash_class.failure_kind == "process_crash_or_native_error", crash
     assert oom_class.status == "oom"
     assert oom_class.failure_kind == "operating_system_out_of_memory"
 

@@ -107,3 +107,16 @@ time.sleep(.1)
     classification = worker.classify_process_result(result, final_report_exists=True)
     assert classification.status == "failed"
     assert classification.failure_kind == "unexpected_descendant_lifetime"
+
+
+@pytest.mark.parametrize("exit_code", [0, 7])
+@pytest.mark.parametrize("stream_log", [False, True])
+def test_plain_exit_does_not_invent_a_descendant_lifetime(tmp_path, exit_code, stream_log):
+    result = worker.run_isolated_process(
+        [sys.executable, "-u", "-c", f"import os; print('plain exit',flush=True); os._exit({exit_code})"],
+        cwd=tmp_path, watchdog_seconds=5,
+        log_path=tmp_path / "plain.log" if stream_log else None,
+    )
+    assert result["exit_code"] == exit_code, result
+    assert not result["survivor"] and not result["descendants_after_parent_exit"], result
+    assert "plain exit" in result["output"], result
