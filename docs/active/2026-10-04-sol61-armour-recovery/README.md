@@ -877,3 +877,15 @@ original frozen request/prices/laws/caps,150native/165host,50Mwork/1GiB and all
 full-scan arm. Completion would qualify entries/resource delivery, not close the
 economic gap or historical reconstruction. No Current/Finder producer activation,
 result transfer/early checker release, control-cohort/WASM qualification or push.
+
+
+Reviewer87d678876a038e24c5e5ab1065220a4ec00a0cf2 independently confirms the
+R1 memory-observation bottleneck and requires live mutable accounting at every
+checkpoint. The actual implementation at2ff1adc5 adds NO outer/checker cache;
+those measurements stay live. Source-only follow-up strengthens the peak test
+with a successful prior checkpoint, proving growth-caused refusal, and explicitly
+destroys a suspended validator after committed native work. The shared owner
+must keep that exact debit; source/checker selected bytes and session references
+must return to baseline while the complete immutable census remains owned.
+Every mutable checkpoint is independently audited before destruction. New tests
+and all finite stages remain UNRUN; reviewer/LOCAL clearance still required.

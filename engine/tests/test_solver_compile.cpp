@@ -6172,11 +6172,48 @@ void run_solver_entry_budget_tests() {
         peak_refused = std::string(error.what()).find("no exact admission memory") != std::string::npos;
     }
     PC_CHECK(peak_refused && !peak_capped.done());
+    // At least one successful checkpoint distinguishes native growth refusal
+    // from a constructor-only refusal that never exercised the live cursor.
+    PC_CHECK(peak_steps > 0);
     PC_CHECK(peak_capped.estimated_owned_bytes() >= peak_capped.audited_estimated_owned_bytes());
     std::printf("native entry selected peak safety: full_peak=%llu cap=%llu refused=%u steps=%u validated=%u positive=%u logical=%llu checker_retained=1 complete_aggregate_peak=0\n",
         static_cast<unsigned long long>(control_audited_peak),static_cast<unsigned long long>(below_peak.max_solver_owned_bytes),
         peak_refused,peak_steps,peak_capped.validated_entries(),peak_capped.positive_entries(),
         static_cast<unsigned long long>(peak_capped.logical_work()));
+    // Explicitly destroy an admission suspended AFTER committed native work.
+    // Only the child is released: the stable problem/checker and their immutable
+    // census stay owned, while the external shared work owner keeps its debit.
+    CalcContext cleanup_owner(session,goal,registry,{chaos});
+    cleanup_owner.set_solve_resource_caps(10000,1000000,false,256ull << 20);
+    source.set_reforge_work_budget_owner(&cleanup_owner);
+    const auto fixed_problem_bytes = source.fast_estimated_owned_bytes();
+    const auto fixed_checker_bytes = checker.live_owned_bytes();
+    const auto fixed_session_references = session.use_count();
+    auto suspended = std::make_unique<SelectiveProgrammeEntryValidator>(source,session,control,census,prices,limits);
+    unsigned cleanup_steps = 0, previous_entries = 0;
+    bool suspended_after_work = false;
+    while (!suspended->done() && cleanup_steps < 40000) {
+        suspended->advance(1); ++cleanup_steps;
+        PC_CHECK(suspended->estimated_owned_bytes() >= suspended->audited_estimated_owned_bytes());
+        PC_CHECK(source.fast_estimated_owned_bytes() == fixed_problem_bytes);
+        PC_CHECK(checker.live_owned_bytes() == fixed_checker_bytes);
+        suspended_after_work = !suspended->done() && suspended->logical_work() > 0 &&
+            suspended->validated_entries() == previous_entries;
+        previous_entries = suspended->validated_entries();
+        if (suspended_after_work) break;
+    }
+    PC_CHECK(suspended_after_work);
+    const auto committed_before_cleanup = cleanup_owner.telemetry().reforge_logical_work_v1;
+    PC_CHECK(committed_before_cleanup > 0 && committed_before_cleanup == suspended->logical_work());
+    suspended.reset(); // End borrowed references/cursor lease before owner/checker.
+    PC_CHECK(cleanup_owner.telemetry().reforge_logical_work_v1 == committed_before_cleanup);
+    PC_CHECK(source.fast_estimated_owned_bytes() == fixed_problem_bytes);
+    PC_CHECK(checker.live_owned_bytes() == fixed_checker_bytes);
+    PC_CHECK(session.use_count() == fixed_session_references);
+    source.set_reforge_work_budget_owner(nullptr);
+    std::printf("native entry suspended cleanup: suspended_after_work=%u steps=%u committed_before=%llu committed_after=%llu checker_retained=1 census_entries=%zu validator_released=1 fixed_ownership_unchanged=1\n",
+        suspended_after_work,cleanup_steps,static_cast<unsigned long long>(committed_before_cleanup),
+        static_cast<unsigned long long>(cleanup_owner.telemetry().reforge_logical_work_v1),census.entries.size());
     // The original immutable result and all six positive entries stayed alive.
     PC_CHECK(finder_evaluation_accepted(checker.result()) && checker.result().policy_entries.entries.size() == 6);
 }

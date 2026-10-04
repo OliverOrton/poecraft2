@@ -13,8 +13,10 @@ observation, with full traversal retained for independent audit. Source prepared
 new finite [request](docs/active/2026-10-04-sol61-armour-recovery/entry-observer-finite-request.json)
 requires every suspended/completed audit, refusal below full selected peak,
 query staging/cancellation/reset/retry audits, unchanged paired/legacy roots and
-blocker/Finder compatibility. ALL new native stages UNRUN; reviewer and parent
-slot clearance required. [Same-graph follow-through](docs/active/2026-10-04-sol61-armour-recovery/entry-observer-root-follow-through-request.json)
+blocker/Finder compatibility. Reviewer87d67887 follow-up adds explicit post-growth cap refusal and post-commit
+suspended validator destruction/debit/census lifetime controls. No outer/checker
+cache added; all mutable checkpoints stay live/audited. ALL new native stages
+UNRUN; reviewer and parent slot clearance required. [Same-graph follow-through](docs/active/2026-10-04-sol61-armour-recovery/entry-observer-root-follow-through-request.json)
 is conditional after finite pass, ONE invocation, original150native/165host/
 50Mwork/1GiB, retained checker/census and every12658entry; no unchanged R1 repeat.
 
