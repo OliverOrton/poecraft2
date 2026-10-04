@@ -1,0 +1,192 @@
+{
+  "schema": "sol61_independent_root_observer_baseline_review_v1",
+  "source_commit": "8ce6db846eab51ec9734f47e2a113970e8dd9d5f",
+  "evidence_class": "Independent source/pin/hash/receipt review of owner native run; no reviewer heavy command",
+  "source_pins": {
+    "engine/src/solver_compile.cpp": "35838754a73d7bc320c1265e12eed88a5fff32bc6bf5eb836ba881d6aeaea05a",
+    "engine/src/solver_compile_contracts.hpp": "b156eed5a8e3c13a1159365b0a3e4ccd6a50234927d07f3c9d506789409735f3",
+    "engine/src/solver_selective_completion.cpp": "8fff4ffb259400854b480bee06cef80b1242d1ba15ab233fe4f75e4f31d3d8b6",
+    "engine/src/solver_selective_completion.hpp": "bd4cf4c3fab6dec4123f052a7f38c35b749b97c8a6c18108bcf9f9a09424f411",
+    "engine/benchmarks/solver_benchmark.cpp": "2903cf7105e185648afd2413370a2b80a44859a11eba07a470c293b41517e37c",
+    "engine/tests/test_main.cpp": "82a2aae41073c57633bad1647f5b1facf4c320596ed3ace802f0bfb32d4369b7",
+    "engine/tests/test_solver_compile.cpp": "b34458428eec7d01ed42689e7988e00c3d63d8d5845ebb91ce3552757c42faca",
+    "engine/tests/tests.hpp": "f6d8cde9c553dd80a174c9b9081b4a29d7d314ec7d9ec91a295075337b2beb05",
+    "engine/src/solver_calc.cpp": "41198cac24afe47b3c65fc07094b6fffa4138f5f69fb656e2339a2a52d3e34b1",
+    "engine/src/solver_calc_types.hpp": "2035b3939d546fb868578b00ee86f358978cbac32d804a4b63a9e2f47fdadd02",
+    "engine/src/solver_options_automatic.cpp": "e85c97e4d6ba591f4b00882864d2d9d7a60ab120b7a7788169c4a7f8523766a0",
+    "engine/src/solver_options_helpers.hpp": "575d705635d48d9c24543bbefd506180c3d1f83bc2ba621f7ac845cbbdbed15e"
+  },
+  "source_pin_count_verified": 12,
+  "frozen_request_identity": "same3 case/economy/manifest and3 compiled runtime hashes previously verified in generic-final-fill-r1; root request hashes unchanged",
+  "processes": [
+    {
+      "phase": "build-benchmark",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 33172,
+      "process_identity_token": "33172:134355925051974064",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 15335.28280002065
+    },
+    {
+      "phase": "generated-final-fill-original-root-and-all-entries",
+      "exit_code": 2,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 40656,
+      "process_identity_token": "40656:134355925209696540",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 150587.58860011585
+    }
+  ],
+  "actual_Benchmark_binary_sha256": "f88bd35a450a02e2211a65f28a539e305a3346bad37daac440de35610b0aa247",
+  "native_result": {
+    "status": "censored_time",
+    "root_accepted": true,
+    "root_diagnostic_cost": 210090.72616079813,
+    "all_positive_entries_accepted": false,
+    "checked_feasible_upper": false,
+    "positive_entries": 12658,
+    "validated_entries": 976,
+    "graph_fnv1a64": "7602779656003707844",
+    "graph_sha256": "bedc2a4718e4622a301b0efd9159335fbe41db46f1b521c8d3bdac619249337a",
+    "root_success": 1,
+    "all_reported_unresolved_failure_stop_not_applied_no_matching_edge": 0,
+    "aggregate_committed_work": 1884694,
+    "generation_work": 233575,
+    "checker_work": 933384,
+    "entry_work": 717735,
+    "work_cap": 50000000,
+    "sampled_reserved_peak": 878621351,
+    "memory_cap": 1073741824,
+    "aggregate_memory_observation_complete": false
+  },
+  "timing": {
+    "generation_wall_ms": 346.5862,
+    "checker_wall_ms": 5126.7498,
+    "entry_wall_ms": 144574.9072,
+    "checker_steps": 10040,
+    "entry_advances": 5859,
+    "memory_observation_calls": 15905,
+    "memory_observation_ns": 141345970600,
+    "entry_live_memory_observation_ns": 141156879500,
+    "wall_ms": 150054.8563
+  },
+  "timing_disposition": "144.575s entry phase includes141.157s measured inside memory observation stack. Timing covers outer(false)+checker live+validator full estimator, not an isolated leaf benchmark. Source full validator->CalcContext.calculate_owned_bytes scans retained payload at every checkpoint. This establishes observed memory-observation overhead for this run; removal savings and completed coverage remain untested.",
+  "reviewed_thin_diff": "8ce declares final-fill root mode and conditional old/new regenerated graph pin, adds phase/observer clocks and explicit aggregate_memory_observation_complete:false; no crafting/query/entry/price/cap change. Previous selector/hash prerequisites satisfied.",
+  "existing_memory_premises": [
+    {
+      "reference": "engine/src/solver_calc.cpp:765-811",
+      "claim": "Existing fast estimate combines constructor baseline, current shallow capacities, incremental nested payloads and active automatic child."
+    },
+    {
+      "reference": "engine/src/solver_calc.cpp:692-761",
+      "claim": "Current shallow estimate includes automatic_admission_cursor_bytes; full calculation also includes same cursor at2643."
+    },
+    {
+      "reference": "engine/src/solver_options_automatic.cpp:1231-1316",
+      "claim": "Retained cursor footprint includes transient local context, synthesis/mapped states/memos/scratch and native batch storage."
+    },
+    {
+      "reference": "engine/src/solver_calc.cpp:2460-2471",
+      "claim": "Native scratch checks already use live fast ledger and propagate to existing memory owner."
+    },
+    {
+      "reference": "engine/src/solver_calc.cpp:2596-2600",
+      "claim": "Full owned-byte calculation is itself a conservative selected-allocation estimate, not exact process heap authority."
+    }
+  ],
+  "required_observer_proof": [
+    "Use existing ownership owner/ledger. Never cache a live validator footprint unchanged across advance: interned states, native distributions/kernels, admission scratch and private budget owner can grow or release.",
+    "Cache only outer/calculation/producer/graph/prepared strategy and completed-checker/census ownership proven fixed during the exclusive validation phase. Document that forwarded work changes scalar counters without heap mutation; refresh/invalidate on every phase/object/result transition.",
+    "Read live validator fast estimate after every admission checkpoint; include private owner after creation and all retained/suspended context scratch. Use conservative fast>=full contract, not bitwise equality or a claim of exact allocator bytes.",
+    "Keep original aggregate cap comparison/headroom and child set_solve_owned_bytes_budget_owner/resource/scratch enforcement. Never omit an owner or subtract retained checker/census to create headroom. Conservative early refusal is acceptable; allowing more than audited cap is not.",
+    "Keep checker/result/census/graph/prices and parent budget owner alive until validator ends; reset cache ownership on completion, capacity/unsupported exception, timeout/cancel and destruction. No release, copy/move of census or skipped entry.",
+    "Preserve all strictly positive native entries, original occurrence/carrier/goal/scope/probability/resource/price identities, query membership, cancellation/rollback and exact logical committed debit. Observation alone must consume no native units or reset/refund them.",
+    "Keep aggregate_memory_observation_complete:false until separate transient simultaneous overlap evidence closes R6. Boundary ledger equivalence and cached fixed owners do not establish within-step peak."
+  ],
+  "focused_verification_required": [
+    "Reuse passed same-census36 boundary full/ledger audits:30 suspended+6 completed, exact48 logical/active and matching native checkpoint count. If new cache wrapper introduced, exercise it on these same boundaries rather than rerun unchanged unrelated suites.",
+    "Verify cached supposedly fixed components against full/audited live composition at entry handoff and after work forwarding; check unchanged graph/checker/census identity and cache invalidation after validator reset.",
+    "Add a memory-cap refusal that occurs after context/cursor growth, not only memory1 during construction. At that boundary fast selected must never undercount full audited; no cap/headroom widening, committed work preserved and no accepted publication. Use same finite accepted census and existing supervision.",
+    "Exercise cancellation/resource/unsupported cleanup while admission is suspended for any new cached lifetime; child/borrowed references end before owner/checker, no stale pointer or native-work refund. Keep tests focused on changed wrapper/lifetime.",
+    "New full run must regenerate identical graph7602779656003707844/SHA bedc2a..., retain same original root cost210090.72616079813/root mass and unchanged root native work if only observer changed, report all12658 positive entries and actual validated count, and maintain generation+checker+validator exactly-once debit under unchanged150/165/50M/1GiB.",
+    "Measure phase and observer time in same existing compact diagnostic; no full payload rescan at every production checkpoint or routine repeated policy solves. Do not infer memory headroom/completion from removing observation time."
+  ],
+  "candidate_source_status": "Upcoming incremental/cached observer source not supplied or present at initial inspection; actual-diff review still required before qualification. No competing production edit.",
+  "recommendation": "Observer optimization is causally justified by this measured censored run. Source-review invariants and focused memory-growth/lifetime checks precede parent-selected changed execution. Root remains diagnostic; no financial upper/retention, complete peak, performance, consumer activation/full closure/final cohort/WASM approval.",
+  "artifacts": {
+    "build-benchmark.binary-identity.json": {
+      "sha256": "86eb0bd28bc18b96b7967bf77f9a53e95468b272644fdeba3b4dc47f2ddd6240",
+      "bytes": 267,
+      "original_path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\out\\sol61-armour\\generic-final-fill-root-r1\\build-benchmark.binary-identity.json"
+    },
+    "build-benchmark.log": {
+      "sha256": "21f4b1f3f132741efce059df0d4cec08a270b7c14248be972df370d607a72a31",
+      "bytes": 203,
+      "original_path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\out\\sol61-armour\\generic-final-fill-root-r1\\build-benchmark.log"
+    },
+    "build-benchmark.receipt.json": {
+      "sha256": "95fd0c9d3509ff271dec2c19a10c739660821beb92e673057227c8f1528b2093",
+      "bytes": 315,
+      "original_path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\out\\sol61-armour\\generic-final-fill-root-r1\\build-benchmark.receipt.json"
+    },
+    "build-benchmark.started.json": {
+      "sha256": "4a1387838f7d09bd4122c3589d885844fa0693dd7d601a51d6165323815c41ce",
+      "bytes": 82,
+      "original_path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\out\\sol61-armour\\generic-final-fill-root-r1\\build-benchmark.started.json"
+    },
+    "completion.json": {
+      "sha256": "f719f4fe506d54a93dfb9f5a3c14db213d47e342be1a7774cad4775fe6e7e845",
+      "bytes": 1090,
+      "original_path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\out\\sol61-armour\\generic-final-fill-root-r1\\completion.json"
+    },
+    "generated-final-fill-original-root-and-all-entries.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "original_path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\out\\sol61-armour\\generic-final-fill-root-r1\\generated-final-fill-original-root-and-all-entries.log"
+    },
+    "generated-final-fill-original-root-and-all-entries.receipt.json": {
+      "sha256": "f4a6dd5a12f79e804988bbe263105e554a48ffb008659cb042228bf59fbe2c6e",
+      "bytes": 316,
+      "original_path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\out\\sol61-armour\\generic-final-fill-root-r1\\generated-final-fill-original-root-and-all-entries.receipt.json"
+    },
+    "generated-final-fill-original-root-and-all-entries.started.json": {
+      "sha256": "8b91ca096a0f58b571db987bb2372ec611581dcfa791d1c799805de76b13c9ad",
+      "bytes": 82,
+      "original_path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\out\\sol61-armour\\generic-final-fill-root-r1\\generated-final-fill-original-root-and-all-entries.started.json"
+    },
+    "generic-final-fill-root.json": {
+      "sha256": "18487867c4ed091dd507d735b481a8c689b6e4b8e0bf75ee995de2de32c67960",
+      "bytes": 11172,
+      "original_path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\out\\sol61-armour\\generic-final-fill-root-r1\\generic-final-fill-root.json"
+    },
+    "generic-final-fill-root.json.construction.json": {
+      "sha256": "93f77ff7008a945ff725de213fbf7c11937f347740ed214e62f2e3f809d46de9",
+      "bytes": 1689,
+      "original_path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\out\\sol61-armour\\generic-final-fill-root-r1\\generic-final-fill-root.json.construction.json"
+    },
+    "generic-final-fill-root.json.eval.json": {
+      "sha256": "19eb5a8c6004ca9e4e1c784319c2a48935901e16005700fc0ea628cf1b0dda00",
+      "bytes": 305434,
+      "original_path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\out\\sol61-armour\\generic-final-fill-root-r1\\generic-final-fill-root.json.eval.json"
+    },
+    "generic-final-fill-root.json.strategy.json": {
+      "sha256": "bedc2a4718e4622a301b0efd9159335fbe41db46f1b521c8d3bdac619249337a",
+      "bytes": 39418,
+      "original_path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\out\\sol61-armour\\generic-final-fill-root-r1\\generic-final-fill-root.json.strategy.json"
+    },
+    "request.json": {
+      "sha256": "78cd59de0f064a718aea859952fabff6fd8dc6dfae720e8578308eaf4a0d4a97",
+      "bytes": 11578,
+      "original_path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\out\\sol61-armour\\generic-final-fill-root-r1\\request.json"
+    }
+  }
+}

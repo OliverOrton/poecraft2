@@ -1206,3 +1206,48 @@ resolve R11 timing ambiguity; do not add another supervisor. R6 complete transie
 peak evidence remains open and explicitly qualified. Historical R3 remains failed
 and separate. Hold activation/full closure, Conquest financial retention, final
 frozen control cohort and WASM pending their actual evidence.
+
+
+## Changed final-fill root deadline and observer proof requirements
+
+Reviewed8ce6db846eab51ec9734f47e2a113970e8dd9d5f and actual generic-final-fill-root-r1
+receipts.12 source pins, actual Benchmark binary, same graph bytes and two process
+receipts verify; frozen request/runtime hashes match prior verified construction.
+Build passes; native exit2 is censored_time, no timeout/cancel/survivor. Thin diff
+correctly declares new root selector/pin and phase/observation clocks without
+mechanics/entry/price/cap changes. No reviewer heavy command. Exact artifact hashes,
+source invariants and focused tests are in generic-final-fill-root-r1-review.json;
+request/report/completion copied, bulk eval/graph stays on owner disk.
+
+Root diagnostic cost210090.72616079813, success1/all reported leaks/failure/unresolved0.
+Only976/12658 positive entries validate by deadline; checked feasible upper remains
+FALSE. Aggregate work233575+933384+717735=1884694/50M is exactly debited. Sampled
+reserved peak878621351/1GiB remains explicitly incomplete. Generation.347s,checker
+5.127s,entry144.575s; entry-live memory observations141.157s over5859 advances are
+measured in the combined outer/checker/validator observation stack. They do not
+isolate one callee, but source traces full validator ownership scan on every
+checkpoint. This justifies the selected observer optimization; no removal saving
+or completed all-entry result has yet been measured.
+
+Required proof: cache only components fixed during validation; keep completed
+checker/result/census/graph/prices and parent owner alive. Work forwarding changes
+scalar counters, not their ownership. The live validator grows states/kernels/
+caches and retains suspended scratch, so read its existing incremental ledger
+after every checkpoint; never reuse one stale full footprint. Include private
+owner after creation. Existing fast>=full is a conservative selected-byte contract,
+not exact allocator/aggregate peak authority. Keep original cap/headroom comparisons
+and native child/scratch owners. Refresh caches on phase/object/result transitions,
+including reset/exception/cancel; no hidden release, census move/copy or entry skip.
+Preserve occurrence/goal/scope/price/probability/resource/query and committed work
+without resets/refunds. Full peak R6 remains qualified open.
+
+Reuse the qualified36 boundary observer comparisons (30suspended/6completed/48work);
+exercise any new cache wrapper against full composition at handoff and after
+forwarding/reset. Add focused refusal AFTER context/cursor growth, since memory1
+only covers construction, and check suspended resource/cancel cleanup for new
+cache lifetimes. Fast must never undercount audit or create extra headroom; keep
+debit and publication refusal. Actual upcoming source is not yet reviewed. A
+changed full run must preserve graph/root cost/root native work, all12658 entry
+coverage and same150/165/50M/1GiB, with existing causal timers/supervision. Removing
+scans may expose another cap; do not infer completion or enlarge budgets. No
+financial upper/retention, peak/performance/consumer/closure/cohort/WASM approval.

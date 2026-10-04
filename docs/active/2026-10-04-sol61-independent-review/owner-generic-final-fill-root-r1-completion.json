@@ -1,0 +1,36 @@
+{
+  "source_commit": "8ce6db846eab51ec9734f47e2a113970e8dd9d5f",
+  "stages": [
+    {
+      "phase": "build-benchmark",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 33172,
+      "process_identity_token": "33172:134355925051974064",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 15335.28280002065
+    },
+    {
+      "phase": "generated-final-fill-original-root-and-all-entries",
+      "exit_code": 2,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 40656,
+      "process_identity_token": "40656:134355925209696540",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 150587.58860011585
+    }
+  ],
+  "unrun": [],
+  "owned_processes": [],
+  "local_slot": "RELEASED at terminal batch result",
+  "stop_requested": false,
+  "finished_utc": "2026-10-04T13:04:31.330553+00:00"
+}
