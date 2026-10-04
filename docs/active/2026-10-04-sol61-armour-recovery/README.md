@@ -164,6 +164,35 @@ states, suppress a tiny entry, or activate a proposal. Plain/blocked Exalt,
 Harvest composition, Finder attempt integration and whole Conquest economic
 recovery are deferred beyond this first private family. All new source is unbuilt.
 
+## Compound-blocker witness prepared after reconnect
+
+Reconciled clean bd3c5b3 before editing. Parent requests the independent review's
+compound blocker: modifier2 remains the lower-tier goal-family member with
+primary group13 and additionally excludes group10; exact carrier prefixes3/2,
+suffixes5/7, held anchor5. The separate
+--solver-partial-held-compound-blocker-only selector proves a positive native
+Chaos pick ordering and independently sums its exact carrier mass in the full
+original-root Chaos law **before** requiring controller construction. It checks
+the authoritative eligible mask for missing prefix goals, native intent absence,
+compiled Exalt routing and original-root/entry rejection. These assertions are
+prepared, not executed; reachability and rejection are not yet findings.
+
+The source fixture needed an independent natural junk suffix: converting modifier7
+into the lower-tier second suffix goal left only two natural suffix families,
+preventing the final native three-affix Annul proposal. Modifier9 is now ordinary
+junk in this private in-memory fixture, with its veiled-placeholder role disabled
+and consistent native masks/group payloads. Production Session builders/data and
+all frozen corpus inputs are unchanged. This prerequisite correction also applies
+to the original four positive variants; their exact-root/resource/positive-entry
+assertions are preserved. No production controller or validator edit follows bd3.
+
+The expected architectural cut is under-capacity progress without any rollable
+missing goal. The controller only observes goal slots, counts and tiers; those
+predicates do not certify carrier-local native eligibility. If the requested
+witness executes, report that exact missing observation and keep public recovery
+held. Correct root/entry rejection is a negative safety witness, not qualification
+of the unsafe controller for publication or an economic recovery claim.
+
 ## Ownership and next qualification
 
 No checker-lifetime change exists. Current's validator still borrows the census;
@@ -173,13 +202,12 @@ and measured positive net release. Reviewer-owned Finder generation-budget and
 nonunit weighted-helper questions remain separate. No borrowed-census release,
 resource epsilon, tolerance change or approximate state merge is allowed.
 
-Next request: source review of the bounded private family and test separation;
-then a parent-granted two-job build and serial runtime-query, native-checkpoint,
-metamod, legacy-growth and private-construction gates. Keep the optional diagnostic failure lane
-separate and capture the actual blocked state/positive admitted reachability before
-classifying it. Stop on semantic/identity/resource mismatch; do not repeat failures
-just to get green. LOCAL is currently not granted to this owner, so only source
-work proceeds. No owned process exists.
+Next LOCAL request is narrowed to a two-job build, the compound-blocker selector,
+the four positive private recovery variants and legacy growth. Each is serial,
+with existing600s build/180s native watchdogs, fixture memory/work limits and
+survivor receipts; stop at first failed selector. No optional checkpoint command,
+query repeat, timed Conquest solve or wider cohort is in this batch. Checkpoint
+save/load remains independently held. No owned process exists.
 
 Bow4/Bow5/Ring/Amulet and all four frozen armour fixtures remain preserved and
 unrun on the new source. Finder attempt compatibility, finite every-entry/root

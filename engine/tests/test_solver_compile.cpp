@@ -5216,11 +5216,14 @@ void run_solver_partial_held_witness_tests(const char* artifact_dir) {
 
 // This is deliberately an explicit research selector, not the normal suite.
 // No imported control graph, public proposal or retained incumbent is modified.
-void run_solver_partial_held_recovery_tests() {
-    for (unsigned fixture = 0; fixture < 4; ++fixture) {
+void run_solver_partial_held_recovery_tests(const bool compound_blocker_only) {
+    const unsigned first_fixture = compound_blocker_only ? 4 : 0;
+    const unsigned end_fixture = compound_blocker_only ? 5 : 4;
+    for (unsigned fixture = first_fixture; fixture < end_fixture; ++fixture) {
         auto session = make_compile_session();
+        const bool compound_blocker = fixture == 4;
         const bool reverse = (fixture & 1u) != 0;
-        const unsigned anchor_slot = fixture < 2 ? 3 : 4;
+        const unsigned anchor_slot = compound_blocker || fixture < 2 ? 3 : 4;
         // Realistic lower-tier blockers on each side. Keep native pool/group
         // resolution authoritative; the fixture defines no transition law.
         session->family_id[2] = session->family_id[4];
@@ -5230,14 +5233,30 @@ void run_solver_partial_held_recovery_tests() {
         session->family_id[7] = session->family_id[other_suffix];
         session->primary_group[7] = session->primary_group[other_suffix];
         session->family_tier_index[7] = 2;
+        // Lower-tier suppression now shares the second suffix goal family.
+        // Keep an independent ordinary junk suffix so the existing native
+        // three-affix Annul admission template remains materializable.
+        session->veiled_suffix_mod_id = PC_MOD_NONE;
+        pc_bitset_set(session->normal_random_roll_mask.data(),9);
+        pc_bitset_set(session->positive_spawn_weight_mask.data(),9);
+        pc_bitset_set(session->positive_base_weight_mask.data(),9);
+        pc_bitset_set(session->suffix_mask.data(),9);
+        pc_bitset_set(session->influence_masks[0].data(),9);
         session->group_ids.clear();
         session->group_offsets.clear();
         session->group_masks.assign(32,{});
         for (unsigned mod = 0; mod < session->mod_count; ++mod) {
             session->group_offsets.push_back(static_cast<std::uint32_t>(session->group_ids.size()));
             session->group_ids.push_back(session->primary_group[mod]);
-            if (mod < 8) {
-                auto& mask = session->group_masks[session->primary_group[mod]];
+            // The independent review's counterexample retains primary group13
+            // and adds native exclusion group10; it does not relabel the goal.
+            if (compound_blocker && mod == 2) {
+                session->group_ids.push_back(10);
+                std::sort(session->group_ids.begin()+session->group_offsets.back(),session->group_ids.end());
+            }
+            if (mod < 8 || mod == 9) for (std::size_t group = session->group_offsets.back();
+                             group < session->group_ids.size(); ++group) {
+                auto& mask = session->group_masks[session->group_ids[group]];
                 if (mask.empty()) mask.assign(session->words,0);
                 pc_bitset_set(mask.data(),mod);
             }
@@ -5311,6 +5330,68 @@ void run_solver_partial_held_recovery_tests() {
         PartialHeldRecoveryProducer unpriced(calc,root,incomplete_prices,limits,1u << anchor_slot,true);
         PC_CHECK(unpriced.advance() && !unpriced.candidate() &&
             unpriced.status() == "no_priced_requested_chaos_acquisition");
+        auto carrier = root;
+        const auto target_progress = compound_blocker ? 3u : 0u;
+        for (const auto mod : {target_progress,2u,anchor_slot == 3 ? 5u : 6u,7u})
+            PC_CHECK(pc_item_add_mod(&carrier,session->gen_type[mod],mod,
+                session->primary_group[mod],0,nullptr) == PC_RESULT_OK);
+        const auto carrier_state = calc.intern_item(carrier);
+        PC_CHECK(satisfied_goal_mask(calc.state(carrier_state)) ==
+            ((1u << (compound_blocker ? 1u : 0u)) | (1u << anchor_slot)));
+        double compound_root_mass = 0;
+        if (compound_blocker) {
+            PC_CHECK(!reverse && anchor_slot == 3 && carrier.prefix_count == 2 && carrier.suffix_count == 2);
+            // First prove one lawful positive pick ordering, using each native
+            // pool after the preceding pick and the actual reviewed count law.
+            auto picking = root;
+            const auto count_law = rare_reforge_count_law(session->rare_reforge_count_kind);
+            double ordering_mass = 0;
+            for (const auto& draw : count_law.draws)
+                if (draw.count == 4) ordering_mass += double(draw.weight) / count_law.denominator;
+            for (const auto mod : {3u,2u,5u,7u}) {
+                ActionContextImpl pool_context(0); pool_context.session = session;
+                const auto& pool = get_weighted_pool(pool_context,&picking,PoolBuildRequest{});
+                const auto found = std::find_if(pool.entries.begin(),pool.entries.end(),
+                    [&](const auto& entry) { return entry.session_mod_id == mod; });
+                PC_CHECK(found != pool.entries.end() && pool.total_weight > 0);
+                if (found == pool.entries.end() || pool.total_weight == 0) return;
+                PC_CHECK(found->final_weight > 0);
+                ordering_mass *= double(found->final_weight) / pool.total_weight;
+                PC_CHECK(pc_item_add_mod(&picking,session->gen_type[mod],mod,
+                    session->primary_group[mod],0,nullptr) == PC_RESULT_OK);
+            }
+            PC_CHECK(std::isfinite(ordering_mass) && ordering_mass > 0);
+            PC_CHECK(exact_item_state_key(picking) == exact_item_state_key(carrier));
+            // Independently confirm the complete native Chaos distribution
+            // reaches this exact item from the original empty rare root.
+            const auto& root_law = calc.outcomes(calc.intern_item(root),chaos,false);
+            PC_CHECK(root_law.supported && root_law.applicable && root_law.choice_groups.empty());
+            for (const auto& exit : root_law.entries) {
+                if (exit.probability <= 0) continue;
+                pc_item_state reached;
+                PC_CHECK(calc.materialize(exit.state,reached));
+                if (exact_item_state_key(reached) == exact_item_state_key(carrier))
+                    compound_root_mass += exit.probability;
+            }
+            PC_CHECK(std::isfinite(compound_root_mass) && compound_root_mass > 0);
+            PC_CHECK(compound_root_mass + 1e-12 >= ordering_mass);
+            const auto eligible = calc.temporary_followup_eligible_mask(
+                carrier_state,registry.index_by_id.at("exalt"));
+            std::uint32_t rollable_missing = 0;
+            for (unsigned slot = 0; slot < goal.slots.size(); ++slot)
+                if (goal_slot_side(*session,goal.slots[slot]) == PC_SIDE_PREFIX &&
+                    (satisfied_goal_mask(calc.state(carrier_state)) & (1u << slot)) == 0 &&
+                    mask_intersects(eligible,calc.layout().slots[slot].satisfying_mask))
+                    rollable_missing |= 1u << slot;
+            PC_CHECK(rollable_missing == 0);
+            std::printf("compound blocker native reachability: picks=3,2,5,7 groups2=13,10 goal_mask=%u ordering_mass=%.17g original_root_mass=%.17g rollable_missing_prefix_mask=%u\n",
+                satisfied_goal_mask(calc.state(carrier_state)),ordering_mass,compound_root_mass,rollable_missing);
+            std::printf("compound blocker exact carrier key:");
+            for (const auto word : exact_item_state_key(carrier))
+                std::printf("%016llx,",static_cast<unsigned long long>(word));
+            std::printf("\n");
+            if (!(compound_root_mass > 0) || rollable_missing != 0) return;
+        }
         PartialHeldRecoveryProducer producer(calc,root,prices,limits,1u << anchor_slot,true);
         for (unsigned step = 0; step < 40000 && !producer.done(); ++step) producer.advance();
         if (!producer.candidate()) std::printf("private partial fixture=%u construction=%s\n",fixture,producer.status().c_str());
@@ -5327,12 +5408,6 @@ void run_solver_partial_held_recovery_tests() {
         const auto prepared = prepare_finder_candidate(calc,session,root,graph,&control);
         PC_CHECK(prepared.ready() && !prepare_finder_candidate(calc,session,root,graph).ready());
         if (!prepared.ready()) return;
-        auto carrier = root;
-        for (const auto mod : {0u,2u,anchor_slot == 3 ? 5u : 6u,7u})
-            PC_CHECK(pc_item_add_mod(&carrier,session->gen_type[mod],mod,
-                session->primary_group[mod],0,nullptr) == PC_RESULT_OK);
-        const auto carrier_state = calc.intern_item(carrier);
-        PC_CHECK(satisfied_goal_mask(calc.state(carrier_state)) == ((1u << 0) | (1u << anchor_slot)));
         // Route from the successor of the compulsory original-root acquisition,
         // never pass an already-acquired carrier off as the original request.
         const auto acquire = std::find_if(control.nodes.begin(),control.nodes.end(),
@@ -5358,22 +5433,39 @@ void run_solver_partial_held_recovery_tests() {
         PC_CHECK(held_run != control.nodes.end());
         if (held_run == control.nodes.end()) return;
         const auto& binding = control.programs.at(held_run->binding);
-        const auto& option = calc.operators().at(binding.operator_index);
+        const auto option = calc.operators().at(binding.operator_index);
         PC_CHECK(binding.held_goal_mask == (1u << anchor_slot));
         PC_CHECK(registry.actions.at(option.primitive_program.back()).params.type == ActionType::EldritchExalt);
         const auto word = execute_attempt(calc,option.primitive_program,carrier_state);
-        PC_CHECK(word.supported && word.fully_legal && word.choice_groups.empty());
-        PC_CHECK(word.expected_primitive_actions == option.primitive_program.size());
-        PC_CHECK(word.expected_resources == aggregate_resources(registry,option.primitive_program));
-        double mass = 0;
-        for (const auto& exit : word.entries) {
-            PC_CHECK(exit.probability > 0);
-            const auto& after = calc.state(exit.state);
-            PC_CHECK((satisfied_goal_mask(after) & (1u << anchor_slot)) != 0);
-            PC_CHECK((reverse ? after.suffix_count : after.prefix_count) == 3);
-            mass += exit.probability;
+        if (compound_blocker) {
+            PC_CHECK(word.supported && !word.fully_legal);
+            AutomaticAdmissionLimits query;
+            query.prices = &prices;
+            query.consider_imprint_programs = false;
+            query.max_solver_owned_bytes = limits.max_solver_owned_bytes;
+            query.max_state_action_rows = limits.max_state_action_rows;
+            query.max_transitions = limits.max_transitions;
+            query.query = eldritch_admission_query(PC_SIDE_PREFIX,ActionType::EldritchExalt,false);
+            const auto admission = calc.admit_state_local_automatic_candidates(carrier_state,query);
+            PC_CHECK(admission.status == StateLocalAutomaticBatchStatus::Complete);
+            PC_CHECK(admission.admitted_operators.empty());
+            PC_CHECK(!calc.is_candidate_operator_admitted_for_state(carrier_state,binding.operator_index));
+            std::printf("compound blocker construction cut: route=%s held_mask=%u word_steps=%zu native_intent_members=%zu; no programme permission granted\n",
+                routed.id.c_str(),binding.held_goal_mask,option.primitive_program.size(),admission.admitted_operators.size());
+        } else {
+            PC_CHECK(word.supported && word.fully_legal && word.choice_groups.empty());
+            PC_CHECK(word.expected_primitive_actions == option.primitive_program.size());
+            PC_CHECK(word.expected_resources == aggregate_resources(registry,option.primitive_program));
+            double mass = 0;
+            for (const auto& exit : word.entries) {
+                PC_CHECK(exit.probability > 0);
+                const auto& after = calc.state(exit.state);
+                PC_CHECK((satisfied_goal_mask(after) & (1u << anchor_slot)) != 0);
+                PC_CHECK((reverse ? after.suffix_count : after.prefix_count) == 3);
+                mass += exit.probability;
+            }
+            PC_CHECK(std::abs(mass-1) <= 1e-12);
         }
-        PC_CHECK(std::abs(mass-1) <= 1e-12);
         auto economy = std::make_shared<EconomyImpl>(); economy->prices = prices;
         StrategyEvalOptions eval; eval.economy = economy;
         eval.max_states = limits.max_discovered_states; eval.max_pairs = limits.max_state_action_rows;
@@ -5392,6 +5484,27 @@ void run_solver_partial_held_recovery_tests() {
             eval.policy_decision_entries.push_back(std::move(request));
         }
         const auto checked = evaluate_strategy(*prepared.strategy,eval);
+        if (compound_blocker) {
+            // A reachable illegal native action must prevent original-root
+            // acceptance. This is a rejection witness, never a checked upper.
+            PC_CHECK(!finder_evaluation_accepted(checked));
+            PC_CHECK(checked.action_not_applied_probability > 1e-9);
+            bool entry_rejected = false;
+            try {
+                SelectiveProgrammeEntryValidator validator(calc,session,control,
+                    checked.policy_entries,prices,limits);
+                for (unsigned step = 0; step < 40000 && !validator.done(); ++step) validator.advance();
+            } catch (const StrategyEvalUnsupported& error) {
+                entry_rejected = true;
+                std::printf("compound blocker reached-entry rejection: %s\n",error.what());
+            }
+            PC_CHECK(entry_rejected);
+            PC_CHECK(product_completion_proposal_count(calc) == 3);
+            std::printf("compound blocker root rejection: success=%.17g not_applied=%.17g root_mass=%.17g entries=%zu no_retention_or_activation\n",
+                checked.success_probability,checked.action_not_applied_probability,
+                compound_root_mass,checked.policy_entries.entries.size());
+            continue;
+        }
         PC_CHECK(finder_evaluation_accepted(checked));
         if (!finder_evaluation_accepted(checked)) return;
         for (const auto key : {"chaos","eldritch_exalt","eldritch_annul","eldritch_chaos"})

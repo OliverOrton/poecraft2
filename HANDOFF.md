@@ -1,15 +1,15 @@
-# Armour recovery: witness qualified, optional checkpoint held (2026-10-04)
+# Armour recovery: private compound-blocker gate ready (2026-10-04)
 
-Isolated dot/sol61-armour-recovery-20261004: native witness293 passes at deb65256.
-At862bd1b build passes; query2728 has one native development-save prerequisite
-failure (unexpanded nonterminal representative), after budget/retry checks pass.
-Earlier failed receipts remain in the [living record](docs/active/2026-10-04-sol61-armour-recovery/README.md).
-All grants released, no survivors, no timed policy run. Blocked state IDs and
-admitted-transition reachability are unmeasured; do not relax the save guard.
-Optional nonempty replay stays held behind an explicit diagnostic selector;
-known-valid empty terminal membership/control source is prepared and unbuilt.
-Parent allows disabled/private bounded recovery source work. Default Current/Finder
-proposals and checker ownership remain unchanged; CI alone owns publication.
+Isolated dot/sol61-armour-recovery-20261004 retains bd3c5b3's default-off bounded
+composition. Source-only compound-blocker selector now checks native root Chaos
+reachability of prefixes3/2,suffixes5/7,anchor5 with modifier2 groups10/13,
+then absence of rollable missing prefix goals and root/entry rejection. Its
+synthetic fixture restores independent ordinary junk suffix9 for the native
+three-affix Annul proposal. These tests are unbuilt/unrun; production is unchanged.
+The [living record](docs/active/2026-10-04-sol61-armour-recovery/README.md) preserves
+witness293 and all three prior failed checkpoint receipts. Next LOCAL request:
+two-job build, compound rejection, four positive private fixtures, legacy growth.
+Optional checkpoint commands are excluded. No processes/survivors or publication.
 
 # Qualified solver CI repair (2026-10-03)
 

@@ -1,17 +1,17 @@
 {
   "schema": "sol61_armour_finite_request_v1",
-  "status": "PENDING parent source review and LOCAL grant",
-  "basis_commit": "862bd1b30eedcab61bfb1be5e01055005f9b7c16",
+  "status": "SOURCE READY; requesting parent LOCAL grant after UI gate",
+  "basis_commit": "bd3c5b3c1b54805d9469c41f75f2befa5cccb430",
   "source_files_sha256": {
     "engine/src/solver_selective_completion.hpp": "c35661b9449eb8caf6d6272a05aa78718fe282d457caefeea931cb3bc5c25c78",
     "engine/src/solver_selective_completion.cpp": "74cb6f0391d1426cf9a832bb8863f1008e1bd49fe3861e972ac3bd5bb2184e65",
     "engine/src/solver_development_checkpoint.cpp": "5fbd67b5f1f285f96c741a6713ec8292757b47371c52d7791724475e6dfd12a0",
-    "engine/tests/test_main.cpp": "a3e046da1382797409755d8a705ef0b2050ded7c33875bf767d1420af610ef5c",
-    "engine/tests/test_solver_compile.cpp": "920301974e10b9cfbf977887bbc99a91fcf90f3806f55ff6d7d6289bffcf1254",
+    "engine/tests/test_main.cpp": "5b7aeb7960961be15a130468a79de1c50bfb8f96b062467b7b2a9800546dfd1d",
+    "engine/tests/test_solver_compile.cpp": "a40d98645f50d5c8f18a0881f6ba0385192508a16db756b90ce6d8b36d1c62b0",
     "engine/tests/test_solver_metamod_recovery.cpp": "5cae556520d62df2d52076e60178006b7398c6e4099cb844495b18cc92f7d9ce",
-    "engine/tests/tests.hpp": "00d15d97fdb27ac5f5525331ae5c6afce8d8e71db28634e2f858db0b047b3924"
+    "engine/tests/tests.hpp": "5cbf8b6c24dac9a828399ef1e83c62ada645b8b9a790d8a656ff6d3723a5671f"
   },
-  "purpose": "Compile disabled native composition; isolate optional checkpoint persistence; qualify complete runtime query contract, known-valid coarse checkpoint control, crafted cleanup empty-query replay, old growth routing and private original-root/every-positive-entry witnesses.",
+  "purpose": "Build default-off recovery; prove requested compound blocker native root reachability and fail-safe rejection; qualify four positive private native/root/entry witnesses and preserve legacy growth.",
   "slots": {
     "local_slot": "parent controlled; currently ungranted",
     "compiler_jobs": 2,
@@ -47,33 +47,10 @@
       ]
     },
     {
-      "phase": "runtime-query",
+      "phase": "compound-blocker-rejection",
       "argv": [
         "build/engine/poecraft_engine_tests.exe",
-        "--solver-admission-query-only"
-      ]
-    },
-    {
-      "phase": "known-valid-checkpoint-control",
-      "argv": [
-        "build/engine/poecraft_engine_tests.exe",
-        "--solver-checkpoint-only",
-        "data/compiled/current"
-      ]
-    },
-    {
-      "phase": "metamod-empty-query-replay",
-      "argv": [
-        "build/engine/poecraft_engine_tests.exe",
-        "--solver-metamod-recovery-only",
-        "data/compiled/current"
-      ]
-    },
-    {
-      "phase": "legacy-growth",
-      "argv": [
-        "build/engine/poecraft_engine_tests.exe",
-        "--solver-growth-only"
+        "--solver-partial-held-compound-blocker-only"
       ]
     },
     {
@@ -81,6 +58,13 @@
       "argv": [
         "build/engine/poecraft_engine_tests.exe",
         "--solver-partial-held-recovery-only"
+      ]
+    },
+    {
+      "phase": "legacy-growth",
+      "argv": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-growth-only"
       ]
     }
   ],
@@ -92,10 +76,14 @@
     ],
     "known_failure": "native_save_ready; unchanged native unexpanded-representative guard",
     "purpose": "Identify blocked carrier(s), cached positive admitted reachability and missing closure evidence; not a green qualification attempt",
-    "must_retain": "nonempty replay and malformed members remain unrun if save refuses"
+    "must_retain": "nonempty replay and malformed members remain unrun if save refuses",
+    "status": "HELD; excluded from this recovery batch"
   },
   "private_finite_caps": {
-    "fixtures": 4,
+    "fixtures": {
+      "positive": 4,
+      "compound_rejection": 1
+    },
     "profile": "calculator_product_v1",
     "max_states": 800000,
     "max_discovered_states": 10000,
@@ -117,6 +105,29 @@
     "No actual frozen Conquest generated-controller qualification yet",
     "No public activation, lower/closure authority, Finder attempts, lifetime release or WASM qualification",
     "No nonempty query-only replay at a nonterminal carrier",
-    "No numerical tolerance/cap/data/price changes to frozen cohort"
-  ]
+    "No numerical tolerance/cap/data/price changes to frozen cohort",
+    "Optional checkpoint and runtime-query selectors are excluded from this bounded recovery gate"
+  ],
+  "compound_witness": {
+    "groups_of_modifier_2": [
+      10,
+      13
+    ],
+    "primary_group_of_modifier_2": 13,
+    "prefix_modifiers": [
+      3,
+      2
+    ],
+    "suffix_modifiers": [
+      5,
+      7
+    ],
+    "held_anchor_modifier": 5,
+    "reachability": "native per-pick pool positive ordering, then complete native original-root Chaos exact item mass",
+    "native_eligibility": "authoritative ordinary pool intersected with missing prefix goal masks; expected zero",
+    "expected_rejection": "compiled growth route still selects Exalt; native intent absent; original-root not-applied probability positive and reached-entry validator rejects",
+    "authority": "No synthetic complete certificate; use actual root evaluator census. A root resource/identity/unsupported failure is not a passing rejection witness.",
+    "fixture_prerequisite": "restore independent natural junk suffix9 and disable its veiled placeholder role in this in-memory fixture only",
+    "runtime_status": "UNRUN"
+  }
 }
