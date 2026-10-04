@@ -159,3 +159,13 @@ assertion formatting and emits full failure text for plain/crash controls.
 The existing staged artifact upload includes these per-test records. Process
 ownership, descendant classification, exit proof and all deadlines remain
 unchanged. Local reproduction/qualification requires a parent-assigned slot.
+
+Diagnostic checkpoint121edac7 local lifecycle qualification:19/19 pass in2.06s
+(outer2.572s), with seven full immutable subprocess receipts. No timeout,
+cleanup error, unexpected descendant or survivor; original parent identity is
+proved absent. LOCAL released immediately. Receipt:
+out/sol61-ci-supervision/hosted-diagnostic-local-r1/receipt.json.
+This local Python3.14 check validates the diagnostic source and existing controls;
+it does not establish the hosted Python3.12 member identity or close that failure.
+The diagnostic branch may be published for a new causal observation, retaining
+failed run37183933992. No main merge follows incomplete hosted evidence.
