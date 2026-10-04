@@ -1,0 +1,369 @@
+{
+  "kind": "generated_partial_held_root_check_v1",
+  "case": "sol61-trace-conquest5-currentmodel-120",
+  "status": "censored_time",
+  "phase": "positive_entries",
+  "refusal": "",
+  "cap_reason": "",
+  "economy_id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+  "construction_receipt": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\out\\sol61-armour\\root-r11\\conquest-root.json.construction.json",
+  "graph_hash": "2424103896900201902",
+  "root_accepted": true,
+  "all_positive_entries_accepted": false,
+  "checked_feasible_upper": false,
+  "root_cost": 896765.8190299857,
+  "checked_cost": null,
+  "supplied_historical_reference_cost": 85970.67347138176,
+  "meets_supplied_reference_cost": false,
+  "consumer_retention_or_activation": false,
+  "historical_graph_imported": false,
+  "positive_entries": 12719,
+  "validated_entries": 968,
+  "census_entries": 12719,
+  "census_refused_entries": 0,
+  "success": 1,
+  "unresolved": 0,
+  "failure": 0,
+  "stop": 0,
+  "not_applied": 0,
+  "no_matching_edge": 0,
+  "generation_logical_work": 233575,
+  "checker_logical_work": 933384,
+  "checker_active_work": 279657,
+  "entry_logical_work": 717735,
+  "entry_active_work": 717735,
+  "aggregate_committed_logical_work": 1884694,
+  "aggregate_work_cap": 50000000,
+  "aggregate_selected_peak": 674886885,
+  "aggregate_reserved_peak": 876476133,
+  "transient_reservation": 201589248,
+  "aggregate_memory_cap": 1073741824,
+  "checker_live_bytes": 87666138,
+  "checker_internal_peak_bytes": 133182141,
+  "checker_retained_for_census": true,
+  "requested_finish_observed": true,
+  "requested_seconds": 120,
+  "native_seconds": 150,
+  "step_work_items": 8,
+  "details_path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\out\\sol61-armour\\root-r11\\conquest-root.json.eval.json",
+  "checker_limits": {
+    "states": 800000,
+    "pairs": 1215000,
+    "transitions": 10000000,
+    "owned_bytes": 790265526,
+    "logical_work": 49766425
+  },
+  "resolved_limits": {
+    "max_states": 800000,
+    "max_discovered_states": 800000,
+    "max_expanded_states": 200000,
+    "max_rows": 1215000,
+    "max_transitions": 10000000,
+    "max_compiled_nodes": 100000,
+    "max_compiled_edges": 400000,
+    "max_strategy_json_bytes": 67108864,
+    "max_telemetry_json_bytes": 2097152
+  },
+  "wall_ms": 150068.4141,
+  "source_commit": "a585ec4666d7c83f1446e89e2f822261b72d4254",
+  "report_sha256": "c46a552caedc4b2f6653bf23c1ab855e8c6aa9c6fe8be09b9fe7c96e07fdcfff",
+  "full_evaluation_sha256": "abb63746a8ced8d371390e6da418004aa6e7589c23d47b548e79afc6f74733d2",
+  "generated_graph_sha256": "7f2c12941904762444da1ecf95ef77f8456e2ab170cd74465c5aba50bbd4461e",
+  "generated_graph_matches_r8_bytes": true,
+  "construction_report_sha256": "4fdef95fd002c7b8c0284d15a1b4da68fa5b71eedeba02131cdc0ca416613cbb",
+  "frozen_inputs": {
+    "docs/active/2026-10-03-sol61-recovery/qualification/law3/cases/conquest5-product.json": {
+      "sha256": "49bc43f7fa8616ab0f798d8e5c5a2e0c3e79342a51a1636446f2d80e65147642",
+      "bytes": 7942
+    },
+    "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json": {
+      "sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92",
+      "bytes": 141941
+    },
+    "docs/active/2026-10-04-sol61-armour-recovery/conquest-construction-manifest.json": {
+      "sha256": "9cdfc766842410dfac2c4aaa7a0e96342cf724cd7cea5dcf633293661d3c7607",
+      "bytes": 1125
+    }
+  },
+  "resolved_actions": [
+    "transmute",
+    "augment",
+    "alteration",
+    "regal",
+    "alchemy",
+    "chaos",
+    "exalt",
+    "annul",
+    "scour",
+    "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+    "fossil:Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+    "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison",
+    "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+    "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+    "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+    "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+    "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+    "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+    "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+    "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+    "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+    "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+    "harvest_reforge:defences",
+    "harvest_reforge:physical",
+    "harvest_augment:defences",
+    "harvest_augment:physical",
+    "fracture",
+    "restart"
+  ],
+  "expected_consumption": [
+    {
+      "key": "chaos",
+      "quantity": 44.65634981329255
+    },
+    {
+      "key": "eldritch_annul",
+      "quantity": 2207.051861517616
+    },
+    {
+      "key": "eldritch_chaos",
+      "quantity": 20530.174466383687
+    },
+    {
+      "key": "eldritch_ember:1",
+      "quantity": 0.9982286793977418
+    },
+    {
+      "key": "eldritch_exalt",
+      "quantity": 635.2674448518271
+    },
+    {
+      "key": "eldritch_ichor:1",
+      "quantity": 0.0017712494156097644
+    },
+    {
+      "key": "eldritch_ichor:2",
+      "quantity": 0.9959810367935099
+    }
+  ],
+  "action_cost_projection": [
+    {
+      "action": "chaos",
+      "expected_visits": 44.65634981329255,
+      "expected_cost": 44.65634981329255,
+      "cost_share": 4.979711410231543e-05,
+      "native_operation_nodes": [
+        {
+          "node_id": "c1",
+          "expected_visits": 44.65634981329255,
+          "expected_applied": 44.65634981329255
+        }
+      ]
+    },
+    {
+      "action": "eldritch_annul",
+      "expected_visits": 2207.051861517616,
+      "expected_cost": 89451.81194730898,
+      "cost_share": 0.09974935490300832,
+      "native_operation_nodes": [
+        {
+          "node_id": "c17_o1",
+          "expected_visits": 0.041378498006660144,
+          "expected_applied": 0.041378498006660144
+        },
+        {
+          "node_id": "c18",
+          "expected_visits": 629.887963934491,
+          "expected_applied": 629.887963934491
+        },
+        {
+          "node_id": "c44_o1",
+          "expected_visits": 9.704663675968535e-05,
+          "expected_applied": 9.704663675968535e-05
+        },
+        {
+          "node_id": "c45",
+          "expected_visits": 1.5884995059347429,
+          "expected_applied": 1.5884995059347429
+        },
+        {
+          "node_id": "c72_o1",
+          "expected_visits": 0.0005380013927975267,
+          "expected_applied": 0.0005380013927975267
+        },
+        {
+          "node_id": "c73",
+          "expected_visits": 2.7955838524813905,
+          "expected_applied": 2.7955838524813905
+        },
+        {
+          "node_id": "c89_o1",
+          "expected_visits": 0.6876022761822579,
+          "expected_applied": 0.6876022761822579
+        },
+        {
+          "node_id": "c90",
+          "expected_visits": 1572.0501984024907,
+          "expected_applied": 1572.0501984024907
+        }
+      ]
+    },
+    {
+      "action": "eldritch_chaos",
+      "expected_visits": 20530.17446638368,
+      "expected_cost": 804988.1408269041,
+      "cost_share": 0.8976570290085814,
+      "native_operation_nodes": [
+        {
+          "node_id": "c13_o1",
+          "expected_visits": 0.8684962286926637,
+          "expected_applied": 0.8684962286926637
+        },
+        {
+          "node_id": "c14",
+          "expected_visits": 1628.2171274572984,
+          "expected_applied": 1628.2171274572984
+        },
+        {
+          "node_id": "c40_o1",
+          "expected_visits": 0.0018992602062794118,
+          "expected_applied": 0.0018992602062794118
+        },
+        {
+          "node_id": "c41",
+          "expected_visits": 2.93755637783301,
+          "expected_applied": 2.93755637783301
+        },
+        {
+          "node_id": "c68_o1",
+          "expected_visits": 0.0012332480228122414,
+          "expected_applied": 0.0012332480228122414
+        },
+        {
+          "node_id": "c69",
+          "expected_visits": 33.54577298175385,
+          "expected_applied": 33.54577298175385
+        },
+        {
+          "node_id": "c85_o1",
+          "expected_visits": 0.3083787606112523,
+          "expected_applied": 0.3083787606112523
+        },
+        {
+          "node_id": "c86",
+          "expected_visits": 18864.294002069262,
+          "expected_applied": 18864.294002069262
+        }
+      ]
+    },
+    {
+      "action": "eldritch_ember:1",
+      "expected_visits": 0.9982286793977454,
+      "expected_cost": 0.1560231425898676,
+      "cost_share": 1.7398426576810746e-07,
+      "native_operation_nodes": [
+        {
+          "node_id": "c13",
+          "expected_visits": 0.8684962286926637,
+          "expected_applied": 0.8684962286926637
+        },
+        {
+          "node_id": "c17",
+          "expected_visits": 0.041378498006660165,
+          "expected_applied": 0.041378498006660165
+        },
+        {
+          "node_id": "c21",
+          "expected_visits": 0.08610631009425723,
+          "expected_applied": 0.08610631009425723
+        },
+        {
+          "node_id": "c40",
+          "expected_visits": 0.0018992602062794118,
+          "expected_applied": 0.0018992602062794118
+        },
+        {
+          "node_id": "c44",
+          "expected_visits": 9.704663675968535e-05,
+          "expected_applied": 9.704663675968535e-05
+        },
+        {
+          "node_id": "c48",
+          "expected_visits": 0.00025133576112529223,
+          "expected_applied": 0.00025133576112529223
+        }
+      ]
+    },
+    {
+      "action": "eldritch_exalt",
+      "expected_visits": 635.267444851827,
+      "expected_cost": 2280.610127018059,
+      "cost_share": 0.0025431501498183223,
+      "native_operation_nodes": [
+        {
+          "node_id": "c21_o1",
+          "expected_visits": 0.08610631009425723,
+          "expected_applied": 0.08610631009425723
+        },
+        {
+          "node_id": "c22",
+          "expected_visits": 633.7952042863822,
+          "expected_applied": 633.7952042863822
+        },
+        {
+          "node_id": "c48_o1",
+          "expected_visits": 0.0002513357611252922,
+          "expected_applied": 0.0002513357611252922
+        },
+        {
+          "node_id": "c49",
+          "expected_visits": 1.3858829195894702,
+          "expected_applied": 1.3858829195894702
+        }
+      ]
+    },
+    {
+      "action": "eldritch_ichor:1",
+      "expected_visits": 0.001771249415609768,
+      "expected_cost": 0.0001458446768813083,
+      "cost_share": 1.6263407211379408e-10,
+      "native_operation_nodes": [
+        {
+          "node_id": "c68",
+          "expected_visits": 0.0012332480228122414,
+          "expected_applied": 0.0012332480228122414
+        },
+        {
+          "node_id": "c72",
+          "expected_visits": 0.0005380013927975267,
+          "expected_applied": 0.0005380013927975267
+        }
+      ]
+    },
+    {
+      "action": "eldritch_ichor:2",
+      "expected_visits": 0.9959810367935101,
+      "expected_cost": 0.4436099537878294,
+      "cost_share": 4.946775895937624e-07,
+      "native_operation_nodes": [
+        {
+          "node_id": "c85",
+          "expected_visits": 0.30837876061125225,
+          "expected_applied": 0.30837876061125225
+        },
+        {
+          "node_id": "c89",
+          "expected_visits": 0.6876022761822579,
+          "expected_applied": 0.6876022761822579
+        }
+      ]
+    }
+  ],
+  "economic_disposition": "Diagnostic root-only cost896765.8190299857 is uncompetitive against supplied references; NOT a fully programme-validated checked policy cost or financial recovery",
+  "unvalidated_positive_entries": 11751,
+  "no_positive_entries_omitted_from_request": true,
+  "reroll_cost_lead": "EldritchChaos804988.1408269041 cost89.7657%; direct final-stage c86 alone18864.294002069262 expected visits; three-goal-held/two-target stages use RerollVersusRepair with no fill word. Source/occupancy lead, no measured route-change benefit.",
+  "early_checker_release_disposition": "No memory/work cap hit; checker live87666138/result retained54713649; no release saving measured; root quality already poor",
+  "full_report_path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\out\\sol61-armour\\root-r11\\conquest-root.json",
+  "full_evaluation_path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\out\\sol61-armour\\root-r11\\conquest-root.json.eval.json",
+  "bulk_generated_graph_path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\out\\sol61-armour\\root-r11\\conquest-root.json.strategy.json"
+}

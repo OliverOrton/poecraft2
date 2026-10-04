@@ -1,20 +1,19 @@
-# Armour recovery: full generated Conquest gate source ready (2026-10-04)
+# Armour recovery: qualified entry owner; negative full Conquest result
 
-Isolated dot/sol61-armour-recovery-20261004 retains R8 at1cc4f8ff:5944checks,
-eight roots/878positiveentries and native partial-held Conquest construction;
-review2e68974a verified all pins and no new routing blocker. New UNBUILT source
-adds a generic bounded unowned/stricter-local entry owner plus explicit discovery/
-memory caps; native semantics/routing remain unchanged. Full Conquest benchmark
-mode regenerates and pins the R8 private graph, binds original frozen request/
-prices/root/scope and checks the complete root then every positive entry. Checker
-is retained for its borrowed census; parent work is charged once before validation,
-all overlapping ownership is counted/reserved, no caps raised or policy imported.
-[Precise next request](docs/active/2026-10-04-sol61-armour-recovery/conquest-root-finite-request.json)
-declares serial two-job Tests, finite budget/compatibility selectors, Benchmark,
-one120+30/150native/165host full case under50M/1GiB. Parent schedules LOCAL;
-no command launched and no process running. [Living record](docs/active/2026-10-04-sol61-armour-recovery/README.md)
-owns arguments/failures. Finder generation/attachment lifecycle and early checker
-release remain separate; public economic/control/consumer/WASM qualification open.
+Isolated sourcea585ec46 R11:5603finite checks pass; eight R8 roots/all878entries
+unchanged. Entry owner enforces1/47/48 work, shared and discovery/memory caps.
+R9 compile/R10 typed-cap diagnostic failures preserved. One frozen original
+Conquest graph matches R8 exact bytes. Root converged/success1/full prices with
+diagnostic cost896765.8190299857; entry deadline150s reached at968/12719positive
+entries. No checked upper, retention or activation. [Finite receipt](docs/active/2026-10-04-sol61-armour-recovery/root-r11-summary.json)
+and [Conquest receipt](docs/active/2026-10-04-sol61-armour-recovery/conquest-root-r11-summary.json)
+pin work1884694/50M, reservedpeak876476133/1GiB and all source/binary/input bytes.
+LOCAL released10:34:51UTC; no survivors, repeat or cap increase. [Living record](docs/active/2026-10-04-sol61-armour-recovery/README.md)
+owns negative:89.8%cost from EldritchChaos, final c86 repeats18864 times.
+Three-held/two-target final stages have reroll/annul but no fill; bounded native
+growth there is a next source lead for parent selection, not measured recovery.
+Finder generation/lifecycle, early checker release, economic/all-entry,
+consumer/control/WASM gates remain open. No main publication or activation.
 
 # Qualified solver CI repair (2026-10-03)
 

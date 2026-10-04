@@ -528,3 +528,49 @@ memory refusal as memory. Native budget/decision/rollback/resource semantics do
 not change. This is diagnostic authority needed for the cap-qualified full case;
 no cap is raised, census omitted or failed semantic premise relaxed. Resume from
 a new source/output under the existing coherent repair grant; retain R9/R10.
+
+## R11: owner gates pass; Conquest root expensive and entry validation censored
+
+Source a585ec4666d7c83f1446e89e2f822261b72d4254 ran the declared gate once.
+[Receipt](root-r11-summary.json):5603 finite checks pass (budget45, guarded
+compatibility5387, legacy blocker171). Work1/47 refuse at1/47; work48 completes
+all6 actual positive entries. Exhausted/stricter/exact shared owners, discovery1
+named refusal after26 work and memory1 before-work refusal pass. Eight R8 root
+costs and all878 positive entry counts remain unchanged. Tests binary
+db17f5b22c397fdd9bfdbe8ecb6ff0f9f648d876db344bf777d9f1bfe2489da8;
+benchmark62fe94f2b283af5cee95299bbeddd6b6225487ae4e0647212ef5d4e59f449375.
+
+The one [full generated Conquest case](conquest-root-r11-summary.json) ends at
+150.068s native (150.627s isolated process), censored_time in positive_entries.
+Generated graph is BYTE IDENTICAL to R8. Independent exact original-root check
+converged, success1, every failure/leak/unresolved probability0 and full prices.
+Diagnostic root cost896765.8190299857 chaos is far above the supplied reference.
+Census has12719 strictly positive entries, zero refused census entries. Only968
+were rebound/validated before the deadline; remaining11751 were NOT dropped.
+All-entry acceptance, checked feasible upper, retention and activation are false.
+Root cost is not a qualified programme-policy upper or financial recovery.
+
+Logical generation233575+checker933384+entry717735=1884694 exactly equals
+the parent ledger, under50M. Active checker279657 and entry717735 remain separate.
+Selected simultaneous component peak674886885, reserved876476133 (includes
+201589248 transient reservation), under1GiB. Checker live87666138/internal
+peak133182141; retained result estimate54713649. No work/memory cap hit or measured
+release saving. Full final30s exact allowance and cleanup receipts retained;
+no host watchdog/cancellation/survivor. LOCAL released10:34:51UTC. No repeat or
+cap increase launched. R9/R10 failures and explanations remain intact.
+
+Economic source/occupancy lead: EldritchChaos costs804988.1408269041 (89.7657%);
+Annul89451.81194730898 (9.9749%); acquisition Chaos44.66. Direct final-stage c86
+rerolls18864.294002069262 expected times. Those stages preserve three complete
+goals and target the other two using RerollVersusRepair, with no Exalt fill word.
+The first partial-held carrier route gain is real, but this final composition is
+economically poor. Existing growth construction permits only two held/three
+target goals. Capability-derived full-three-held/two-target growth is the
+smallest next source lead for parent selection; no price benefit is measured.
+Do not import history, enable proposal3, omit entries or spend larger checker
+budgets to certify this candidate.
+
+Compact projections pin full native costs/resources, request/actions/caps,
+graph/word/occurrence identities and bulk evaluator output. Generic entry owner
+is finitely qualified; Finder generation/scoped attachment lifetime remain open.
+Economic/all-entry, consumer/control cohort and matching WASM gates remain open.

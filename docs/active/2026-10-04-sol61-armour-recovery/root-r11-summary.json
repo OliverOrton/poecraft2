@@ -1,0 +1,179 @@
+{
+  "source_commit": "a585ec4666d7c83f1446e89e2f822261b72d4254",
+  "stages": [
+    {
+      "phase": "build-tests",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 57120,
+      "process_identity_token": "57120:134355835028962926",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 21627.899799961597
+    },
+    {
+      "phase": "generic-entry-budget",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 49172,
+      "process_identity_token": "49172:134355835250671543",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 295.59240001253784
+    },
+    {
+      "phase": "guarded-recovery-owner-compatibility",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 84352,
+      "process_identity_token": "84352:134355835251009067",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 373.7360998056829
+    },
+    {
+      "phase": "legacy-blocker-and-entry-compatibility",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 74068,
+      "process_identity_token": "74068:134355835254755674",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 103.0506999231875
+    },
+    {
+      "phase": "build-benchmark",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 16156,
+      "process_identity_token": "16156:134355835255806061",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 15085.221600020304
+    },
+    {
+      "phase": "generated-conquest-original-root-and-entries",
+      "exit_code": 2,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 19664,
+      "process_identity_token": "19664:134355835411849829",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 150626.84349995106
+    }
+  ],
+  "unrun": [],
+  "owned_processes": [],
+  "local_slot": "RELEASED at terminal batch result",
+  "stop_requested": false,
+  "finished_utc": "2026-10-04T10:34:51.566273+00:00",
+  "schema": "sol61_generated_conquest_root_receipt_v1",
+  "qualification": "Finite generic owner boundaries and compatibility PASS; Conquest exact root accepted but every-positive-entry qualification TIME-CENSORED; no checked feasible upper/retention/activation",
+  "checks": [
+    {
+      "phase": "generic-entry-budget",
+      "checks": 45,
+      "failures": 0,
+      "log_sha256": "1aa7e7c105c7532742271242ace181c6b0988032e9beb00a1cde41c925f14943"
+    },
+    {
+      "phase": "guarded-recovery-owner-compatibility",
+      "checks": 5387,
+      "failures": 0,
+      "log_sha256": "8ce118c5287497f5cc6596cbe887961203409b46fd3550139558b2b9b4afe774"
+    },
+    {
+      "phase": "legacy-blocker-and-entry-compatibility",
+      "checks": 171,
+      "failures": 0,
+      "log_sha256": "a60b3925eb7eb9471fac527b00434564b68410991ac98faa6e77b3ccfc239e75"
+    }
+  ],
+  "total_checks": 5603,
+  "positive_root_fixtures": [
+    {
+      "fixture": 0,
+      "anchor_slot": 3,
+      "root_checked_cost": 282.224787,
+      "positive_entries": 145
+    },
+    {
+      "fixture": 1,
+      "anchor_slot": 3,
+      "root_checked_cost": 282.189717985,
+      "positive_entries": 145
+    },
+    {
+      "fixture": 2,
+      "anchor_slot": 4,
+      "root_checked_cost": 274.525596464,
+      "positive_entries": 145
+    },
+    {
+      "fixture": 3,
+      "anchor_slot": 4,
+      "root_checked_cost": 274.390726972,
+      "positive_entries": 79
+    },
+    {
+      "fixture": 4,
+      "anchor_slot": 3,
+      "root_checked_cost": 274.559625906,
+      "positive_entries": 105
+    },
+    {
+      "fixture": 5,
+      "anchor_slot": 3,
+      "root_checked_cost": 274.523961891,
+      "positive_entries": 105
+    },
+    {
+      "fixture": 6,
+      "anchor_slot": 3,
+      "root_checked_cost": 1058.41163574,
+      "positive_entries": 77
+    },
+    {
+      "fixture": 7,
+      "anchor_slot": 3,
+      "root_checked_cost": 1058.40531371,
+      "positive_entries": 77
+    }
+  ],
+  "finite_positive_entries": 878,
+  "test_binary_identity": {
+    "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_engine_tests.exe",
+    "sha256": "db17f5b22c397fdd9bfdbe8ecb6ff0f9f648d876db344bf777d9f1bfe2489da8",
+    "source_commit": "a585ec4666d7c83f1446e89e2f822261b72d4254"
+  },
+  "benchmark_binary_identity": {
+    "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_solver_benchmark.exe",
+    "sha256": "62fe94f2b283af5cee95299bbeddd6b6225487ae4e0647212ef5d4e59f449375",
+    "source_commit": "a585ec4666d7c83f1446e89e2f822261b72d4254"
+  },
+  "conquest_summary": "conquest-root-r11-summary.json",
+  "bulk_evidence": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\out\\sol61-armour\\root-r11",
+  "prior_failures": [
+    "root-r9-summary.json",
+    "root-r10-summary.json"
+  ],
+  "no_automatic_repeat_or_cap_increase": true
+}
