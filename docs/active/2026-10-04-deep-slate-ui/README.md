@@ -7,18 +7,16 @@ The delivered plan was read through Library as text; the reference image was
 not inspected. CI/integrator owns integration/merge/push. Protected path `0`,
 normal checkout/dev server, canonical data and frozen engine inputs are untouched.
 
-Latest qualified source is `c03aaebb5b3954316495738167f69c12611f7566`.
-Its clean build, immutable package and full legacy static-host/browser gate passed
-in installed Chrome. LOCAL was released immediately after the batch. A source-only
-Dockview token bridge was subsequently committed source-only as
-`70ef59e11398742c9256d659f42a5acd6ab4a114` after screenshot review exposed the
-library's remaining Abyss page/tab colors. The focused gate at `b8e92472` passed
-TypeScript/Vite and package integrity but failed its rendered color assertion.
-Dependency-source inspection identified the inner theme root created by BaseGrid;
-source-only correction `e6359fe4838f657c0bdaa913f6fe3afc2792fd35` extends the same
-selector to that root. Its focused rerun needs a new LOCAL slot. Overall C2 palette
-cleanup is not yet qualified. New A/B and actual-output adapters are absent from
-this source and remain an integration-dependent extension.
+The full legacy UI/native browser boundary remains
+`c03aaebb5b3954316495738167f69c12611f7566`. The additional Dockview palette scope
+is now qualified at clean `b592016107003c58dba3cdf52721a4675261a3fe`, containing
+bridge `70ef59e1` and nested-root correction `e6359fe4`. TypeScript/Vite, immutable
+package integrity and the unchanged focused rendered assertions passed in
+installed Chrome. The agreed C2 palette is qualified for the existing legacy
+surfaces. New A/B connectors and actual-output/trace adapters remain absent and
+require matched component source/WASM from their owner; they were not worked
+around or integrated. LOCAL was released immediately, cleanup verified, and both
+qualification boundaries and all actual screenshots are preserved.
 
 ## Presentation owners
 
@@ -46,9 +44,9 @@ No OS font installation or runtime third-party font request. Body is 14px,
 metadata 12px, headings 16px; costs/odds use tabular numbers. Rarity, prefix,
 suffix and fracture semantics remain distinct. Magic blue was raised to `#9a9aff`.
 
-## Current qualification
+## Qualified boundaries
 
-Clean product/test source: `c03aaebb5b3954316495738167f69c12611f7566`.
+Full legacy product/test source: `c03aaebb5b3954316495738167f69c12611f7566`.
 Source-tree SHA-256: `b25bbdd29a588091c2ca01884f75938745a66d1fdb9561d8630506e1fd89a707`.
 Build ID: `a416ccf24a1206925fa2c0877d5d1ca9bd41cc5ab17ccb65fdd28166793f1b11`.
 Immutable web archive (667 files):
@@ -58,18 +56,28 @@ Full receipt, exact input hashes and logs:
 `build.log`, `package.log`, `verify.log`, `browser.log`.
 Archive: `dist/public-artifacts/web/<archive>/deployment-manifest.json`.
 
+Additional Dockview source: `b592016107003c58dba3cdf52721a4675261a3fe`.
+Source-tree SHA-256: `2a5722bdbae300b9e1dfb4bc3203906c6b1c1e43f54b2e46bbca38755d91b506`.
+Build ID: `6c15e1df4b1dd190ae1956e25e3ba5f6b8394b72f0e3cb6050f3ede20307679b`.
+Verified archive (667 files):
+`d66d294820bc5e233d4f4b3a545825f21c4f3da1fdcb38cdd12ade04381f7e57`.
+Evidence: `out/deep-slate-ui/dock-b5920161/{preflight,qualification,commands}.json`,
+`build.log`, `package.log`, `verify.log`, `browser.log` and two new PNGs.
+This receipt qualifies only `scope: dock-theme`, adding to the preserved full
+legacy boundary rather than relabeling it as another full native run.
+
 | Check | Actual outcome / evidence under `out/deep-slate-ui/` |
 | --- | --- |
-| TypeScript + Vite | Passed on final clean source, `final-c03aaebb/build.log` |
+| TypeScript + Vite | Passed on both clean boundaries, `final-c03aaebb/build.log`, `dock-b5920161/build.log` |
 | Owner cache regression | Passed on this branch, `remaining-cache-fixed/cache-regression.log` |
 | Focused item display/native rarity casing | Passed, `remaining-shared-rarity/item-display.log`; DOM fixture warns about intentionally unavailable relative artwork URL |
-| Immutable package/integrity | Passed, `final-c03aaebb/package.log`, `verify.log` |
+| Immutable package/integrity | Passed for both 667-file archives, each boundary's `package.log`, `verify.log` |
 | Full legacy browser gate | Passed against the exact immutable archive, Chrome 152.0.7977.83 via Playwright Chromium `channel=chrome`, `final-c03aaebb/browser.log` |
 | Prior 33-command web suite | All commands passed across initial run and Chrome continuation on `2a46b1b3`; the initial aggregate `npm test` invocation failed at unavailable pinned Chromium, `web-tests.log`, `web-tests-chrome-tail.log` |
 | Pinned Chromium / Firefox | Not installed/qualified; no browser download or user-profile access |
 | New A/B/trace adapters | Absent from this source, not implemented or qualified here |
 | Dockview gate at `b8e92472` | TypeScript/Vite/package passed; rendered color failed, `dock-b8e92472/` |
-| Nested-root correction `e6359fe4` | Source-reviewed/committed; rendered assertions unchanged; focused rerun pending |
+| Corrected Dockview gate at `b5920161` | Passed unchanged rendered assertions; page/panel colors, contrast, geometry and Stash/return, `dock-b5920161/browser.log` |
 
 The full browser gate includes native item round-trip, probability sum tolerance
 `1e-9`, exact convergence/cancellation, three-size Emulator/Calculator layout,
@@ -85,6 +93,13 @@ Logged browser contrast: primary 9.014:1, hover 10.451:1, muted/card 6.145:1,
 focus/card 7.567:1, field boundary/field 4.990:1. Thresholds remain 4.5 for text
 and 3 for focus/boundaries. Source arithmetic also gives body/card 10.16:1,
 control boundary/card 3.47:1 and magic/card 5.34:1.
+
+The Dockview gate measured page `rgb(16,21,27)` and panel `rgb(24,33,42)`.
+Initial active-tab text contrast was 16.466:1; with active/inactive tabs, minimum
+contrast was 7.536:1. Joined tab/strip heights remain 35px, radius 0px, type 14px.
+Stash added one tab and return retained the initial base-picker selection; no
+native item was created or craft/solve/Simulator invoked. These assertions and
+both inspected screenshots passed after the scoped root correction.
 
 All native/WASM/runtime/artwork/economy pins remain unchanged. Runtime manifest
 `82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d`;
@@ -127,7 +142,9 @@ weakening acceptance: actual group background `rgb(0,12,24)` versus expected
 `rgb(16,21,27)`. `BaseGrid` constructs an inner div and DockviewComponent applies
 the theme class there; explicit inner variables override inherited host values.
 `e6359fe4` applies the identical token bridge to both scoped roots. No color,
-geometry, library/controller behavior or rendered assertion changed.
+geometry, library/controller behavior or rendered assertion changed. The new
+clean `b5920161` gate passed those same assertions; its evidence remains separate
+from this retained failure.
 
 Attempt evidence: `dock-b8e92472/preflight.json`, `build.log`, `package.log`,
 `verify.log`, `browser.log`, `outcome.json`, `screenshots/chromium-failure.png`.
@@ -159,18 +176,24 @@ Reviewed remaining captures:
 `remaining-native-facts/screenshots/chromium-builder.png` (legacy graph/picker)
 and `remaining-native-shaper/screenshots/chromium-stash.png` (native Rare Shaper).
 Labels, icons, compact density and controls were visually inspected. They exposed
-the remaining library Abyss background/tab mismatch; the source-only Dockview
-variable bridge fixes that owner without changing tab/split/controller behavior.
-No unchanged before/after PNGs were recaptured. Broader zoom/long-name/long-edge
+the remaining library Abyss background/tab mismatch. The corrected Dockview
+bridge was subsequently rendered/qualified without changing tab/split/controller
+behavior. Final inspected captures are
+`dock-b5920161/screenshots/chromium-dock-stash.png` (empty/loading-settled Stash)
+and `chromium-dock-base-picker.png` (return to unchanged picker). Page/tab layers,
+text, square joined edges and ember execution button fit the selected C2 palette.
+These new shell frames are not the earlier native Shaper item state; preserve
+that distinction. No unchanged before/after PNGs were recaptured. Broader zoom/long-name/long-edge
 stress and all new A/B/trace views remain a later integrated-source review.
 
-## Integration boundary / next gate
+## Integration handoff / remaining interfaces
 
 The delivered source chain includes `5b0e71ef`, `0ffc425d`, `5a531639`, `366219cc`,
 `2a46b1b3`, documentation checkpoints, narrow cache `1be4c20c`, shared rarity
-`5cd7b742`, qualified legacy browser checks `c03aaebb`, and separate source-only
-Dockview bridge `70ef59e1` and its source-only root-scope correction `e6359fe4`.
-All commits stay local.
+`5cd7b742`, qualified legacy browser checks `c03aaebb`, Dockview bridge
+`70ef59e1` and corrected theme root `e6359fe4`, now qualified at `b5920161`.
+All commits stay local. Owner cache cherry-pick `1be4c20c` mirrors `63ff9c12`;
+CI should deduplicate it if the original owner commit is already integrated.
 The Builder branch's appended `.pc-edge-path.is-item-supply` rule must be preserved.
 
 Parent handoff `ffa93611`, runtime source pin `9736e766de959070b0c89fcb71281438ebd6f64c`,
@@ -186,31 +209,27 @@ feeder receipts, child/native known-cost completeness without double counting,
 consumed/unavailable states and seven execution slots distinct from 32 planner
 catalogue entries. No frontend synthesis of constraints, costs or native mechanics.
 
-The smallest requested LOCAL continuation is the unchanged focused gate on the
-corrected `e6359fe4` source: clean TypeScript/Vite build,
-existing immutable package/integrity owners, then the existing static-host runner
-with `POECRAFT_UI_SMOKE_SCOPE=dock-theme`,
+The focused Dockview continuation is completed. Its reproducible existing-runner
+scope uses `POECRAFT_UI_SMOKE_SCOPE=dock-theme`,
 `POECRAFT_TEST_BROWSER_CHANNEL=chrome`, `POECRAFT_SMOKE_BROWSERS=chromium`,
-`POECRAFT_UI_CAPTURE_ONLY=dock-stash,dock-base-picker,failure` and a fresh evidence
-directory. Preflight the frozen bytes above. This mode measures page/panel and
-active/inactive tab colors, text contrast >=4.5, unchanged 35px square joined tab
-geometry, 14px type, Stash opening and return to the unchanged base picker.
-It creates no native item, crafts, solve or Simulator workload, and reports
-`scope: dock-theme` with explicit full-legacy/A-B/trace exclusions. The default
-full smoke retains every original numerical and lifecycle assertion.
+`POECRAFT_UI_CAPTURE_ONLY=dock-stash,dock-base-picker,failure` against the immutable
+archive. It reports explicit full-legacy/A-B/trace exclusions; default full smoke
+keeps all original numerical/lifecycle assertions. No redundant full legacy run
+was performed for this CSS-only correction.
 
-Only those two changed shell/Stash frames need capture; retain all prior actual
-screenshots. No new server, supervisor or browser profile owner. Use 120-second
-build, 60-second packaging and a 120-second outer host watchdog; the existing
-30-second locator deadlines and finally cleanup remain active. Release LOCAL
-immediately after heavy work ends, before documentation. Do not rerun the full
-legacy gate solely for the token bridge. Combine new A/B/trace qualification only
-when parent supplies coherent component source and matching qualified artifacts.
+The failed `b8e92472` attempt's PIDs 64744/70028/9260/17680 exited. The passing
+`b5920161` build/package/verify/browser PIDs 17404/12272/38292/53800 also exited,
+confirmed by read-only process lookup. Browser/server finally cleanup completed,
+and no Node/Python/Chrome process references the UI worktree. The existing owners
+used 120-second build/browser and 60-second package watchdogs, with 30-second
+locator deadlines. LOCAL was released before documentation and image review.
+No new server/supervisor or fixed aggregate run cap. `git diff --check` passed.
 
-The `b8e92472` attempt ended with supervised PIDs 64744 (build), 70028 (package),
-9260 (verify), 17680 (browser) exited, confirmed through read-only process lookup.
-Browser/server finally cleanup completed and no Node/Python/Chrome process
-references this UI worktree. LOCAL was released promptly before source correction.
-No heavy command ran for `e6359fe4`; `git diff --check` passed. The qualified
-`c03aaebb` package/receipts remain preserved. There is no new supervisor or fixed
-aggregate run cap. Retain causal failures before deciding another batch.
+The current isolated source is ready for CI/integrator handoff within this
+qualified scope. No deployment, unilateral main merge/push, native build or
+recombination feature import. Preserve the supplied component/artifact boundary
+until the recombination owner resolves its fresh-session adapter defect and
+provides matched qualified source/WASM. Further new A/B/trace visual qualification
+belongs to that explicit integrated-source continuation, not this completed
+legacy palette gate. Broader zoom/long-name/long-edge stress remains a later
+review choice, not a claim covered by the recorded fixtures.
