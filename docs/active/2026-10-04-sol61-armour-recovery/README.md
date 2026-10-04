@@ -787,3 +787,22 @@ needed to select a separate economic opportunity gate versus a historical
 reference/temporary-blocked composition. No full Conquest repeat is authorized
 by this stopped result. LOCAL released11:57:59UTC; all native process cleanup
 checks report zero survivors. R1/R2 failures and actual routes remain retained.
+
+## Parent disposition: separate generic candidate gate, history remains negative
+
+Parent explicitly accepts R3's bounded historical plain-fill-equivalence
+hypothesis as negative and requires its failing assertion/selector/results to
+remain. That diagnostic is not a logical prerequisite for a DISTINCT generated
+economic controller. [Separately named candidate request](generic-final-fill-candidate-request.json)
+continues the six unrun stages with exactly the same twelve source hashes,
+frozen inputs, caps, strict P0/native Exalt/resource checks and every-entry/native
+guard/ownership requirements. Reuse R3's exact52a02bff test binary/build and
+passing finite checks, while retaining its one historical matching failure as
+an excluded hypothesis rather than a passing case. No source test/assertion or
+production behaviour changes for this disposition.
+
+LOCAL remains assigned by the parent for this serial bounded continuation,
+max2 compiler jobs. No broader historical search, imported reference controller,
+full Conquest economic repeat, production observer switch or peak/release claim.
+If the separate candidate gate passes, its next artifact is an exact proposed
+original-request economic comparison, not a historical reconstruction claim.

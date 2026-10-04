@@ -1,4 +1,11 @@
-# Armour: final-fill historical witness stopped; LOCAL released
+# Armour: separate generic candidate gate authorized; history stays negative
+
+Parent disposition accepts historical equivalence as negative, preserves its
+failing selector/assertion, and assigns LOCAL for six separately named generic
+candidate stages on the SAME source/caps. [Candidate request](docs/active/2026-10-04-sol61-armour-recovery/generic-final-fill-candidate-request.json)
+reuses R3 exact build and passing P0/native law checks; later correctness/ownership/
+construction stages remain UNRUN. No full Conquest repeat or wider historical
+search. If gates pass, propose a distinct economic comparison for parent selection.
 
 Tested source675c2f06642a25338310a6d7bfc578e27d4cc153 R3 builds successfully
 but strict historical plain-fill witness fails961checks/1failure. P0 still passes
