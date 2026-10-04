@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { checkWorkbenchPresentation, captureUiCheckpoint } from './ui-presentation-checks.mjs';
+import { checkWorkbenchPresentation, checkItemPresentationSemantics, checkBuilderPresentation, captureUiCheckpoint } from './ui-presentation-checks.mjs';
 import { checkEmulatorHistory, checkStrategyHistory } from './edit-history-checks.mjs';
 import { checkCalculatorLayout, checkEmulatorLayout } from './calculator-layout-checks.mjs';
 import { checkCraftChoices, checkCalculatorChoices } from './craft-choices-checks.mjs';
@@ -20,6 +20,7 @@ export async function checkUiContinuity(page) {
     assert.ok(await page.locator('pc-emulator .pc-mod-slot.is-filled').count() >= 4);
     await checkEmulatorLayout(page);
     const presentation = await checkWorkbenchPresentation(page);
+    const itemPresentation = await checkItemPresentationSemantics(page);
     await captureUiCheckpoint(page, "emulator");
     await checkEmulatorHistory(page);
     await checkCraftChoices(page);
@@ -30,6 +31,8 @@ export async function checkUiContinuity(page) {
     await page.locator('pc-calculator [data-calc-context="goal"]').click();
     await page.locator('pc-calculator .pc-mod-family-header').first().click();
     await page.locator('pc-calculator .pc-mod-tier-btn').first().click();
+    await page.locator('[data-context-card="goal"] .pc-mod-slot.is-filled').first().waitFor();
+    await page.waitForFunction(() => !document.querySelector('pc-calculator')?.busy);
     await captureUiCheckpoint(page, "calculator-goal");
     await page.locator('pc-calculator [data-calc-tool="odds"]').click();
     await page.locator('pc-calculator [data-select-action="chaos"]:not(:disabled)').click();
@@ -97,6 +100,8 @@ export async function checkUiContinuity(page) {
     condition = JSON.parse(await page.locator('[data-action="json"]').inputValue());
     assert.match(JSON.stringify(condition), /"min_tier":0/);
     await checkStrategyHistory(page);
+    const builderPresentation = await checkBuilderPresentation(page);
+    await captureUiCheckpoint(page, "builder");
     await page.locator('.pc-tab-title').filter({hasText: /^Calculator/}).click();
     await page.waitForFunction(() => document.querySelector('.pc-calc-answer-value')?.textContent);
     await page.waitForFunction(() => !document.querySelector('pc-calculator')?.busy);
@@ -139,7 +144,7 @@ export async function checkUiContinuity(page) {
     await imported.locator('.pc-tab-close').click();
     await page.locator('.pc-modal [data-choice="discard"]').click();
     await imported.waitFor({state: 'detached'});
-    return {presentation, crafts: true, handoffs: true, coverageGoal: true, draftRecovery: true, restart: true,
+    return {presentation, itemPresentation, builderPresentation, crafts: true, handoffs: true, coverageGoal: true, draftRecovery: true, restart: true,
         namespacedAction: true, nestedConditions: true, tierAndAnyTier: true, tabLifecycle: true, artwork: true,
         stashRoundTrip: true, dirtyClose: true, emulatorHistory: true, strategyHistory: true, edgeReconnection: true,
         craftChoices: true, craftTooltips: true, stableModSlots: true, calculatorComparison: true, harvestMaterials: true, historySpend: true};

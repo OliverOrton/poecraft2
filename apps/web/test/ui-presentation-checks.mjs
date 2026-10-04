@@ -70,3 +70,125 @@ export async function captureUiCheckpoint(page, name) {
     await page.screenshot({path: resolve(directory, `${page.context().browser().browserType().name()}-${name}.png`)});
     await page.setViewportSize(viewport);
 }
+
+/** Exercise the shipped shared card in a real browser with a native-owned clone.
+ * Goal fixtures explicitly provide their constraints; no live goal is modified.
+ */
+export async function checkItemPresentationSemantics(page) {
+    await page.evaluate(async () => {
+        window.presentationReturnFocus = document.activeElement;
+        const emulator = document.querySelector('pc-emulator');
+        const source = emulator.querySelector('pc-mod-list').model;
+        const clone = await emulator.client.cloneItem(emulator.item);
+        try {
+            await emulator.client.editItem(clone, emulator.session, {influence_bits: 32});
+            const info = await emulator.client.itemInfo(clone, emulator.session);
+            if (Number(info.generic_influence_bits) !== 32) throw new Error('Native Shaper fixture was not retained');
+            window.itemPresentationFixture = {...structuredClone(source),
+                influences: ['Shaper'], itemFlags: Number(info.item_flags), lifecycle: Number(info.lifecycle),
+                memoryStrands: Number(info.memory_strands)};
+        } finally { await emulator.client.closeItem(clone); }
+        const host = document.createElement('aside');
+        host.id = 'item-presentation-qualification';
+        host.setAttribute('aria-label', 'Item presentation qualification fixture');
+        host.style.cssText = 'position:fixed;inset:16px auto 16px 16px;width:460px;overflow:auto;z-index:1000;background:var(--pc-surface-panel);padding:12px;border:1px solid var(--pc-border)';
+        const card = document.createElement('pc-mod-list');
+        host.append(card); document.body.append(host);
+        card.setModel({...window.itemPresentationFixture, readOnly: true});
+    });
+    const host = page.locator('#item-presentation-qualification');
+    const card = host.locator('pc-mod-list');
+    try {
+        assert.equal(await card.locator('[data-influence-context="actual"]').innerText(), 'Shaper');
+        assert.equal(await card.locator('[data-influence-context="required"], [data-influence-context="exact"]').count(), 0);
+        assert.equal(await card.locator('.pc-item-fracture-mod, .pc-item-remove-mod, .pc-item-add-mod').count(), 0);
+        await card.locator('.pc-item-properties summary').click();
+        assert.equal(await card.getByRole('checkbox', {name: 'Shaper', exact: true}).isDisabled(), true);
+        const details = card.locator('.pc-mod-slot.is-filled .pc-mod-slot-content').first();
+        await details.focus(); await page.keyboard.press('Tab'); await page.keyboard.press('Shift+Tab');
+        assert.equal(await details.evaluate(element => element.matches(':focus-visible')), true);
+        assert.equal(await details.getAttribute('tabindex'), '0');
+        assert.equal(await details.evaluate(element => getComputedStyle(element).outlineWidth), '2px');
+        await page.evaluate(() => {
+            const card = document.querySelector('#item-presentation-qualification pc-mod-list');
+            card.setModel({...window.itemPresentationFixture, readOnly: false});
+            window.presentationFracture = null;
+            card.addEventListener('fracture-mod', event => {window.presentationFracture = event.detail;});
+        });
+        const fracture = card.locator('.pc-item-fracture-mod').first();
+        const expected = await fracture.evaluate(element => {
+            const row = element.closest('.pc-mod-slot');
+            return {key: row.dataset.modKey, modId: Number(row.dataset.modId), side: row.dataset.side};
+        });
+        await fracture.focus(); await page.keyboard.press('Enter');
+        assert.deepEqual(await page.evaluate(() => window.presentationFracture), expected);
+        await page.evaluate(() => {
+            const source = window.itemPresentationFixture;
+            const card = document.querySelector('#item-presentation-qualification pc-mod-list');
+            let model = {kind: 'target', baseKey: source.baseKey, baseName: source.baseName,
+                itemLevel: source.itemLevel, rarity: source.rarity, maxPrefix: source.maxPrefix, maxSuffix: source.maxSuffix,
+                prefixes: [], suffixes: [], otherRequirements: [], implicitInfluences: ['Searing Exarch'],
+                properties: {influences: source.properties.influences}};
+            card.addEventListener('item-properties-change', event => {
+                const edit = event.detail;
+                model = {...model, properties: {...model.properties,
+                    influenceBits: edit.influence_bits === null ? undefined : edit.influence_bits}};
+                card.setModel(model);
+            });
+            card.setModel(model);
+        });
+        assert.equal(await card.locator('[data-influence-context="any"]').innerText(), 'Any ordinary influence');
+        assert.equal(await card.locator('[data-influence-context="required"]').innerText(), 'Required: Searing Exarch');
+        assert.equal(await card.locator('[data-influence-context="actual"]').count(), 0);
+        if (!await card.locator('.pc-item-properties').evaluate(element => element.open)) {
+            await card.locator('.pc-item-properties summary').click();
+        }
+        await card.getByRole('checkbox', {name: 'Any influence', exact: true}).uncheck();
+        assert.equal(await card.locator('[data-influence-context="exact-none"]').innerText(), 'Exactly: no ordinary influence');
+        await card.getByRole('checkbox', {name: 'Shaper', exact: true}).check();
+        assert.equal(await card.locator('[data-influence-context="exact"]').innerText(), 'Exactly: Shaper');
+        await card.getByRole('checkbox', {name: 'Any influence', exact: true}).check();
+        assert.equal(await card.locator('[data-influence-context="exact"], [data-influence-context="exact-none"]').count(), 0);
+        assert.equal(await card.locator('[data-influence-context="any"]').count(), 1);
+        return {nativeActualInfluence: true, requiredExactAnyDistinct: true, readOnly: true, keyboardFractureIdentity: true};
+    } finally {
+        await host.evaluate(element => element.remove());
+        await page.evaluate(() => {
+            window.presentationReturnFocus?.focus();
+            delete window.presentationReturnFocus; delete window.itemPresentationFixture; delete window.presentationFracture;
+        });
+    }
+}
+
+/** Source-baseline geometry; new A/B connector qualification belongs to its feature branch. */
+export async function checkBuilderPresentation(page) {
+    const geometry = await page.locator('pc-strategy-node').evaluateAll(nodes => nodes.map(node => ({
+        width: getComputedStyle(node).width,
+        ports: [...node.querySelectorAll('.pc-node-port')].map(port => ({
+            width: getComputedStyle(port).width, height: getComputedStyle(port).height,
+            top: getComputedStyle(port).top, radius: getComputedStyle(port).borderRadius,
+        })),
+    })));
+    assert.ok(geometry.length > 0);
+    for (const node of geometry) {
+        assert.equal(node.width, '210px');
+        for (const port of node.ports) {
+            assert.equal(port.width, '14px'); assert.equal(port.height, '14px');
+            assert.equal(port.radius, '50%'); assert.equal(port.top, '48px');
+        }
+    }
+    const field = page.locator('.pc-strategy-inspector input').first();
+    const style = await field.evaluate(element => {
+        const style = getComputedStyle(element);
+        return {text: style.color, fill: style.backgroundColor, boundary: style.borderTopColor};
+    });
+    assert.ok(contrast(style.text, style.fill) >= 4.5);
+    assert.ok(contrast(style.boundary, style.fill) >= 3);
+    await field.focus(); await page.keyboard.press('Tab'); await page.keyboard.press('Shift+Tab');
+    assert.equal(await field.evaluate(element => element.matches(':focus-visible')), true);
+    assert.equal(await field.evaluate(element => getComputedStyle(element).outlineWidth), '2px');
+    const clipped = await page.locator('.pc-edge-card-leaf').evaluateAll(leaves => leaves.filter(leaf =>
+        leaf.scrollHeight > leaf.closest('.pc-edge-card-row').clientHeight + 1).map(leaf => leaf.textContent));
+    assert.deepEqual(clipped, [], 'Edge card text fits its existing row geometry');
+    return {nodeWidth: 210, portDiameter: 14, sourceBaselinePortTop: 48, keyboardFocus: true, edgeRowsFit: true};
+}

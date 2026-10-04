@@ -30,7 +30,9 @@ try {
     const selectedBrowsers = process.env.POECRAFT_SMOKE_BROWSERS?.split(',') || ['chromium', 'firefox'];
     if (selectedBrowsers.some(name => !['chromium', 'firefox'].includes(name))) throw new Error('Unknown smoke browser');
     for (const browserType of [chromium, firefox].filter(type => selectedBrowsers.includes(type.name()))) {
-        const browser = await browserType.launch({ headless: true });
+        const channel = process.env.POECRAFT_TEST_BROWSER_CHANNEL;
+        assert.ok(channel === undefined || channel === 'chrome', 'POECRAFT_TEST_BROWSER_CHANNEL must be unset or chrome');
+        const browser = await browserType.launch({ headless: true, ...(browserType === chromium && channel ? {channel} : {}) });
         try {
             const page = await browser.newPage();
             page.setDefaultTimeout(30_000);
@@ -75,7 +77,19 @@ try {
             assert.equal(result.supported, true); assert.equal(result.legal, true);
             assert.ok(Math.abs(result.probability - 1) < 1e-9);
             assert.equal(result.exact.converged, true); assert.equal(result.cancelled, true);
+            // The local font is optional for usability; the fallback keeps a working app.
+            const withoutFont = await browser.newPage();
+            await withoutFont.route('**/*.woff2', route => route.fulfill({status: 404, body: 'missing'}));
+            await withoutFont.goto(origin + build.base);
+            await withoutFont.locator('pc-emulator .pc-bp-confirm:not(:disabled)').click();
+            await withoutFont.locator('pc-emulator [data-simple-action="alchemy"]:not(:disabled)').waitFor();
+            await withoutFont.evaluate(() => document.fonts.ready);
+            assert.equal(await withoutFont.evaluate(() => document.fonts.check('400 14px "Noto Sans"')), false);
+            await captureUiCheckpoint(withoutFont, 'font-fallback');
+            await withoutFont.close();
+            console.log(JSON.stringify({checkpoint: 'font-fallback', result: 'passed', channel: channel || 'pinned'}));
             const ui = build.game_assets ? await checkUiContinuity(page).catch(async error => {
+                await captureUiCheckpoint(page, 'failure');
                 console.error(JSON.stringify({failures, status: await page.locator('.pc-emu-status, .pc-calc-status').allTextContents()}));
                 throw error;
             }) : {skipped: 'archive predates React/asset migration'};
@@ -100,16 +114,6 @@ try {
                 ui.artworkFallback = true;
                 await withoutArt.close();
             }
-            // The local font is optional for usability; the fallback keeps a working app.
-            const withoutFont = await browser.newPage();
-            await withoutFont.route('**/*.woff2', route => route.fulfill({status: 404, body: 'missing'}));
-            await withoutFont.goto(origin + build.base);
-            await withoutFont.locator('pc-emulator .pc-bp-confirm:not(:disabled)').click();
-            await withoutFont.locator('pc-emulator [data-simple-action="alchemy"]:not(:disabled)').waitFor();
-            await withoutFont.evaluate(() => document.fonts.ready);
-            assert.equal(await withoutFont.evaluate(() => document.fonts.check('400 14px "Noto Sans"')), false);
-            await captureUiCheckpoint(withoutFont, 'font-fallback');
-            await withoutFont.close();
             // A tab pinned to old JS must fail safely if its data disappeared.
             const stale = await browser.newPage();
             await stale.addInitScript(() => localStorage.setItem('hosting-preserved-draft-marker', 'keep'));
@@ -117,7 +121,7 @@ try {
             await stale.goto(origin + build.base);
             await stale.waitForFunction(() => document.querySelector('pc-emulator')?.textContent.includes('reload to retry'));
             assert.equal(await stale.evaluate(() => localStorage.getItem('hosting-preserved-draft-marker')), 'keep');
-            console.log(JSON.stringify({ browser: browserType.name(), version: browser.version(), base: build.base, build_id: build.build_id, result: 'passed', requests: responses.length, ui }));
+            console.log(JSON.stringify({ browser: browserType.name(), version: browser.version(), channel: channel || 'pinned', base: build.base, build_id: build.build_id, result: 'passed', requests: responses.length, ui }));
         } finally { await browser.close(); }
     }
 } finally { await new Promise(resolve => server.close(resolve)); }

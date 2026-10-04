@@ -39,7 +39,7 @@ function firstExisting(paths) {
 function webComponents(directory) {
     return filesBelow(directory).filter(path => basename(path) !== 'deployment-manifest.json').map(path => {
         const name = relative(directory, path).replaceAll('\\', '/');
-        if (!/^(index\.html|build-info\.json|THIRD_PARTY_NOTICES\.txt|poecraft-data\.[a-f0-9]{64}\.json|assets\/[\w.-]+|game-assets\/(catalog\.json|[a-f0-9]{64}\.png)|economy\/league-index\.json|economy\/snapshots\/[a-f0-9]{64}\.json)$/.test(name)) {
+        if (!/^(index\.html|build-info\.json|THIRD_PARTY_NOTICES\.txt|fonts\/OFL\.txt|poecraft-data\.[a-f0-9]{64}\.json|assets\/[\w.-]+|game-assets\/(catalog\.json|[a-f0-9]{64}\.png)|economy\/league-index\.json|economy\/snapshots\/[a-f0-9]{64}\.json)$/.test(name)) {
             throw new Error(`Unexpected file in static deployment: ${name}`);
         }
         return { kind: 'web', path: name, bytes: statSync(path).size, sha256: sha256(path) };
@@ -61,7 +61,9 @@ function verifyWeb(directory) {
     if (components.find(c => c.path === 'economy/league-index.json')?.sha256 !== build.economy.bundled_index_sha256) throw new Error('Bundled economy index differs from build identity');
     if (build.game_assets && components.find(c => c.path === 'game-assets/catalog.json')?.sha256 !== build.game_assets.catalog_sha256) throw new Error('Artwork catalogue differs from build identity');
     if (build.game_assets) verifiedGameAssets(join(directory, 'game-assets'), build.runtime.manifest_sha256, build.runtime.source.data_hash);
-    for (const required of ['index.html', 'THIRD_PARTY_NOTICES.txt']) {
+    const requiredFiles = ['index.html', 'THIRD_PARTY_NOTICES.txt'];
+    if (components.some(c => /noto-sans.*\.woff2$/.test(c.path))) requiredFiles.push('fonts/OFL.txt');
+    for (const required of requiredFiles) {
         if (!components.some(c => c.path === required)) throw new Error(`Required static file missing: ${required}`);
     }
     if (!components.some(c => c.path.endsWith('.wasm') && c.sha256 === build.engine.wasm_sha256)) throw new Error('Emitted WASM differs from selected engine');
