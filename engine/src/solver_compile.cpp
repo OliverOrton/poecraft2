@@ -18,6 +18,61 @@
 namespace poecraft {
 namespace solver {
 
+namespace {
+
+std::string missing_goal_rollable_condition(const CalcContext& calc,
+        const pc_item_state& original_start, const std::uint32_t side,
+        const std::vector<SlotVocabulary>& vocabulary) {
+    if (side > PC_SIDE_SUFFIX)
+        throw std::invalid_argument("finder rollable-goal side is invalid");
+    const auto& session = calc.session();
+    // These private stages keep the original influence and item-tag context.
+    // Dynamic added-tag weights need a richer observation; retain paid reroll
+    // conservatively instead of granting a draw or discarding the candidate.
+    if (session.has_added_tags) return any_of({});
+    auto empty = original_start;
+    pc_item_clear_side(&empty,PC_SIDE_PREFIX);
+    pc_item_clear_side(&empty,PC_SIDE_SUFFIX);
+    ActionContextImpl context(0); context.session = calc.shared_session();
+    PoolBuildRequest request; request.side_filter = static_cast<std::int8_t>(side);
+    const auto& pool = get_weighted_pool(context,&empty,request);
+    std::vector<std::string> rollable_slots;
+    for (std::uint32_t slot = 0; slot < calc.goal().slots.size(); ++slot) {
+        if (goal_slot_side(session,calc.goal().slots[slot]) != side) continue;
+        std::vector<std::string> open_members;
+        for (const auto& entry : pool.entries) {
+            const auto mod = entry.session_mod_id;
+            if (entry.final_weight == 0 || mod >= session.mod_count ||
+                !pc_bitset_test(calc.layout().slots[slot].satisfying_mask.data(),mod)) continue;
+            // Use every native group, including secondary exclusions. The same
+            // masks are applied by get_weighted_pool to occupied native groups.
+            std::vector<std::uint64_t> blockers(session.words,0);
+            for (auto group = session.group_offsets.at(mod);
+                 group < session.group_offsets.at(mod+1); ++group) {
+                const auto id = session.group_ids.at(group);
+                if (id >= session.group_masks.size()) continue;
+                const auto& mask = session.group_masks[id];
+                for (std::size_t word = 0; word < mask.size(); ++word)
+                    blockers[word] |= mask[word];
+            }
+            const auto occupied = std::any_of(blockers.begin(),blockers.end(),
+                [](const auto word) { return word != 0; });
+            open_members.push_back(occupied ? mod_count_condition_for_mask(session,
+                blockers,0,0,false,"native goal blockers") : all_of({}));
+        }
+        if (!open_members.empty()) rollable_slots.push_back(all_of({
+            not_of(vocabulary.at(slot).satisfied),any_of(open_members)}));
+    }
+    const auto cap = rarity_affix_cap(session,calc.goal().rarity);
+    const auto count_type = side == PC_SIDE_PREFIX ? "prefix_count_range" : "suffix_count_range";
+    std::vector<std::string> capacity;
+    for (std::uint8_t count = 0; count < cap; ++count)
+        capacity.push_back(count_condition(count_type,count));
+    return all_of({rarity_condition(calc.goal().rarity),any_of(capacity),any_of(rollable_slots)});
+}
+
+} // namespace
+
 std::string compile_finder_goal_condition(const CalcContext& calc) {
     std::vector<SlotVocabulary> vocabulary;
     vocabulary.reserve(calc.layout().slots.size());
@@ -511,6 +566,7 @@ std::string compile_finder_control_json(
         case FinderControlKind::TestAffixCountAtLeast4:
         case FinderControlKind::TestEldritchTiers:
         case FinderControlKind::TestSideCountAtLeast:
+        case FinderControlKind::TestMissingGoalRollable:
             json += "router\"}";
             break;
         case FinderControlKind::RunPrimitive:
@@ -602,7 +658,8 @@ std::string compile_finder_control_json(
             node.kind != FinderControlKind::TestSlot &&
             node.kind != FinderControlKind::TestAffixCountAtLeast4 &&
             node.kind != FinderControlKind::TestEldritchTiers &&
-            node.kind != FinderControlKind::TestSideCountAtLeast)
+            node.kind != FinderControlKind::TestSideCountAtLeast &&
+            node.kind != FinderControlKind::TestMissingGoalRollable)
             continue;
         std::string condition;
         if (node.kind == FinderControlKind::TestGoal) {
@@ -614,6 +671,8 @@ std::string compile_finder_control_json(
             if (node.binding >= vocabulary.size())
                 throw std::invalid_argument("finder goal slot is invalid");
             condition = vocabulary[node.binding].satisfied;
+        } else if (node.kind == FinderControlKind::TestMissingGoalRollable) {
+            condition = missing_goal_rollable_condition(calc,start_item,node.binding,vocabulary);
         } else if (node.kind == FinderControlKind::TestAffixCountAtLeast4) {
             const auto threshold = node.binding == kNoId ? 4u : node.binding;
             if (threshold == 0 || threshold > 7)

@@ -58,7 +58,7 @@ void run_solver_proof_pattern_tests();
 void run_solver_automatic_eldritch_tests();
 void run_solver_admission_query_tests(bool development_checkpoint_diagnostic = false);
 void run_solver_partial_held_witness_tests(const char* artifact_dir);
-void run_solver_partial_held_recovery_tests(bool compound_blocker_only = false);
+void run_solver_partial_held_recovery_tests(bool compound_blocker_only = false, bool guarded_recovery = false);
 void run_solver_eldritch_side_fixture_tests();
 void run_solver_policy_refinement_tests();
 void run_solver_bounded_finish_tests();

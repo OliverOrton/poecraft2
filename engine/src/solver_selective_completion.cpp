@@ -678,6 +678,14 @@ void SelectiveCompletionProducer::build() {
         // uses an independently admitted finite attempt at two target affixes.
         const auto repair_branch = branch(secondary_, secondary_binding);
         const auto fill_branch = branch(tertiary_, tertiary_binding);
+        auto guarded_fill = fill_branch;
+        if (guard_missing_goal_rollability_) {
+            guarded_fill = append(FinderControlKind::TestMissingGoalRollable, target_side_);
+            graph.nodes[guarded_fill].on_true = fill_branch;
+            // Preserve the held subset and pay the existing native side reroll.
+            // A refused lookup is never permission to repeat a no-progress draw.
+            graph.nodes[guarded_fill].on_false = primary_branch;
+        }
         auto full_miss = primary_branch;
         for (auto slot : side_slots_[target_side_]) {
             const auto test = append(FinderControlKind::TestSlot, slot);
@@ -693,7 +701,7 @@ void SelectiveCompletionProducer::build() {
             auto below_miss = primary_branch;
             for (const auto slot : side_slots_[target_side_]) {
                 const auto test = append(FinderControlKind::TestSlot, slot);
-                graph.nodes[test].on_true = fill_branch;
+                graph.nodes[test].on_true = guarded_fill;
                 graph.nodes[test].on_false = below_miss;
                 below_miss = test;
             }
@@ -828,9 +836,10 @@ PartialHeldRecoveryProducer::PartialHeldRecoveryProducer(CalcContext& problem,
         const pc_item_state& original_start,
         const std::unordered_map<std::string, double>& prices,
         const SolveOptions& limits, const std::uint32_t anchor_mask,
-        const bool private_gate)
+        const bool private_gate, const bool guard_missing_rollability)
     : problem_(problem), original_start_(original_start), prices_(prices),
-      limits_(limits), anchor_mask_(anchor_mask), private_gate_(private_gate) {}
+      limits_(limits), anchor_mask_(anchor_mask), private_gate_(private_gate),
+      guard_missing_rollability_(guard_missing_rollability) {}
 
 void PartialHeldRecoveryProducer::refuse(std::string reason) {
     status_ = std::move(reason);
@@ -897,7 +906,10 @@ void PartialHeldRecoveryProducer::begin_stage() {
             SelectiveCompletionVariant::RerollVersusRepair,
         acquisition_, stage_ < 2 ? scope_->held_side : 1u - scope_->held_side);
     if (stage_ == 0) active_->requested_held_mask_ = anchor_mask_;
-    if (stage_ < 2) active_->reroll_without_target_progress_ = true;
+    if (stage_ < 2) {
+        active_->reroll_without_target_progress_ = true;
+        active_->guard_missing_goal_rollability_ = guard_missing_rollability_;
+    }
 }
 
 void PartialHeldRecoveryProducer::finish_stage() {

@@ -58,7 +58,10 @@ bool compiled_operations_match_request(
 enum class FinderControlKind : std::uint8_t {
     TestGoal, TestSlot, TestAffixCountAtLeast4,
     RunPrimitive, RunScourAlchemy, GoalTerminal, FailureTerminal, Hole,
-    TestEldritchTiers, TestSideCountAtLeast, RunNativeProgram
+    TestEldritchTiers, TestSideCountAtLeast, RunNativeProgram,
+    // Compiler projection into existing predicates, not native admission authority.
+    // Binding selects the target side; false retains the paid recovery branch.
+    TestMissingGoalRollable
 };
 enum class FinderProgramIntent : std::uint8_t {
     ExactOperator,

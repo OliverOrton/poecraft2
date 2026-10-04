@@ -1,11 +1,17 @@
 # Conquest and armour recovery execution (2026-10-04)
 
-Native witness293 passes at deb65256. The latest finite batch at862bd1b builds
-and executes query2728 with one failure: development save refuses an unexpanded
-nonterminal representative. All budget/refusal/retry assertions reached before
-that prerequisite pass. Checkpoint and metamod selectors remain unrun. All three
-LOCAL grants were released on terminal results, with no survivors; no timed
-policy run has launched. Source changes following862bd1b are unbuilt.
+Native witness293 remains qualified at deb65256. Recovery baseline8984f7c8
+builds and passes468 focused checks: compound rejection151, four positive private
+fixtures233 and legacy growth84. Its [receipt](finite-r4-r6-summary.json) retains
+the failed compile and native fixture premises at preceding heads. All owned
+processes are gone. No timed policy solve, public activation or WASM ran.
+
+The next generic rollability guard and paid reroll continuation are SOURCE ONLY,
+unbuilt and unrun; CI owns LOCAL. Original-root and every-entry gates for the
+changed family remain open. Query/checkpoint save remains independently held;
+its original failures and unrun nonempty replay are not reclassified by recovery
+checks. The [next finite request](guarded-recovery-finite-request.json) binds
+source bytes, immutable inputs, two compiler jobs, serial native owners and caps.
 
 ## Evidence and process identity
 
@@ -256,3 +262,81 @@ This is no measured release/saving or broad accounting qualification. Native wor
 exits must equal the exact setup-only item, mass1 within1e-12; root unresolved mass
 must cover the carrier mass. Actual refused census stays unchanged. The parent
 authorizes these routine fixture-contract corrections inside the same finite gate.
+
+## Generic rollability guard and paid recovery: source checkpoint
+
+The smallest source change is one internal TestMissingGoalRollable routing node
+in each private growth stage. It compiles into the existing any/all/not, family,
+side-count and exact modifier-count strategy predicates; no public vocabulary or
+ABI is added. Current/Finder proposal enumeration and old growth defaults stay
+unchanged. The private outer gate still defaults false. An explicit false guard
+argument preserves the old rejection control; ordinary private construction now
+requests the guard. There is still one live native admission cursor.
+
+For the ordinary immutable tag/influence domain, native get_weighted_pool on the
+empty source frame selects positive eligible goal members. A member remains
+rollable precisely when its slot is unsatisfied, capacity exists and no present
+modifier intersects any of its native groups. The compiler ORs the session's
+full group masks across every target group, including secondary exclusions, then
+requires exact blocker count0. Thus a compound group cannot escape via primary
+group identity. This is a routing projection, not native programme permission.
+The unchanged validator must rederive complete admission at every positive entry.
+If added-tag weights are dynamic, the predicate is conservatively false and the
+paid reroll continuation stays available; the candidate is not discarded wholesale.
+The finite projection test does not claim new added-tag mechanic qualification.
+
+With target progress below capacity, a true guard uses the already-admitted
+EldritchExalt word. A false guard uses the same stage's already-admitted
+EldritchChaos word, including paid tier setup; every exit returns to central
+dispatch. Native reroll preserves the held subset, may lose target progress and
+pays for that loss/recovery. Full-capacity repair and zero-progress reroll remain
+existing stages. No probability is dropped or terminal relaxed. On the compound
+witness this removes the no-op draw loop without rejecting otherwise useful
+controllers. Actual root termination, native resources and every positive entry
+remain acceptance gates; this source argument alone supplies no checked upper.
+
+The new --solver-partial-held-guarded-only selector prepares six full native
+roots: the prior four fixtures plus compound blockers on both sides. It checks
+the carrier route, paid word/resources/held exits, compiled guard versus native
+ordinary eligibility on every positive census entry, complete root acceptance,
+unchanged complete entry validator and existing tamper/scope/gate/cap/price
+negatives. Original rejection selector still expects unresolved mass and an
+unchanged refused census. These new checks have not run.
+
+## Frozen Conquest ordinary construction cut: source check and next native gate
+
+The frozen conquest5-product.json matches the private capability premises:
+empty rare ilvl86 root, clean five natural T1 families, two suffix/three prefix
+goals, the reviewed native equipment count law and original Eldritch tier pair.
+The previous positive carrier keeps goal mask9, so partial anchor mask8 selects
+singleton growth before a complete held side. Its lower hybrid blocks that family
+but leaves an unmet percentage-prefix goal available. The generated guard should
+therefore select native Exalt setup/draw, rather than acquisition or blocked
+recovery. The native construction outcome is UNRUN; this source check is not
+economic recovery, root acceptance or positive-entry policy qualification.
+
+The existing benchmark now prepares --partial-held-construction-witness only
+for the frozen named case and excludes other diagnostic treatments. Its normal
+create_case_objects owner resolves the original product actions, item, goals
+and immutable Allflame prices/base override. It invokes the private native
+producer, imports no reference graph and captures the complete generated graph
+before route checks, retaining it on a later refusal. Receipt includes carrier
+and programme identity, route, positive native Chaos ordering, complete paid
+word resources/actions/exits and held progress. Complete root evaluation, every
+positive policy entry, cost comparison, retention and activation are explicitly
+unrun. Diagnostic one-work-item construction is not a matched production solve.
+
+The construction-only manifest references the exact frozen product case without
+editing it. Its case/economy/runtime hashes and resolved bounds are in the next
+request:1GiB aggregate ceiling,50M shared logical work, original discovery/row/
+transition/output caps,120s requested construction finish,150s case watchdog and
+165s host cleanup watchdog. Compiler/word transients are conservatively reserved;
+reported reserved peak is not audited live memory or evidence for early checker
+release. No cap increase, source ownership repair, extra runner or service exists.
+
+Next bounded gate: two-job Tests build, preserved rejection, guarded six fixtures,
+legacy growth; then two-job Benchmark build and the original Conquest carrier
+construction witness. Existing isolated-worker supervisor owns serial execution,
+watchdogs and survivor receipts. LOCAL is ungranted and no new run has launched.
+Parent's reviewer accounting plan5d35ab6c/e0e24ccc remains the next separate
+consumer/lifetime repair after recovery routing; no accounting fix is included.

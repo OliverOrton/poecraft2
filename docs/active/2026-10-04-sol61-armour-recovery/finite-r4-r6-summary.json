@@ -1,0 +1,528 @@
+{
+  "schema": "sol61_recovery_finite_receipts_v1",
+  "batches": [
+    {
+      "source_commit": "7cd2a5d8a0914e55ffe25b84e15e573f6bea8e2a",
+      "stages": [
+        {
+          "phase": "build",
+          "exit_code": 1,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 28144,
+          "process_identity_token": "28144:134355764969825951",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 182516.34199987166
+        }
+      ],
+      "unrun": [
+        "compound-blocker-rejection",
+        "private-partial-held-recovery",
+        "legacy-growth"
+      ],
+      "owned_processes": [],
+      "local_slot": "RELEASED at terminal batch result",
+      "finished_utc": "2026-10-04T08:37:59.499198+00:00",
+      "batch": "finite-r4",
+      "request": {
+        "source_commit": "7cd2a5d8a0914e55ffe25b84e15e573f6bea8e2a",
+        "created_utc": "2026-10-04T08:34:56.898326+00:00",
+        "declared_request_sha256": "2c0c6b94295cc2e41ecbdf67082d00986a3318679e7c748c744a5282dcd7f69f",
+        "source_files_sha256": {
+          "engine/src/solver_selective_completion.hpp": "c35661b9449eb8caf6d6272a05aa78718fe282d457caefeea931cb3bc5c25c78",
+          "engine/src/solver_selective_completion.cpp": "74cb6f0391d1426cf9a832bb8863f1008e1bd49fe3861e972ac3bd5bb2184e65",
+          "engine/src/solver_development_checkpoint.cpp": "5fbd67b5f1f285f96c741a6713ec8292757b47371c52d7791724475e6dfd12a0",
+          "engine/tests/test_main.cpp": "5b7aeb7960961be15a130468a79de1c50bfb8f96b062467b7b2a9800546dfd1d",
+          "engine/tests/test_solver_compile.cpp": "a40d98645f50d5c8f18a0881f6ba0385192508a16db756b90ce6d8b36d1c62b0",
+          "engine/tests/test_solver_metamod_recovery.cpp": "5cae556520d62df2d52076e60178006b7398c6e4099cb844495b18cc92f7d9ce",
+          "engine/tests/tests.hpp": "5cbf8b6c24dac9a828399ef1e83c62ada645b8b9a790d8a656ff6d3723a5671f"
+        },
+        "machine": "KIDS",
+        "platform": "Windows-11-10.0.26200-SP0",
+        "runtime_files_sha256": {
+          "manifest.json": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+          "strings.json": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6",
+          "game-data.json": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e"
+        },
+        "serial": true,
+        "compiler_jobs": 2,
+        "parent_LOCAL_grant": "explicit grant after reviewer release; max Jobs2",
+        "resource_qualification_hold": {
+          "reviewer_source": "f442b4d8",
+          "Finder_generation": "cap50 actual88=40ordinary+48automatic; reported40",
+          "unowned_entry_validator": "cap1 actual48 over six entries; exhausted shared-owner control refused with zero child work",
+          "disposition": "Do not fix or qualify Finder/accounting here; this is the bounded recovery semantic gate"
+        },
+        "outer_client_yield_contract": "120-second exec yields, retain same deterministic supervisor across any forced yields",
+        "phases": [
+          {
+            "phase": "build",
+            "command": {
+              "argv": [
+                "powershell",
+                "-NoProfile",
+                "-File",
+                "scripts/dev-engine.ps1",
+                "-Task",
+                "Tests",
+                "-Jobs",
+                "2"
+              ],
+              "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004",
+              "host_watchdog_seconds": 600,
+              "host_reservation": {},
+              "identity_sha256": "1fd91f659b4cd7dcf0fc64dbec7477458207eb9277a8b3218ef3029cd3e563db"
+            }
+          },
+          {
+            "phase": "compound-blocker-rejection",
+            "command": {
+              "argv": [
+                "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_engine_tests.exe",
+                "--solver-partial-held-compound-blocker-only"
+              ],
+              "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004",
+              "host_watchdog_seconds": 180,
+              "host_reservation": {},
+              "identity_sha256": "4af25d951fd2639a2e0c6e9447ac7339c97e216cb04fc15cc6652cc95f3df06f"
+            }
+          },
+          {
+            "phase": "private-partial-held-recovery",
+            "command": {
+              "argv": [
+                "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_engine_tests.exe",
+                "--solver-partial-held-recovery-only"
+              ],
+              "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004",
+              "host_watchdog_seconds": 180,
+              "host_reservation": {},
+              "identity_sha256": "32680a9d28e71f0d40303cddee430641794bb284c0d5ef54b77ef4cdbda150b8"
+            }
+          },
+          {
+            "phase": "legacy-growth",
+            "command": {
+              "argv": [
+                "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_engine_tests.exe",
+                "--solver-growth-only"
+              ],
+              "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004",
+              "host_watchdog_seconds": 180,
+              "host_reservation": {},
+              "identity_sha256": "8337a91d53f8b0a4f71f19de3d81590938149f13b23b968eaa777cdd26556e32"
+            }
+          }
+        ],
+        "checkpoint": "HELD; no save/load selector in this batch",
+        "qualified_witness_reuse": {
+          "source": "deb65256",
+          "checks": 293,
+          "failures": 0,
+          "witness_function_bytes_unchanged": true,
+          "function_sha256": "2ba17bc1ff4579e9ced79129d6af80f6ae146f858d07b0fc8377bf3059bca66d"
+        }
+      },
+      "raw_artifact_sha256": {
+        "build.log": "bc236712ef42c0a98ba995cf7c98208a806b8a1c355098573f1f42828abd794b",
+        "build.receipt.json": "1637ac40b7de5e055fa5a187ba9934579ebfdc1e475fc3c6d446ec25cac78620",
+        "build.started.json": "eaccd257da75047e026bc89e6990c82f6a38b0cbcce5af2eff7ea656e5670523",
+        "completion.json": "149d5099526fd0ad9a3c05fd055b399d8b1cd7b7b8678e16610a058b0a37d7f8",
+        "request.json": "d178cc0dcf8cf33687f3136f9e9b02c497c9ea42283f9dde7f8b1c77bb855707"
+      }
+    },
+    {
+      "source_commit": "dbd943cba1409f8365849fa481b487c10aea39bc",
+      "stages": [
+        {
+          "phase": "build",
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 49452,
+          "process_identity_token": "49452:134355770366938260",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 38561.58630014397
+        },
+        {
+          "phase": "compound-blocker-rejection",
+          "exit_code": 1,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 75648,
+          "process_identity_token": "75648:134355770758591704",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 345.6566999666393
+        }
+      ],
+      "unrun": [
+        "private-partial-held-recovery",
+        "legacy-growth"
+      ],
+      "owned_processes": [],
+      "local_slot": "RELEASED at terminal batch result",
+      "finished_utc": "2026-10-04T08:44:35.908333+00:00",
+      "batch": "finite-r5",
+      "request": {
+        "source_commit": "dbd943cba1409f8365849fa481b487c10aea39bc",
+        "created_utc": "2026-10-04T08:43:56.622044+00:00",
+        "declared_request_sha256": "dd5bab51e47e64b35b8fb80792e01477049152d7e4a5e95f6d29c335365e7fd5",
+        "source_files_sha256": {
+          "engine/src/solver_selective_completion.hpp": "c35661b9449eb8caf6d6272a05aa78718fe282d457caefeea931cb3bc5c25c78",
+          "engine/src/solver_selective_completion.cpp": "74cb6f0391d1426cf9a832bb8863f1008e1bd49fe3861e972ac3bd5bb2184e65",
+          "engine/src/solver_development_checkpoint.cpp": "5fbd67b5f1f285f96c741a6713ec8292757b47371c52d7791724475e6dfd12a0",
+          "engine/tests/test_main.cpp": "5b7aeb7960961be15a130468a79de1c50bfb8f96b062467b7b2a9800546dfd1d",
+          "engine/tests/test_solver_compile.cpp": "9368287b324c899e373f38a2b0a79f374e9de7ef073cd354b46dfe7a5f6b9c6f",
+          "engine/tests/test_solver_metamod_recovery.cpp": "5cae556520d62df2d52076e60178006b7398c6e4099cb844495b18cc92f7d9ce",
+          "engine/tests/tests.hpp": "5cbf8b6c24dac9a828399ef1e83c62ada645b8b9a790d8a656ff6d3723a5671f"
+        },
+        "machine": "KIDS",
+        "platform": "Windows-11-10.0.26200-SP0",
+        "runtime_files_sha256": {
+          "manifest.json": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+          "strings.json": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6",
+          "game-data.json": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e"
+        },
+        "serial": true,
+        "compiler_jobs": 2,
+        "parent_LOCAL_grant": "renewed after r4; recoverable compile/fixture corrections allowed within gate",
+        "resource_qualification_hold": {
+          "reviewer_source": "f442b4d8",
+          "Finder_generation": "cap50 actual88=40ordinary+48automatic; reported40",
+          "unowned_entry_validator": "cap1 actual48 over six entries; exhausted shared-owner control refused with zero child work",
+          "disposition": "Do not fix or qualify Finder/accounting here; this is the bounded recovery semantic gate"
+        },
+        "outer_client_yield_contract": "120-second exec yields, retain same deterministic supervisor across any forced yields",
+        "phases": [
+          {
+            "phase": "build",
+            "command": {
+              "argv": [
+                "powershell",
+                "-NoProfile",
+                "-File",
+                "scripts/dev-engine.ps1",
+                "-Task",
+                "Tests",
+                "-Jobs",
+                "2"
+              ],
+              "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004",
+              "host_watchdog_seconds": 600,
+              "host_reservation": {},
+              "identity_sha256": "1fd91f659b4cd7dcf0fc64dbec7477458207eb9277a8b3218ef3029cd3e563db"
+            }
+          },
+          {
+            "phase": "compound-blocker-rejection",
+            "command": {
+              "argv": [
+                "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_engine_tests.exe",
+                "--solver-partial-held-compound-blocker-only"
+              ],
+              "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004",
+              "host_watchdog_seconds": 180,
+              "host_reservation": {},
+              "identity_sha256": "4af25d951fd2639a2e0c6e9447ac7339c97e216cb04fc15cc6652cc95f3df06f"
+            }
+          },
+          {
+            "phase": "private-partial-held-recovery",
+            "command": {
+              "argv": [
+                "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_engine_tests.exe",
+                "--solver-partial-held-recovery-only"
+              ],
+              "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004",
+              "host_watchdog_seconds": 180,
+              "host_reservation": {},
+              "identity_sha256": "32680a9d28e71f0d40303cddee430641794bb284c0d5ef54b77ef4cdbda150b8"
+            }
+          },
+          {
+            "phase": "legacy-growth",
+            "command": {
+              "argv": [
+                "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_engine_tests.exe",
+                "--solver-growth-only"
+              ],
+              "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004",
+              "host_watchdog_seconds": 180,
+              "host_reservation": {},
+              "identity_sha256": "8337a91d53f8b0a4f71f19de3d81590938149f13b23b968eaa777cdd26556e32"
+            }
+          }
+        ],
+        "checkpoint": "HELD; no save/load selector in this batch",
+        "qualified_witness_reuse": {
+          "source": "deb65256",
+          "checks": 293,
+          "failures": 0,
+          "witness_function_bytes_unchanged": true,
+          "function_sha256": "2ba17bc1ff4579e9ced79129d6af80f6ae146f858d07b0fc8377bf3059bca66d"
+        },
+        "prior_failed_batch": "out/sol61-armour/finite-r4"
+      },
+      "raw_artifact_sha256": {
+        "binary-identity.json": "bc1b5339126d36b6a3ed2bdaac7ba48885f9be65e07bd07b9a3ddfa67edf66b1",
+        "build.log": "e80defadee3316f1e140f857036c90bbc5c50d72c980ebf330e3ffd658137edc",
+        "build.receipt.json": "ab424f7bfef36291f2011ec5af446904e77040c9e5f962c2f31789ca5f20bf76",
+        "build.started.json": "e47b5a09e1602df6f4edbb97ea413bd2b92fa16c2e9fa7c3e733f30a7cf2dfb1",
+        "completion.json": "99c1500f726882c9617b1ed468799459b7df656a949f4142af11eea09c616728",
+        "compound-blocker-rejection.log": "8f4621b49fc005acd99646ccb8af098905fa3b6f3b2e39d5ed8b8b141f7f4528",
+        "compound-blocker-rejection.receipt.json": "53bfafdcc74f58380554532d411a75b2cb8efed24a3d1eb44637b3c26aff2045",
+        "compound-blocker-rejection.started.json": "90c4354860dc21124b17cf0521e3c123a5104f7f6c7b8bf82316e70aba7b4716",
+        "request.json": "74ab197bcb99d940f2f70a0f101c0988088dcb5f1b43581dbfe513870268a101"
+      },
+      "binary": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_engine_tests.exe",
+        "sha256": "34b531976f675069f64779ce488eb129b3caad4703ca5f08f9825a2139ef3de6",
+        "source_commit": "dbd943cba1409f8365849fa481b487c10aea39bc"
+      }
+    },
+    {
+      "source_commit": "8984f7c8076ea152fdd38857602c1ad97ab9fde3",
+      "stages": [
+        {
+          "phase": "build",
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 46720,
+          "process_identity_token": "46720:134355772824533286",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 20773.409200133756
+        },
+        {
+          "phase": "compound-blocker-rejection",
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 61048,
+          "process_identity_token": "61048:134355773038396939",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 382.9820000100881
+        },
+        {
+          "phase": "private-partial-held-recovery",
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 18296,
+          "process_identity_token": "18296:134355773038841499",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 203.46789993345737
+        },
+        {
+          "phase": "legacy-growth",
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 81272,
+          "process_identity_token": "81272:134355773040884026",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 51.959099946543574
+        }
+      ],
+      "unrun": [],
+      "owned_processes": [],
+      "local_slot": "RELEASED at terminal batch result",
+      "finished_utc": "2026-10-04T08:48:24.140421+00:00",
+      "batch": "finite-r6",
+      "request": {
+        "source_commit": "8984f7c8076ea152fdd38857602c1ad97ab9fde3",
+        "created_utc": "2026-10-04T08:48:02.383908+00:00",
+        "declared_request_sha256": "e4583ea274f7aa450e3c6cc2fafa66eb858dc68a52afa1edda98f5b0f5942029",
+        "source_files_sha256": {
+          "engine/src/solver_selective_completion.hpp": "c35661b9449eb8caf6d6272a05aa78718fe282d457caefeea931cb3bc5c25c78",
+          "engine/src/solver_selective_completion.cpp": "74cb6f0391d1426cf9a832bb8863f1008e1bd49fe3861e972ac3bd5bb2184e65",
+          "engine/src/solver_development_checkpoint.cpp": "5fbd67b5f1f285f96c741a6713ec8292757b47371c52d7791724475e6dfd12a0",
+          "engine/tests/test_main.cpp": "5b7aeb7960961be15a130468a79de1c50bfb8f96b062467b7b2a9800546dfd1d",
+          "engine/tests/test_solver_compile.cpp": "b794944204112164e2e3c3bc1a873ffd668f3de90e5abe038f0eaeef6575e15e",
+          "engine/tests/test_solver_metamod_recovery.cpp": "5cae556520d62df2d52076e60178006b7398c6e4099cb844495b18cc92f7d9ce",
+          "engine/tests/tests.hpp": "5cbf8b6c24dac9a828399ef1e83c62ada645b8b9a790d8a656ff6d3723a5671f"
+        },
+        "machine": "KIDS",
+        "platform": "Windows-11-10.0.26200-SP0",
+        "runtime_files_sha256": {
+          "manifest.json": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+          "strings.json": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6",
+          "game-data.json": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e"
+        },
+        "serial": true,
+        "compiler_jobs": 2,
+        "parent_LOCAL_grant": "renewed; routine fixture contract corrections authorized within finite gate",
+        "resource_qualification_hold": {
+          "reviewer_source": "f442b4d8",
+          "Finder_generation": "cap50 actual88=40ordinary+48automatic; reported40",
+          "unowned_entry_validator": "cap1 actual48 over six entries; exhausted shared-owner control refused with zero child work",
+          "disposition": "Do not fix or qualify Finder/accounting here; this is the bounded recovery semantic gate"
+        },
+        "outer_client_yield_contract": "120-second exec yields, retain same deterministic supervisor across any forced yields",
+        "phases": [
+          {
+            "phase": "build",
+            "command": {
+              "argv": [
+                "powershell",
+                "-NoProfile",
+                "-File",
+                "scripts/dev-engine.ps1",
+                "-Task",
+                "Tests",
+                "-Jobs",
+                "2"
+              ],
+              "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004",
+              "host_watchdog_seconds": 600,
+              "host_reservation": {},
+              "identity_sha256": "1fd91f659b4cd7dcf0fc64dbec7477458207eb9277a8b3218ef3029cd3e563db"
+            }
+          },
+          {
+            "phase": "compound-blocker-rejection",
+            "command": {
+              "argv": [
+                "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_engine_tests.exe",
+                "--solver-partial-held-compound-blocker-only"
+              ],
+              "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004",
+              "host_watchdog_seconds": 180,
+              "host_reservation": {},
+              "identity_sha256": "4af25d951fd2639a2e0c6e9447ac7339c97e216cb04fc15cc6652cc95f3df06f"
+            }
+          },
+          {
+            "phase": "private-partial-held-recovery",
+            "command": {
+              "argv": [
+                "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_engine_tests.exe",
+                "--solver-partial-held-recovery-only"
+              ],
+              "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004",
+              "host_watchdog_seconds": 180,
+              "host_reservation": {},
+              "identity_sha256": "32680a9d28e71f0d40303cddee430641794bb284c0d5ef54b77ef4cdbda150b8"
+            }
+          },
+          {
+            "phase": "legacy-growth",
+            "command": {
+              "argv": [
+                "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_engine_tests.exe",
+                "--solver-growth-only"
+              ],
+              "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004",
+              "host_watchdog_seconds": 180,
+              "host_reservation": {},
+              "identity_sha256": "8337a91d53f8b0a4f71f19de3d81590938149f13b23b968eaa777cdd26556e32"
+            }
+          }
+        ],
+        "checkpoint": "HELD; no save/load selector in this batch",
+        "qualified_witness_reuse": {
+          "source": "deb65256",
+          "checks": 293,
+          "failures": 0,
+          "witness_function_bytes_unchanged": true,
+          "function_sha256": "2ba17bc1ff4579e9ced79129d6af80f6ae146f858d07b0fc8377bf3059bca66d"
+        },
+        "prior_failed_batch": "out/sol61-armour/finite-r5"
+      },
+      "raw_artifact_sha256": {
+        "binary-identity.json": "862958dfd2215389a7ccf56c50f0bc47a861af72d339da75b2f472ee563a2a2a",
+        "build.log": "2257944e124ab128029973d017363a4914c936848283aecdb29fbd1ab2db0eb2",
+        "build.receipt.json": "fd908842c7f854b7181a03014752d39c118bee0d28892e8a6b550a77e9b4f1e8",
+        "build.started.json": "8614b790b6544c7f0236f2d355094bf44028f1b868ed7423400ea1a5c95e3759",
+        "completion.json": "7c18d5528ed54c598667f0551965c2b143694b68e480b7d56c6ed2a5d3c63d8d",
+        "compound-blocker-rejection.log": "e17bbe382f530c9adb425c45d4c407547f04a358423e609829a1439ce75402f3",
+        "compound-blocker-rejection.receipt.json": "97ff60e0e6ef832c5efcdc805df2014179ca444da0a760d6472bace13c6cbe2a",
+        "compound-blocker-rejection.started.json": "c736a8fa4dca39bd23616c05211e14f756743e4eb4c569c2de5469beec99709c",
+        "legacy-growth.log": "2d13dd6fb1f8baac9d33037551aeab5df29427f31157a9d4f43f98b1136f7845",
+        "legacy-growth.receipt.json": "4ac23231976a8cf9daf56a717ca85aaa3ed51d316f8444aad0373c66af044303",
+        "legacy-growth.started.json": "8d526d94e515cc6a4a625e8d6e9e65014d45abe8681d840a4cc22f585d153b0e",
+        "private-partial-held-recovery.log": "75dea114cb1ed2cf8e645bf0535bfcf8da4b01e32149b70bd15f9f2e349f7e73",
+        "private-partial-held-recovery.receipt.json": "3c7d54fe347e550dd00a09a7292f9554bbb4abcf62e7c54b338d5399b3a8ace5",
+        "private-partial-held-recovery.started.json": "6d59abe6ac438ceec16d82dcdbfd1dec4f81fdad881648645cc7299a7ecb6b7d",
+        "request.json": "6e91a32190ff508d93c6197399047a9fe2236ad63b925c756437aba62f9f3f35"
+      },
+      "binary": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_engine_tests.exe",
+        "sha256": "228643b0050d1af10e7891068f86671c28ac1b26d3451e09a3a8d03d5d7b8854",
+        "source_commit": "8984f7c8076ea152fdd38857602c1ad97ab9fde3"
+      }
+    }
+  ],
+  "qualification_limits": [
+    "synthetic finite semantics only",
+    "compound root refusal is not complete entry-by-entry qualification",
+    "no timed Conquest or cohort policy solve",
+    "no Finder resource/owner-lifetime or WASM qualification"
+  ],
+  "findings": {
+    "r4": {
+      "build": "test call used uint32 state ID instead of const pc_item_state&",
+      "tests": "unrun"
+    },
+    "r5": {
+      "checks": 142,
+      "failures": 3,
+      "disposition": "test-only correction to native paid empty-pool self-loop and conservative owned-byte audit contract"
+    },
+    "r6": {
+      "checks": 468,
+      "failures": 0,
+      "selectors": {
+        "compound": 151,
+        "private_positive": 233,
+        "legacy_growth": 84
+      },
+      "private_positive_entry_counts": [
+        145,
+        145,
+        145,
+        79
+      ],
+      "compound_carrier": {
+        "ordering_mass": 0.00021919330543368763,
+        "root_mass": 0.017031484841614736,
+        "goal_mask": 10,
+        "rollable_missing_target_goals": 0,
+        "route": "c20",
+        "held_mask": 8,
+        "word_steps": 2,
+        "word_no_progress_mass": 1,
+        "typed_native_members": 0,
+        "root_success": 0.7934687570974885,
+        "root_unresolved": 0.20653124290250982,
+        "root_not_applied": 0,
+        "census_entries": 99,
+        "refused_entries": 14,
+        "validator_refusal": "native programme has no complete reached entry census"
+      },
+      "native_owned_byte_conservative_excess": 8,
+      "scope": "baseline private family; no guard delta qualification"
+    }
+  }
+}

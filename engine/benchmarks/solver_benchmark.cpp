@@ -66,6 +66,7 @@ struct Arguments {
     fs::path strategy_output;
     fs::path fixed_graph_check_pair;
     std::string fixed_graph_hash;
+    bool partial_held_construction_witness = false;
     fs::path development_checkpoint_save;
     fs::path development_checkpoint_load;
     std::string case_id;
@@ -3223,6 +3224,187 @@ void create_case_objects(
     }
 }
 
+
+// Construction-only diagnostic on the frozen original request. The existing
+// benchmark resolves session, product actions, prices and request identity;
+// no reference graph is imported and no upper/cost is published.
+int run_partial_held_construction_witness(pc_data_handle data, const Value& specification,
+                                        const Arguments& args) {
+    using namespace poecraft::solver;
+    const auto began=Clock::now();
+    const auto deadline=began+std::chrono::duration_cast<Clock::duration>(
+        std::chrono::duration<double>(optional_nonnegative_double(specification,"requested_bounded_finish_seconds",120)));
+    const auto output=fs::absolute(args.output);
+    const auto graph_path=fs::path(output.string()+".strategy.json");
+    if (fs::exists(output) || fs::exists(graph_path))
+        throw std::runtime_error("construction witness refuses existing output");
+    NativeHandles handles; pc_item_state root;
+    std::vector<std::string> actions;
+    create_case_objects(data,specification,handles,root,&actions);
+    auto& parent=solver_lower_diagnostic_calculator(handles.solver);
+    const auto& cap=required(specification,"caps",Type::Object);
+    if (optional_string(cap,"solve_profile","default")!="calculator_product_v1")
+        throw std::runtime_error("construction witness requires frozen product profile");
+    SolveOptions limits; apply_solve_profile_defaults(limits,SolveProfile::CalculatorProductV1);
+    limits.max_states=optional_u32(cap,"max_states",limits.max_states);
+    limits.max_discovered_states=optional_u32(cap,"max_discovered_states",limits.max_states);
+    limits.max_expanded_states=optional_u32(cap,"max_expanded_states",
+        cap.find("max_states") ? limits.max_states : limits.max_expanded_states);
+    limits.max_state_action_rows=optional_u64(cap,"max_state_action_rows",1215000);
+    limits.max_transitions=optional_u64(cap,"max_transitions",10000000);
+    limits.max_reforge_work=optional_u64(cap,"max_reforge_work",50000000);
+    limits.max_solver_owned_bytes=optional_u64(cap,"max_solver_owned_bytes",1073741824);
+    limits.max_sweeps=optional_u32(cap,"max_sweeps",100000);
+    limits.max_compiled_nodes=optional_u32(cap,"max_compiled_nodes",100000);
+    limits.max_compiled_edges=optional_u32(cap,"max_compiled_edges",400000);
+    limits.max_strategy_json_bytes=optional_u64(cap,"max_strategy_json_bytes",67108864);
+    limits.max_diagnostic_samples=optional_u32(cap,"max_diagnostic_samples",32);
+    limits.max_telemetry_json_bytes=optional_u64(cap,"max_telemetry_json_bytes",1048576);
+    limits.full_evidence=optional_bool(cap,"full_evidence",false);
+    limits.allow_economic_restart=false;
+    SolveWorkTestAccess::Impl owner(parent,root,handles.economy->impl->prices,limits);
+    limits=owner.options; // Preserve the existing original-root scope resolution.
+    CalcContext calc(parent.shared_session(),parent.goal(),parent.registry(),parent.candidates(),
+        false,false,false,std::nullopt,{},false,{},true);
+    calc.set_reforge_work_budget_owner(&parent);
+    calc.set_solve_owned_bytes_budget_owner(&calc);
+    calc.set_solve_resource_caps(limits.max_discovered_states,limits.max_reforge_work,false,0);
+    const auto scope=partial_held_recovery_scope(calc,root,limits);
+    if (!scope || parent.goal().slots.size()!=5)
+        throw std::runtime_error("frozen original request is outside private construction scope");
+    const auto& session=calc.session();
+    const auto mod=[&](const std::string& key) {
+        const auto global=session.data->mod_pos_by_key.at(key);
+        return session.session_id_by_global_id.at(session.data->mod_global_ids.at(global));
+    };
+    const auto below=[&](const std::uint32_t target) {
+        for (std::uint32_t id=0;id<session.mod_count;++id)
+            if (session.family_id[id]==session.family_id[target] &&
+                session.family_tier_index[id]==2 && session.base_spawn_weight[id]>0) return id;
+        throw std::runtime_error("frozen witness has no lower-tier native member");
+    };
+    const std::vector<std::uint32_t> picks{mod("LocalBaseArmourAndEvasionRating8"),
+        below(mod("LocalIncreasedArmourAndEvasionAndStunRecovery6")),
+        mod("AdditionalPhysicalDamageReduction5_"),below(mod("ChanceToSuppressSpellsHigh5___"))};
+    auto carrier=root; double ordering_mass=0;
+    const auto law=rare_reforge_count_law(session.rare_reforge_count_kind);
+    for (const auto& draw:law.draws) if (draw.count==4) ordering_mass+=double(draw.weight)/law.denominator;
+    for (const auto id:picks) {
+        ActionContextImpl context(0);context.session=calc.shared_session();
+        const auto& pool=get_weighted_pool(context,&carrier,PoolBuildRequest{});
+        const auto selected=std::find_if(pool.entries.begin(),pool.entries.end(),[&](const auto& entry) {
+            return entry.session_mod_id==id;
+        });
+        if (selected==pool.entries.end() || selected->final_weight==0 || pool.total_weight==0)
+            throw std::runtime_error("frozen carrier has no positive native acquisition ordering");
+        ordering_mass*=double(selected->final_weight)/pool.total_weight;
+        if (pc_item_add_mod(&carrier,session.gen_type[id],id,session.primary_group[id],0,nullptr)!=PC_RESULT_OK)
+            throw std::runtime_error("frozen native carrier insertion failed");
+    }
+    const auto state=calc.intern_item(carrier);
+    if (!(ordering_mass>0) || satisfied_goal_mask(calc.state(state))!=9)
+        throw std::runtime_error("frozen carrier or goal identity drifted");
+    // Conservative reservation for compiler/prepare copies and the fixed
+    // setup/add word's bounded exits. This is no audited live-memory measurement.
+    const auto transient_reservation=3*limits.max_strategy_json_bytes+65536ull+
+        static_cast<std::uint64_t>(session.mod_count)*128;
+    const auto outer=owner.fast_estimated_owned_bytes()+transient_reservation;
+    if (outer>=limits.max_solver_owned_bytes)
+        throw std::length_error("construction witness has no aggregate generation allowance");
+    auto allowance=limits;allowance.max_solver_owned_bytes-=outer;
+    PartialHeldRecoveryProducer producer(calc,root,handles.economy->impl->prices,allowance,1u<<3,true);
+    std::uint64_t peak=0;
+    const auto memory=[&](const std::uint64_t extra=0) {
+        const auto live=owner.fast_estimated_owned_bytes()+calc.fast_estimated_owned_bytes()+
+            producer.estimated_owned_bytes()+transient_reservation+extra;
+        peak=std::max(peak,live);
+        if (live>=limits.max_solver_owned_bytes)
+            throw std::length_error("construction witness aggregate generation memory");
+        calc.refresh_solve_owned_bytes_cap(calc.fast_estimated_owned_bytes()+limits.max_solver_owned_bytes-live);
+        if (Clock::now()>=deadline) throw std::runtime_error("construction witness native deadline");
+    };
+    while (!producer.done()) {memory();producer.advance(1);}
+    if (!producer.candidate()) {
+        std::ofstream(output)<<"{\"kind\":\"partial_held_construction_witness_v1\",\"case\":"
+            <<escape_json(required_string(specification,"id"))<<",\"status\":"<<escape_json(producer.status())
+            <<",\"constructed\":false,\"original_root_acceptance\":\"unrun\",\"economic_qualification\":false}\n";
+        return 2;
+    }
+    memory();
+    const auto& control=producer.candidate()->control;
+    const auto graph=compile_finder_control_json(calc,root,control,limits);
+    memory(graph.capacity()+1);
+    { std::ofstream captured(graph_path);captured<<graph;
+      if (!captured) throw std::runtime_error("constructed graph capture failed"); }
+    const auto prepared=prepare_finder_candidate(calc,calc.shared_session(),root,graph,&control);
+    if (!prepared.ready()) throw std::runtime_error("constructed native graph binding refused:"+prepared.refusal);
+    memory(graph.capacity()+1+refinement::strategy_impl_owned_bytes(*prepared.strategy));
+    const auto chaos=calc.registry().index_by_id.at("chaos");
+    const auto acquisition=std::find_if(control.nodes.begin(),control.nodes.end(),[&](const auto& node) {
+        return node.kind==FinderControlKind::RunPrimitive && node.binding==chaos;
+    });
+    if (acquisition==control.nodes.end()) throw std::runtime_error("constructed graph omits original Chaos acquisition");
+    auto routed=prepared.strategy->node_by_id.at("c"+std::to_string(acquisition->next));
+    for (std::size_t step=0;step<=prepared.strategy->nodes.size();++step) {
+        const auto& node=prepared.strategy->nodes.at(routed);
+        if (node.kind==StrategyNodeKind::Operation || node.kind==StrategyNodeKind::Terminal) break;
+        const auto edge=std::find_if(node.edges.begin(),node.edges.end(),[&](const auto& candidate) {
+            return candidate.is_default || evaluate_compiled_condition(candidate.condition,session,carrier);
+        });
+        if (edge==node.edges.end()) throw std::runtime_error("constructed carrier has no route");
+        routed=edge->target;
+    }
+    const auto& routed_node=prepared.strategy->nodes.at(routed);
+    const auto occurrence=std::find_if(control.nodes.begin(),control.nodes.end(),[&](const auto& node) {
+        return node.kind==FinderControlKind::RunNativeProgram &&
+            routed_node.id=="c"+std::to_string(&node-control.nodes.data());
+    });
+    if (occurrence==control.nodes.end()) throw std::runtime_error("constructed carrier misses native recovery stage");
+    const auto& binding=control.programs.at(occurrence->binding);
+    const auto& option=calc.operators().at(binding.operator_index);
+    if (binding.held_goal_mask!=8 || calc.registry().actions.at(option.primitive_program.back()).params.type!=ActionType::EldritchExalt)
+        throw std::runtime_error("constructed carrier does not retain the partial held anchor and draw");
+    const auto word=execute_attempt(calc,option.primitive_program,state);
+    if (!word.supported || !word.fully_legal || !word.choice_groups.empty() ||
+        word.expected_resources!=aggregate_resources(calc.registry(),option.primitive_program) ||
+        word.expected_primitive_actions!=option.primitive_program.size())
+        throw std::runtime_error("constructed carrier native word/resource contract failed");
+    memory(graph.capacity()+1+refinement::strategy_impl_owned_bytes(*prepared.strategy)+
+        word.entries.capacity()*sizeof(OutcomeEntry));
+    double mass=0;for (const auto& exit:word.entries) {
+        mass+=exit.probability;
+        if (exit.probability>0 && (satisfied_goal_mask(calc.state(exit.state))&8)==0)
+            throw std::runtime_error("constructed native carrier word loses held progress");
+    }
+    if (std::abs(mass-1)>1e-12) throw std::runtime_error("constructed native word mass mismatch");
+    // The carrier word is a positive-root witness, not a complete controller
+    // census or an evaluated upper. Whole-root and every-entry gates stay open.
+    const auto numbers=[](const auto& values) {
+        std::ostringstream out;out<<'[';bool first=true;
+        for (const auto value:values) {if (!first) out<<',';first=false;out<<value;}
+        out<<']';return out.str();
+    };
+    std::ostringstream resources;resources<<std::setprecision(17)<<'{';bool first_resource=true;
+    for (const auto& [key,quantity]:word.expected_resources) {
+        if (!first_resource) resources<<',';first_resource=false;
+        resources<<escape_json(key)<<':'<<quantity;
+    }
+    resources<<'}';
+    std::ofstream report(output);report<<std::setprecision(17)
+        <<"{\"kind\":\"partial_held_construction_witness_v1\",\"case\":"<<escape_json(required_string(specification,"id"))
+        <<",\"constructed\":true,\"graph_hash\":"<<escape_json(finder_candidate_graph_hash(graph))
+        <<",\"route\":"<<escape_json(routed_node.id)<<",\"held_mask\":8,\"ordering_mass\":"<<ordering_mass
+        <<",\"native_word_mass\":"<<mass<<",\"native_word_steps\":"<<word.expected_primitive_actions
+        <<",\"native_word_exits\":"<<word.entries.size()<<",\"native_word_resources\":"<<resources.str()
+        <<",\"programme_occurrence_key\":"<<numbers(finder_program_occurrence_key(calc,binding))
+        <<",\"exact_carrier_key\":"<<numbers(exact_item_state_key(carrier))
+        <<",\"goal_mask\":9,\"source_proposal_admitted_state\":"<<binding.admitted_state
+        <<",\"source_operator_index\":"<<binding.operator_index
+        <<",\"generation_work\":"<<parent.telemetry().reforge_logical_work_v1
+        <<",\"conservative_reserved_peak\":"<<peak<<",\"transient_reservation\":"<<transient_reservation<<",\"nodes\":"<<control.nodes.size()<<",\"programs\":"<<control.programs.size()
+        <<",\"original_root_acceptance\":\"unrun\",\"every_positive_entry_acceptance\":\"unrun\",\"economic_qualification\":false}\n";
+    return report && std::ifstream(graph_path).good() ? 0 : 1;
+}
 
 // Native-only fixed-graph checking through the same Finder binding and exact
 // evaluator owners. No solver search, policy import/seed, or sampled execution.
@@ -6580,6 +6762,7 @@ Arguments parse_arguments(int argc, char** argv) {
         else if (argument == "--output") args.output = value("--output");
         else if (argument == "--fixed-graph-check-pair") args.fixed_graph_check_pair=value("--fixed-graph-check-pair");
         else if (argument == "--fixed-graph-hash") args.fixed_graph_hash=value("--fixed-graph-hash");
+        else if (argument == "--partial-held-construction-witness") args.partial_held_construction_witness=true;
         else if (argument == "--partial-output") {
             args.partial_output = value("--partial-output");
         }
@@ -6792,6 +6975,23 @@ Arguments parse_arguments(int argc, char** argv) {
             args.exact_strategy_evaluation_time_limit_seconds!=0 || args.goal_progress_gated_reforges)
             throw std::runtime_error("fixed-graph pair requires one Finder case, input/hash/output and no solve/verification diagnostic alterations");
     }
+    if (args.partial_held_construction_witness &&
+        (args.case_id != "sol61-trace-conquest5-currentmodel-120" || args.output.empty() ||
+         args.solver_mode != "current" || args.validate_only || args.action_layout_diagnostic ||
+         args.action_coverage_diagnostic || args.checked_potential_estimate != 0 ||
+         args.fragment_shadow_only || args.resumable_joint_policy_continuation_diagnostic ||
+         args.verified_policy_alternative_shadow_diagnostic || args.finder_candidate_graph_capture ||
+         !args.fixed_graph_check_pair.empty() || !args.fixed_graph_hash.empty() ||
+         !args.native_dirty_guidance.empty() || !args.native_retention_diagnostic.empty() ||
+         !args.development_checkpoint_save.empty() || !args.development_checkpoint_load.empty() ||
+         !args.strategy_output.empty() || !args.partial_output.empty() || args.verification_runs != 0 ||
+         args.max_discovered_states_override != 0 || args.exact_strategy_evaluation ||
+         args.exact_strategy_evaluation_time_limit_seconds != 0 || args.goal_progress_gated_reforges ||
+         args.native_goal_terminal != "legacy-clean" || args.native_goal_proof != "ordinary-clean" ||
+         args.native_selective_completion_service || args.neutral_extra_ordering ||
+         args.seed_progress_observation || args.native_execution_action_price != 0 ||
+         args.proof_handoff_seconds != 0))
+        throw std::runtime_error("partial-held construction witness requires the frozen original Current case and no other treatment");
     if (args.artifact.empty()) throw std::runtime_error("--artifact is required");
     if (args.corpus.empty()) throw std::runtime_error("--corpus is required");
     if (!args.validate_only && args.output.empty()) {
@@ -6957,6 +7157,13 @@ int main(int argc, char** argv) {
             }
             if (!args.case_id.empty() && specifications.empty()) {
                 throw std::runtime_error("unknown corpus case: " + args.case_id);
+            }
+
+            if (args.partial_held_construction_witness) {
+                if (specifications.size()!=1) throw std::runtime_error("partial-held construction witness requires exactly one case");
+                const int result=run_partial_held_construction_witness(data,specifications.front(),args);
+                pc_data_destroy(data);
+                return result;
             }
 
             if (!args.fixed_graph_check_pair.empty()) {

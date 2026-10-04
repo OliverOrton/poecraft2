@@ -5216,12 +5216,12 @@ void run_solver_partial_held_witness_tests(const char* artifact_dir) {
 
 // This is deliberately an explicit research selector, not the normal suite.
 // No imported control graph, public proposal or retained incumbent is modified.
-void run_solver_partial_held_recovery_tests(const bool compound_blocker_only) {
+void run_solver_partial_held_recovery_tests(const bool compound_blocker_only, const bool guarded_recovery) {
     const unsigned first_fixture = compound_blocker_only ? 4 : 0;
-    const unsigned end_fixture = compound_blocker_only ? 5 : 4;
+    const unsigned end_fixture = guarded_recovery ? 6 : compound_blocker_only ? 5 : 4;
     for (unsigned fixture = first_fixture; fixture < end_fixture; ++fixture) {
         auto session = make_compile_session();
-        const bool compound_blocker = fixture == 4;
+        const bool compound_blocker = fixture >= 4;
         const bool reverse = (fixture & 1u) != 0;
         const unsigned anchor_slot = compound_blocker || fixture < 2 ? 3 : 4;
         // Realistic lower-tier blockers on each side. Keep native pool/group
@@ -5340,7 +5340,7 @@ void run_solver_partial_held_recovery_tests(const bool compound_blocker_only) {
             ((1u << (compound_blocker ? 1u : 0u)) | (1u << anchor_slot)));
         double compound_root_mass = 0;
         if (compound_blocker) {
-            PC_CHECK(!reverse && anchor_slot == 3 && carrier.prefix_count == 2 && carrier.suffix_count == 2);
+            PC_CHECK(anchor_slot == 3 && carrier.prefix_count == 2 && carrier.suffix_count == 2);
             // First prove one lawful positive pick ordering, using each native
             // pool after the preceding pick and the actual reviewed count law.
             auto picking = root;
@@ -5379,7 +5379,7 @@ void run_solver_partial_held_recovery_tests(const bool compound_blocker_only) {
                 carrier,registry.index_by_id.at("exalt"));
             std::uint32_t rollable_missing = 0;
             for (unsigned slot = 0; slot < goal.slots.size(); ++slot)
-                if (goal_slot_side(*session,goal.slots[slot]) == PC_SIDE_PREFIX &&
+                if (goal_slot_side(*session,goal.slots[slot]) == (reverse ? PC_SIDE_SUFFIX : PC_SIDE_PREFIX) &&
                     (satisfied_goal_mask(calc.state(carrier_state)) & (1u << slot)) == 0 &&
                     mask_intersects(eligible,calc.layout().slots[slot].satisfying_mask))
                     rollable_missing |= 1u << slot;
@@ -5392,7 +5392,7 @@ void run_solver_partial_held_recovery_tests(const bool compound_blocker_only) {
             std::printf("\n");
             if (!(compound_root_mass > 0) || rollable_missing != 0) return;
         }
-        PartialHeldRecoveryProducer producer(calc,root,prices,limits,1u << anchor_slot,true);
+        PartialHeldRecoveryProducer producer(calc,root,prices,limits,1u << anchor_slot,true,guarded_recovery);
         for (unsigned step = 0; step < 40000 && !producer.done(); ++step) producer.advance();
         if (!producer.candidate()) std::printf("private partial fixture=%u construction=%s\n",fixture,producer.status().c_str());
         PC_CHECK(producer.done() && producer.candidate());
@@ -5442,9 +5442,50 @@ void run_solver_partial_held_recovery_tests(const bool compound_blocker_only) {
         const auto& binding = control.programs.at(held_run->binding);
         const auto option = calc.operators().at(binding.operator_index);
         PC_CHECK(binding.held_goal_mask == (1u << anchor_slot));
-        PC_CHECK(registry.actions.at(option.primitive_program.back()).params.type == ActionType::EldritchExalt);
+        PC_CHECK(registry.actions.at(option.primitive_program.back()).params.type ==
+            (compound_blocker && guarded_recovery ? ActionType::EldritchChaos : ActionType::EldritchExalt));
+        if (guarded_recovery) {
+            PC_CHECK(std::count_if(control.nodes.begin(),control.nodes.end(),[](const auto& current) {
+                return current.kind == FinderControlKind::TestMissingGoalRollable;
+            }) == 2);
+            const auto guarded = std::find_if(control.nodes.begin(),control.nodes.end(),[&](const auto& current) {
+                return current.kind == FinderControlKind::TestMissingGoalRollable &&
+                    current.binding == (reverse ? PC_SIDE_SUFFIX : PC_SIDE_PREFIX);
+            });
+            PC_CHECK(guarded != control.nodes.end());
+            if (guarded == control.nodes.end()) return;
+            const auto guard_id = "c"+std::to_string(guarded-control.nodes.begin());
+            const auto& guard_node = prepared.strategy->nodes.at(prepared.strategy->node_by_id.at(guard_id));
+            const auto yes = std::find_if(guard_node.edges.begin(),guard_node.edges.end(),[](const auto& edge) {
+                return !edge.is_default;
+            });
+            PC_CHECK(yes != guard_node.edges.end());
+            if (yes == guard_node.edges.end()) return;
+            PC_CHECK(evaluate_compiled_condition(yes->condition,*session,carrier) == !compound_blocker);
+            auto invalid = control; invalid.nodes.at(guarded-control.nodes.begin()).binding = 2;
+            bool bad_side_refused = false;
+            try { (void)compile_finder_control_json(calc,root,invalid,limits); }
+            catch (const std::invalid_argument&) { bad_side_refused = true; }
+            PC_CHECK(bad_side_refused);
+            // The richer added-tag domain retains a paid reroll branch. Test
+            // compiler projection only; do not invent native tag-weight fixture law.
+            session->has_added_tags = true;
+            const auto conservative_graph = compile_finder_control_json(calc,root,control,limits);
+            session->has_added_tags = false;
+            const auto conservative = compile_strategy_json(session,conservative_graph.data(),conservative_graph.size());
+            const auto& conservative_guard = conservative->nodes.at(conservative->node_by_id.at(guard_id));
+            const auto conservative_yes = std::find_if(conservative_guard.edges.begin(),conservative_guard.edges.end(),[](const auto& edge) {
+                return !edge.is_default;
+            });
+            PC_CHECK(conservative_yes != conservative_guard.edges.end());
+            if (conservative_yes != conservative_guard.edges.end())
+                PC_CHECK(!evaluate_compiled_condition(conservative_yes->condition,*session,carrier));
+            std::printf("private guarded carrier: fixture=%u target_side=%u rollable=%u routed_final=%s\n",
+                fixture,guarded->binding,!compound_blocker,
+                registry.actions.at(option.primitive_program.back()).id.c_str());
+        }
         const auto word = execute_attempt(calc,option.primitive_program,carrier_state);
-        if (compound_blocker) {
+        if (compound_blocker && !guarded_recovery) {
             // Empty eligible pools are native paid no-op self-loops, not illegal
             // actions. Preserve that law and prove the word changes only setup.
             PC_CHECK(word.supported && word.fully_legal && word.choice_groups.empty());
@@ -5491,7 +5532,9 @@ void run_solver_partial_held_recovery_tests(const bool compound_blocker_only) {
                 PC_CHECK(exit.probability > 0);
                 const auto& after = calc.state(exit.state);
                 PC_CHECK((satisfied_goal_mask(after) & (1u << anchor_slot)) != 0);
-                PC_CHECK((reverse ? after.suffix_count : after.prefix_count) == 3);
+                PC_CHECK(compound_blocker && guarded_recovery ?
+                    (reverse ? after.suffix_count : after.prefix_count) >= 2 :
+                    (reverse ? after.suffix_count : after.prefix_count) == 3);
                 mass += exit.probability;
             }
             PC_CHECK(std::abs(mass-1) <= 1e-12);
@@ -5514,7 +5557,7 @@ void run_solver_partial_held_recovery_tests(const bool compound_blocker_only) {
             eval.policy_decision_entries.push_back(std::move(request));
         }
         const auto checked = evaluate_strategy(*prepared.strategy,eval);
-        if (compound_blocker) {
+        if (compound_blocker && !guarded_recovery) {
             // A positive native no-progress loop must prevent original-root
             // acceptance. Preserve its actual incomplete census, never manufacture
             // a complete one to claim entry-by-entry validation of this controller.
@@ -5541,6 +5584,34 @@ void run_solver_partial_held_recovery_tests(const bool compound_blocker_only) {
         }
         PC_CHECK(finder_evaluation_accepted(checked));
         if (!finder_evaluation_accepted(checked)) return;
+        if (guarded_recovery) {
+            const auto target_side = reverse ? PC_SIDE_SUFFIX : PC_SIDE_PREFIX;
+            const auto guard = std::find_if(control.nodes.begin(),control.nodes.end(),[&](const auto& current) {
+                return current.kind == FinderControlKind::TestMissingGoalRollable && current.binding == target_side;
+            });
+            const auto& observed = prepared.strategy->nodes.at(prepared.strategy->node_by_id.at(
+                "c"+std::to_string(guard-control.nodes.begin())));
+            const auto yes = std::find_if(observed.edges.begin(),observed.edges.end(),[](const auto& edge) {
+                return !edge.is_default;
+            });
+            unsigned observed_entries = 0;
+            for (const auto& entry : checked.policy_entries.entries) {
+                if (!(entry.root_expected_visits > 0)) continue;
+                const auto eligible = calc.temporary_followup_eligible_mask(entry.item,registry.index_by_id.at("exalt"));
+                const auto state = calc.intern_item(entry.item);
+                const auto satisfied = satisfied_goal_mask(calc.state(state));
+                bool native_rollable = false;
+                for (unsigned slot = 0; slot < goal.slots.size(); ++slot)
+                    native_rollable |= goal_slot_side(*session,goal.slots[slot]) == target_side &&
+                        (satisfied & (1u << slot)) == 0 &&
+                        mask_intersects(eligible,calc.layout().slots[slot].satisfying_mask);
+                PC_CHECK(evaluate_compiled_condition(yes->condition,*session,entry.item) == native_rollable);
+                ++observed_entries;
+            }
+            PC_CHECK(observed_entries > 0);
+            std::printf("private guard projection: fixture=%u all_positive_entries=%u native_pool_equivalent\n",
+                fixture,observed_entries);
+        }
         for (const auto key : {"chaos","eldritch_exalt","eldritch_annul","eldritch_chaos"})
             PC_CHECK(checked.expected_consumption.contains(key) && checked.expected_consumption.at(key) > 0);
         unsigned entries = 0;
