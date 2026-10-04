@@ -4588,19 +4588,43 @@ void run_solver_admission_query_tests() {
         PC_CHECK(!resumable.is_candidate_operator_admitted_for_state(state,index));
     PC_CHECK(!resumable.admit_state_local_automatic_candidates(state,request).cached);
 
-    // Work refusal must roll back the query and leave the same request retryable.
+    // Automatic admission owns a separate work scope and debits its explicit
+    // shared owner, as the private service does. Exhaust that owner's allowance
+    // before the next native unit; a cap on this child alone is not that budget.
+    CalcContext unowned(session,goal,registry,{chaos});
+    unowned.set_solve_resource_caps(100000,1,false);
+    const auto unowned_state = unowned.intern_item(root);
+    const auto unowned_batch = unowned.admit_state_local_automatic_candidates(unowned_state,request);
+    PC_CHECK(unowned_batch.status == StateLocalAutomaticBatchStatus::Complete);
+    PC_CHECK(unowned.telemetry().automatic_admission_reforge_logical_work_v1 > 1 &&
+             unowned.telemetry().reforge_logical_work_v1 == 0);
+    CalcContext budget_owner(session,goal,registry,{chaos});
+    budget_owner.set_solve_resource_caps(100000,1,false);
+    budget_owner.consume_reforge_work(1,1);
+    PC_CHECK(budget_owner.telemetry().reforge_logical_work_v1 == 1);
     CalcContext capped(session,goal,registry,{chaos});
+    capped.set_reforge_work_budget_owner(&budget_owner);
     const auto capped_state = capped.intern_item(root);
     const auto capped_operators = capped.operators().size();
     capped.set_reforge_resource_accounting(true);
-    capped.set_solve_resource_caps(100000,1,false);
-    const auto deferred = capped.admit_state_local_automatic_candidates(capped_state,request);
-    PC_CHECK(deferred.status == StateLocalAutomaticBatchStatus::ResourceDeferred &&
-             deferred.query == request.query && deferred.admitted_operators.empty());
+    // Shared-owner refusal propagates to the service rather than returning a
+    // locally deferred batch. The admission transaction must still roll back.
+    bool work_refused = false;
+    try { (void)capped.admit_state_local_automatic_candidates(capped_state,request); }
+    catch (const SolverResourceLimit& limit) {
+        work_refused = limit.cap_name() == "max_reforge_work";
+    }
+    PC_CHECK(work_refused);
+    PC_CHECK(budget_owner.telemetry().reforge_logical_work_v1 == 1);
     PC_CHECK(capped.operators().size() == capped_operators);
-    capped.set_solve_resource_caps(100000,100000000,false);
+    budget_owner.set_solve_resource_caps(100000,100000000,false);
     const auto retried = capped.admit_state_local_automatic_candidates(capped_state,request);
     PC_CHECK(!retried.cached && !retried.admitted_operators.empty());
+    PC_CHECK(budget_owner.telemetry().reforge_logical_work_v1 > 1);
+    std::printf("admission budget fixture: unowned_automatic=%llu unowned_ordinary=%llu shared_refused_at=1 shared_after_retry=%llu\n",
+        static_cast<unsigned long long>(unowned.telemetry().automatic_admission_reforge_logical_work_v1),
+        static_cast<unsigned long long>(unowned.telemetry().reforge_logical_work_v1),
+        static_cast<unsigned long long>(budget_owner.telemetry().reforge_logical_work_v1));
     CalcContext memory_capped(session,goal,registry,{chaos});
     const auto memory_state = memory_capped.intern_item(root);
     const auto memory_operators = memory_capped.operators().size();

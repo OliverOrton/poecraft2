@@ -1,0 +1,90 @@
+{
+  "schema": "sol61_query_finite_qualification_v2",
+  "timestamp_utc": "2026-10-03T23:33:46.012715+00:00",
+  "base_commit": "3dbee30bcb3ac6c12f120a7aa9f931227231c45b",
+  "base_engine_tree": "c1092d869439d9a846c9e8bed3049303204e40ea",
+  "changed_source_files": [
+    "engine/tests/test_solver_compile.cpp"
+  ],
+  "changed_source_sha256": "2f1216d25698797ad39925dae9f37c4a4716ef58c3c19ac9cdc2ed5a5351f9e8",
+  "source_patch": "query-r2-budget-fixture-source-only.patch",
+  "patch_sha256": "850d58bb4f376ab8f9578a2d37cf3387211412292e346434e3b01c2c2712adc0",
+  "reverse_patch_check": "passed; not applied",
+  "scope": "FINITE_NATIVE_QUERY_AND_BLOCKER_CONTROLS_PASSED; product/performance/WASM qualification not claimed",
+  "diagnosis": "Original test attached a local ordinary solve-work cap but no explicit automatic-admission shared owner. Automatic-admission scope routes budget debit through reforge_work_budget_owner and otherwise records a separate ledger, so it did not exhaust the asserted authority. Production selective service attaches the shared owner. No cap-enforcement/query-engine bug established by those failures.",
+  "source_owners": [
+    "engine/src/solver_calc.cpp:2236-2272",
+    "engine/src/solver_solve_selective_completion.cpp:114",
+    "engine/src/solver_options_automatic.cpp:1543-1552"
+  ],
+  "correction": "Test-only: prove separate unowned ledgers, attach independent shared owner pre-exhausted at1, require max_reforge_work exception and unchanged committed ledger, require operator rollback and uncached successful retry. Probability/resource tolerances unchanged.",
+  "measured_budget_units": {
+    "unowned_automatic": 60,
+    "unowned_ordinary": 0,
+    "shared_before": 1,
+    "shared_after_refusal": 1,
+    "shared_after_retry": 61
+  },
+  "build": {
+    "start_utc": "2026-10-03T23:26:35.668954+00:00",
+    "jobs": 2,
+    "watchdog_seconds": 600,
+    "wall_ms": 18706.518199993297,
+    "exit_code": 0
+  },
+  "checks": [
+    {
+      "phase": "finite-query",
+      "exit_code": 0,
+      "wall_ms": 572.6036000996828,
+      "timed_out": false,
+      "survivor": false
+    },
+    {
+      "phase": "blocker-growth",
+      "exit_code": 0,
+      "wall_ms": 108.04290021769702,
+      "timed_out": false,
+      "survivor": false
+    },
+    {
+      "phase": "native-blocker",
+      "exit_code": 0,
+      "wall_ms": 3942.4705000128597,
+      "timed_out": false,
+      "survivor": false
+    }
+  ],
+  "check_counts": {
+    "finite_query": 2584,
+    "blocker_growth": 171,
+    "native_blocker_entry": 81,
+    "failures": 0
+  },
+  "native_binary_identity": {
+    "build\\engine\\poecraft_engine_tests.exe": {
+      "sha256": "53072bb20b179b08716bb0deddedac5fb62f9215a421f09d7e2eaa2e87a19ed1",
+      "bytes": 20130606
+    },
+    "build\\engine\\libpoecraft_engine.a": {
+      "sha256": "179a3cfbeaa1ba8d9a542b1728d05b39333c231bb6fe558e86c9e5d6c30e2ab9",
+      "bytes": 17102142
+    }
+  },
+  "preserved_failure_evidence": [
+    "query-r1-request.json",
+    "query-r1-results.json",
+    "query-r1-finite-query.log",
+    "query-r1-built-binary-identity.json"
+  ],
+  "no_WASM": true,
+  "no_timed_policy_evaluations": true,
+  "no_new_main_merge": true,
+  "proposal3_activation": false,
+  "protected_checkout_and_metadata": "untouched; no retry of rejected repair, no index/ref mutation",
+  "LOCAL": "released",
+  "owned_processes": [],
+  "remaining": "Hosted compile target/whole-product and real Conquest/armour performance remain unrun for this corrected source. Research branch update only via integrator.",
+  "hard_stop_utc": "2026-10-03T23:45:00Z",
+  "quiet_window_utc": "2026-10-04T00:00:00Z through05:00:00Z"
+}

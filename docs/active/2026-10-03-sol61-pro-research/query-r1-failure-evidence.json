@@ -1,0 +1,82 @@
+{
+  "original_request_projection": {
+    "source_commit": "3dbee30bcb3ac6c12f120a7aa9f931227231c45b",
+    "engine_tree": "c1092d869439d9a846c9e8bed3049303204e40ea",
+    "model_law": 3,
+    "contract": 5,
+    "certificate": 3,
+    "compiler_jobs": 2,
+    "serial": true,
+    "created_utc": "2026-10-03T22:16:04.380147+00:00",
+    "hard_stop_utc": "2026-10-03T23:45:00+00:00",
+    "whole_batch_watchdog_bound_seconds": 1080,
+    "scope": "native build and finite query fixtures only",
+    "no_WASM": true,
+    "no_timed_policy_evaluation": true,
+    "no_proposal3_activation": true
+  },
+  "original_command_identity_sha256": [
+    "1fa5f0a1d558108743d7908a33e77d34ed37d436da9631f7155c7ee22fe8c205",
+    "d9ac91d405731eb47b09cf47d03d64e92b54addb722e13c1850948d3755f862a"
+  ],
+  "original_results": [
+    {
+      "phase": "build-tests",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 10708,
+      "process_identity_token": "10708:134355393644407275",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 257288.55739999563
+    },
+    {
+      "phase": "finite-query",
+      "exit_code": 1,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 40656,
+      "process_identity_token": "40656:134355396223956763",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 684.6570000052452
+    }
+  ],
+  "failure_log_repository_relative": "FAIL engine/tests/test_solver_compile.cpp:4598: deferred.status == StateLocalAutomaticBatchStatus::ResourceDeferred && deferred.query == request.query && deferred.admitted_operators.empty()\nFAIL engine/tests/test_solver_compile.cpp:4600: capped.operators().size() == capped_operators\nFAIL engine/tests/test_solver_compile.cpp:4603: !retried.cached && !retried.admitted_operators.empty()\nsolver admission query tests: 2579 checks, 3 failures\n",
+  "original_built_binary_identity": {
+    "build\\engine\\poecraft_engine_tests.exe": {
+      "sha256": "7017bd7cfe3cd0b7a450f24242523d58c111796b4420089b86d4dfa264f5afba",
+      "bytes": 20127534
+    },
+    "build\\engine\\libpoecraft_engine.a": {
+      "sha256": "179a3cfbeaa1ba8d9a542b1728d05b39333c231bb6fe558e86c9e5d6c30e2ab9",
+      "bytes": 17102142
+    }
+  },
+  "schema": "sol61_query_preserved_initial_failure_v1",
+  "original_artifact_pins": {
+    "query-r1-request.json": {
+      "sha256": "f8fc06beb33d1b90e426278a4e9ac0a9cd3d39d3e1ca3c547503cacc3ba93093",
+      "bytes": 21354
+    },
+    "query-r1-results.json": {
+      "sha256": "53bce8d81c119fea685fc73a139a5adcb09cfc6525273a65b76ea159c7d85a72",
+      "bytes": 769
+    },
+    "query-r1-finite-query.log": {
+      "sha256": "19edd82064f64463187774984adee2e40130ac8fd89b5aec109ad23332a1f461",
+      "bytes": 685
+    },
+    "query-r1-built-binary-identity.json": {
+      "sha256": "eb430ecefcb58b9931b398f25031b065c92b27e15cc5f14113b5039a728fb205",
+      "bytes": 322
+    }
+  },
+  "disposition": "Preserved initial finite-query failure: 2579 checks, three budget-fixture failures. The correction fixes the test budget owner; no production cap-enforcement bug was established. Original files remain unchanged outside Git.",
+  "publication_transform": "Bounded JSON projection and repository-relative failure log; only the local checkout root was removed from log lines. Original artifacts are pinned above."
+}

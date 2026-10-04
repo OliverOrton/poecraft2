@@ -1,0 +1,61 @@
+{
+  "schema": "sol61_query_r2_clean_publication_v1",
+  "created_utc": "2026-10-04T00:03:26.486600+00:00",
+  "parent_commit": "3dbee30bcb3ac6c12f120a7aa9f931227231c45b",
+  "released_main_unchanged": "29d9e666b9d11dbe9ba58959f2598df9495dc49d",
+  "branch": "dot/pro-sol61-conquest-armour-20261003",
+  "qualification": "FINITE_NATIVE_QUERY_AND_BLOCKER_CONTROLS_PASSED; product/performance/WASM unqualified",
+  "changed_source_files": [
+    "engine/tests/test_solver_compile.cpp"
+  ],
+  "changed_source_normalized_sha256": "2f1216d25698797ad39925dae9f37c4a4716ef58c3c19ac9cdc2ed5a5351f9e8",
+  "patch_sha256": "850d58bb4f376ab8f9578a2d37cf3387211412292e346434e3b01c2c2712adc0",
+  "owner_summary_original_sha256": "7644be8318d91195d9f3a4c006632dd374f9b0d9fb4f9e1fbe4e44d58a494e7f",
+  "owner_summary_publication_transform": "Portable LF JSON serialization, with semantic data unchanged",
+  "code_review": "Shared-owner budget contract read directly; test-only patch verifies refusal before work debit, unchanged committed ledger, rollback and uncached retry. Production source and tolerances unchanged.",
+  "publication_checks": {
+    "patch_hash": "PASSED",
+    "explicit_scope": "PASSED",
+    "apply_check": "PASSED",
+    "corrected_source_pin": "PASSED",
+    "receipt_json": "PASSED",
+    "credential_and_private_path_scan": "PASSED"
+  },
+  "qualification_checks_reused": {
+    "finite_query": 2584,
+    "blocker_growth": 171,
+    "native_blocker_entry": 81,
+    "failures": 0
+  },
+  "publication_local_builds_tests_solves_browsers": 0,
+  "main_hosted_ci": "Pending: Build passed, Test active; Python/native/web progress unknown. No rerun or cancellation.",
+  "unrun": [
+    "new real-policy evaluations",
+    "real Conquest/armour performance",
+    "WASM rebuild",
+    "whole-product/web qualification",
+    "hosted qualification of corrected source"
+  ],
+  "protected_entry": "Inherited unchanged from parent tree; no protected-file or checkout/index operation.",
+  "original_failure_artifacts_preserved": {
+    "query-r1-request.json": {
+      "sha256": "f8fc06beb33d1b90e426278a4e9ac0a9cd3d39d3e1ca3c547503cacc3ba93093",
+      "bytes": 21354
+    },
+    "query-r1-results.json": {
+      "sha256": "53bce8d81c119fea685fc73a139a5adcb09cfc6525273a65b76ea159c7d85a72",
+      "bytes": 769
+    },
+    "query-r1-finite-query.log": {
+      "sha256": "19edd82064f64463187774984adee2e40130ac8fd89b5aec109ad23332a1f461",
+      "bytes": 685
+    },
+    "query-r1-built-binary-identity.json": {
+      "sha256": "eb430ecefcb58b9931b398f25031b065c92b27e15cc5f14113b5039a728fb205",
+      "bytes": 322
+    }
+  },
+  "production_proposal3_enabled": false,
+  "quiet_window_utc": "2026-10-04T00:00:00Z through 2026-10-04T05:00:00Z",
+  "owned_heavy_processes_started": []
+}
