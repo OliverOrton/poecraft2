@@ -473,3 +473,23 @@ allowed; stop on renewed denial. No retry ran during this source-only turn.
 Before/after product-gate hashes must be compared; after hashes remain pending.
 Test fixtures reading frozen bytes in memory do not qualify product bundle/source
 metadata.
+
+## Matching WASM checkpoint stopped on fixture identity (2026-10-04)
+
+Source `43ef96cf` built matching WASM with two compiler jobs in 392.3 seconds,
+peak job memory 2.94GB under 8GiB, with no surviving process. The one authorized
+exact bundle retry passed, including its cache regression; all16 frozen-input
+hashes match before/after. Real termination/lifetime and stale-identity tests pass.
+
+The matching-WASM planner fixture then failed: `goal slots 0 and 1 have overlapping
+members`. Its candidate loop incorrectly assumed legacy `pcw_item_add_mod` checks
+canonical groups; that function calls the raw item slot helper. The native solver
+refused the overlapping goal before policy output or trials. Repair the fixture
+selection to establish the original native Ring witness's full group disjointness.
+Do not weaken the goal or planner guard. No subsequent qualification command ran.
+
+LOCAL is released, all exec sessions ended and escalated process inspection found
+zero owned survivors. WASM/MJS outputs are preserved uncommitted and unqualified;
+passing native `823657c0` remains separate. The transport receipt under
+`out/strategy-feeder/sol61-transport-20261004/qualification-receipt.json` retains
+source/artifact/build identities, successful stages, failure and unrun stages.

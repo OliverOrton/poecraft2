@@ -36,8 +36,17 @@
     "runtime_lock_sha256": "bafe2c54c2659348c8fa6836564b9300a9ffb0ac5f86d717302176b7239c0ad1",
     "economy_index_sha256": "2d71a5a96a669ac835b6e5bc06750c12ef8e5af3d7d9966c43fec0c62e86a2cd",
     "before_hashes_and_read_only_recheck_equal": true,
-    "after_product_gate_hashes": "Not yet available; gate unrun. Recheck all before inputs immediately before and after the authorized command.",
-    "retry_attempted": false,
+    "after_product_gate_hashes": "Captured in bundle-retry.json; all16 before/after hashes equal.",
+    "retry_attempted": true,
     "original_rejection_retained": true
+  },
+  "authorized_retry": {
+    "attempts": 1,
+    "executed": true,
+    "exit_code": 0,
+    "cache_regression_passed": true,
+    "all_16_before_after_hashes_equal": true,
+    "receipt": "out/strategy-feeder/sol61-transport-20261004/bundle-retry.json",
+    "local_released": true
   }
 }
