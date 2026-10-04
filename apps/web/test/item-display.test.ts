@@ -233,3 +233,82 @@ assert.ok(!selectedTier.disabled);
 selectedTier.click();
 assert.equal(selectedImplicit, "mod-1");
 console.log("  ok - implicit goals and item properties are editable and respect the Unveil lock");
+
+// A shared badge must keep actual, exact and unrestricted contexts distinct.
+const targetFixture: import("../src/app/components/pc-mod-list").TargetModListModel = {
+    kind: "target", baseName: "Vaal Regalia", itemLevel: 86, rarity: "rare", maxPrefix: 3, maxSuffix: 3,
+    prefixes: [], suffixes: [], otherRequirements: [], properties: {influences: influenceCatalog.genericInfluences!},
+    implicitInfluences: ["Searing Exarch"],
+};
+function headerMarkup(model: typeof targetFixture) {
+    const element = dom.document.createElement("div");
+    element.innerHTML = renderToStaticMarkup(createElement(ItemCard, {model}));
+    return element.querySelector(".pc-item-card-header")!;
+}
+const anyHeader = headerMarkup(targetFixture);
+assert.equal(anyHeader.querySelector('[data-influence-context="any"]')?.textContent, "Any ordinary influence");
+assert.equal(anyHeader.querySelector('[data-influence-context="required"]')?.textContent, "Required: Searing Exarch");
+assert.equal(anyHeader.querySelectorAll('[data-influence-context="actual"], [data-influence-context="exact"]').length, 0);
+const noneHeader = headerMarkup({...targetFixture, properties: {...targetFixture.properties!, influenceBits: 0}});
+assert.equal(noneHeader.querySelector('[data-influence-context="exact-none"]')?.textContent, "Exactly: no ordinary influence");
+assert.equal(noneHeader.querySelector('[data-influence-context="any"]'), null);
+const exactHeader = headerMarkup({...targetFixture, properties: {...targetFixture.properties!, influenceBits: 32}});
+assert.equal(exactHeader.querySelector('[data-influence-context="exact"]')?.textContent, "Exactly: Shaper");
+assert.equal(exactHeader.querySelector('[data-influence-context="actual"]'), null);
+const unknownHeader = headerMarkup({...targetFixture, properties: {influences: [], influenceBits: 32}});
+assert.match(unknownHeader.textContent!, /influence labels unavailable/);
+assert.doesNotMatch(unknownHeader.textContent!, /no ordinary influence/);
+assert.deepEqual(influenceLabels(32, 3, 0, null), ["Ordinary influence (labels unavailable)", "Searing Exarch T3"]);
+assert.deepEqual(influenceLabels(0, 0, 0, null), []);
+assert.match(influenceLabels(NaN, 0, 0, null)[0], /information unavailable/);
+
+// Live/snapshot metadata use one projection. Native sessions still close on both paths.
+const { concreteItemFacts } = await import("../src/app/item-card-model");
+const nativeInfo = {rarity: "Rare", item_flags: 17, memory_strands: 20, lifecycle: 1,
+    generic_influence_bits: 32, searing_exarch_tier: 3, eater_of_worlds_tier: 2,
+    prefix_mod_ids: [7], suffix_mod_ids: [], implicit_mod_ids: [], enchantment_mod_ids: [],
+    fractured_prefix_mod_ids: [7], fractured_suffix_mod_ids: [], max_prefix: 3, max_suffix: 3};
+const identity = {baseKey: "base", baseName: "Long example item name", itemLevel: 86};
+const facts = concreteItemFacts(nativeInfo, influenceCatalog, identity);
+const closed: string[] = [];
+const previewClient = {...client, itemInfo: async () => nativeInfo,
+    modInfo: async () => ({key: "life", family_tier_index: 1, text_lines: ["+10 to maximum Life"], classification_tags: ["life"], reach_kind: 2}),
+    closeItem: async () => {closed.push("item");}, closeSession: async () => {closed.push("session");},
+} as unknown as typeof client;
+const preview = await readItemCard(previewClient, 1, influenceCatalog,
+    {base: "base", itemLevel: 86, state: {prefixes: [{rolls: [10]}]}}, identity.baseName);
+for (const key of Object.keys(facts) as Array<keyof typeof facts>) assert.deepEqual(preview[key], facts[key]);
+assert.deepEqual(preview.prefixes[0].rollValues, [10]);
+assert.equal(preview.prefixes[0].fractured, true);
+assert.equal(preview.prefixes[0].crafted, true);
+assert.deepEqual(closed, ["item", "session"]);
+// Native enum casing stays intact while imported cards use the live-view label
+// and semantic colour classes (saved snapshots can contain "Rare").
+assert.equal(preview.rarity, "Rare");
+const nativeCaseMarkup = renderToStaticMarkup(createElement(ItemCard, {model: preview}));
+assert.match(nativeCaseMarkup, /pc-item-rarity-rare/);
+assert.match(nativeCaseMarkup, /class="pc-rarity pc-rarity-rare">rare<\/span>/);
+closed.length = 0;
+await assert.rejects(readItemCard({...previewClient, modInfo: async () => {throw new Error("unavailable modifier");}} as unknown as typeof client,
+    1, influenceCatalog, {base: "base", itemLevel: 86, state: {}}, identity.baseName), /unavailable modifier/);
+assert.deepEqual(closed, ["item", "session"]);
+
+// The keyboard fracture action emits the same identity as the context menu,
+// and every mutation route disappears for read-only previews.
+const { PcModList } = await import("../src/app/components/pc-mod-list");
+const editableList = new PcModList();
+const mutableFixture = {...preview, lifecycle: 0, properties: {influences: influenceCatalog.genericInfluences!, influenceBits: 32},
+    prefixes: [{...preview.prefixes[0], fractured: false}]};
+let fractureEvent: unknown;
+editableList.addEventListener("fracture-mod", event => {fractureEvent = (event as CustomEvent).detail;});
+editableList.setModel(mutableFixture);
+editableList.querySelector<HTMLButtonElement>(".pc-item-fracture-mod")!.click();
+assert.deepEqual(fractureEvent, {key: "life", modId: 7, side: "prefix"});
+editableList.setModel({...mutableFixture, readOnly: true});
+assert.equal(editableList.querySelector(".pc-item-fracture-mod, .pc-item-remove-mod, .pc-item-add-mod"), null);
+const readOnlyMarkup = renderToStaticMarkup(createElement(ItemCard, {model: {...mutableFixture, readOnly: true}}));
+assert.match(readOnlyMarkup, /Actual influence: Shaper/);
+assert.match(readOnlyMarkup, /Searing Exarch T3/);
+assert.match(readOnlyMarkup, /data-item-state="foreseeing"/);
+assert.match(readOnlyMarkup, /data-item-state="fractured"|data-item-state="crafted"/);
+console.log("  ok - influence context, native fact parity, preview cleanup and keyboard fracture identity");

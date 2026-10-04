@@ -103,12 +103,19 @@ export function influenceLabels(
     catalog: Catalog | null,
 ): string[] {
     const labels: string[] = [];
+    let knownBits = 0;
     for (const influence of
         catalog?.genericInfluences ?? catalog?.influences ?? []) {
         const code = influence.code ?? 0;
         if (code > 0 && (genericBits & (1 << (code - 1))) !== 0) {
             labels.push(influence.name);
+            knownBits |= 1 << (code - 1);
         }
+    }
+    if (!Number.isInteger(genericBits) || genericBits < 0) {
+        labels.push("Ordinary influence information unavailable");
+    } else if ((genericBits & ~knownBits) !== 0) {
+        labels.push("Ordinary influence (labels unavailable)");
     }
     if (searingExarchTier > 0) {
         labels.push(`Searing Exarch T${searingExarchTier}`);

@@ -5,10 +5,13 @@ import { resolve, extname, sep } from 'node:path';
 import { chromium, firefox } from 'playwright';
 import assert from 'node:assert/strict';
 import { checkUiContinuity } from './ui-continuity-checks.mjs';
+import { captureUiCheckpoint, checkDockTheme } from './ui-presentation-checks.mjs';
 
 const directory = resolve(process.argv[2] || 'dist');
 const build = JSON.parse(readFileSync(resolve(directory, 'build-info.json')));
-const mime = { '.html': 'text/html', '.json': 'application/json', '.js': 'text/javascript', '.wasm': 'application/wasm', '.css': 'text/css', '.txt': 'text/plain', '.png': 'image/png' };
+const smokeScope = process.env.POECRAFT_UI_SMOKE_SCOPE || 'full';
+assert.ok(['full', 'dock-theme'].includes(smokeScope), 'Unknown UI smoke scope');
+const mime = { '.html': 'text/html', '.json': 'application/json', '.js': 'text/javascript', '.wasm': 'application/wasm', '.css': 'text/css', '.txt': 'text/plain', '.png': 'image/png', '.woff2': 'font/woff2' };
 const server = createServer((request, response) => {
     try {
         const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
@@ -29,7 +32,9 @@ try {
     const selectedBrowsers = process.env.POECRAFT_SMOKE_BROWSERS?.split(',') || ['chromium', 'firefox'];
     if (selectedBrowsers.some(name => !['chromium', 'firefox'].includes(name))) throw new Error('Unknown smoke browser');
     for (const browserType of [chromium, firefox].filter(type => selectedBrowsers.includes(type.name()))) {
-        const browser = await browserType.launch({ headless: true });
+        const channel = process.env.POECRAFT_TEST_BROWSER_CHANNEL;
+        assert.ok(channel === undefined || channel === 'chrome', 'POECRAFT_TEST_BROWSER_CHANNEL must be unset or chrome');
+        const browser = await browserType.launch({ headless: true, ...(browserType === chromium && channel ? {channel} : {}) });
         try {
             const page = await browser.newPage();
             page.setDefaultTimeout(30_000);
@@ -40,6 +45,37 @@ try {
             await page.goto(origin + build.base);
             await page.waitForFunction(() => document.querySelector('pc-emulator')?.client?.getAbiVersion() > 0 && document.querySelector('pc-emulator')?.dataId > 0);
             await page.waitForFunction(() => document.querySelector('pc-economy-selector')?.textContent.includes('Bundled snapshot'));
+            // A narrow palette-only continuation reuses this server/profile and
+            // makes its exclusions explicit; the default full gate is unchanged.
+            if (smokeScope === 'dock-theme') {
+                try {
+                    await page.locator('pc-emulator .pc-bp-confirm:not(:disabled)').waitFor();
+                    const base = await page.locator('pc-emulator .pc-bp-base').inputValue();
+                    const initial = await checkDockTheme(page);
+                    await page.getByRole('button', {name: 'Stash', exact: true}).click();
+                    await page.locator('pc-stash .pc-stash-list[aria-busy="false"]').waitFor();
+                    assert.equal(await page.locator('pc-stash [role="alert"]').count(), 0);
+                    const stash = await checkDockTheme(page);
+                    assert.equal(stash.tabs, initial.tabs + 1);
+                    await captureUiCheckpoint(page, 'dock-stash');
+                    await page.locator('.pc-tab-title').filter({hasText: /^Untitled$/}).click();
+                    await page.locator('pc-emulator .pc-bp-confirm:not(:disabled)').waitFor();
+                    assert.equal(await page.locator('pc-emulator .pc-bp-base').inputValue(), base);
+                    const returned = await checkDockTheme(page);
+                    assert.equal(returned.tabs, stash.tabs);
+                    await captureUiCheckpoint(page, 'dock-base-picker');
+                    assert.deepEqual(failures, []);
+                    console.log(JSON.stringify({browser: browserType.name(), version: browser.version(),
+                        channel: channel || 'pinned', base: build.base, build_id: build.build_id,
+                        scope: smokeScope, result: 'passed', initial, stash, returned,
+                        exclusions: ['full legacy/native smoke', 'new A/B connectors', 'trace adapters']}));
+                } catch (error) {
+                    await captureUiCheckpoint(page, 'failure');
+                    console.error(JSON.stringify({scope: smokeScope, failures}));
+                    throw error;
+                }
+                continue;
+            }
             const result = await page.evaluate(async () => {
                 const emulator = document.querySelector('pc-emulator');
                 const client = emulator.client;
@@ -74,7 +110,19 @@ try {
             assert.equal(result.supported, true); assert.equal(result.legal, true);
             assert.ok(Math.abs(result.probability - 1) < 1e-9);
             assert.equal(result.exact.converged, true); assert.equal(result.cancelled, true);
+            // The local font is optional for usability; the fallback keeps a working app.
+            const withoutFont = await browser.newPage();
+            await withoutFont.route('**/*.woff2', route => route.fulfill({status: 404, body: 'missing'}));
+            await withoutFont.goto(origin + build.base);
+            await withoutFont.locator('pc-emulator .pc-bp-confirm:not(:disabled)').click();
+            await withoutFont.locator('pc-emulator [data-simple-action="alchemy"]:not(:disabled)').waitFor();
+            await withoutFont.evaluate(() => document.fonts.ready);
+            assert.equal(await withoutFont.evaluate(() => document.fonts.check('400 14px "Noto Sans"')), false);
+            await captureUiCheckpoint(withoutFont, 'font-fallback');
+            await withoutFont.close();
+            console.log(JSON.stringify({checkpoint: 'font-fallback', result: 'passed', channel: channel || 'pinned'}));
             const ui = build.game_assets ? await checkUiContinuity(page).catch(async error => {
+                await captureUiCheckpoint(page, 'failure');
                 console.error(JSON.stringify({failures, status: await page.locator('.pc-emu-status, .pc-calc-status').allTextContents()}));
                 throw error;
             }) : {skipped: 'archive predates React/asset migration'};
@@ -106,7 +154,7 @@ try {
             await stale.goto(origin + build.base);
             await stale.waitForFunction(() => document.querySelector('pc-emulator')?.textContent.includes('reload to retry'));
             assert.equal(await stale.evaluate(() => localStorage.getItem('hosting-preserved-draft-marker')), 'keep');
-            console.log(JSON.stringify({ browser: browserType.name(), version: browser.version(), base: build.base, build_id: build.build_id, result: 'passed', requests: responses.length, ui }));
+            console.log(JSON.stringify({ browser: browserType.name(), version: browser.version(), channel: channel || 'pinned', base: build.base, build_id: build.build_id, result: 'passed', requests: responses.length, ui }));
         } finally { await browser.close(); }
     }
 } finally { await new Promise(resolve => server.close(resolve)); }
