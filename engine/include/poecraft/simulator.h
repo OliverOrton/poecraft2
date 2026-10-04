@@ -64,7 +64,8 @@ typedef enum pc_simulation_failure_reason {
     PC_SIM_FAILURE_STEP_LIMIT = 4,
     PC_SIM_FAILURE_NO_MATCHING_EDGE = 5,
     PC_SIM_FAILURE_ACTION_NOT_APPLIED = 6,
-    PC_SIM_FAILURE_MISSING_PRICE = 7
+    PC_SIM_FAILURE_MISSING_PRICE = 7,
+    PC_SIM_FAILURE_CANCELLED = 8
 } pc_simulation_failure_reason;
 
 typedef enum pc_cost_status {
@@ -203,6 +204,10 @@ pc_result pc_simulator_create(
  * yield between calls for progress/cancellation. A single run is still bounded
  * by the action/step/cost limits above.
  */
+/* Optional native cancellation; polled at graph/source boundaries and before
+ * atomic pair commit. A stopped run preserves settled costs and actual resources. */
+pc_result pc_simulator_set_cancellation_callback(pc_simulator_handle simulator,
+    uint32_t (*cancelled)(void*), void* user, pc_error_info* out_error);
 pc_result pc_simulator_run_chunk(
     pc_simulator_handle simulator,
     const pc_simulation_options* options,

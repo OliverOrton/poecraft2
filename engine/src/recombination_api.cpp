@@ -59,10 +59,14 @@ std::string calculate_json(const poecraft::RandomRecombPair& pair) {
     std::ostringstream out; out << std::setprecision(17);
     out << "{\"pair_version\":1,\"model_id\":" << quote(pair.model_id)
         << ",\"projection_id\":" << quote(poecraft::kRandomRecombProjection)
-        << ",\"game_odds_estimated\":true,\"apply_supported\":true,"
+        << ",\"apply_supported\":" << (pair.full_item_apply_supported ? "true" : "false")
+        << ",\"game_odds_estimated\":true,"
            "\"gold_cost\":null,\"dust_cost\":null,\"cost_complete\":false,\"data_identity\":[";
     for (unsigned i = 0; i < pair.data_identity.size(); ++i) { if (i) out << ','; out << quote(pair.data_identity[i]); }
-    out << "],\"carriers\":[";
+    out << "],\"scenario_id\":" << (pair.scenario ? quote(pair.scenario->id) : "null");
+    if (pair.scenario) out << ",\"configuration_id\":" << quote(poecraft::kRandomRecombBlockingConfiguration)
+        << ",\"prefix_first\":[" << pair.scenario->prefix_first[0] << ',' << pair.scenario->prefix_first[1] << ']';
+    out << ",\"carriers\":[";
     for (unsigned c = 0; c < 2; ++c) {
         if (c) out << ','; const auto& s = *pair.carriers[c].output_session;
         out << "{\"carrier\":" << c << ",\"probability\":0.5,\"base_metadata_path\":"
@@ -93,6 +97,38 @@ std::string calculate_json(const poecraft::RandomRecombPair& pair) {
 }
 }
 namespace poecraft {
+std::string random_recomb_base_state_json(const pc_item_state& item, const SessionImpl& session) {
+    std::ostringstream out; out << std::setprecision(17);
+    out << "{\"base_key\":" << quote(session.data->string_at(session.data->base_metadata_path_sid[session.base_index]))
+        << ",\"item_level\":" << session.item_level << ",\"rarity\":" << quote(item.rarity==PC_RARITY_RARE ? "rare" : item.rarity==PC_RARITY_MAGIC ? "magic" : "normal")
+        << ",\"quality\":" << unsigned(item.quality) << ",\"memory_strands\":" << unsigned(item.memory_strands)
+        << ",\"item_flags\":" << unsigned(item.item_flags) << ",\"generic_influence_bits\":" << unsigned(item.generic_influence_bits)
+        << ",\"searing_exarch_tier\":" << unsigned(item.searing_exarch_tier) << ",\"eater_of_worlds_tier\":" << unsigned(item.eater_of_worlds_tier)
+        << ",\"link_mask\":" << unsigned(item.link_mask) << ",\"socket_colors\":[";
+    for (unsigned i=0;i<item.socket_count;++i) { if(i) out << ',';out << unsigned(item.socket_colors[i]); } out << ']';
+    const auto key = [&](unsigned id) { return quote(session.data->string_at(session.data->mod_key_sid[session.global_index.at(id)])); };
+    const auto slots = [&](const char* name,const pc_mod_slot* values,unsigned count) {
+        out << ',' << quote(name) << ":[";
+        for (unsigned i=0;i<count;++i) {
+            if(i) out << ',';const auto& slot=values[i];
+            out << "{\"mod_key\":" << key(slot.mod_id);
+            for (auto [name,flag]: {std::pair{"fractured",PC_MOD_SLOT_FRACTURED}, {"crafted",PC_MOD_SLOT_CRAFTED},
+                    {"veiled",PC_MOD_SLOT_VEILED},{"eldritch",PC_MOD_SLOT_ELDRITCH},{"synth",PC_MOD_SLOT_SYNTH}})
+                if (slot.flags & flag) out << ',' << quote(name) << ":true";
+            out << ",\"rolls\":[";
+            for (unsigned j=0;j<slot.roll_count;++j) {if(j)out<<',';out<<slot.rolls[j];} out << ']';
+            if (slot.veiled_option_count) {
+                out << ",\"veiled_option_keys\":[";
+                for(unsigned j=0;j<slot.veiled_option_count;++j){if(j)out<<',';out<<key(slot.veiled_option_mod_ids[j]);}out<<']';
+            }
+            if(slot.veiled_chosen_mod_id!=PC_MOD_NONE)out<<",\"veiled_chosen_key\":"<<key(slot.veiled_chosen_mod_id);
+            out << '}';
+        } out << ']';
+    };
+    slots("prefixes",item.prefixes,item.prefix_count);slots("suffixes",item.suffixes,item.suffix_count);
+    slots("implicits",item.implicits,item.implicit_count);slots("enchantments",item.enchantments,item.enchantment_count);
+    return out.str()+'}';
+}
 std::string random_recomb_item_json(const pc_item_state& item, const SessionImpl& session) {
     std::ostringstream out; write_item(out, item, session); return out.str();
 }
@@ -126,6 +162,22 @@ pc_result pc_recombination_pair_create(const pc_craft_resource* a, const pc_craf
         *out = pair.release(); if (error) pc_error_info_init(error); return PC_RESULT_OK;
     } catch (const std::invalid_argument& ex) { return fail(error, PC_RESULT_UNSUPPORTED_FEATURE, ex.what()); }
       catch (const std::exception& ex) { return fail(error, PC_RESULT_INTERNAL_ERROR, ex.what()); }
+}
+pc_result pc_recombination_analysis_create(const pc_craft_resource* a, const pc_craft_resource* b,
+        const char* model, const char* scenario_id, double prefix_a, double prefix_b,
+        pc_recombination_pair_handle* out, pc_error_info* error) {
+    if (!a || !b || !out || !model || std::strcmp(model,poecraft::kRandomRecombBlockingModel) ||
+        !scenario_id || !a->identity || !b->identity || !a->role || !b->role ||
+        !a->session || !b->session || !a->item || !b->item || a->item == b->item)
+        return fail(error, PC_RESULT_INVALID_ARGUMENT, "Invalid explicit blocking analysis request");
+    try {
+        poecraft::RecombScenario scenario{scenario_id,{prefix_a,prefix_b}};
+        auto pair = std::make_unique<pc_recombination_pair>();
+        pair->impl = poecraft::prepare_random_recomb_pair(
+            {a->identity,a->role,a->session->impl,*a->item}, {b->identity,b->role,b->session->impl,*b->item}, &scenario);
+        *out = pair.release(); if (error) pc_error_info_init(error); return PC_RESULT_OK;
+    } catch (const std::invalid_argument& ex) { return fail(error,PC_RESULT_UNSUPPORTED_FEATURE,ex.what()); }
+      catch (const std::exception& ex) { return fail(error,PC_RESULT_INTERNAL_ERROR,ex.what()); }
 }
 void pc_recombination_pair_destroy(pc_recombination_pair_handle pair) { delete pair; }
 pc_result pc_recombination_pair_output_session(pc_recombination_pair_handle pair,

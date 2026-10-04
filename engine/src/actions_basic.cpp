@@ -1464,11 +1464,8 @@ bool ensure_unveil_options(
                item->suffixes, item->suffix_count, PC_SIDE_SUFFIX);
 }
 
-ActionOutcome apply_action(
-    ActionContextImpl& context,
-    pc_item_state* item,
-    const ActionParameters& action) {
-    const SessionImpl& session = *context.session;
+void validate_action_input_contract(const SessionImpl& session,const pc_item_state& original,const ActionParameters& action) {
+    const auto* item=&original;
     if (action.type == ActionType::Fossil)
         if (const char* reason = unavailable_fossil_reason(*session.data, action.fossil_indices))
             throw std::invalid_argument(reason);
@@ -1488,6 +1485,14 @@ ActionOutcome apply_action(
         pc_action_memory_interaction(static_cast<int>(action.type), &interaction);
         throw std::invalid_argument(interaction.unavailable_reason);
     }
+}
+
+ActionOutcome apply_action(
+    ActionContextImpl& context,
+    pc_item_state* item,
+    const ActionParameters& action) {
+    const SessionImpl& session = *context.session;
+    validate_action_input_contract(session,*item,action);
     if (context.capture_action_trace) {
         context.last_action_trace.clear();
     }
@@ -1796,6 +1801,41 @@ pc_item_state awaken_item(ActionContextImpl& context,
     return result;
 }
 
+ActionOutcome visit_full_item_removal_outcomes(ActionContextImpl& context,
+        const pc_item_state& original, const ActionParameters& action,
+        const std::function<void(const pc_item_state&, long double)>& visit) {
+    const auto& s = *context.session;
+    validate_action_input_contract(s,original,action);
+    if (!item_craftable(&original)) { visit(original,1); return {}; }
+    switch (action.type) {
+    case ActionType::RemoveCraftedModifiers: {
+        auto next = original; const auto result = do_remove_crafted_modifiers(&next);
+        visit(next, 1); return result;
+    }
+    case ActionType::Annul: {
+        std::vector<std::pair<int, std::uint8_t>> removable;
+        for (const auto side : {PC_SIDE_PREFIX, PC_SIDE_SUFFIX}) {
+            if (side_locked(s, &original, side)) continue;
+            const auto* slots = side == PC_SIDE_PREFIX ? original.prefixes : original.suffixes;
+            const auto count = side == PC_SIDE_PREFIX ? original.prefix_count : original.suffix_count;
+            for (std::uint8_t i = 0; i < count; ++i)
+                if (!(slots[i].flags & PC_MOD_SLOT_FRACTURED)) removable.emplace_back(side, i);
+        }
+        if (removable.empty()) { visit(original, 1); return {}; }
+        for (const auto& [side, index] : removable) {
+            auto next = original; pc_item_remove_at(&next, side, index);
+            visit(next, 1.0L / removable.size());
+        }
+        return {true, 0, 1};
+    }
+    case ActionType::Scour: {
+        auto next = original; const auto result = do_scour(s, &next);
+        visit(next, 1); return result;
+    }
+    default: throw std::invalid_argument("Checked full-item feeder action is outside the removal kernel");
+    }
+}
+
 ActionOutcome visit_cluster_currency_outcomes(ActionContextImpl& context,
     const pc_item_state& original, const ActionParameters& action,
     const std::function<void(const pc_item_state&, long double)>& visit,
@@ -2050,30 +2090,8 @@ ActionOutcome visit_cluster_currency_outcomes(ActionContextImpl& context,
         }
         return {true, 1, 1};
     }
-    case ActionType::RemoveCraftedModifiers: {
-        auto next = original; const auto result = do_remove_crafted_modifiers(&next);
-        visit(next, 1); return result;
-    }
-    case ActionType::Annul: {
-        std::vector<std::pair<int, std::uint8_t>> removable;
-        for (const auto side : {PC_SIDE_PREFIX, PC_SIDE_SUFFIX}) {
-            if (side_locked(s, &original, side)) continue;
-            const auto* slots = side == PC_SIDE_PREFIX ? original.prefixes : original.suffixes;
-            const auto count = side == PC_SIDE_PREFIX ? original.prefix_count : original.suffix_count;
-            for (std::uint8_t i = 0; i < count; ++i)
-                if (!(slots[i].flags & PC_MOD_SLOT_FRACTURED)) removable.emplace_back(side, i);
-        }
-        if (removable.empty()) { visit(original, 1); return {}; }
-        for (const auto& [side, index] : removable) {
-            auto next = original; pc_item_remove_at(&next, side, index);
-            visit(next, 1.0L / removable.size());
-        }
-        return {true, 0, 1};
-    }
-    case ActionType::Scour: {
-        auto next = original; const auto result = do_scour(s, &next);
-        visit(next, 1); return result;
-    }
+    case ActionType::RemoveCraftedModifiers: case ActionType::Annul: case ActionType::Scour:
+        return visit_full_item_removal_outcomes(context,original,action,visit);
     default: throw std::invalid_argument("This cluster action law is not yet approved and qualified");
     }
 }

@@ -2,13 +2,22 @@
 #include "multi_item.hpp"
 #include "poecraft/session.h"
 #include <array>
+#include <optional>
 
 namespace poecraft {
 inline constexpr char kRandomRecombModel[] = "poe1-random-spawn-proxy-preserve-tier-roll-no-upgrade-v1";
 inline constexpr char kRandomRecombExtendedModel[] = "poe1-random-spawn-proxy-native-constraints-preserve-tier-roll-no-upgrade-v2";
+inline constexpr char kRandomRecombBlockingModel[] = "poe1-random-blocking-sensitivity-preserve-tier-roll-no-upgrade-v3-draft1";
+inline constexpr char kRandomRecombBlockingConfiguration[] = "pooled-exclusive-counts-first-positive-proxy-order-scenario-v1";
+struct RecombScenario {
+    std::string id;
+    std::array<double, 2> prefix_first; // explicit carrier-specific scenario; no default
+};
 inline constexpr char kRandomRecombProjection[] = "structural-output-preserve-tier-roll-v1";
 
 // Exact thousandths of the adopted estimated coefficients, never game-exact.
+std::string random_recomb_base_state_json(const pc_item_state&, const SessionImpl&);
+std::string random_recomb_item_key(const pc_item_state&);
 std::string random_recomb_item_json(const pc_item_state&, const SessionImpl&);
 const std::array<unsigned, 4>& random_recomb_count_row(unsigned physical_count);
 std::uint32_t random_recomb_item_level(std::uint32_t a, std::uint32_t b);
@@ -26,6 +35,13 @@ struct RecombSideOutcome {
     unsigned requested_count = 0;
     std::vector<unsigned> occurrences; // indices into the physical side pool
 };
+struct RecombJointOutcome {
+    double probability = 0;
+    RecombSideOutcome prefixes, suffixes;
+};
+// Both counts drawn before global blocking; physical occurrences stay distinct.
+std::vector<RecombJointOutcome> enumerate_random_recomb_joint(
+    const std::array<std::vector<RecombOccurrence>, 2>& pools, unsigned first_side);
 std::vector<RecombSideOutcome> enumerate_random_recomb_side(
     const std::vector<RecombOccurrence>& physical_pool);
 RecombSideOutcome sample_random_recomb_side(Rng& rng,
@@ -42,6 +58,7 @@ struct RandomRecombCarrier {
 struct RandomRecombPair {
     std::uint32_t version = 1;
     std::string model_id = kRandomRecombModel;
+    std::optional<RecombScenario> scenario;
     std::array<CraftResource, 2> inputs;
     std::array<RandomRecombCarrier, 2> carriers;
     std::array<std::string, 4> data_identity;
@@ -57,7 +74,8 @@ struct RandomRecombOutcome {
 // Read-only preparation/enumeration. No acquisition, RNG draw, receiver-only
 // currencyCalc mapping or solver admission. Rolled-total/defence goals are out
 // of scope even though recorded numeric rolls are preserved by Apply.
-RandomRecombPair prepare_random_recomb_pair(const CraftResource& a, const CraftResource& b);
+RandomRecombPair prepare_random_recomb_pair(const CraftResource& a, const CraftResource& b,
+    const RecombScenario* scenario = nullptr);
 std::vector<RandomRecombOutcome> enumerate_random_recomb_pair(const RandomRecombPair& pair);
 RandomRecombOutcome sample_random_recomb_selection(Rng& rng, const RandomRecombPair& pair);
 pc_item_state materialize_random_recomb_outcome(const RandomRecombPair& pair,

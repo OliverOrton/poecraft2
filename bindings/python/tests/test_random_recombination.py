@@ -95,6 +95,6 @@ def test_input_alias_and_unsupported_fracture_refuse(inputs):
         RandomRecombination(left, left, left_identity="a", right_identity="b")
     right._state.prefixes[0].flags = 1
     before = image(left), image(right)
-    with pytest.raises(EngineError, match="classification"):
+    with pytest.raises(EngineError, match="output treatment is unsupported"):
         RandomRecombination(left, right, left_identity="a", right_identity="b")
     assert (image(left), image(right)) == before

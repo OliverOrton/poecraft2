@@ -23,6 +23,11 @@ typedef struct pc_recombination_pair* pc_recombination_pair_handle;
 pc_result pc_recombination_pair_create(const pc_craft_resource* input_a,
     const pc_craft_resource* input_b, uint32_t pair_version,
     pc_recombination_pair_handle* out_pair, pc_error_info* out_error);
+/* Analysis-only v3, explicitly declared carrier/order scenario. No random Apply. */
+pc_result pc_recombination_analysis_create(const pc_craft_resource* input_a,
+    const pc_craft_resource* input_b, const char* model_id, const char* scenario_id,
+    double prefix_first_a, double prefix_first_b,
+    pc_recombination_pair_handle* out_pair, pc_error_info* out_error);
 void pc_recombination_pair_destroy(pc_recombination_pair_handle pair);
 
 /* Returns an independently owned session handle. Caller destroys it with

@@ -225,6 +225,12 @@ std::string calculate_random_recomb_goals_json(const RandomRecombPair& pair, con
     member(result, "goal_projection_id") = string("calculator-structural-goals-carrier-session-v1");
     member(result, "game_odds_estimated") = boolean(true);
     member(result, "model_projection_exact") = boolean(true);
+    if (pair.scenario) {
+        member(result,"scenario_id")=string(pair.scenario->id);
+        member(result,"configuration_id")=string(kRandomRecombBlockingConfiguration);
+        Value order=array();for(auto alpha:pair.scenario->prefix_first)order.array.push_back(number(alpha));
+        member(result,"prefix_first")=std::move(order);
+    }
     member(result, "apply_supported") = boolean(pair.full_item_apply_supported);
     member(result, "cost_complete") = boolean(false);
     member(result, "gold_cost") = Value{}; member(result, "dust_cost") = Value{};

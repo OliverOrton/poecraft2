@@ -9,6 +9,139 @@
 #include <limits>
 
 namespace {
+void run_blocking_witnesses() {
+    using namespace poecraft;
+    using Pools = std::array<std::vector<RecombOccurrence>,2>;
+    const auto ordinary = [](unsigned input,unsigned slot,unsigned key) { return RecombOccurrence{
+        uint8_t(input),uint8_t(slot),key,key,100,{key},false}; };
+    const auto exclusive = [&](unsigned input,unsigned slot,unsigned key) { auto o=ordinary(input,slot,key); o.exclusive=true; return o; };
+    const auto event = [&](const Pools& pools,unsigned first,const std::function<bool(const RecombJointOutcome&)>& accepts) {
+        double mass=0,success=0;
+        for (const auto& o : enumerate_random_recomb_joint(pools,first)) {
+            mass+=o.probability; if (accepts(o)) success+=o.probability;
+            unsigned exclusives=0;
+            for (auto i : o.prefixes.occurrences) exclusives+=pools[0][i].exclusive;
+            for (auto i : o.suffixes.occurrences) exclusives+=pools[1][i].exclusive;
+            PC_CHECK(exclusives<=1);
+        }
+        PC_CHECK(std::abs(mass-1)<1e-10); return success;
+    };
+    Pools pools;
+    pools[0]={ordinary(0,0,10),exclusive(0,1,11),exclusive(0,2,12),exclusive(1,0,13)};
+    const auto retains_p=[](const auto& o) { return std::find(o.prefixes.occurrences.begin(),o.prefixes.occurrences.end(),0)!=o.prefixes.occurrences.end(); };
+    PC_CHECK(std::abs(event(pools,0,retains_p)-.49975)<1e-10); // RB2 pooled count=2, four candidates
+    pools[0]={ordinary(0,0,10),exclusive(1,0,11)};
+    pools[1]={ordinary(0,0,20),exclusive(1,0,21)};
+    const auto both=[&](const auto& o) { return retains_p(o) && std::find(o.suffixes.occurrences.begin(),o.suffixes.occurrences.end(),0)!=o.suffixes.occurrences.end(); };
+    for (unsigned first=0;first<2;++first) PC_CHECK(std::abs(event(pools,first,both)-.55527775)<1e-10); // RB4 counts first
+    pools[0]={ordinary(0,0,10),ordinary(0,1,11),ordinary(0,2,12),exclusive(1,0,13),exclusive(1,1,14),exclusive(1,2,15)};
+    pools[1]={exclusive(0,0,20),exclusive(1,0,21)};
+    const auto triple=[](const auto& o) { return o.prefixes.occurrences==std::vector<unsigned>{0,1,2}; };
+    PC_CHECK(std::abs(event(pools,0,triple)-.015)<1e-10);
+    PC_CHECK(std::abs(event(pools,1,triple)-.18315)<1e-10); // RB5 order-sensitive
+    pools[0]={ordinary(0,0,10),exclusive(1,0,11)}; pools[1].clear();
+    for (unsigned weight : {100u,1000u,10000u}) {
+        pools[0][1].spawn_weight=weight;
+        PC_CHECK(std::abs(event(pools,0,retains_p)-(.333+.667*100/(100.+weight)))<1e-10); // RB6 declared weights
+    }
+    pools[0][1].exclusive=false; pools[0][1].spawn_weight=0;
+    PC_CHECK(std::abs(event(pools,0,retains_p)-1)<1e-10); // RB3 count before carrier filtering
+    pools[0][0].groups.push_back(77); pools[0][1].groups.push_back(77); pools[0][1].spawn_weight=100;
+    PC_CHECK(event(pools,0,[](const auto& o){return o.prefixes.occurrences.size()==2;})==0);
+}
+void run_checked_bridge_witnesses(const poecraft::RecombSolverRequest& original,
+        const poecraft::RecombSolverResult& original_result) {
+    using namespace poecraft;
+    auto economy=std::make_shared<EconomyImpl>();economy->id=original.price_identity;economy->prices={{"annul",2},{"scour",3}};
+    const auto child=[&](const pc_item_state& item,const std::string& operation="") {
+        const auto base=random_recomb_base_state_json(item,*original.session);
+        return "{\"version\":\"v1\",\"name\":\"Checked child\",\"start_node_id\":\"start\",\"base_state\":"+base+
+            ",\"output_contracts\":[{\"id\":\"complete\",\"base_key\":"+
+            std::string("\"")+original.session->data->string_at(original.session->data->base_metadata_path_sid[original.session->base_index])+"\",\"predicate\":{\"type\":\"always\"}}],"
+            "\"nodes\":[{\"id\":\"start\",\"kind\":\"start\"},{\"id\":\"success\",\"kind\":\"terminal\",\"terminal\":\"success\"}"+
+            (operation.empty()?"":",{\"id\":\"action\",\"kind\":\"operation\",\"operation\":{\"type\":\""+operation+"\",\"params\":{}}}")+
+            "],\"edges\":[{\"id\":\"entry\",\"from\":\"start\",\"to\":\""+(operation.empty()?"success":"action")+"\",\"is_default\":true}"+
+            (operation.empty()?"":",{\"id\":\"finish\",\"from\":\"action\",\"to\":\"success\",\"is_default\":true}")+ "]}";
+    };
+    const auto bdoc=child(original.acquisitions[1].item);
+    const auto checked_b=check_recomb_feeder(original.session,"b-child","revision-1",bdoc,"complete",1,economy);
+    PC_CHECK(checked_b->outcomes().size()==1 && checked_b->total_cost()==1 && checked_b->child_actions()==0);
+    PC_CHECK(random_recomb_item_key(checked_b->outcomes()[0].item)==random_recomb_item_key(original.acquisitions[1].item));
+    auto request=original;request.acquisitions[1].source_kind="checked_feeder";request.acquisitions[1].checked_feeder=checked_b;
+    const auto solved=solve_random_recomb_inventory(request);
+    PC_CHECK(std::abs(solved.expected_cost_chaos-original_result.expected_cost_chaos)<1e-8);
+    const auto exported=export_recomb_builder_policy(request,solved);
+    PC_CHECK(std::abs(exported.checked_cost-(1+2/.333))<1e-7);
+    PC_CHECK(std::abs(exported.checked_recombinations-1/.333)<1e-7 && exported.checked_child_actions==0);
+    PC_CHECK(exported.checked_builder_actions>exported.checked_recombinations);
+    const auto parsed=json::Parser(exported.strategy_json.data(),exported.strategy_json.size()).parse();
+    PC_CHECK(!parsed.at("start_item_present").as_bool());
+    for(const auto& n:parsed.at("nodes").array)if(const auto* op=n.find("operation"))if(op->at("type").as_string()=="recombination") {
+        PC_CHECK(op->at("params").at("use_declared_inputs").as_bool());
+        PC_CHECK(op->at("params").at("input_a").as_string()!=op->at("params").at("input_b").as_string());
+    }
+    const auto refusal=[&](const std::function<void()>& work,const char* match) {
+        bool refused=false;try{work();}catch(const std::exception& e){refused=std::string(e.what()).find(match)!=std::string::npos;}
+        PC_CHECK(refused);
+    };
+    refusal([&]{(void)export_recomb_builder_policy(original,original_result);},"Unchecked feeder");
+    auto tampered=exported.strategy_json;
+    const auto flag=tampered.find("\"use_declared_inputs\":true");PC_CHECK(flag!=std::string::npos);
+    if(flag!=std::string::npos){tampered.replace(flag,std::strlen("\"use_declared_inputs\":true"),"\"use_declared_inputs\":false");refusal([&]{(void)check_recomb_builder_policy(request,solved,tampered);},"provider/attempt-price");}
+    auto full=original.acquisitions[2].item;full.prefixes[0].roll_count=1;full.prefixes[0].rolls[0]=123;
+    const auto full_doc=child(full);
+    const auto checked_full=check_recomb_feeder(original.session,"multimod-child","revision-1",full_doc,"complete",20,economy);
+    PC_CHECK(checked_full->outcomes().size()==1 && checked_full->outcomes()[0].item.prefix_count==2 &&
+        checked_full->outcomes()[0].item.prefixes[0].rolls[0]==123);
+    const auto annul_doc=child(full,"annul");
+    const auto checked_annul=check_recomb_feeder(original.session,"annul-child","revision-1",annul_doc,"complete",1,economy);
+    PC_CHECK(checked_annul->outcomes().size()==2 && checked_annul->total_cost()==3 && checked_annul->child_actions()==1);
+    double total=0;bool roll_retained=false;
+    for(const auto& o:checked_annul->outcomes()) {
+        total+=o.probability;PC_CHECK(o.item.prefix_count==1 && o.probability==.5 && o.item.rarity==PC_RARITY_RARE);
+        roll_retained|=o.item.prefixes[0].roll_count==1 && o.item.prefixes[0].rolls[0]==123;
+    }
+    PC_CHECK(std::abs(total-1)<1e-10 && roll_retained && checked_annul->materials().at("annul")==1);
+    auto free_prices=std::make_shared<EconomyImpl>(*economy);free_prices->prices.clear();
+    refusal([&]{(void)check_recomb_feeder(original.session,"annul","r1",annul_doc,"complete",1,free_prices);},"material price");
+    auto bad_doc=annul_doc;auto always=bad_doc.find("\"type\":\"always\"");
+    bad_doc.replace(always,std::strlen("\"type\":\"always\""),"\"type\":\"rarity_is\",\"rarity\":\"magic\"");
+    refusal([&]{(void)check_recomb_feeder(original.session,"annul","r1",bad_doc,"complete",1,economy);},"unaccepted");
+    auto cyclic=bdoc;auto destination=cyclic.find("\"to\":\"success\"");cyclic.replace(destination,std::strlen("\"to\":\"success\""),"\"to\":\"start\"");
+    refusal([&]{(void)check_recomb_feeder(original.session,"cycle","r1",cyclic,"complete",1,economy);},"terminate");
+    refusal([&]{(void)check_recomb_feeder(original.session,"cancel","r1",bdoc,"complete",1,economy,[]{return true;});},"cancelled");
+    auto changed=request;changed.acquisitions[2].source_kind="checked_feeder";
+    changed.acquisitions[2].checked_feeder=check_recomb_feeder(original.session,"b-child","revision-1",full_doc,"complete",20,economy);
+    refusal([&]{(void)solve_random_recomb_inventory(changed);},"conflicting documents");
+    auto partial=request;partial.recombination_cost_chaos.reset();partial.recombination_cost_complete=false;partial.allow_incomplete_costs=true;
+    const auto unpriced=solve_random_recomb_inventory(partial);
+    PC_CHECK(!unpriced.cost_complete && !unpriced.search_converged && unpriced.policy_iterations==0);
+    refusal([&]{(void)export_recomb_builder_policy(partial,unpriced);},"economic status");
+    auto owned=request;owned.initial_items={original.acquisitions[0].item};owned.initial_item_costs={1};
+    const auto owned_solve=solve_random_recomb_inventory(owned);const auto owned_export=export_recomb_builder_policy(owned,owned_solve);
+    PC_CHECK(std::abs(owned_export.checked_cost-(1+2/.333))<1e-7);
+    SimulatorImpl runner;runner.session=request.session;runner.strategy=compile_strategy_json(request.session,exported.strategy_json.data(),exported.strategy_json.size());
+    runner.economy=load_economy_json(exported.economy_json.data(),exported.economy_json.size());prepare_simulator_runtime(runner);
+    SimulationOptionsInternal options{};options.target_runs=1000;options.seed=62667494;options.max_actions_per_run=1000;options.max_graph_steps_per_run=4096;
+    options.retained_success_count=1;options.retained_failure_count=1;options.retained_trace_count=1;options.max_trace_entries=256;
+    run_simulator_chunk(runner,options,1000);
+    PC_CHECK(runner.summary.completed_runs==1000 && runner.summary.success_count==1000 && runner.summary.failure_count==0 && runner.summary.stop_count==0);
+    PC_CHECK(runner.summary.missing_price_run_count==0 && runner.summary.known_total_cost>0);
+    PC_CHECK(!runner.success_examples.empty() && runner.success_examples[0].cost_complete);
+    std::printf("checked Ring Builder seed62667494 runs=%llu success=%llu cost=%.17g actions=%llu\n",
+        (unsigned long long)runner.summary.completed_runs,(unsigned long long)runner.summary.success_count,runner.summary.known_total_cost,(unsigned long long)runner.summary.total_actions);
+    // Cancellation retains the already purchased output before the next acquisition.
+    SimulatorImpl stopped;stopped.session=request.session;stopped.strategy=runner.strategy;stopped.economy=runner.economy;unsigned checks=0;
+    stopped.cancelled=[&]{return ++checks>=5;};prepare_simulator_runtime(stopped);options.target_runs=1;
+    run_simulator_chunk(stopped,options,1);
+    PC_CHECK(stopped.summary.stop_count==1 && stopped.summary.success_count==0 && stopped.summary.known_total_cost==1);
+    PC_CHECK(!stopped.failure_examples.empty() && stopped.failure_examples[0].failure_reason==PC_SIM_FAILURE_CANCELLED);
+    if(!stopped.failure_examples.empty()) {
+        const auto resources=json::Parser(stopped.failure_examples[0].resources_json.data(),stopped.failure_examples[0].resources_json.size()).parse();
+        unsigned live=0;for(const auto& r:resources.array)live+=r.at("item").at("lifecycle").as_number()==PC_ITEM_LIVE;PC_CHECK(live==1);
+    }
+}
+
 void run_constraint_witnesses(pc_data_handle data, pc_session_handle ring) {
     using namespace poecraft;
     const std::pair<const char*,RecombOrigin> fixtures[] = {
@@ -220,6 +353,7 @@ void run_recombination_solver_tests(const char* artifact_dir) {
     pc_session_handle session = nullptr;
     PC_CHECK(pc_session_create(data, &options, &session, &error) == PC_RESULT_OK);
     if (!session) { pc_data_destroy(data); return; }
+    run_blocking_witnesses();
     run_constraint_witnesses(data,session);
     std::vector<unsigned> mods;
     const auto& s = *session->impl;
@@ -274,6 +408,7 @@ void run_recombination_solver_tests(const char* artifact_dir) {
         double row_mass = 0; for (auto [next, p] : decision.outcomes) { PC_CHECK(next < solved.inventories.size() && p > 0); row_mass += p; }
         PC_CHECK(std::abs(row_mass - 1) < 1e-10);
     }
+    run_checked_bridge_witnesses(request,solved);
     auto cheaper_finish = request; cheaper_finish.acquisitions[2].total_cost_chaos = 2;
     const auto finished = solve_random_recomb_inventory(cheaper_finish);
     PC_CHECK(std::abs(finished.expected_cost_chaos - 2) < 1e-9 && finished.expected_recombinations == 0 &&

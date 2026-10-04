@@ -1790,6 +1790,12 @@ pc_result pc_simulator_create(
     return PC_RESULT_OK;
 }
 
+pc_result pc_simulator_set_cancellation_callback(pc_simulator_handle simulator,
+        uint32_t (*cancelled)(void*), void* user, pc_error_info* error) {
+    if (!simulator) { set_error(error,PC_RESULT_INVALID_ARGUMENT,"null simulator"); return PC_RESULT_INVALID_ARGUMENT; }
+    simulator->impl->cancelled = cancelled ? std::function<bool()>([cancelled,user] {return cancelled(user)!=0;}) : std::function<bool()>{};
+    clear_error(error); return PC_RESULT_OK;
+}
 pc_result pc_simulator_run_chunk(
     pc_simulator_handle simulator,
     const pc_simulation_options* options,

@@ -73,6 +73,7 @@ export interface StrategyNode {
 
 export type StrategyCondition = {
     type: string;
+    base_state?: StrategyBaseState;
     conditions?: StrategyCondition[];
     children?: StrategyCondition[];
     group?: string;
@@ -300,6 +301,8 @@ export interface StrategyResource {
     name?: string;
     base_state: StrategyBaseState;
     acquisition_price_key: string;
+    initially_owned?: boolean;
+    initial_cost_chaos?: number;
     feeder?: StrategyFeederReference;
 }
 
@@ -309,6 +312,7 @@ export interface StrategyDocument {
     description: string;
     start_node_id: string;
     base_state: StrategyBaseState;
+    start_item_present?: boolean;
     /** Templates are unavailable until an explicit priced acquire_resource node. */
     resources?: StrategyResource[];
     output_contracts?: StrategyOutputContract[];
@@ -763,13 +767,13 @@ export function operationLabel(
     const params = operation.params ?? {};
     const catalog = context.catalog;
     switch (operation.type) {
-        case "invoke_feeder": return `Run feeder → ${stringParam(params, "resource_id") || "choose slot"}`;
-        case "move_resource": return `Move ${stringParam(params, "from") || "?"} → ${stringParam(params, "to") || "?"}`;
+        case "invoke_feeder": return `Run feeder ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ ${stringParam(params, "resource_id") || "choose slot"}`;
+        case "move_resource": return `Move ${stringParam(params, "from") || "?"} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ ${stringParam(params, "to") || "?"}`;
         case "discard_resource": return `Discard ${stringParam(params, "resource_id") || "choose slot"}`;
         case "acquire_resource": return `Acquire ${stringParam(params, "resource_id") || "donor"}`;
         case "recombination": return "Recombine pair";
         case "restart":
-            return "Restart · fresh base";
+            return "Restart ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· fresh base";
         case "bestiary:imprint":
             return "Create Imprint";
         case "bestiary:restore_imprint":
@@ -819,7 +823,7 @@ export function operationLabel(
             return `Harvest Resistance: ${keyedDisplayName(
                 catalog?.harvestTags,
                 source,
-            )} → ${keyedDisplayName(catalog?.harvestTags, target)}`;
+            )} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ ${keyedDisplayName(catalog?.harvestTags, target)}`;
         }
         case "influence_exalt": {
             const key = stringParam(params, "influence");
@@ -831,7 +835,7 @@ export function operationLabel(
             const tier = Number(params.tier);
             const base = titleCaseKey(operation.type);
             return Number.isFinite(tier) && tier > 0
-                ? `${base} · Tier ${tier}`
+                ? `${base} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· Tier ${tier}`
                 : base;
         }
         default:
@@ -1390,6 +1394,7 @@ function validateCondition(
          * compilation remains its shape and semantic authority.
          */
         "observation_signature",
+        "full_item_is",
         "rarity_is",
         "base_is",
         "open_prefix_count",

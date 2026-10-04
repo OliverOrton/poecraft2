@@ -875,6 +875,7 @@ struct ActionOutcome {
  * removable) the item is left unchanged and outcome.applied is false. Callers
  * that need failed-call atomicity apply to a temporary copy (the C ABI does).
  */
+void validate_action_input_contract(const SessionImpl&,const pc_item_state&,const ActionParameters&);
 ActionOutcome apply_action(
     ActionContextImpl& context,
     pc_item_state* item,
@@ -917,7 +918,8 @@ enum class ConditionKind : std::uint8_t {
       EldritchTier = 15,
       HasUnveilOption = 16,
       ModFamilyCount = 17,
-      ObservationSignature = 18
+      ObservationSignature = 18,
+      FullItemIs = 19
   };
 
 enum class ItemFlagKind : std::uint8_t {
@@ -1000,6 +1002,7 @@ struct CompiledObservationProgram;
 namespace json { struct Value; }
 
 struct CompiledCondition {
+    std::string full_item_key;
     ConditionKind kind = ConditionKind::Always;
     std::uint32_t group_id = std::numeric_limits<std::uint32_t>::max();
     std::uint32_t family_id = std::numeric_limits<std::uint32_t>::max();
@@ -1090,6 +1093,8 @@ struct StrategyNode {
     std::string source_resource_id;
     std::string second_resource_id;
     bool source_only = false;
+    std::optional<double> all_in_attempt_cost;
+    bool use_declared_inputs = false;
     // Item-supply edges bind slots; paid sources are invoked sequentially on demand.
     std::array<std::uint32_t, 2> input_sources{UINT32_MAX, UINT32_MAX};
     std::array<std::string, 2> input_edges;
@@ -1126,6 +1131,8 @@ struct StrategyResourceDefinition {
     std::string feeder_revision;
     std::shared_ptr<const StrategyImpl> feeder;
     StrategyOutputContract output_contract;
+    bool initially_owned = false;
+    double initial_cost = 0;
 };
 
 struct StrategyImpl {
@@ -1134,6 +1141,7 @@ struct StrategyImpl {
     std::string name;
     pc_item_state start_item{};
     std::uint32_t start_node = 0;
+    bool start_item_present = true;
     std::vector<StrategyNode> nodes;
     std::vector<StrategyResourceDefinition> resources;
     std::vector<StrategyOutputContract> output_contracts;
@@ -1222,6 +1230,7 @@ struct SimulationOptionsInternal {
 };
 
 struct SimulatorImpl {
+    std::function<bool()> cancelled;
     std::shared_ptr<const SessionImpl> session;
     std::shared_ptr<const StrategyImpl> strategy;
     std::shared_ptr<const EconomyImpl> economy;

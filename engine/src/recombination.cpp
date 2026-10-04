@@ -2,6 +2,9 @@
 #include "recombination_constraints.hpp"
 #include <algorithm>
 #include <functional>
+#include <cmath>
+#include <tuple>
+#include <sstream>
 #include <map>
 #include <set>
 #include <stdexcept>
@@ -15,9 +18,9 @@ bool conflict(const RecombOccurrence& a, const RecombOccurrence& b) {
     return !recombination_mods_can_coexist(a, a.exclusive ? RecombExclusivity::Exclusive : RecombExclusivity::NonExclusive,
         b, b.exclusive ? RecombExclusivity::Exclusive : RecombExclusivity::NonExclusive);
 }
-void validate_pool(const std::vector<RecombOccurrence>& pool) {
+void validate_pool(const std::vector<RecombOccurrence>& pool, bool blocking = false) {
     require(pool.size() <= 6, "Random recombination side exceeds six physical occurrences");
-    require(std::count_if(pool.begin(), pool.end(), [](const auto& o) { return o.exclusive; }) <= 1,
+    require(blocking || std::count_if(pool.begin(), pool.end(), [](const auto& o) { return o.exclusive; }) <= 1,
             "Multiple-exclusive count law is unresolved; physical padding cannot use the ordinary row");
     std::set<std::pair<unsigned, unsigned>> identities;
     for (const auto& o : pool) {
@@ -92,19 +95,50 @@ void validate_ordinary_input(const CraftResource& resource) {
     check(item.prefixes, item.prefix_count); check(item.suffixes, item.suffix_count);
 }
 void validate_pair_projection(const RandomRecombPair& pair) {
-    require(pair.version == 1 && (pair.model_id == kRandomRecombModel || pair.model_id == kRandomRecombExtendedModel) &&
-            pair.game_odds_estimated && pair.full_item_apply_supported,
+    const bool blocking = pair.model_id == kRandomRecombBlockingModel;
+    require(pair.version == 1 && (blocking || pair.model_id == kRandomRecombModel || pair.model_id == kRandomRecombExtendedModel) &&
+            pair.game_odds_estimated && pair.full_item_apply_supported == !blocking && bool(pair.scenario) == blocking,
             "Unsupported random recombination projection/model version");
+    if (blocking) {
+        require(!pair.scenario->id.empty(), "Blocking analysis requires an explicit scenario identity");
+        for (auto alpha : pair.scenario->prefix_first)
+            require(std::isfinite(alpha) && alpha >= 0 && alpha <= 1,
+                    "Blocking analysis requires explicit carrier-specific first-side probabilities");
+    }
     for (const auto& carrier : pair.carriers) {
         require(carrier.output_session != nullptr, "Random recombination output session is missing");
-        validate_pool(carrier.sides[0]); validate_pool(carrier.sides[1]);
+        validate_pool(carrier.sides[0], blocking); validate_pool(carrier.sides[1], blocking);
         unsigned exclusive = 0;
         for (const auto& side : carrier.sides) for (const auto& mod : side) exclusive += mod.exclusive;
-        require(exclusive <= 1, "Multiple-exclusive joint count/side-order law is unresolved");
+        require(blocking || exclusive <= 1, "Multiple-exclusive joint count/side-order law is unresolved");
         for (const auto& p : carrier.sides[0]) for (const auto& s : carrier.sides[1])
-            require(!conflict(p, s), "Random recombination cross-side group order is unresolved");
+            require(recombination_mods_can_coexist(p, RecombExclusivity::NonExclusive, s, RecombExclusivity::NonExclusive),
+                    "Random recombination cross-side canonical group overlap is held");
     }
 }
+}
+std::string random_recomb_item_key(const pc_item_state& item) {
+    std::ostringstream out;
+    for (auto v : {item.rarity, item.quality, item.memory_strands, item.lifecycle,
+            item.item_flags, item.generic_influence_bits, item.searing_exarch_tier,
+            item.eater_of_worlds_tier, item.socket_count, item.link_mask})
+        out << unsigned(v) << ':';
+    for (unsigned i = 0; i < item.socket_count; ++i) out << unsigned(item.socket_colors[i]) << ':';
+    const auto slots = [&](const pc_mod_slot* values, unsigned count) {
+        out << '/' << count << ':';
+        for (unsigned i = 0; i < count; ++i) {
+            const auto& slot = values[i];
+            out << slot.mod_id << ':' << slot.group_id << ':' << unsigned(slot.flags)
+                << ':' << unsigned(slot.roll_count) << ':';
+            for (unsigned j = 0; j < slot.roll_count; ++j) out << slot.rolls[j] << ':';
+            out << unsigned(slot.veiled_option_count) << ':';
+            for (unsigned j = 0; j < slot.veiled_option_count; ++j) out << slot.veiled_option_mod_ids[j] << ':';
+            out << slot.veiled_chosen_mod_id << ';';
+        }
+    };
+    slots(item.prefixes, item.prefix_count); slots(item.suffixes, item.suffix_count);
+    slots(item.implicits, item.implicit_count); slots(item.enchantments, item.enchantment_count);
+    return out.str();
 }
 const std::array<unsigned, 4>& random_recomb_count_row(unsigned count) {
     static constexpr std::array<std::array<unsigned, 4>, 7> rows{{
@@ -168,7 +202,7 @@ RecombSideOutcome sample_random_recomb_side(Rng& rng, const std::vector<RecombOc
         return result;
     } catch (...) { rng = saved; throw; }
 }
-RandomRecombPair prepare_random_recomb_pair(const CraftResource& a, const CraftResource& b) {
+RandomRecombPair prepare_random_recomb_pair(const CraftResource& a, const CraftResource& b, const RecombScenario* scenario) {
     validate_ordinary_input(a); validate_ordinary_input(b);
     validate_recombination_resource_pair(a,b);
     const auto& da = *a.session->data;
@@ -193,7 +227,11 @@ RandomRecombPair prepare_random_recomb_pair(const CraftResource& a, const CraftR
                 pair.model_id = kRandomRecombExtendedModel;
         }
     }
-    require(exclusive_count <= 1, "Multiple-exclusive joint count/side-order law is unresolved");
+    require(scenario || exclusive_count <= 1, "Multiple-exclusive joint count/side-order law is unresolved");
+    if (scenario) {
+        pair.model_id = kRandomRecombBlockingModel; pair.scenario = *scenario;
+        pair.full_item_apply_supported = false;
+    }
     const auto level = random_recomb_item_level(a.session->item_level, b.session->item_level);
     for (unsigned c = 0; c < 2; ++c) {
         const auto& carrier = pair.inputs[c];
@@ -249,10 +287,67 @@ RandomRecombPair prepare_random_recomb_pair(const CraftResource& a, const CraftR
     validate_pair_projection(pair);
     return pair;
 }
+std::vector<RecombJointOutcome> enumerate_random_recomb_joint(
+        const std::array<std::vector<RecombOccurrence>, 2>& pools, unsigned first_side) {
+    require(first_side < 2, "Invalid first side for blocking analysis");
+    std::array<unsigned,2> effective{};
+    for (unsigned side = 0; side < 2; ++side) {
+        validate_pool(pools[side], true);
+        bool exclusive = false;
+        for (const auto& o : pools[side]) { if (o.exclusive) exclusive = true; else ++effective[side]; }
+        effective[side] += exclusive;
+    }
+    using Key = std::tuple<unsigned,unsigned,std::vector<unsigned>,std::vector<unsigned>>;
+    std::map<Key,double> masses;
+    const auto& pr = random_recomb_count_row(effective[0]);
+    const auto& sr = random_recomb_count_row(effective[1]);
+    for (unsigned p = 0; p < 4; ++p) for (unsigned s = 0; s < 4; ++s) {
+        if (!pr[p] || !sr[s]) continue;
+        const std::array<unsigned,2> requested{p,s};
+        std::function<void(unsigned,std::array<std::vector<unsigned>,2>,double)> visit;
+        visit = [&](unsigned stage, std::array<std::vector<unsigned>,2> selected, double mass) {
+            if (stage == 2) {
+                for (auto& side : selected) std::sort(side.begin(),side.end());
+                masses[{p,s,selected[0],selected[1]}] += mass; return;
+            }
+            const unsigned side = stage == 0 ? first_side : 1-first_side;
+            std::vector<unsigned> available;
+            for (unsigned i = 0; i < pools[side].size(); ++i) {
+                const auto& candidate = pools[side][i]; if (!candidate.spawn_weight) continue;
+                bool blocked = false;
+                for (unsigned d = 0; d < 2; ++d) for (auto chosen : selected[d])
+                    if (conflict(candidate,pools[d][chosen])) blocked = true;
+                if (!blocked) available.push_back(i);
+            }
+            if (selected[side].size() == requested[side] || available.empty()) {
+                visit(stage+1,std::move(selected),mass); return;
+            }
+            const auto total = total_weight(pools[side],available);
+            for (auto i : available) {
+                auto next = selected; next[side].push_back(i);
+                visit(stage,std::move(next),mass * (static_cast<double>(pools[side][i].spawn_weight)/total));
+            }
+        };
+        visit(0,{},(pr[p]/1000.0)*(sr[s]/1000.0));
+    }
+    std::vector<RecombJointOutcome> result;
+    for (const auto& [key,mass] : masses)
+        result.push_back({mass,{0,std::get<0>(key),std::get<2>(key)},{0,std::get<1>(key),std::get<3>(key)}});
+    return result;
+}
 std::vector<RandomRecombOutcome> enumerate_random_recomb_pair(const RandomRecombPair& pair) {
     validate_pair_projection(pair);
     std::vector<RandomRecombOutcome> result;
     for (unsigned c = 0; c < 2; ++c) {
+        if (pair.scenario) {
+            for (unsigned first = 0; first < 2; ++first) {
+                const double weight = first == 0 ? pair.scenario->prefix_first[c] : 1-pair.scenario->prefix_first[c];
+                if (!weight) continue;
+                for (const auto& row : enumerate_random_recomb_joint(pair.carriers[c].sides, first))
+                    result.push_back({.5*weight*row.probability,c,row.prefixes,row.suffixes});
+            }
+            continue;
+        }
         const auto ps = enumerate_random_recomb_side(pair.carriers[c].sides[0]);
         const auto ss = enumerate_random_recomb_side(pair.carriers[c].sides[1]);
         for (const auto& p : ps) for (const auto& s : ss)
@@ -262,6 +357,7 @@ std::vector<RandomRecombOutcome> enumerate_random_recomb_pair(const RandomRecomb
 }
 RandomRecombOutcome sample_random_recomb_selection(Rng& rng, const RandomRecombPair& pair) {
     validate_pair_projection(pair);
+    require(pair.full_item_apply_supported, "Advanced blocking analysis has no approved random Apply law");
     const auto saved = rng;
     try {
         RandomRecombOutcome result; result.carrier = static_cast<unsigned>(rng.next_below(2));
@@ -300,6 +396,8 @@ pc_item_state materialize_random_recomb_outcome(const RandomRecombPair& pair,
             else item.suffixes[item.suffix_count++] = slot;
         }
     };
+    for (auto p : outcome.prefixes.occurrences) for (auto s : outcome.suffixes.occurrences)
+        require(!conflict(carrier.sides[0].at(p),carrier.sides[1].at(s)), "Global recombination output conflict");
     add(0, outcome.prefixes); add(1, outcome.suffixes);
     return item;
 }

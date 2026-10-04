@@ -424,6 +424,11 @@ CompiledCondition compile_condition(
 
     const DataImpl& data = *session.data;
     CompiledCondition out;
+    if (type == "full_item_is") {
+        out.kind = ConditionKind::FullItemIs;
+        out.full_item_key = random_recomb_item_key(parse_start_item(session,require_object_member(value,"base_state",Type::Object)));
+        return out;
+    }
     if (type == "base_is") {
         const auto key = string_member(value, "base_key");
         if (!data.base_by_path.count(key)) invalid("base_is requires a known base_key");
@@ -988,6 +993,7 @@ std::size_t condition_hash(const CompiledCondition& condition) {
     combine(observation.count_observation_count);
     combine_mod_values(
         observation.count_observation_membership_by_mod);
+    combine(std::hash<std::string>{}(condition.full_item_key));
     combine(condition.children.size());
     for (const CompiledCondition& child : condition.children) {
         combine(condition_hash(child));
@@ -999,7 +1005,7 @@ bool condition_equal(
     const CompiledCondition& left,
     const CompiledCondition& right) {
     if (left.kind != right.kind || left.group_id != right.group_id ||
-        left.family_id != right.family_id ||
+        left.family_id != right.family_id || left.full_item_key != right.full_item_key ||
         left.required_flags != right.required_flags ||
         left.item_flag != right.item_flag ||
         left.eldritch_side != right.eldritch_side ||
@@ -1580,6 +1586,12 @@ void compile_operation(
         node.second_resource_id = string_member(params, "input_b");
         node.resource_id = string_member(params, "output");
         node.action_type = kStrategyRecombinationOperation;
+        node.use_declared_inputs=bool_member(params,"use_declared_inputs",false);
+        if (const auto* cost=params.find("all_in_attempt_cost_chaos")) {
+            if (cost->type!=Type::Number || !std::isfinite(cost->number) || cost->number<0)
+                invalid("Recombination all-in scenario cost must be finite and nonnegative");
+            node.all_in_attempt_cost=cost->number;
+        }
         if (node.resource_id.empty() || node.resource_id == "current")
             invalid("Recombination requires a named output slot preserving the actual native output session");
         return;
@@ -2002,6 +2014,8 @@ bool evaluate_condition_impl(
     switch (condition.kind) {
     case ConditionKind::Always:
         return true;
+    case ConditionKind::FullItemIs:
+        return random_recomb_item_key(item) == condition.full_item_key;
     case ConditionKind::HasModGroup:
         return has_group(
             session, item, condition.group_id, condition.min_value,
@@ -2469,7 +2483,8 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace,
     std::string current_identity = "current/1";
     for (const auto& definition : strategy.resources) {
         auto item = definition.item;
-        item.lifecycle = PC_ITEM_CONSUMED; // A template is not a free available donor.
+        item.lifecycle = definition.initially_owned ? PC_ITEM_LIVE : PC_ITEM_CONSUMED;
+        if (definition.initially_owned) result.known_cost += definition.initial_cost;
         inventory.push_back({definition.id, "donor", definition.session, item});
     }
     const auto inventory_json = [&]() {
@@ -2525,10 +2540,13 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace,
 
     while (true) {
         const StrategyNode& node = strategy.nodes[node_index];
+        if (simulator.cancelled && simulator.cancelled()) {
+            finish_failure(PC_SIM_FAILURE_CANCELLED,node,"Execution cancelled; paid resources retained",PC_TERMINAL_STOP);break;
+        }
         if (node.action_type == kStrategyRecombinationOperation && !inputs_ready) {
             if (graph_steps >= max_steps) { finish_failure(PC_SIM_FAILURE_STEP_LIMIT, node, ""); break; }
             // Unknown station costs prevent a cost-capped request before buying dependencies.
-            if (options.max_cost_per_run > 0.0) {
+            if (options.max_cost_per_run > 0.0 && !node.all_in_attempt_cost) {
                 result.cost_complete = false; run_missing_price = true;
                 ++simulator.summary.missing_price_action_count;
                 for (const auto& key : simulator.node_missing_price_keys[node_index]) ++simulator.missing_prices[key];
@@ -2591,7 +2609,7 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace,
             const std::vector<std::string>& missing_keys =
                 simulator.node_missing_price_keys[node_index];
 
-            if ((!price_known || (simulator.economy == nullptr && !node.price_keys.empty())) && options.max_cost_per_run > 0.0) {
+            if ((!price_known || (simulator.economy == nullptr && !node.price_keys.empty() && !node.all_in_attempt_cost)) && options.max_cost_per_run > 0.0) {
                 for (const auto& price_key : missing_keys) {
                     ++simulator.missing_prices[price_key];
                 }
@@ -2602,7 +2620,7 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace,
                 finish_failure(PC_SIM_FAILURE_MISSING_PRICE, node, "");
                 break;
             }
-            if (price_known && simulator.economy != nullptr &&
+            if (price_known && (simulator.economy != nullptr || node.all_in_attempt_cost) &&
                 options.max_cost_per_run > 0.0 &&
                 cost_offset + result.known_cost + price > options.max_cost_per_run) {
                 finish_failure(PC_SIM_FAILURE_COST_LIMIT, node, "");
@@ -2660,7 +2678,7 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace,
                     bestiary_state.checkpoint_active = false;
                 }
             } else if (node.action_type == kStrategyRecombinationOperation) {
-                const auto a_id = node.input_edges[0].empty() && !incoming_item.empty() ? incoming_item : node.source_resource_id;
+                const auto a_id = !node.use_declared_inputs && node.input_edges[0].empty() && !incoming_item.empty() ? incoming_item : node.source_resource_id;
                 const auto b_id = node.second_resource_id;
                 const auto input = [&](const std::string& id) {
                     return id == "current" ? CraftResource{current_identity, "", strategy.session, result.item} : inventory.at(slot_index(id));
@@ -2678,6 +2696,10 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace,
                     auto inputs = std::vector<CraftResource>{a, b};
                     simulator.context->session = a.session;
                     const auto identity = "recomb/" + node.id + "/" + std::to_string(output_generation + 1);
+                    if (simulator.cancelled && simulator.cancelled()) {
+                        simulator.context->session=session_before;
+                        finish_failure(PC_SIM_FAILURE_CANCELLED,node,"Execution cancelled before atomic pair commit",PC_TERMINAL_STOP);break;
+                    }
                     (void)apply_random_recomb_transaction(*simulator.context, inputs, pair, identity);
                     auto next_inventory = inventory;
                     auto next_current = result.item;
@@ -2688,7 +2710,7 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace,
                     const auto& output = inputs.back();
                     next_inventory.at(output_index) = output;
                     const unsigned carrier = output.session == pair.carriers[0].output_session ? 0 : 1;
-                    const auto receipt = "{\"model_id\":" + quote_json(kRandomRecombModel) +
+                    const auto receipt = "{\"model_id\":" + quote_json(pair.model_id) +
                         ",\"carrier\":" + std::to_string(carrier) + ",\"input_a\":" + quote_json(a.identity) +
                         ",\"input_b\":" + quote_json(b.identity) + ",\"output_identity\":" + quote_json(identity) +
                         ",\"gold_cost_complete\":false,\"dust_cost_complete\":false,\"game_odds_estimated\":true}";
@@ -2729,6 +2751,7 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace,
                     if (!simulator.economy) ++simulator.missing_prices[found->acquisition_price_key];
                 }
                 SimulatorImpl child;
+                child.cancelled=simulator.cancelled;
                 child.session = found->session;
                 child.strategy = found->feeder;
                 child.economy = simulator.economy;
@@ -2799,7 +2822,8 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace,
                     ",\"output_accepted\":" + (accepted ? "true" : "false") + "}";
                 if (!accepted) {
                     finish_failure(child_result.failure_reason == PC_SIM_FAILURE_NONE ? PC_SIM_FAILURE_ACTION_NOT_APPLIED : child_result.failure_reason,
-                        node, child_result.terminal_kind == PC_TERMINAL_SUCCESS ? "Feeder success terminal did not satisfy the actual output contract" : "Feeder child: " + child_result.detail);
+                        node, child_result.terminal_kind == PC_TERMINAL_SUCCESS ? "Feeder success terminal did not satisfy the actual output contract" : "Feeder child: " + child_result.detail,
+                        child_result.failure_reason==PC_SIM_FAILURE_CANCELLED ? PC_TERMINAL_STOP : PC_TERMINAL_FAILURE);
                     break;
                 }
                 outcome.applied = true;
@@ -2896,7 +2920,7 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace,
                 else if (node.action_type != kStrategyRecombinationOperation && node.action_type != kStrategyMoveResourceOperation)
                     active_output.clear(); // Ordinary crafting observes the fixed root item.
                 ++simulator.applied_action_counts[node_index];
-                if (price_known && simulator.economy != nullptr) {
+                if (price_known && (simulator.economy != nullptr || node.all_in_attempt_cost)) {
                     result.known_cost += price;
                     ++simulator.summary.costed_action_count;
                 } else if (simulator.economy != nullptr || !node.price_keys.empty() || node.action_type == kStrategyRecombinationOperation) {
@@ -3029,6 +3053,8 @@ std::shared_ptr<StrategyImpl> compile_strategy_json(
     strategy->start_item = parse_start_item(
         *strategy->session,
         require_object_member(root, "base_state", Type::Object));
+    strategy->start_item_present=bool_member(root,"start_item_present",true);
+    if (!strategy->start_item_present) strategy->start_item.lifecycle=PC_ITEM_CONSUMED;
 
     if (const auto* contracts = root.find("output_contracts")) {
         if (contracts->type != Type::Array || contracts->array.size() > 32)
@@ -3102,6 +3128,13 @@ std::shared_ptr<StrategyImpl> compile_strategy_json(
                 resource.output_contract = *contract;
                 // The pinned child's starting state owns the paid acquisition.
                 resource.item = resource.feeder->start_item;
+            }
+            resource.initially_owned=bool_member(value,"initially_owned",false);
+            if (resource.initially_owned) {
+                const auto* cost=value.find("initial_cost_chaos");
+                if (!cost || cost->type!=Type::Number || !std::isfinite(cost->number) || cost->number<0 || resource.feeder)
+                    invalid("Owned inventory requires a finite explicit paid/sunk entry cost and no feeder template");
+                resource.initial_cost=cost->number;
             }
             strategy->resources.push_back(std::move(resource));
         }
@@ -3395,6 +3428,10 @@ void prepare_simulator_runtime(SimulatorImpl& simulator) {
         simulator.node_prices_known[i] = 0;
         simulator.node_prices[i] = 0.0;
         simulator.node_missing_price_keys[i] = {"recombination:gold", "recombination:dust"};
+        if (simulator.strategy->nodes[i].all_in_attempt_cost) {
+            simulator.node_prices[i]=*simulator.strategy->nodes[i].all_in_attempt_cost;
+            simulator.node_prices_known[i]=true; simulator.node_missing_price_keys[i].clear();
+        }
     }
     simulator.condition_cache_generation.assign(
         simulator.strategy->condition_memo_slots, 0);

@@ -1137,6 +1137,13 @@ EvalModel derive_model(
     std::vector<ObservationRequirement>& node_observations,
     StrategyEvalResult::ObservationPropagationTelemetry* observation_telemetry,
     MemoryCheck&& check_memory) {
+    const std::function<bool(const CompiledCondition&)> has_full_item = [&](const CompiledCondition& condition) {
+        return condition.kind==ConditionKind::FullItemIs ||
+            std::any_of(condition.children.begin(),condition.children.end(),has_full_item);
+    };
+    if (!strategy.start_item_present || std::any_of(strategy.nodes.begin(),strategy.nodes.end(),[&](const auto& node) {
+        return std::any_of(node.edges.begin(),node.edges.end(),[&](const auto& edge){return has_full_item(edge.condition);});
+    })) throw std::invalid_argument("Full-item inventory routing requires the restricted checked recombination language; general authored exact evaluation is held");
     if (!strategy.resources.empty() || std::any_of(strategy.nodes.begin(), strategy.nodes.end(), [](const auto& node) {
         return node.action_type == kStrategyInvokeFeederOperation || node.action_type == kStrategyMoveResourceOperation ||
                node.action_type == kStrategyDiscardResourceOperation || node.action_type == kStrategyRecombinationOperation;

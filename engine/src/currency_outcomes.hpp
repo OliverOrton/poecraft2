@@ -17,6 +17,12 @@ inline bool cluster_currency_qualified(ActionType type) {
     }
 }
 
+// Full represented removal laws share the sampled native legality/transformations.
+// No abstract materialization or output conditioning; recorded rolls survive.
+ActionOutcome visit_full_item_removal_outcomes(ActionContextImpl&,
+    const pc_item_state&, const ActionParameters&,
+    const std::function<void(const pc_item_state&, long double)>&);
+
 // Concrete cluster outcomes rebuild the native pool after every draw; only
 // completed outcomes may be projected into Calculator terminal observations.
 ActionOutcome visit_cluster_currency_outcomes(ActionContextImpl&,
