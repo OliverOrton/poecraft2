@@ -15,7 +15,12 @@ throws on a reference terminal; six remaining stages are UNRUN. Source-only
 repair now records adjacent native operation/terminal dispositions while
 retaining strict P0 and historical plain-fill assertions. [R1 receipt](docs/active/2026-10-04-sol61-armour-recovery/final-fill-r1-summary.json)
 retains the failure; LOCAL released11:39:36UTC with no survivors. Revised test
-source needs fresh finite execution after parent slot reassignment.
+source needs fresh finite execution after parent slot reassignment. R2 renewed
+LOCAL/P0 pass; direct plain-fill assertion fails748/1 because one-target history
+uses Chaos/temporary blocker/offpolicy. [R2 receipt](docs/active/2026-10-04-sol61-armour-recovery/final-fill-r2-summary.json)
+retains findings. Corrected witness inspects only existing positive native Exalt
+exits for adjacent two-target plain fill, preserving strict assertions under the
+explicit coherent fixture-repair grant; later gates remain UNRUN.
 [Bounded request](docs/active/2026-10-04-sol61-armour-recovery/final-fill-finite-request.json)
 pins source/inputs; independent review3b45b7c8 retained; LOCAL released after R1
 fixture stop and needs parent reassignment. No new full Conquest run, cap increase or production activation.

@@ -5260,6 +5260,44 @@ void run_solver_partial_held_witness_tests(const char* artifact_dir) {
             mass += exit.probability;
         }
         PC_CHECK(std::abs(mass-1) <= 1e-12);
+        // R2 established that the one-target frame uses a temporary blocker,
+        // not plain Exalt. Inspect only the already enumerated positive native
+        // exits: these adjacent two-target carriers have one slot left and
+        // cannot add that blocker before a fill. Keep the strict plain-word
+        // assertion, without assuming it applies to the one-target carrier.
+        unsigned plain_two_target_exits = 0;
+        for (const auto& exit : word.entries) {
+            if (!(exit.probability > 0) || calc.is_goal_state(calc.state(exit.state))) continue;
+            pc_item_state adjacent; PC_CHECK(calc.materialize(exit.state,adjacent));
+            const auto old_next = first_paid(*historical,adjacent,true);
+            if (historical->nodes[old_next].kind != StrategyNodeKind::Operation ||
+                historical->nodes[old_next].action.type != ActionType::Exalt) continue;
+            ++plain_two_target_exits;
+            ++historical_plain_fill_frames;
+            PC_CHECK(final_ordering_mass*exit.probability > 0);
+            const auto next_word = execute_attempt(calc,{ordinary},exit.state);
+            PC_CHECK(next_word.supported && next_word.fully_legal &&
+                next_word.expected_primitive_actions == 1 &&
+                next_word.expected_resources == aggregate_resources(registry,{ordinary}));
+            double next_mass = 0;
+            for (const auto& next : next_word.entries) {
+                PC_CHECK(next.probability > 0 && (satisfied_goal_mask(calc.state(next.state)) & 15) == 15);
+                PC_CHECK(calc.state(next.state).prefix_count == 3 && calc.state(next.state).suffix_count == 3);
+                next_mass += next.probability;
+            }
+            PC_CHECK(std::abs(next_mass-1) <= 1e-12);
+            if (plain_two_target_exits == 1) {
+                const auto new_next = first_paid(*current,adjacent,true);
+                std::printf("adjacent two-target native plain-fill witness: tiers=%u,%u original_root_primitive_path_mass=%.17g historical=%s current=%s key=",
+                    adjacent.searing_exarch_tier,adjacent.eater_of_worlds_tier,
+                    final_ordering_mass*exit.probability,historical->nodes[old_next].id.c_str(),current->nodes[new_next].id.c_str());
+                for (const auto value : exact_item_state_key(adjacent))
+                    std::printf("%016llx,",static_cast<unsigned long long>(value));
+                std::printf("\n");
+            }
+        }
+        std::printf("adjacent two-target plain-fill projection: tiers=%u,%u native_positive_exits=%zu historical_plain_exits=%u none_dropped\n",
+            frame.searing_exarch_tier,frame.eater_of_worlds_tier,word.entries.size(),plain_two_target_exits);
         std::printf("three held native witness: root_ordering_mass=%.17g tiers=%u,%u historical=%s/kind%u/action%d/terminal%d current=%s/kind%u/action%d/terminal%d plain_exalt_exits=%zu mass=%.17g\n",
             final_ordering_mass,frame.searing_exarch_tier,frame.eater_of_worlds_tier,
             historical->nodes[historical_node].id.c_str(),static_cast<unsigned>(historical->nodes[historical_node].kind),

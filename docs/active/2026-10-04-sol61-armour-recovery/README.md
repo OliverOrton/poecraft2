@@ -728,3 +728,31 @@ to16b0cf11; test translation unit must rebuild for the changed diagnostic.
 Retain R1 failure, reuse compatible evidence, and do not repeat unchanged or
 increase budgets. No full Conquest evaluation, production observer switch,
 early checker release or complete aggregate peak claim occurs.
+
+## Final-fill R2: strict P0 passes; historical first word is blocked, not plain
+
+Parent renewed LOCAL atd748e8aff791b1b6d68a4e6dbfa63428a01435bd and explicitly
+allowed straightforward fixture corrections within the bounded grant. [R2
+receipt](final-fill-r2-summary.json):build passes22.556s; native selector748checks,
+1failure in.616s. P0 strictly passes historicals3/currentc5 with33 exits and
+mass1.0000000000000002. The new four-affix three-held/PDR carrier has positive
+original Chaos ordering5.3568735870151188e-9. Its native ordinary Exalt word has
+72positive exits and mass.99999999999999944, preserving all incoming four goals.
+History first routes Chaos at0,0; at1,0 routes temporary blocker s886 (Bench
+JunMaster2StrengthAndDexterity2 -> Exalt); at1,2 routes offpolicy failure. Current
+routesc5 Chaos for each. The historical_plain_fill_frames>0 assertion fails.
+All six later stages remain UNRUN; no survivors; terminal LOCAL receipt11:50:05UTC.
+
+This disproves direct historical plain-word equality on the ONE-target carrier.
+It does not establish a crafting-law mismatch or qualify the new candidate.
+The bounded fixture correction inspects only the72 already-enumerated positive
+Exalt exits in each of the three frames. They are adjacent TWO-target carriers
+with one slot left; the existing temporary blocker cannot occupy that slot and
+then fill. The strict historical plain-fill assertion remains, as do strict P0,
+complete native mass/resources/progress preservation and positive original-root
+primitive-path witnesses. Retain operation/terminal dispositions; no imported
+policy or native production route changes. If none of this bounded adjacent set
+has a historical plain word, stop and report the unsupported cut rather than
+searching a wider carrier family or weakening the assertion. Full original-root
+and every-positive-entry qualification of the generated Conquest policy is still
+UNRUN; construction-only is the only Conquest stage in this batch.
