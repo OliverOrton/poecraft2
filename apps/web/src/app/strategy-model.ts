@@ -823,7 +823,7 @@ export function operationLabel(
             return `Harvest Resistance: ${keyedDisplayName(
                 catalog?.harvestTags,
                 source,
-            )} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ ${keyedDisplayName(catalog?.harvestTags, target)}`;
+            )} \u2192 ${keyedDisplayName(catalog?.harvestTags, target)}`;
         }
         case "influence_exalt": {
             const key = stringParam(params, "influence");

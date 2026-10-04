@@ -155,3 +155,22 @@ actual total cleanup is reported rather than asserted to be5s.
 The next parent-coordinated batch should regenerate source-matched metadata,
 resume full npm, then Vite/package/rendered. TypeScript/focused evidence can be
 reused for unchanged source trees. No automatic rerun or main publication.
+
+## Continued gate failures and label repair
+
+At d9ffc956, metadata passed and full npm reached25 completed test files,
+including matching WASM planner/ownership/export and Ring1000/1000. It then
+failed on missing pinned headless-browser executable. The existing Chrome
+fixture option corrected that prerequisite; its test and four subsequent
+files passed. Strategy-model then caught the inherited Harvest Resistance
+label mojibake. Exact worktree bytes match committed source; the fixture
+already expects U+2192. Only the display string is repaired using an ASCII
+Unicode escape; action mapping, mechanics, scope, prices and assertion stay
+unchanged. Failed receipts remain at gate-d9ffc956-r2/r3. Both batches exited
+without timeout/cleanup error/survivor.
+
+The continuation regenerates source-matched metadata, reruns TypeScript and
+starts at the failed strategy-model file. Earlier native captures keep their
+actual d9ffc956 metadata; native source/WASM/requests/tests are unchanged by
+this label edit. Mixed-carrier capture/rendered comparison will use the repaired
+product metadata. No repeated Ring simulation is required for this label edit.
