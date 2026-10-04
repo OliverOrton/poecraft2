@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import hashlib
 import json
 import math
+import ntpath
 import os
 from pathlib import Path
 import platform
@@ -666,6 +667,15 @@ def terminate_verified_process_identity(pid: int, token: str) -> bool:
     return process_identity_token(pid) != token
 
 
+def _owned_console_host(member: Mapping[str, Any], system_console_image: str) -> bool:
+    """Recognize the OS console image only after verified job membership."""
+    image = member.get("image")
+    return bool(member.get("owned_job_member") is True and isinstance(image, str)
+                and ntpath.isabs(image)
+                and ntpath.normcase(ntpath.normpath(image)) ==
+                    ntpath.normcase(ntpath.normpath(system_console_image)))
+
+
 class _WindowsProcessJob:
     """Own descendants from a suspended launch, including after parent exit.
 
@@ -678,7 +688,15 @@ class _WindowsProcessJob:
         from ctypes import wintypes
         self.ctypes = ctypes
         self.last_live_processes = []
+        self.last_terminated_processes = []
         self.kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+        self.kernel.GetSystemDirectoryW.argtypes = [wintypes.LPWSTR, wintypes.UINT]
+        self.kernel.GetSystemDirectoryW.restype = wintypes.UINT
+        directory = ctypes.create_unicode_buffer(32768)
+        length = self.kernel.GetSystemDirectoryW(directory, len(directory))
+        if not length or length >= len(directory):
+            raise ctypes.WinError(ctypes.get_last_error())
+        self.system_console_image = ntpath.join(directory.value, "conhost.exe")
         handles = {"CreateJobObjectW": ([ctypes.c_void_p, wintypes.LPCWSTR], wintypes.HANDLE),
                    "SetInformationJobObject": ([wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD], wintypes.BOOL),
                    "AssignProcessToJobObject": ([wintypes.HANDLE, wintypes.HANDLE], wintypes.BOOL),
@@ -808,6 +826,8 @@ class _WindowsProcessJob:
                             observed.append({"pid": int(pid), "exit_signal": "live",
                                              "image": image.value if image_ok else None,
                                              "owned_job_member": True})
+                            observed[-1]["platform_console_host"] = _owned_console_host(
+                                observed[-1], self.system_console_image)
                             handles.append(handle)
                             handle = None
                         elif state != 0:  # WAIT_OBJECT_0: proved exited
@@ -835,6 +855,7 @@ class _WindowsProcessJob:
         # Job accounting reaching zero alone does not establish signaled exit.
         # Retain handles across termination and wait within the cleanup bound.
         handles = self._live_process_handles()
+        self.last_terminated_processes = list(self.last_live_processes)
         deadline = time.monotonic() + 5.0
         try:
             if not self.kernel.TerminateJobObject(self.handle, 1):
@@ -890,6 +911,7 @@ def run_isolated_process(
     process_job = None
     descendants_after_parent_exit = False
     descendant_observations = []
+    console_host_cleanup_performed = False
     timed_out = canceled = drain_timed_out = False
     cleanup_error = None
     cancellation_mode = None
@@ -912,6 +934,27 @@ def run_isolated_process(
             drain_timed_out = True
             partial = exc.output or ""
             output = partial.decode("utf-8", errors="replace") if isinstance(partial, bytes) else partial
+
+    def clean_post_parent_members() -> None:
+        nonlocal descendants_after_parent_exit, console_host_cleanup_performed
+        members = getattr(process_job, "last_live_processes", [])
+        # CREATE_NO_WINDOW allocates a hidden Windows console. Its verified OS
+        # host can outlive client exit briefly; it is still owned and cleaned.
+        console_only = bool(members) and all(member.get("platform_console_host") is True
+                                           for member in members)
+        descendants_after_parent_exit |= not console_only
+        console_host_cleanup_performed |= console_only
+        descendant_observations.append({
+            "parent_pid": process.pid, "parent_exit_code": process.returncode,
+            "live_owned_processes": members,
+            "disposition": "owned_platform_console_cleanup" if console_only else "unexpected_descendant_lifetime",
+        })
+        force_cleanup()  # All job members must prove exited; none is ignored.
+        terminated = getattr(process_job, "last_terminated_processes", [])
+        if any(member.get("platform_console_host") is not True for member in terminated):
+            descendants_after_parent_exit = True
+            descendant_observations[-1]["disposition"] = "unexpected_descendant_lifetime"
+            descendant_observations[-1]["termination_members"] = terminated
 
     try:
         process = subprocess.Popen(
@@ -966,19 +1009,13 @@ def run_isolated_process(
                 break
             except subprocess.TimeoutExpired:
                 if process_job is not None and process.poll() is not None and process_job.active_processes():
-                    descendants_after_parent_exit = True
-                    descendant_observations.append({"parent_pid": process.pid, "parent_exit_code": process.returncode,
-                                                   "live_owned_processes": getattr(process_job, "last_live_processes", [])})
-                    force_cleanup()
+                    clean_post_parent_members()
                     break
                 continue
         if process.poll() is None:
             force_cleanup()
         if process_job is not None and process.poll() is not None and process_job.active_processes():
-            descendants_after_parent_exit = True
-            descendant_observations.append({"parent_pid": process.pid, "parent_exit_code": process.returncode,
-                                           "live_owned_processes": getattr(process_job, "last_live_processes", [])})
-            force_cleanup()
+            clean_post_parent_members()
     except BaseException:
         # Callback and observer errors must also terminate the owned process.
         if process is not None:
@@ -1010,6 +1047,7 @@ def run_isolated_process(
         "parent_survivor": parent_survivor,
         "descendants_after_parent_exit": descendants_after_parent_exit,
         "descendant_observations": descendant_observations,
+        "console_host_cleanup_performed": console_host_cleanup_performed,
         "process_tree_owner": "windows_job" if process_job is not None else "process_group",
         "cleanup_drain_timed_out": drain_timed_out,
         "cleanup_error": cleanup_error,

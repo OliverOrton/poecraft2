@@ -1,0 +1,42 @@
+{
+  "canceled": false,
+  "cancellation_ack_ms": null,
+  "cancellation_mode": null,
+  "cleanup_drain_timed_out": false,
+  "cleanup_error": null,
+  "descendant_observations": [
+    {
+      "live_owned_processes": [
+        {
+          "exit_signal": "live",
+          "image": "C:\\Windows\\System32\\conhost.exe",
+          "owned_job_member": true,
+          "pid": 18420
+        }
+      ],
+      "parent_exit_code": 1,
+      "parent_pid": 38004
+    }
+  ],
+  "descendants_after_parent_exit": true,
+  "exit_code": 1,
+  "failed_tests": 5,
+  "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2-ci-supervision-20261004\\out\\sol61-ci-supervision\\process-identity-r1\\pytest.log",
+  "parent_survivor": false,
+  "passed_tests": 7,
+  "process_id": 38004,
+  "process_identity_token": "38004:134355682988466334",
+  "process_tree_owner": "windows_job",
+  "purpose": "12 focused owned-process identity checks; classification unchanged",
+  "qualification": "Identity diagnostic only; source remains unqualified",
+  "source": "61c38e753d7a06c3953a6d12586d5dcef4b6d081",
+  "survivor": false,
+  "survivor_check": "owned_windows_job_drained",
+  "targets": [
+    "test_solver_worker_cleanup.py",
+    "test_solver_lab_supervisor.py::test_actual_crash_and_synthetic_os_oom_remain_distinct",
+    "test_solver_lab_supervisor.py::test_actual_subprocess_cancel_escalates_and_leaves_no_survivor"
+  ],
+  "timed_out": false,
+  "wall_ms": 2618.151099886745
+}

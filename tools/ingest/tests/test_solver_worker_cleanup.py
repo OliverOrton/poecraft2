@@ -120,3 +120,16 @@ def test_plain_exit_does_not_invent_a_descendant_lifetime(tmp_path, exit_code, s
     assert result["exit_code"] == exit_code, result
     assert not result["survivor"] and not result["descendants_after_parent_exit"], result
     assert "plain exit" in result["output"], result
+
+
+@pytest.mark.parametrize("member, expected", [
+    ({"image": r"C:\Windows\System32\conhost.exe", "owned_job_member": True}, True),
+    ({"image": r"c:\WINDOWS\SYSTEM32\CONHOST.EXE", "owned_job_member": True}, True),
+    ({"image": r"C:\Temp\conhost.exe", "owned_job_member": True}, False),
+    ({"image": r"C:\Windows\System32\python.exe", "owned_job_member": True}, False),
+    ({"image": r"C:\Windows\System32\conhost.exe", "owned_job_member": False}, False),
+    ({"image": "conhost.exe", "owned_job_member": True}, False),
+    ({"image": None, "owned_job_member": True}, False),
+])
+def test_console_role_requires_verified_membership_and_the_os_system_image(member, expected):
+    assert worker._owned_console_host(member, r"C:\Windows\System32\conhost.exe") is expected

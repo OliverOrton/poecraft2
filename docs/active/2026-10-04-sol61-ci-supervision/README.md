@@ -88,3 +88,24 @@ actual parent-exit observation and preserves all membership, cleanup and survivo
 checks. Paired0/7 exit codes and streamed/piped transports expose the distinction.
 No failure-kind precedence is changed to obtain a pass. A focused recheck is
 required; the original hosted scheduler cause remains independently open.
+
+Identity probe at61c38e75:7 passed,5 failed in2.08s (outer2.62s), no timeout
+or survivor. Four plain0/7 piped/streamed controls and the existing crash case
+failed; real grandchild and cancellation negatives passed. The outer observation
+identifies a live owned C:\Windows\System32\conhost.exe after client exit.
+The hidden console created by CREATE_NO_WINDOW remains an owned platform helper.
+
+Pending correction recognizes that helper only through verified job membership
+and exact image identity against GetSystemDirectoryW, then terminates the job
+and proves exit on all retained handles under the existing5s cleanup bound.
+It retains actual parent exit status and records console cleanup separately.
+Other or unknown live images retain descendant-lifetime failure; the cleanup-time
+member snapshot catches newly observed application descendants. No live process
+is omitted from ownership, termination or exit proof. Seven identity negatives
+include a temporary conhost basename, wrong image, missing image and unowned host.
+
+Next causal batch:19 narrow lifecycle checks, then the existing seven-file163-test
+focused regression only if the narrow check passes with no survivor or unexpected
+descendant. Bounds120s and300s, serial; no build or solve. All earlier failures
+remain retained. This console evidence concerns the new worker owner, not the
+original hosted5s scheduler-condition failure.
