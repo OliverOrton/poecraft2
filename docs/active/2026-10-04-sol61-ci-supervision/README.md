@@ -101,7 +101,7 @@ and proves exit on all retained handles under the existing5s cleanup bound.
 It retains actual parent exit status and records console cleanup separately.
 Other or unknown live images retain descendant-lifetime failure; the cleanup-time
 member snapshot catches newly observed application descendants. No live process
-is omitted from ownership, termination or exit proof. Seven identity negatives
+is omitted from ownership, termination or exit proof. Seven identity controls
 include a temporary conhost basename, wrong image, missing image and unowned host.
 
 Next causal batch:19 narrow lifecycle checks, then the existing seven-file163-test
@@ -109,3 +109,25 @@ focused regression only if the narrow check passes with no survivor or unexpecte
 descendant. Bounds120s and300s, serial; no build or solve. All earlier failures
 remain retained. This console evidence concerns the new worker owner, not the
 original hosted5s scheduler-condition failure.
+
+## CI/worker slice qualified for branch-only hosted validation
+
+At17a150d96c75ca79fc75e39fec4ed020179796c2,19/19 narrow controls pass in1.96s
+(outer2.57s), then163/163 focused Python tests pass in38.57s (outer39.26s).
+Both stages prove console cleanup with no timeout, cleanup error, unexpected
+descendant or survivor. Qualification covers the selected Python supervisor,
+worker, stage/reporter contracts, corpus finalization and unattended lifecycle.
+PowerShell source syntax also parses. Actual hosted preparation/Python/native/web
+stages, CMake target limits and product-quality smokes remain unrun for this slice.
+
+The unbuilt native missing-candidate and sentinel-negative fixture is preserved
+separately as out/sol61-ci-supervision/deferred-native-witness/native-witness.patch
+with its original source copy and SHA receipt; git apply --check succeeds.
+It is excluded from the publication tree. Release-verifier source remains only
+an ignored draft under out/sol61-ci-supervision/release-source-draft/. No production
+engine, WASM, web source, canonical data, economy, or benchmark inputs changed.
+
+Branch-only publication is authorized to exercise the actual staged workflow.
+Its remote result is pending, supplies no new economic/optimality qualification,
+and does not close the original hosted scheduler timing cause. No main merge,
+deployment, local bundle generation or restart is part of this publication.

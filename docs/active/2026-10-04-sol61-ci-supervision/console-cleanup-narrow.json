@@ -1,0 +1,45 @@
+{
+  "canceled": false,
+  "cancellation_ack_ms": null,
+  "cancellation_mode": null,
+  "cleanup_drain_timed_out": false,
+  "cleanup_error": null,
+  "console_host_cleanup_performed": true,
+  "descendant_observations": [
+    {
+      "disposition": "owned_platform_console_cleanup",
+      "live_owned_processes": [
+        {
+          "exit_signal": "live",
+          "image": "C:\\Windows\\System32\\conhost.exe",
+          "owned_job_member": true,
+          "pid": 47980,
+          "platform_console_host": true
+        }
+      ],
+      "parent_exit_code": 0,
+      "parent_pid": 66696
+    }
+  ],
+  "descendants_after_parent_exit": false,
+  "exit_code": 0,
+  "expected_tests": 19,
+  "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2-ci-supervision-20261004\\out\\sol61-ci-supervision\\console-cleanup-qualification\\narrow.log",
+  "parent_survivor": false,
+  "passed_tests": 19,
+  "phase": "narrow",
+  "process_id": 66696,
+  "process_identity_token": "66696:134355696324734474",
+  "process_tree_owner": "windows_job",
+  "purpose": "Verified console shutdown with all-owned exit proof",
+  "source": "17a150d96c75ca79fc75e39fec4ed020179796c2",
+  "survivor": false,
+  "survivor_check": "owned_windows_job_drained",
+  "targets": [
+    "test_solver_worker_cleanup.py",
+    "test_solver_lab_supervisor.py::test_actual_crash_and_synthetic_os_oom_remain_distinct",
+    "test_solver_lab_supervisor.py::test_actual_subprocess_cancel_escalates_and_leaves_no_survivor"
+  ],
+  "timed_out": false,
+  "wall_ms": 2572.430399945006
+}
