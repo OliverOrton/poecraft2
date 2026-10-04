@@ -1,18 +1,21 @@
-# Armour recovery: persistent native blocker correction ready (2026-10-04)
+# Armour recovery: bounded native route gate completed (2026-10-04)
 
-Isolated dot/sol61-armour-recovery-20261004 retains e669ddd7 R7:1588 finite
-checks, six scoped checked roots/724 positive entries, no survivors. Benchmark
-namespace compile failure and original Conquest unrun are preserved. Independent
-159b8039/R5 blocks generic qualification: retained junk may permanently block a
-target goal. New default-off source checks ALL target goals after clearing their
-side and sends persistent obstruction to original paid Chaos acquisition;
-removable blockers still use paid Eldritch Chaos. Four-stage tier bounds and
-strict original-root/entry authorities remain. Both-orientation native negative
-and eight corrected roots are prepared. Parent renewed LOCAL for the declared
-[persistent finite gate](docs/active/2026-10-04-sol61-armour-recovery/persistent-blocker-finite-request.json).
-The [living record](docs/active/2026-10-04-sol61-armour-recovery/README.md) owns
-arguments/receipts. No public activation, ownership fix, frozen data edit, deploy
-or dev restart. Whole Conquest/economic/consumer/control/WASM gates stay open.
+Isolated dot/sol61-armour-recovery-20261004 source1cc4f8ff completed R8:5944
+finite checks, eight accepted synthetic roots/878 positive entries. Fresh
+retained-side-blocker old route leaves84.0% unresolved; bounded ALL-target
+compatibility guard pays original Chaos and completes both orientations with
+all77 entries each. Prior six results unchanged. Actual frozen Conquest ordinary
+native construction now produces partial-held Ember1+EldritchExalt at the P0
+carrier (102nodes/20programmes,33wordexits). No graph import or public activation.
+[Finite receipt](docs/active/2026-10-04-sol61-armour-recovery/finite-r8-summary.json)
+and [Conquest receipt](docs/active/2026-10-04-sol61-armour-recovery/conquest-construction-r8-summary.json)
+pin source/binaries/full graph/inputs. R7 benchmark failure stays preserved.
+LOCAL released2026-10-04T09:57:34UTC, no survivors; queued CI may run.
+[living record](docs/active/2026-10-04-sol61-armour-recovery/README.md) owns the
+argument and all failures. Whole Conquest root/entry/economic, accounting/lifetime,
+Current/Finder activation, final controls and WASM remain held/unrun. No deploy,
+dev restart, frozen data change or main publication. Next bounded work needs
+parent scheduling; no new heavy batch has launched.
 
 # Qualified solver CI repair (2026-10-03)
 

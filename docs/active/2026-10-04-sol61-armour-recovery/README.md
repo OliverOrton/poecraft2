@@ -377,3 +377,52 @@ all positive entries/native projection, legacy growth, benchmark build, then
 the frozen original Conquest construction-only witness. Parent renewed LOCAL
 for this coherent repair. Root/entry/economic Conquest qualification, final
 controls, WASM and consumer ownership/accounting remain separate open gates.
+
+## R8 completed: causal negative, bounded correction and native Conquest route
+
+Source1cc4f8ffa48d2bfdb2f99116120300a9455e2905 completed the declared serial
+batch at2026-10-04T09:57:34UTC. LOCAL released immediately; every supervised
+owned process gone, no watchdog/cancellation, all seven stages passed.
+[Finite receipt](finite-r8-summary.json):5944 checks (151 preserved rejection,
+322 retained-obstruction rejection,5387 corrected recovery,84 legacy growth).
+Tests binary88ddd8e09e1cb1ddfe91fb5bccf2ff0faf63164296683f852e79b2ae209b6fdf.
+
+The fresh persistent witness has full native original-root carrier probability
+0.018899252609993832, one-ordering probability0.00018729344839751061. Its
+retained modifier7 blocks target goal0 even after clearing the entire target
+side. With only the new escape disabled, the prior missing-goal guard pays
+Eldritch Chaos but both root evaluations leave0.84001882298508312 unresolved,
+and actual census refuses14 entries. This confirms the independent source cut
+natively; it does not grant a programme or complete-census certificate.
+
+With the compatibility escape enabled, both persistent fixtures route directly
+to requested paid Chaos (100 synthetic chaos, full native mass within1e-12),
+then independently accept the complete original-root graph and all77 positive
+entries each. Their fully paid costs1058.41163574/1058.40531371 expose the
+expense of discarding progress. All eight roots validate878 positive entries;
+full-goal-after-clear compiler projections match native pools for every positive
+entry on all four private stages. Prior six costs/entry counts are unchanged.
+These are finite scoped semantic gates, not general performance or economy claims.
+
+[Frozen Conquest receipt](conquest-construction-r8-summary.json) confirms the
+original desired construction cut without importing either reference policy:
+goal-mask9 carrier is positively reachable by native Chaos, generated singleton
+held-mask8 routes c21 to Ember1 plus Eldritch Exalt. The two-action paid word has
+33 exits, total mass1.0000000000000002 and preserves held progress. Generated
+controller has102 nodes/20 programmes; generation spent233575 shared logical
+work. Positive ordering2.4457291281364614e-9 matches P0. Complete graph bytes and
+SHA-256, carrier/occurrence keys, immutable inputs and source/binary pins are
+retained. Benchmark binaryaf8f0738bed1b2873e04046c19ef41a7b0cbf20c23c06a48a240acafa9a75c38.
+Conservative reserved memory283828260 includes201589248 transient reservation;
+this is neither audited peak memory nor measured release savings.
+
+The first implementation deliverable is now met: ordinary bounded native
+construction produces the partial-held carrier recovery decision and the
+identified synthetic obstructions have paid, completely checked escapes.
+Conquest whole-root evaluation, every positive policy entry, retained checked
+cost against85970.67347138176, Current/Finder public integration, shared-owner
+accounting/lifetime, final control cohort and matching WASM remain UNRUN.
+Generic and public qualification is held until these respective gates pass.
+Prior R4/R5/R7 and query-checkpoint failures remain recorded, with no green rerun
+attributed to identical failed premises. Parent can give queued CI its LOCAL slot;
+this programme has no running process or new heavy batch launched.
