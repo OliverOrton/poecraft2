@@ -1,19 +1,19 @@
 {
   "schema": "sol61_armour_finite_request_v1",
-  "status": "SOURCE READY; requesting parent LOCAL grant after UI gate",
-  "basis_commit": "bd3c5b3c1b54805d9469c41f75f2befa5cccb430",
+  "status": "RENEWED LOCAL; precise compile fixture repair; same bounded finite gate",
+  "basis_commit": "7cd2a5d8a0914e55ffe25b84e15e573f6bea8e2a",
   "source_files_sha256": {
     "engine/src/solver_selective_completion.hpp": "c35661b9449eb8caf6d6272a05aa78718fe282d457caefeea931cb3bc5c25c78",
     "engine/src/solver_selective_completion.cpp": "74cb6f0391d1426cf9a832bb8863f1008e1bd49fe3861e972ac3bd5bb2184e65",
     "engine/src/solver_development_checkpoint.cpp": "5fbd67b5f1f285f96c741a6713ec8292757b47371c52d7791724475e6dfd12a0",
     "engine/tests/test_main.cpp": "5b7aeb7960961be15a130468a79de1c50bfb8f96b062467b7b2a9800546dfd1d",
-    "engine/tests/test_solver_compile.cpp": "a40d98645f50d5c8f18a0881f6ba0385192508a16db756b90ce6d8b36d1c62b0",
+    "engine/tests/test_solver_compile.cpp": "9368287b324c899e373f38a2b0a79f374e9de7ef073cd354b46dfe7a5f6b9c6f",
     "engine/tests/test_solver_metamod_recovery.cpp": "5cae556520d62df2d52076e60178006b7398c6e4099cb844495b18cc92f7d9ce",
     "engine/tests/tests.hpp": "5cbf8b6c24dac9a828399ef1e83c62ada645b8b9a790d8a656ff6d3723a5671f"
   },
   "purpose": "Build default-off recovery; prove requested compound blocker native root reachability and fail-safe rejection; qualify four positive private native/root/entry witnesses and preserve legacy growth.",
   "slots": {
-    "local_slot": "parent controlled; currently ungranted",
+    "local_slot": "renewed explicit parent grant after finite-r4 compile failure",
     "compiler_jobs": 2,
     "native_stages": "serial"
   },
@@ -129,5 +129,12 @@
     "authority": "No synthetic complete certificate; use actual root evaluator census. A root resource/identity/unsupported failure is not a passing rejection witness.",
     "fixture_prerequisite": "restore independent natural junk suffix9 and disable its veiled placeholder role in this in-memory fixture only",
     "runtime_status": "UNRUN"
+  },
+  "recoverable_compile_failure": {
+    "source": "7cd2a5d8a0914e55ffe25b84e15e573f6bea8e2a",
+    "receipt": "out/sol61-armour/finite-r4/completion.json",
+    "error": "test_solver_compile.cpp:5379 passed state ID where temporary_followup_eligible_mask requires const pc_item_state&",
+    "repair": "pass exact carrier item; all other new helper calls checked against declarations; native source objects had compiled successfully",
+    "authorization": "parent renewed LOCAL; correct straightforward compile/fixture contract errors within the same gate, stop semantic contradictions/redesign"
   }
 }

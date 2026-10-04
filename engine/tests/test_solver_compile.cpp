@@ -5376,7 +5376,7 @@ void run_solver_partial_held_recovery_tests(const bool compound_blocker_only) {
             PC_CHECK(std::isfinite(compound_root_mass) && compound_root_mass > 0);
             PC_CHECK(compound_root_mass + 1e-12 >= ordering_mass);
             const auto eligible = calc.temporary_followup_eligible_mask(
-                carrier_state,registry.index_by_id.at("exalt"));
+                carrier,registry.index_by_id.at("exalt"));
             std::uint32_t rollable_missing = 0;
             for (unsigned slot = 0; slot < goal.slots.size(); ++slot)
                 if (goal_slot_side(*session,goal.slots[slot]) == PC_SIDE_PREFIX &&

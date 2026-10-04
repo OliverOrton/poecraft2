@@ -214,3 +214,19 @@ unrun on the new source. Finder attempt compatibility, finite every-entry/root
 acceptance, historical economic recovery, timed matched cohorts and WASM remain
 unqualified. CI/integrator owns final regression, integration and publication.
 No push, deployment, dev restart, canonical data edit or public proposal activation.
+
+## Finite-r4 compile refusal and bounded continuation
+
+At source7cd2a5d the two-job build stopped after182.516s. All native source
+objects compiled; the new compound-blocker fixture passed carrier_state to
+temporary_followup_eligible_mask, whose declaration takes const pc_item_state&.
+The exact carrier item now replaces that ID. Reviewed the other new compiler,
+preparation, native-word, validator, pool/outcome and admission helper signatures
+against their declarations; no further signature mismatch was found.
+
+The immutable out/sol61-armour/finite-r4 build log, receipt and completion retain
+exit1, no timeout/cancellation, PID28144 gone, and all three native stages unrun.
+Parent renewed LOCAL for the same600s build/180s serial native gate, maxJobs2,
+and authorized straightforward compile/fixture corrections within scope. Stop
+on semantic contradiction, identity/resource disagreement or production redesign.
+No unrelated accounting repair, query/checkpoint run or policy activation added.

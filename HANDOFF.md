@@ -1,15 +1,14 @@
-# Armour recovery: private compound-blocker gate ready (2026-10-04)
+# Armour recovery: finite gate resumed after fixture compile repair (2026-10-04)
 
-Isolated dot/sol61-armour-recovery-20261004 retains bd3c5b3's default-off bounded
-composition. Source-only compound-blocker selector now checks native root Chaos
-reachability of prefixes3/2,suffixes5/7,anchor5 with modifier2 groups10/13,
-then absence of rollable missing prefix goals and root/entry rejection. Its
-synthetic fixture restores independent ordinary junk suffix9 for the native
-three-affix Annul proposal. These tests are unbuilt/unrun; production is unchanged.
-The [living record](docs/active/2026-10-04-sol61-armour-recovery/README.md) preserves
-witness293 and all three prior failed checkpoint receipts. Next LOCAL request:
-two-job build, compound rejection, four positive private fixtures, legacy growth.
-Optional checkpoint commands are excluded. No processes/survivors or publication.
+Isolated dot/sol61-armour-recovery-20261004 retains default-off composition.
+Finite-r4 at7cd2a5d failed only the new test call type; source objects compiled,
+all native selectors stayed unrun, and PID28144 is gone. Exact carrier now
+replaces state ID in native eligibility helper; other new signatures checked.
+Parent renewed LOCAL for same bounded two-job build and serial compound-blocker,
+private positive fixtures, legacy growth gate. Prior receipt is immutable.
+The [living record](docs/active/2026-10-04-sol61-armour-recovery/README.md) retains
+witness293, failed checkpoint history and source scope. No accounting fix, query
+repeat, public activation, publication or WASM qualification.
 
 # Qualified solver CI repair (2026-10-03)
 
