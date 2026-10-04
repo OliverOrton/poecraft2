@@ -422,3 +422,7 @@ four focused selectors and affected Python tests on frozen runtime82fb60a2. Keep
 all internal caps/tolerances and deterministic cleanup; no timed research run is
 needed. Release the parent slot immediately after the batch. Do not publish this
 draft as tested or transfer either component's historical receipts to it.
+
+Presentation migration can proceed against the [stable source interface handoff](ui-interface-handoff.md).
+It records connector geometry, authored-template wording and native trace provenance;
+execution adapters and the queued qualification gate remain with this owner.
