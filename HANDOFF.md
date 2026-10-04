@@ -1,3 +1,16 @@
+# Combined recombination/Builder source checkpoint (2026-10-04)
+
+Isolated `dot/sol61-recomb-builder-20261004`, source `9736e766`, combines main
+29d9e666, Recomb1aac44c1 and Builder7d60c969. Native v3 scenarios, checked removal
+children and restricted export/check are SOURCE-ONLY / UNBUILT / UNQUALIFIED.
+The [living record](docs/active/2026-10-03-recombination-solver/README.md#combined-sol-61-source-checkpoint-2026-10-04)
+and its compact source receipt own prepared tests, exact pins and held adapters.
+Parent LOCAL is requested, not granted; no heavy command/process or slot is held.
+Next: source-matched two-job native/DLL/header build and focused native/Python gate,
+including the prepared original Ring export and 1,000-trial witness. Matching
+WASM/worker exposure follows qualification. No main merge/push/deploy/data refresh
+or dev-server action; UI owner retains styling. Historical receipts stay separate.
+
 # Qualified solver CI repair (2026-10-03)
 
 Source `e6f2b8bc` and rebuilt WASM `9d65393c` repair completed no-action
@@ -178,7 +191,7 @@ Oliver resumed this selected repair and explicitly approved normal main delivery
 of tested overnight changes at 04:12:22 UTC. Isolated
 `dot/local-native-repair-20261002` repair source `652c1fab`, qualified checkpoint
 `057b5325`, has 158,188 solver / 1,087 S8 / 63 selective-cap passing checks and
-matching WASM `472f644b…`; real worker filters and TypeScript pass. Bounded artifact
+matching WASM `472f644bâ€¦`; real worker filters and TypeScript pass. Bounded artifact
 retention supplies no exact/statewise authority; publication-loss negative control
 still passes. No owned heavy process remains; the serial slot is released.
 The [living integration record](docs/active/2026-10-02-sprint-integration/README.md)
@@ -282,7 +295,7 @@ No newer feature branch is imported and no complete Fossil support is claimed.
 The existing integration plus `8ef8a67` Fracture side repair is frozen at source
 `fcf361f` for Oliver-approved normal main delivery, independent of the five new
 feature branches. The [v4 integration receipt](docs/active/2026-10-02-sprint-integration/qualification.json)
-pins matching WASM `6fb7e9c9â€¦`, engine tree `3afab9efâ€¦`, 1,147,897 passing native
+pins matching WASM `6fb7e9c9Ã¢â‚¬Â¦`, engine tree `3afab9efÃ¢â‚¬Â¦`, 1,147,897 passing native
 checks, 29 Python tests, four worker filters and TypeScript. Existing web/ingest
 checks are compatible. Separate f08facbb broader-selector failures remain failed;
 no assertion was weakened. The native publication invariant refuses that failed
@@ -414,7 +427,7 @@ All 6 native+2 worker slots spent, no retry or process remains. Real MM W1 repla
 and ungated Foulborn worker replay remain unrun. Main/root `0`, original data/
 runtime/prices, push and deployment are untouched. No next programme is selected.
 
-Oliver's selected [MM0â€“MM7 recovery](docs/active/2026-09-29-metamod-recovery/README.md)
+Oliver's selected [MM0Ã¢â‚¬â€œMM7 recovery](docs/active/2026-09-29-metamod-recovery/README.md)
 is locally retained with partial acceptance. Last coherent execution commit:
 `b6c8c4bdfb0d9663ce2db768fa081d31cceaccde`; this handoff update is documentation
 only. The living record and `qualification.json` own source/build identities,
@@ -447,7 +460,7 @@ run `36631500946` is retained for rollback. Work stayed sequential on `main`,
 preserving root `0`; no strategy or mechanics hold was expanded. Rendered design
 acceptance remains Oliver's.
 
-Previous release: Oliver's unified Input â†’ Goal Calculator and item editing follow-up
+Previous release: Oliver's unified Input Ã¢â€ â€™ Goal Calculator and item editing follow-up
 is live as Beta `1d1fe26c`, source `a468feb`. The
 [joint item-goal record](docs/active/2026-09-28-currency-expansion/README.md#joint-item-goal-calculator-follow-up-2026-09-29)
 owns scope and validation; its [hosted receipt](docs/active/2026-09-28-currency-expansion/hosted-item-goals-2026-09-29.json)

@@ -102,8 +102,9 @@ The source is unqualified until the programme receipt says otherwise. No Builder
 adapter, WASM export or public product activation is implied by this native API.
 ## Pending sensitivity contract: no default first-side probability
 
-This is an unimplemented, unapproved analysis contract. Neither v1/v2 nor the C ABI
-accepts an ambiguity set. The earlier suggested 10% first-side value is withdrawn as
+Oliver approved the sensitivity-first estimated v3 scope on October 4. The isolated
+combined source now implements explicitly named point scenarios; it is unbuilt and
+unqualified. Neither v1/v2 nor the C ABI accepts a robust ambiguity set. The earlier suggested 10% first-side value is withdrawn as
 a default: observations do not establish it. Count normalization, count/selection
 stage, taxonomy and missing-weight policies remain separately identified assumptions.
 The current source/qualification receipt owns their pending approval.
@@ -197,3 +198,38 @@ silently select 10%, 50%, an adversarial endpoint or an average. Existing v1/v2 
 and recorded receipt replay remain the declared authorized model. No new selected-mod
 mode, broader solver admission, frontend mechanics or experiment supervisor follows.
 This mathematical contract is source-only and does not grant heavy work or activation.
+
+## Draft checked single-item feeder and Builder bridge
+
+The isolated combined source adds a checked acquisition law for successful
+single-current-item children using the shared native full-item Annul, Scour and
+crafted-removal kernels. Full outputs, rolls, flags and all positive mass remain
+represented. Native routers, fixed-policy properness, complete paid start/action
+costs and exact embedded document/revision are checked. Initial random unveil
+materialization, nested inventory and failed-child recovery refuse. A caller's
+completed-feeder quote still proves none of these properties.
+
+The restricted exporter names physical slots, represents owned inputs and their
+explicit paid/sunk entry cost, and creates no free Start item. It emits acquisitions
+only where the evaluated policy requests them. Its checker reconstructs compiled
+control/resource transitions and compares cost, attempts, discards, child actions
+and per-source acquisitions through the existing numerical equations. Explicit
+`use_declared_inputs` prevents a control-carried B output from overriding the
+retained A binding. Full-item routing has its own native predicate and remains
+refused by the general authored exact evaluator.
+
+An explicit all-in attempt scenario price can be settled once at execution; it
+does not supply native gold/dust quantities. Checked child execution pays actual
+start/actions, without also charging its expected quotation. Optional incomplete
+cost reporting constructs a proper feasible resource policy and reports known
+partial cost/counters without priced optimization, a complete total or export.
+Advanced v3 stays analysis-only. Named independently optimized scenario values
+are not the evaluation of one fixed policy or robust retry-cost bounds.
+
+The versioned C API binds full request/result records, exact documents, prices,
+outputs, initial ownership, limits and checker identities. Cancellation callbacks
+interrupt native discovery/work and Simulator source/child/pair boundaries; pair
+commit stays atomic and paid resources are retained. Matching browser/WASM routing
+is held until source-matched finite qualification, including real interruption.
+This draft is not product activation or qualification. The programme source
+checkpoint records the original Ring witness and every unrun/held stage.

@@ -1,0 +1,100 @@
+{
+  "status": "SOURCE_ONLY_UNBUILT_UNQUALIFIED",
+  "programme": "combined estimated recombination and checked bounded Builder export",
+  "source_commit": "9736e766de959070b0c89fcb71281438ebd6f64c",
+  "engine_tree": "149bbc4ce0a555435d358d2f52a4c83f06d18166",
+  "web_source_tree": "68f0d291b3861695ff00e9690afd73fa438c5c8b",
+  "branch": "dot/sol61-recomb-builder-20261004",
+  "worktree": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-recomb-builder-20261004",
+  "main_base": "29d9e666b9d11dbe9ba58959f2598df9495dc49d",
+  "components": {
+    "recombination": "1aac44c1ddfa4aa0ea861383b0168268259f0b76",
+    "builder": "7d60c969382ef2087c3a816fcf554c550ba1aee0"
+  },
+  "merge_commits": [
+    "b171dea8",
+    "28d002e09a285758935d5d2bef995ad3ed6d21f9"
+  ],
+  "merge_resolution": "Only HANDOFF and historical WASM conflicted. Retained main HANDOFF and main WASM; native solver repairs unchanged.",
+  "implemented_as_source": [
+    "Known Python fracture-refusal assertion repair with refusal and input preservation retained",
+    "Analysis-only v3 pooled exclusive counts, both counts before global blocking, explicit carrier/order scenarios, positive proxies only",
+    "Checked successful single-item child laws through shared native Annul/Scour/remove-crafted kernels; complete terminal items, paid start/actions, termination and revision checks",
+    "Two-slot native planner acquisition distributions and explicit incomplete-cost feasible reports without priced optimization/export",
+    "Restricted native Builder export and independent full-item/control policy evaluation; named physical slots, no free Start, explicit owned-root costs, no fresh-pair restart substitution",
+    "Explicit declared all-in attempt scenario costs and native cancellation before sources, within children and before atomic pair commit",
+    "General authored exact evaluator guard retained and extended to refuse full-item routing outside the restricted checker"
+  ],
+  "prepared_witnesses": [
+    "RB2 .49975, RB3 counts-before-filter, RB4 .55527775, RB5 .015/.18315, RB6 named toy weights, secondary-group/global exclusivity and mass",
+    "Ring1 ilvl80 original fixture prices: 1+2/.333 expected cost, 1/.333 attempts, 1+1/.333 acquisitions through checked native export",
+    "Full-item multimod/roll preservation and complete two-output Annul child; failed/unaccepted terminals, missing prices, cycles, cancellation and conflicting revisions refuse",
+    "Owned-root accounting and native cancellation preserving settled costs/resources",
+    "1000 native compiled Builder trials at seed62667494 (NOT RUN)"
+  ],
+  "completed_checks": [
+    "Scoped git diff --check"
+  ],
+  "unrun": [
+    "native build",
+    "native header/DLL checks",
+    "all new finite tests",
+    "1000 new Builder trials",
+    "focused Python checks",
+    "web tests",
+    "TypeScript",
+    "matching WASM",
+    "actual worker route",
+    "rendered review"
+  ],
+  "not_implemented_or_held": [
+    "Matching WASM/worker/planner exposure pending native dependency qualification; no cosmetic browser cancellation",
+    "Same-policy cross-scenario comparison API; currently only individually declared native point scenarios",
+    "Closed bench recipe numerical admission and zero-proxy special weights; no guessed weights",
+    "Broad failed-child/nested inventory recovery",
+    "Advanced random Apply, bare split and unsupported output categories",
+    "Robust repeated-policy cost bounds or synthesis"
+  ],
+  "local_slot": {
+    "granted": false,
+    "heavy_commands_started": 0,
+    "owned_processes": [],
+    "status": "No owned heavy process or compiler job; no slot held"
+  },
+  "next_batch": {
+    "purpose": "Source-matched native dependency and restricted export correctness gate before further adapters",
+    "compiler_jobs": 2,
+    "build_owner": "scripts/dev-engine.ps1 -Task Tests / -Task Engine -Jobs 2",
+    "native_selectors": [
+      "--random-recombination-only",
+      "--recombination-solver-only",
+      "--strategy-recombination-only",
+      "--strategy-feeder-only"
+    ],
+    "python": "focused random recombination and strategy feeder tests against new isolated DLL",
+    "artifact": "data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "requirements": [
+      "Parent LOCAL grant",
+      "Frozen native hash and interpreter/DLL preflight",
+      "Deterministic bounded/blocking execution through existing supervision",
+      "Retain failures; stop on unresolved contract/identity/mass/cap failure",
+      "Release LOCAL immediately; report owned process cleanup"
+    ],
+    "timed_research_runs": 0,
+    "internal_limits": {
+      "item_specs": 64,
+      "inventory_states": 256,
+      "catalogue": 32,
+      "policy_iterations": 32,
+      "work": 20000000
+    },
+    "unchanged_tolerances": {
+      "pair_mass": 1e-10,
+      "pivot": 1e-13,
+      "nonnegative_allowance": -1e-08,
+      "residual": "1e-8*max(1,V)",
+      "policy_improvement": "1e-10*max(1,V)"
+    }
+  },
+  "publication": "No main merge, push, deployment, data refresh or dev-server action. Do not integrate as qualified."
+}

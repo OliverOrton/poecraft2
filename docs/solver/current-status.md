@@ -1,6 +1,6 @@
 # Solver current status
 
-**Reviewed capability snapshot — qualification remains scoped to its receipts.**
+**Reviewed capability snapshot â€” qualification remains scoped to its receipts.**
 Reviewed code: `ae24e0bb8797fb953cb8b9eb5c8ef040fbba203c`.
 The later [IC native follow-up](../active/2026-09-27-current-incumbent-continuity/README.md#continued-native-repair)
 changes initial renewal checking, one-affix selective cleanup and private-service
@@ -24,6 +24,14 @@ Default native proposals use existing strategy vocabulary; protected Scour stays
 private and Current's producer default is unchanged. Real-data economics and
 WASM/worker acceptance remain unqualified; no exact checker quotient is retained
 at the grammar checkpoint.
+
+## Combined recombination/Builder draft (2026-10-04)
+
+The isolated [combined source checkpoint](../active/2026-10-03-recombination-solver/README.md#combined-sol-61-source-checkpoint-2026-10-04)
+drafts explicit estimated v3 scenarios, successful full-item checked removal
+children and restricted native policy export/check. It is UNBUILT / UNQUALIFIED;
+component receipts do not qualify it. Native/worker/WASM acceptance remains held.
+Current/Finder and general exact inventory evaluation gain no new authority.
 
 ## Authored feeder qualification (2026-10-03)
 
@@ -323,7 +331,7 @@ savings nor refute all heterogeneous-role strategies. Ring capacity trials did
 more work without improving the selected ordinary policy. The aggregate
 [research dispositions](research.md) link their originals.
 
-The 24-run P0–P9 allowance is exhausted. A new session does not renew it.
+The 24-run P0â€“P9 allowance is exhausted. A new session does not renew it.
 Detailed unresolved claims remain in [research](research.md#open-obligations)
 and the claim histories, not in a growing duplicate list here.
 

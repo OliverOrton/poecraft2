@@ -379,3 +379,46 @@ A few exploratory query column names were corrected against the actual schema;
 these were source inspection errors, not test receipts. Source-only whitespace check
 passes. Every new DLL/header/Python/WASM/web/TypeScript qualification remains unrun.
 No LOCAL lease has been used, no compiled artifact replaced, no merge/push/deployment.
+
+## Combined Sol 6.1 source checkpoint (2026-10-04)
+
+Oliver approved sensitivity-first estimated v3 and successful checked single-item
+feeder/export work. The new isolated `dot/sol61-recomb-builder-20261004` starts
+from main `29d9e666`, merges recombination `1aac44c1` and Builder `7d60c969`, and
+retains main's solver repairs and WASM pending a matching rebuild. Only HANDOFF
+and the old WASM conflicted. Protected `0`, the normal checkout and other
+worktrees were not inspected or changed. No subagents, deploy or data refresh.
+
+Source `9736e766` is **UNBUILT / UNQUALIFIED**. The [source checkpoint](sol61-combined-source-checkpoint.json)
+records exact source trees, implemented source, prepared witnesses and held work.
+Its native v3 count-first joint law retains physical candidates, canonical/global
+blocking and explicit order scenarios. No default order chance or zero-proxy
+weight is introduced; advanced Apply and bare split stay held.
+
+The first checked child language uses full native Annul, Scour and crafted-removal
+outputs, native routers and successful single-current-item termination. It binds
+exact embedded document/revision, complete output law, paid start and action costs.
+No initial random unveil offers, nested inventory or failed-child recovery is
+claimed. General authored exact evaluation still refuses inventory/full-item
+routing. Unchecked feeder quotes remain hypothetical.
+
+Restricted export reconstructs the compiled graph independently, preserving live
+slot multiplicity and original owned-input costs. Explicit declared slot use
+avoids A's incoming-control override; continuation acquires only the missing item.
+The original Ring1/80 `1+2/.333` witness and 1,000 trials at seed62667494 are
+**prepared, not run**. Explicit all-in scenario attempt prices are separate from
+unknown physical gold/dust quantities. An opt-in incomplete-cost report returns a
+proper feasible resource policy without priced improvement/ranking or export.
+
+Native cancellation now has callbacks at source/child/commit boundaries. Browser
+exposure remains held: no merely cosmetic Cancel route has been shipped. Matching
+WASM, actual-worker tests and UI adapter delivery follow the finite native gate.
+The new UI owner retains visual tokens, typography and shared styling; this task
+changes only behavior/opaque model contracts.
+
+LOCAL is not granted. No heavy command or owned compiler/solver process has started.
+The next batch is the existing two-job native Tests/Engine build, header/DLL smoke,
+four focused selectors and affected Python tests on frozen runtime82fb60a2. Keep
+all internal caps/tolerances and deterministic cleanup; no timed research run is
+needed. Release the parent slot immediately after the batch. Do not publish this
+draft as tested or transfer either component's historical receipts to it.
