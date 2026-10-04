@@ -557,3 +557,23 @@ is prepared to run before the next full build to establish fixture preconditions
 then build once and run the positive direct check before the larger planner gate.
 Both modes are unrun while UI/core own LOCAL. The living checkpoint records the
 bounded causal order, unchanged main-envelope limits and smaller ownership case.
+
+
+## Fresh-session matching gate and guard fixture correction (2026-10-04)
+
+At source75bea4df, the pinned old-artifact negative control passed, then the
+two-job matching build passed in388.75s with2.94GB peak job memory. Its WASM is
+50c98f555d4ef9f6786c9a5fcfd138442a5d01ae1b3759b09712dbae059cdd9c;
+MJS remains8ec20cf7c0f86cbad4c5d0638e0733da3110610cf02091c0807d4b87186d2b97.
+Direct repeated-call/paid ownership now passes. A reported executor disconnect
+was reconciled against the existing session/process identities; no build relaunch.
+
+The larger planner reached the general evaluator refusal, then its old error-text
+assertion failed before sampled trials. Native returned the correct restricted
+full-item routing guard rather than the legacy generic inventory guard. The
+fixture now checks EngineError/code1 and the exact current refusal, retaining
+physical input preservation. No production code/artifact or guard changed.
+This failure remains in
+out/strategy-feeder/sol61-transport-fresh-session-20261004/planner-ring-worker.json.
+The causal test-only retry and remaining targeted checks are pending while LOCAL
+is still held; no rebuilt artifact is qualified for integration yet.

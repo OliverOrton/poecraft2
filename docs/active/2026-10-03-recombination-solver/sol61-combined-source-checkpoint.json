@@ -235,6 +235,19 @@
       "no_feeder_or_retry_or_sampled_policy": true,
       "old_artifact_negative": "--expect-legacy-session-conflict pins known MJS8ec20cf7/WASMc8b4991a and accepts only the exact retained-constructor physical-conflict failure after native fixture admission. It is not positive qualification.",
       "executed": false
+    },
+    "fresh_session_gate": {
+      "tested_source": "75bea4df792ec85d4fa855d33780b9a045704450",
+      "receipt_directory": "out/strategy-feeder/sol61-transport-fresh-session-20261004",
+      "old_artifact_negative_passed": true,
+      "matching_build_passed": true,
+      "direct_ownership_passed": true,
+      "matching_wasm_sha256": "50c98f555d4ef9f6786c9a5fcfd138442a5d01ae1b3759b09712dbae059cdd9c",
+      "matching_mjs_sha256": "8ec20cf7c0f86cbad4c5d0638e0733da3110610cf02091c0807d4b87186d2b97",
+      "retained_failure": "Planner guard fixture expected legacy inventory/control message; native correctly refused full-item routing outside restricted checked language. Trials not reached.",
+      "source_only_fixture_fix": "Check EngineError/code1/exact full-item guard and unchanged live A/B; no production/native change.",
+      "remaining_checks": "Test-only causal retry and adapter/TypeScript stages pending; LOCAL held.",
+      "disconnection": "Existing build session and process identities reconciled; no relaunch."
     }
   },
   "bundle_input_preflight": "out/strategy-feeder/sol61-finite-20261004/bundle-input-preflight.json"

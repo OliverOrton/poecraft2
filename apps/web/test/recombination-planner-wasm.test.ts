@@ -5,7 +5,7 @@ import {createHash} from "node:crypto";
 import {readFileSync} from "node:fs";
 import {Worker, type TransferListItem} from "node:worker_threads";
 import {EngineClient, type EngineTransport} from "../src/app/engine-client";
-import type {RecombinationPlannerRequest, WorkerMessage} from "../src/app/engine-protocol";
+import {EngineError, type RecombinationPlannerRequest, type WorkerMessage} from "../src/app/engine-protocol";
 import {prepareRingPlannerFixture, RING_FIXTURE_BASE} from "./recombination-planner-fixture";
 import {runRecombinationPlanner} from "../src/app/recombination-planner";
 import type {StrategyDocument} from "../src/app/strategy-model";
@@ -113,7 +113,12 @@ try {
     assert.ok(workers.slice(1).every(worker => exits.has(worker)), "each read-only worker must exit before delivery");
     // General authored evaluation still refuses inventory graphs. Only the
     // native restricted checker attached to the export supplies its expectation.
-    await assert.rejects(client.strategyEvaluate(session, checked.strategy), /inventory\/control identity/);
+    await assert.rejects(client.strategyEvaluate(session, checked.strategy), (error: unknown) => {
+        assert.ok(error instanceof EngineError); assert.equal(error.code, 1);
+        assert.equal(error.detail, "Full-item inventory routing requires the restricted checked recombination language; general authored exact evaluation is held");
+        return true;
+    });
+    assert.deepEqual([await client.exportItem(a, session), await client.exportItem(b, session)], initialPhysical);
     const compiled = await client.compileStrategy(session, checked.strategy), economy = await client.loadEconomy(checked.economy);
     const simulator = await client.createSimulator(session, compiled, economy);
     try {
