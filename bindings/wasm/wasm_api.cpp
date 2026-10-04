@@ -2250,7 +2250,14 @@ const char* pcw_recombination_planner(uint32_t data_id,const char* request_json)
             planner_retained_keys(Parser(doc.data(),doc.size()).parse(),d,retained);
         }
         std::sort(retained.begin(),retained.end());retained.erase(std::unique(retained.begin(),retained.end()),retained.end());
-        poecraft::build_session(*session->impl,retained); // Native retained-mod mapping, not eligibility/probability admission.
+        // build_session is a constructor: its retained overload requires a
+        // fresh universe, never the already-built pc_session_create universe.
+        auto retained_session=std::make_shared<poecraft::SessionImpl>();
+        retained_session->data=session->impl->data;
+        retained_session->base_index=session->impl->base_index;
+        retained_session->item_level=session->impl->item_level;
+        poecraft::build_session(*retained_session,retained);
+        session->impl=std::move(retained_session); // Native mapping, not new numerical admission.
         std::vector<pc_item_state> items,initial;items.reserve(offers.size());initial.reserve(inputs.size());
         std::vector<pc_recombination_acquisition> acquisitions;acquisitions.reserve(offers.size());std::vector<double> initial_costs;
         for(const auto& offer:offers) {

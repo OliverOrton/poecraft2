@@ -63,10 +63,10 @@
     "all_exec_sessions_complete": true
   },
   "next_batch": {
-    "status": "REQUEST_PARENT_LOCAL_AFTER_CI",
-    "purpose": "Qualify causal native-group fixture repair and finish remaining transport/planner/export/feeder checks using the retained matching WASM",
+    "status": "REQUEST_NEW_PARENT_LOCAL_FOR_CAUSAL_ADAPTER_FIX",
+    "purpose": "Build matching WASM for the fresh retained-session constructor fix, then qualify repaired planner/Ring1000 and remaining adapter checks",
     "compiler_jobs": 2,
-    "build_command": null,
+    "build_command": "$env:EMCC_CORES='2'\n$env:BINARYEN_CORES='2'\npowershell -NoProfile -File scripts/build-wasm.ps1",
     "sdk_parallelism_evidence": "C:/emsdk/upstream/emscripten/tools/utils.py get_num_cores reads EMCC_CORES; shared.py run_multiple_processes and system_libs.py ninja owner use it.",
     "qualification_commands": [
       "node apps/web/node_modules/tsx/dist/cli.mjs apps/web/test/recombination-planner-wasm.test.ts",
@@ -93,7 +93,7 @@
       "policy_iterations": 32
     },
     "qualification_trials": "Current owner-approved 1000 actual compiled-worker Ring trials seed62667494; retained component feeder tests keep their separate regression identity.",
-    "reuse": "Retained MJS8ec20cf7/WASMc8b4991a match compiled source43ef96cf and unchanged engine/facade/production adapter scopes. Reuse successful build, lifetime and cache evidence; no WASM/native/Python rebuild or exact bundle retry needed for this test-only repair.",
+    "reuse": "Reuse native823657c0 and frozen input/bundle/lifetime evidence where source-compatible. Retained WASM/MJS compile old facade43ef96cf and cannot qualify the fresh-session fix; one source-matched causal rebuild is required.",
     "receipts": "New source/tree, WASM/MJS hashes and matching request/model/economy/data/checker pins under out/strategy-feeder; native DLL/exe receipts remain 823657c0.",
     "stop": "Stop on identity/probability/resource/export/properness/cap/compilation failure; retain failure, do not raise caps or repeat for green.",
     "requirements": [
@@ -120,7 +120,7 @@
   "native_executable_sha256": "bcdf9165d9be4b27803594f4460c54708609d3b572fa169de48d56596c8075b0",
   "native_dll_sha256": "32162f44f1f7c5f1b6ead3a61a4c40d996680a39d41e406b55df64daffd4761d",
   "pending_adapter": {
-    "status": "FIXTURE_REPAIRED_SOURCE_ONLY_RETAINED_WASM_UNQUALIFIED",
+    "status": "PLANNER_ADAPTER_FRESH_SESSION_CONTRACT_FAILURE_SOURCE_FIXED_UNBUILT",
     "source_scope": "request-owned read-only planner worker and strict native WASM JSON facade",
     "native_dependency": "823657c0b67a793676e83285c4e05b85175a96ab",
     "native_engine_source_unchanged": true,
@@ -143,7 +143,7 @@
     "bundle_rejection": "bundle-review-rejection.json",
     "source_commit": "a97e2cdd0947dc7048474e2c92cd49a572fc0a97",
     "qualification_source_commit": "43ef96cf772942f3cd6adf75caea0d4baceda8c6",
-    "matching_wasm_built": true,
+    "matching_wasm_built": false,
     "qualification_receipt": "out/strategy-feeder/sol61-transport-20261004/qualification-receipt.json",
     "artifacts": {
       "bindings/wasm/dist/poecraft_engine.mjs": "8ec20cf7c0f86cbad4c5d0638e0733da3110610cf02091c0807d4b87186d2b97",
@@ -167,7 +167,13 @@
     "fixture_repair": "Use pc_item_edit_json via EngineClient.editItem for all explicit additions; native full canonical group conflict checks own candidate admission. Verify accepted complete slot keys/flags and refused full-item atomicity. Skip only declared group conflicts; unexpected errors stop. Retain a deliberate overlapping-goal refusal case.",
     "reconciliation_receipt": "out/strategy-feeder/sol61-transport-20261004/reconnected-reconciliation.json",
     "revision_negative_case": "Different embedded child content at the same revision changes only document name, preserving the output/cost law so the test isolates revision identity.",
-    "new_checks_run": false
+    "new_checks_run": false,
+    "fixture_repair_tested_at": "84d7757c30ba4bf4811110f15c9555137a4fb307",
+    "current_failure_detail": "Recombination item contains conflicting physical modifiers",
+    "adapter_diagnosis": "Planner facade called build_session with retained identities on the already-built pc_session_create SessionImpl. engine_internal.hpp explicitly requires a fresh SessionImpl; session_builder appends dense/group tables. Fixture admission now correctly uses native full-group checks. The adapter source fix constructs a fresh SessionImpl with the same immutable data/base/level before full-item import.",
+    "fresh_session_fix_unbuilt": true,
+    "retained_build_matches_changed_facade": false,
+    "latest_receipt": "out/strategy-feeder/sol61-transport-repaired-20261004/qualification-receipt.json"
   },
   "bundle_input_preflight": "out/strategy-feeder/sol61-finite-20261004/bundle-input-preflight.json"
 }

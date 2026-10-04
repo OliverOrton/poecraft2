@@ -512,3 +512,25 @@ The test-only repair is unrun. The next requested LOCAL batch begins with the
 repaired planner/export/Ring1000 fixture, followed by remaining pair/feeder/client
 and TypeScript checks. Reuse the matching build and successful lifetime/cache
 stages; preserve the one successful exact bundle retry without repeating it.
+
+## Repaired fixture exposed adapter constructor violation (2026-10-04)
+
+At source `84d7757c`, native full-group candidate admission passed; the first
+planner call then refused `Recombination item contains conflicting physical
+modifiers`. The batch stopped before policy output/trials. All later checks are
+unrun. Peak job memory1.44GB, wall1.36s, no timeout or survivor. LOCAL is released
+and escalated process inspection found zero owned survivors.
+
+The facade violated the retained `build_session` overload's explicit fresh-object
+precondition: it built again into the already-completed ordinary session. Its
+source now constructs a fresh SessionImpl with the same immutable data/base/level,
+then imports all complete items through that universe. No canonical group, goal,
+resource, pricing or probability guard is changed. This fix is unbuilt; the old
+WASM is retained as failure evidence and cannot qualify the changed facade.
+
+The next requested LOCAL batch needs one causal two-job matching WASM rebuild,
+then repaired planner/export/Ring1000 and remaining pair/feeder/client/TypeScript
+checks under the existing limits. No repeated bundle command is requested. Keep
+prior build/lifetime/bundle successes, both failed gates and native823657c0
+qualification distinct. The second compact receipt is under
+`out/strategy-feeder/sol61-transport-repaired-20261004/qualification-receipt.json`.
