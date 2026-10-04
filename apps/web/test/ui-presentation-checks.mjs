@@ -14,6 +14,47 @@ function contrast(a, b) {
     return (Math.max(x, y) + .05) / (Math.min(x, y) + .05);
 }
 
+/** The installed dock owns layout; its rendered surfaces share the C2 tokens. */
+export async function checkDockTheme(page) {
+    await page.evaluate(() => document.fonts.ready);
+    const measured = await page.locator('pc-workspace').evaluate(workspace => {
+        const probe = document.createElement('span'); workspace.append(probe);
+        const color = token => { probe.style.color = `var(${token})`; return getComputedStyle(probe).color; };
+        const expected = {page: color('--pc-surface-page'), panel: color('--pc-surface-panel')};
+        probe.remove();
+        const groups = [...workspace.querySelectorAll('.dv-groupview')].map(group => {
+            const strip = group.querySelector('.dv-tabs-and-actions-container');
+            return {page: getComputedStyle(group).backgroundColor, panel: getComputedStyle(strip).backgroundColor,
+                stripHeight: strip.getBoundingClientRect().height,
+                tabs: [...group.querySelectorAll('.dv-tabs-container > .dv-tab')].map(tab => {
+                    const style = getComputedStyle(tab);
+                    return {active: tab.classList.contains('dv-active-tab'), background: style.backgroundColor,
+                        text: style.color, radius: style.borderRadius, height: tab.getBoundingClientRect().height,
+                        fontSize: style.fontSize};
+                })};
+        });
+        return {expected, groups};
+    });
+    assert.ok(measured.groups.length > 0);
+    const textContrasts = [];
+    for (const group of measured.groups) {
+        assert.equal(group.page, measured.expected.page);
+        assert.equal(group.panel, measured.expected.panel);
+        assert.equal(group.stripHeight, 35, 'Joined document strips retain their installed geometry');
+        assert.ok(group.tabs.length > 0);
+        for (const tab of group.tabs) {
+            assert.equal(tab.background, tab.active ? measured.expected.page : measured.expected.panel);
+            assert.equal(tab.radius, '0px'); assert.equal(tab.height, 35);
+            assert.equal(tab.fontSize, '14px');
+            textContrasts.push(contrast(tab.text, tab.background));
+        }
+    }
+    assert.ok(textContrasts.every(value => value >= 4.5), 'Active and inactive document tab text contrast');
+    return {page: measured.expected.page, panel: measured.expected.panel,
+        groups: measured.groups.length, tabs: textContrasts.length, stripHeight: 35,
+        squareJoinedTabs: true, fontSize: 14, minimumTextContrast: Math.min(...textContrasts)};
+}
+
 /** Uses the existing real app fixtures/runner; no extra server or native workload. */
 export async function checkWorkbenchPresentation(page) {
     await page.locator('pc-emulator [data-craft-panel="essence"]').click();
@@ -34,6 +75,7 @@ export async function checkWorkbenchPresentation(page) {
         probe.remove();
         return result;
     });
+    const dockTheme = await checkDockTheme(page);
     assert.equal(styles.radius, '4px');
     assert.ok(contrast(styles.text, styles.fill) >= 4.5, 'Execution text contrast');
     for (const surface of [styles.page, styles.panel, styles.card]) {
@@ -56,7 +98,8 @@ export async function checkWorkbenchPresentation(page) {
     assert.ok(await page.evaluate(() => document.fonts.check('400 14px "Noto Sans"') && document.fonts.check('700 14px "Noto Sans"')));
     return {primaryContrast: contrast(styles.text, styles.fill), hoverContrast: contrast(hover.text, hover.fill),
         mutedCardContrast: contrast(styles.muted, styles.card), focusCardContrast: contrast(styles.focus, styles.card),
-        fieldBoundaryContrast: contrast(styles.boundary, styles.field), keyboardFocus: true, stableSquareSlots: true};
+        fieldBoundaryContrast: contrast(styles.boundary, styles.field), keyboardFocus: true, stableSquareSlots: true,
+        dockTheme};
 }
 
 /** Optional evidence capture during the existing smoke run, in its fresh profile. */

@@ -1546,6 +1546,30 @@ pc-workspace {
     position: relative;
 }
 
+/* Bridge the installed Dockview theme to the same surface/text authorities.
+ * Its joined tabs, split geometry and drag interactions keep their own owners. */
+pc-workspace.dockview-theme-abyss {
+    --dv-group-view-background-color: var(--pc-surface-page);
+    --dv-tabs-and-actions-container-background-color: var(--pc-surface-panel);
+    --dv-activegroup-visiblepanel-tab-background-color: var(--pc-surface-page);
+    --dv-activegroup-hiddenpanel-tab-background-color: var(--pc-surface-panel);
+    --dv-inactivegroup-visiblepanel-tab-background-color: var(--pc-surface-page);
+    --dv-inactivegroup-hiddenpanel-tab-background-color: var(--pc-surface-panel);
+    --dv-activegroup-visiblepanel-tab-color: var(--pc-text-strong);
+    --dv-activegroup-hiddenpanel-tab-color: var(--pc-text-muted);
+    --dv-inactivegroup-visiblepanel-tab-color: var(--pc-text-body);
+    --dv-inactivegroup-hiddenpanel-tab-color: var(--pc-text-muted);
+    --dv-tabs-and-actions-container-font-size: var(--pc-type-body);
+    --dv-tab-divider-color: var(--pc-border);
+    --dv-separator-border: var(--pc-border);
+    --dv-paneview-header-border-color: var(--pc-border);
+    --dv-paneview-active-outline-color: var(--pc-focus);
+    --dv-icon-hover-background-color: var(--pc-surface-hover);
+    --dv-tabs-container-scrollbar-color: var(--pc-border-control);
+    --dv-drag-over-border-color: var(--pc-focus);
+    --dv-drag-over-background-color: color-mix(in srgb, var(--pc-focus) 16%, var(--pc-surface-page));
+}
+
 pc-emulator,
 pc-strategy-editor,
 pc-stash {
