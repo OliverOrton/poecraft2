@@ -1,0 +1,131 @@
+{
+  "schema": "sol61_independent_entry_observer_source_review_v1",
+  "production_candidate": "2ff1adc5e0ccec7ac1fb4bf8f6cfd9f7bbc36ae8",
+  "latest_test_candidate": "1998b03dcac6eb16102442e9ab5cd9418d0b556c",
+  "diff_basis": "8ce6db846eab51ec9734f47e2a113970e8dd9d5f",
+  "evidence_class": "SOURCE ONLY; all new native stages unrun; reviewer ran no heavy command; CI owns LOCAL",
+  "verified_requests": {
+    "entry-observer-finite-request.json": {
+      "sha256": "87fc3cc964341f991feb91e0d363b1d5dfaf5fc56ec6986fd1ca6d7fd4f3e8ec",
+      "bytes": 9583,
+      "source_files_sha256": {
+        "engine/src/solver_compile.cpp": "35838754a73d7bc320c1265e12eed88a5fff32bc6bf5eb836ba881d6aeaea05a",
+        "engine/src/solver_compile_contracts.hpp": "b156eed5a8e3c13a1159365b0a3e4ccd6a50234927d07f3c9d506789409735f3",
+        "engine/src/solver_selective_completion.cpp": "55aae11d9143570808f4543dce066e824940441c87857249d1dbe6f877b00433",
+        "engine/src/solver_selective_completion.hpp": "cff99b2e0a96ba91f5dd8c3ce5b07d4cc1b5529d72befdb1c2644d351b24cdda",
+        "engine/benchmarks/solver_benchmark.cpp": "2b4a392126999be3650d315b7cc88a81d8c04fee0748bff6abf6494d187340cc",
+        "engine/tests/test_main.cpp": "82a2aae41073c57633bad1647f5b1facf4c320596ed3ace802f0bfb32d4369b7",
+        "engine/tests/test_solver_compile.cpp": "5b58a40d7733df7f151ae6a730ee0afc14ba63d9bbb00697074fddafbf25f68f",
+        "engine/tests/tests.hpp": "f6d8cde9c553dd80a174c9b9081b4a29d7d314ec7d9ec91a295075337b2beb05",
+        "engine/src/solver_calc.cpp": "41198cac24afe47b3c65fc07094b6fffa4138f5f69fb656e2339a2a52d3e34b1",
+        "engine/src/solver_calc_types.hpp": "2035b3939d546fb868578b00ee86f358978cbac32d804a4b63a9e2f47fdadd02",
+        "engine/src/solver_options_automatic.cpp": "e85c97e4d6ba591f4b00882864d2d9d7a60ab120b7a7788169c4a7f8523766a0",
+        "engine/src/solver_options_helpers.hpp": "575d705635d48d9c24543bbefd506180c3d1f83bc2ba621f7ac845cbbdbed15e"
+      }
+    },
+    "entry-observer-root-follow-through-request.json": {
+      "sha256": "6d913173b498a9a1a2c45ca2be0a3a76ac4bec3752f8355b95f89345980a655e",
+      "bytes": 10358,
+      "source_files_sha256": {
+        "engine/src/solver_compile.cpp": "35838754a73d7bc320c1265e12eed88a5fff32bc6bf5eb836ba881d6aeaea05a",
+        "engine/src/solver_compile_contracts.hpp": "b156eed5a8e3c13a1159365b0a3e4ccd6a50234927d07f3c9d506789409735f3",
+        "engine/src/solver_selective_completion.cpp": "55aae11d9143570808f4543dce066e824940441c87857249d1dbe6f877b00433",
+        "engine/src/solver_selective_completion.hpp": "cff99b2e0a96ba91f5dd8c3ce5b07d4cc1b5529d72befdb1c2644d351b24cdda",
+        "engine/benchmarks/solver_benchmark.cpp": "2b4a392126999be3650d315b7cc88a81d8c04fee0748bff6abf6494d187340cc",
+        "engine/tests/test_main.cpp": "82a2aae41073c57633bad1647f5b1facf4c320596ed3ace802f0bfb32d4369b7",
+        "engine/tests/test_solver_compile.cpp": "5b58a40d7733df7f151ae6a730ee0afc14ba63d9bbb00697074fddafbf25f68f",
+        "engine/tests/tests.hpp": "f6d8cde9c553dd80a174c9b9081b4a29d7d314ec7d9ec91a295075337b2beb05",
+        "engine/src/solver_calc.cpp": "41198cac24afe47b3c65fc07094b6fffa4138f5f69fb656e2339a2a52d3e34b1",
+        "engine/src/solver_calc_types.hpp": "2035b3939d546fb868578b00ee86f358978cbac32d804a4b63a9e2f47fdadd02",
+        "engine/src/solver_options_automatic.cpp": "e85c97e4d6ba591f4b00882864d2d9d7a60ab120b7a7788169c4a7f8523766a0",
+        "engine/src/solver_options_helpers.hpp": "575d705635d48d9c24543bbefd506180c3d1f83bc2ba621f7ac845cbbdbed15e"
+      }
+    }
+  },
+  "verified_source_pins": 12,
+  "native_scoped_git_diff_check": "passed",
+  "production_delta_after2ff": "none;1998 adds tests/documentation only",
+  "source_observations": [
+    {
+      "claim": "estimated_owned_bytes now delegates to existing live native fast ledger; independent full traversal is preserved as full_estimated_owned_bytes and audited reconciliation stays available. No byte cache or new ownership object introduced.",
+      "references": [
+        "engine/src/solver_selective_completion.cpp:1143-1165",
+        "engine/src/solver_selective_completion.hpp:190-198"
+      ]
+    },
+    {
+      "claim": "Private work owner and admission child are read on every call, including after child creation. They retain existing destruction order. Owner allowance uses conservative fast owner bytes; initial aggregate comparison precedes subtraction, so no unsigned headroom wrap and no allowance increase if fast>=full.",
+      "references": [
+        "engine/src/solver_selective_completion.cpp:1171-1206"
+      ]
+    },
+    {
+      "claim": "Existing native ledger reads current capacities/cursor scratch and accounted payload insert/release/rollback, with independent full enumeration. Core CalcContext allocation/cancellation/row/query code unchanged.",
+      "references": [
+        "engine/src/solver_calc.cpp:692-811",
+        "engine/src/solver_calc.cpp:2596-2643",
+        "engine/src/solver_options_automatic.cpp:1231-1316"
+      ]
+    },
+    {
+      "claim": "Outer/checker ownership remains read live by existing benchmark memory function; no fixed-owner cache to invalidate. Checker/census, graph/prices and parent owner remain retained. All positive entry validation, accepted root/entry counts, exact debit, graph and original numerical/resource/price gates unchanged.",
+      "references": [
+        "engine/benchmarks/solver_benchmark.cpp:3284-3310",
+        "engine/benchmarks/solver_benchmark.cpp:3357-3405"
+      ]
+    },
+    {
+      "claim": "This changes shared validator observation in Finder and Current selective service, not just the diagnostic; planned shared-consumer controls matter. Producer activation/strategy vocabulary/FFI unchanged.",
+      "references": [
+        "engine/src/solver_finder.cpp:568-571",
+        "engine/src/solver_finder.cpp:635-672",
+        "engine/src/solver_solve_selective_completion.cpp:287-313"
+      ]
+    },
+    {
+      "claim": "Full observer arm is restored using new full traversal accessor, so hot-vs-full comparison is independent and is not accidentally fast-vs-fast. Per-checkpoint audits cover all16 paired/eight retained roots and query cache/reset/cancel/rollback boundaries.",
+      "references": [
+        "engine/tests/test_solver_compile.cpp:6119-6139",
+        "engine/tests/test_solver_compile.cpp:5958-5973",
+        "engine/tests/test_solver_compile.cpp:4492-5080"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "id": "R9",
+      "severity": "P2 fixture gate reliability",
+      "confidence": "high for existence of legitimate unrecognized cap path; actual first refusing owner remains unrun",
+      "title": "Below-peak fixture recognizes only one of two legitimate native memory-cap names",
+      "references": [
+        "engine/tests/test_solver_compile.cpp:6169-6170",
+        "engine/src/solver_calc.cpp:2460-2471",
+        "engine/src/solver_selective_completion.cpp:1264-1268"
+      ],
+      "static_witness": "Child has explicit owned-byte cap and scratch owner. require_reforge_scratch_bytes may throw SolverResourceLimit(\"max_owned_bytes\",cap). Automatic admission preserves precise named resource refusal and validator rethrows batch.resource_cap unchanged. Test catches only name==max_solver_owned_bytes, so legitimate scratch cap refusal records peak_refused=false and fails even though enforcement was correct.",
+      "affected_consumer": "new finite selected-peak refusal selector; no production enforcement bug demonstrated",
+      "minimal_correction": "Recognize both legitimate memory-cap names, preserving/logging actual cap owner/name/limit, or prove/force the fixture intended owner before asserting its name. Do not rename production cap errors or loosen a numerical threshold to fit the fixture.",
+      "status": "OPEN in1998, reported promptly to parent before finite execution"
+    },
+    {
+      "id": "R10",
+      "severity": "P3 qualification coverage",
+      "confidence": "high static coverage observation",
+      "title": "Below-peak refusal previously allowed constructor-only failure without growth",
+      "references": [
+        "engine/tests/test_solver_compile.cpp:6171-6178"
+      ],
+      "witness": "2ff accepted constructor no-exact-admission-memory length_error without requiring a successful prior checkpoint.1998 now asserts peak_steps>0, so constructor-only refusal fails qualification.",
+      "status": "SOURCE ADDRESSED in1998; native pending"
+    }
+  ],
+  "latest_cleanup_test": {
+    "references": [
+      "engine/tests/test_solver_compile.cpp:6182-6213"
+    ],
+    "qualification": "SOURCE ONLY, unrun",
+    "claim": "1998 creates external shared work owner, advances validator until suspended after positive committed work, audits child ledger and fixed problem/checker bytes each checkpoint; destroys child before parent/checker, requires exact preserved shared debit, unchanged fixed ownership and session refcount restoration. No new production lifetime introduced."
+  },
+  "release_recommendation": "No new production debit/lifetime/identity/memory-enforcement blocker found in actual diff. Correct R9 fixture classifier before using finite gate to determine regression; then run prepared serial finite gate under parent LOCAL. Require actual native source-pinned results before root follow-through. Keep R6 aggregate transient peak open; no speed/economic/consumer/full closure/frozen cohort/WASM qualification yet.",
+  "follow_through_identity": "Same7602779656003707844 graph/SHA bedc2a..., original root diagnostic210090.72616079813, all12658 positive entries,150native/165host/50M/1GiB, no omitted tiny entries or checker release; only after finite qualification and parent LOCAL grant."
+}

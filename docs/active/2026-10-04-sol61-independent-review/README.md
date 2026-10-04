@@ -1251,3 +1251,46 @@ changed full run must preserve graph/root cost/root native work, all12658 entry
 coverage and same150/165/50M/1GiB, with existing causal timers/supervision. Removing
 scans may expose another cap; do not infer completion or enlarge budgets. No
 financial upper/retention, peak/performance/consumer/closure/cohort/WASM approval.
+
+
+## Live allocation observer source review and finite gate reliability
+
+Reviewed production2ff1adc5e0ccec7ac1fb4bf8f6cfd9f7bbc36ae8 against8ce, then
+latest test-only1998b03dcac6eb16102442e9ab5cd9418d0b556c while review active. Both
+prepared requests verify all12 pins against immutable1998; scoped native diff
+whitespace check passes. No new native run or review-owned production edit.
+CI holds LOCAL; exact review and two requests are entry-observer-1998-*.
+
+No new production debit, lifetime, identity or memory-enforcement blocker found.
+Validator estimated-owned now calls the existing live ledger each time; full
+traversal and independent audit remain. Private owner bytes are also live and
+conservative. Initial total check precedes headroom subtraction, and fast>=full
+can only tighten the allowance. No outer/checker cache or ownership change was
+introduced, so stale-cache concerns do not apply. Current capacities/active
+cursor scratch/accounted shared payloads remain in existing native ledger and
+scratch cap owners. Full observer test arm explicitly calls full traversal;
+this is not a fast-vs-fast comparison. All-positive entry, root, cost/resource/
+price/query/debit obligations are unchanged. Shared method affects Current and
+Finder observation as well as benchmark; prepared compatibility selectors matter.
+
+R9/P2 fixture reliability remains OPEN in1998, communicated promptly: peak
+fixture6170 accepts only max_solver_owned_bytes. Native require_reforge_scratch
+calc2468-2470 may legitimately refuse as max_owned_bytes; validator1264-1268
+retains and promotes that precise batch name. A correct scratch refusal would
+be mislabeled failed enforcement. Actual first owner is unrun. Recognize/log
+both legitimate memory names/limits, or force/prove the intended owner; do not
+change production error authority or numerical caps to fit this test.
+
+R10/P3 construction-only coverage gap is SOURCE ADDRESSED in1998:6177 now
+requires a successful checkpoint before below-peak refusal. New suspended
+cleanup witness keeps external owner/checker/census alive, audits each cursor
+checkpoint, then destroys child after positive native work and checks preserved
+shared debit/fixed ownership/session references. These assertions are unrun.
+Query/cache/reset/cancel/rollback and each finite root checkpoint gain independent
+allocation audits; the source preserves full memory observer arm.
+
+Recommendation: correct R9 classifier, then prepared finite gate is appropriate
+under parent LOCAL. Actual finite results precede samegraph/root/all12658-entry
+follow-through under unchanged150/165/50M/1GiB. No stale validator total, census
+release/skip, new cache or cap widening is introduced. R6 complete transient peak
+remains open. No performance/economics, activation/full closure/cohort/WASM claim.

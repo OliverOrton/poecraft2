@@ -1,22 +1,22 @@
 # Independent review handoff
 
-Latest review:8ce6db84 generic-final-fill-root-r1.12 source pins, actual Benchmark
-binary, graph and2 process receipts verify; native exit2 censored_time, no
-timeout/cancel/survivor. Reviewer ran no heavy command; CI owns LOCAL.
+Latest actual review:production2ff1adc5 + test-only1998b03d.12 pins verify in both
+prepared requests; no reviewer heavy command; CI owns LOCAL.
 
-Root diagnostic210090.72616079813/success1,976/12658 entries by deadline. No checked
-upper. Entry144.575s includes141.157s combined memory observations; work1.884694M
-under50M, sampled reserved878621351 under1GiB but transient peak incomplete.
+No new production debit/lifetime/identity/enforcement blocker found. Observer
+uses existing mutable live ledger every call; full audit preserved. No outer/
+checker cache added; all12658 entries/checker ownership/caps preserved. Shared
+Current/Finder validator observation changes, so compatibility gates matter.
 
-Upcoming observer actual source remains pending review. Cache fixed outer and
-completed checker/census only; recompute live validator incremental ledger each
-checkpoint, including private owner/scratch. Preserve cap/headroom, all entries,
-borrowed lifetimes and debit. Reuse qualified36 boundary audits; new cache wrapper
-needs handoff/reset and refusal-after-growth/suspended cleanup evidence. Same
-graph/root cost and150/165/50M/1GiB required for changed experiment.
+R9/P2 fixture classifier remains open at1998 compile test6170: recognizes only
+max_solver_owned_bytes but legitimate scratch max_owned_bytes is preserved by
+validator. Correct/log cap authority before finite gate. R10 growth checkpoint
+assertion and suspended destruction/debit/census witness added in source; unrun.
 
-[Living record](README.md) / [receipt/proof plan](generic-final-fill-root-r1-review.json).
-Finite6097 evidence remains20708passing,878control/777candidate complete entries;
-R7/R8 qualified only finite cuts. Historical R3 stays failed. Finder R2 and R6
-complete aggregate peak remain open. No financial retention, activation, closure,
-final cohort or WASM approval. Parent alone owns LOCAL/integration/main push.
+[Living record](README.md) / [actual review](entry-observer-1998-source-review.json).
+After R9 correction, finite gate first under parent LOCAL, then same graph/root
+all-entry follow-through only after native qualification:150/165/50M/1GiB.
+Prior root8ce:210090.72616079813 diagnostic,976/12658 entries;141.157s observation
+cost measured. No upper. Prior20708 finite checks passed; R7/R8 finite cuts only.
+R6 complete peak and Finder generation R2 open; historical R3 remains failed.
+No speed/economic/activation/closure/final cohort/WASM approval or main merge/push.
