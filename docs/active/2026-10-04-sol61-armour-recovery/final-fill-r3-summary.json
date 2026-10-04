@@ -1,0 +1,104 @@
+{
+  "schema": "sol61_final_fill_gate_summary_v1",
+  "source_commit": "675c2f06642a25338310a6d7bfc578e27d4cc153",
+  "status": "STOPPED_STRICT_HISTORICAL_PLAIN_FILL_WITNESS; no wider search or assertion weakening",
+  "checks": 961,
+  "failures": 1,
+  "stages": [
+    {
+      "phase": "build-tests",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 69252,
+      "process_identity_token": "69252:134355886564080291",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 22104.1553998366
+    },
+    {
+      "phase": "original-root-native-partial-and-three-held-history-witness",
+      "exit_code": 1,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 41196,
+      "process_identity_token": "41196:134355886790975539",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 581.9241001736373
+    }
+  ],
+  "unrun": [
+    "entry-budget-and-independent-accounting-observer-pair",
+    "same-request-paired-final-fill-sixteen-finite-roots",
+    "unchanged-eight-root-and-878-entry-control",
+    "legacy-blocker-native-consumer-control",
+    "build-benchmark",
+    "original-request-ordinary-generated-final-word-construction-only"
+  ],
+  "build_binary": {
+    "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_engine_tests.exe",
+    "sha256": "52a02bff5b1add79c527078d335310c26c1d538ad6676188537cb11ed7b99848",
+    "source_commit": "675c2f06642a25338310a6d7bfc578e27d4cc153"
+  },
+  "retained_controls": {
+    "P0": "historicals3 Ember->EExalt/currentc5 Chaos,33exits,mass1.0000000000000002,all incoming affixes preserved",
+    "three_held_original_root_ordering_mass": 5.356873587015119e-09,
+    "native_ordinary_exalt": "each of three tier frames:72strictlypositive exits,mass.99999999999999944,exactunitresources/actions,preserves threeheld and incoming target T1"
+  },
+  "historical_reference": {
+    "tiers0_0": "s0 Chaos",
+    "tiers1_0": "s886 temporary StrengthDex Bench->Exalt",
+    "tiers1_2": "offpolicy failure, left policy-reachable state set",
+    "adjacent_two_target_projection": "all72native exits in each frame inspected; exact-goal exits do not need a paid plain-fill comparison; no historical plain Exalt match in any bounded set"
+  },
+  "semantic_disposition": "The selected carrier family does not reconstruct the historical plain word. New ordinary Exalt controller may be a distinct economic opportunity, but construction/root/all-entry/performance gates are UNRUN and cannot be inferred. Any alternative reference carrier/family or temporary-blocked composition needs parent coordination.",
+  "production_routing": "private default-off candidate unchanged; no activation/import/cap/scope/price/law change",
+  "qualification": false,
+  "economic_qualification": false,
+  "complete_peak_qualification": false,
+  "owned_processes": [],
+  "LOCAL_released_utc": "2026-10-04T11:57:59.387967+00:00",
+  "evidence": {
+    "out\\sol61-armour\\final-fill-r3\\build-tests.binary-identity.json": {
+      "sha256": "2e2e68f8ae55d83cb261b7f8ff5f9f691cf08159ba1c4ab64d117ce0feeeb940",
+      "bytes": 263
+    },
+    "out\\sol61-armour\\final-fill-r3\\build-tests.log": {
+      "sha256": "2257944e124ab128029973d017363a4914c936848283aecdb29fbd1ab2db0eb2",
+      "bytes": 193
+    },
+    "out\\sol61-armour\\final-fill-r3\\build-tests.receipt.json": {
+      "sha256": "ea16cf346fd4f876609199bf884e8689dee11a5ea8ead9faf2f75cd5a115998c",
+      "bytes": 314
+    },
+    "out\\sol61-armour\\final-fill-r3\\build-tests.started.json": {
+      "sha256": "cad71f27459f7115d463572c38c8e18fd8b3e64b4cf73706617af11772b3aa73",
+      "bytes": 82
+    },
+    "out\\sol61-armour\\final-fill-r3\\completion.json": {
+      "sha256": "09defec1d84f644010c44bba48a46217108fd20bf73aa2e47046d804e2a63f90",
+      "bytes": 1406
+    },
+    "out\\sol61-armour\\final-fill-r3\\original-root-native-partial-and-three-held-history-witness.log": {
+      "sha256": "e47e48b3698aaa4d89b0beeaf8c4493df580f0bbad21abc5ca4027a9973652ad",
+      "bytes": 2247
+    },
+    "out\\sol61-armour\\final-fill-r3\\original-root-native-partial-and-three-held-history-witness.receipt.json": {
+      "sha256": "46ccebed2cba0c831b9be0c1851c6a721053d1549b2008af4d30cd6af81e4c6d",
+      "bytes": 315
+    },
+    "out\\sol61-armour\\final-fill-r3\\original-root-native-partial-and-three-held-history-witness.started.json": {
+      "sha256": "ef7f5eb8be2505a7484f7603504873fb61ff3aeef18f6758a01cca5f84bd88ed",
+      "bytes": 82
+    },
+    "out\\sol61-armour\\final-fill-r3\\request.json": {
+      "sha256": "800e013b4af7e04b799da32771c0bb5f5fa8ad88d9b69fe553001b5c5801908c",
+      "bytes": 16651
+    }
+  }
+}

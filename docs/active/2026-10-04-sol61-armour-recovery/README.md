@@ -756,3 +756,34 @@ has a historical plain word, stop and report the unsupported cut rather than
 searching a wider carrier family or weakening the assertion. Full original-root
 and every-positive-entry qualification of the generated Conquest policy is still
 UNRUN; construction-only is the only Conquest stage in this batch.
+
+## Final-fill R3: bounded adjacent plain-word hypothesis remains false; stop
+
+Source675c2f06642a25338310a6d7bfc578e27d4cc153:[R3 receipt](final-fill-r3-summary.json)
+retains22.104s successful two-job build and.582s native selector961checks/1failure.
+Strict P0 still passes. Native ordinary Exalt on the three-held/one-target
+carrier remains legal, unit-priced in resources, mass.99999999999999944 over72
+positive exits, preserving incoming four goals for each tier frame. The bounded
+adjacent projection inspects those existing exits; exact-goal exits need no paid
+plain-fill continuation. Historical plain Exalt matches remain ZERO for all
+three frame sets. historical_plain_fill_frames>0 stays failed, not removed.
+
+This is the smallest unsupported comparison cut for the selected witnesses.
+History uses Chaos, temporary StrengthDex-blocked Exalt, or offpolicy at the
+one-target carrier and provides no plain word on the bounded adjacent sets.
+It does NOT establish that all historical plain Exalt words are absent, that
+native ordinary Exalt is invalid, or that a distinct generated controller cannot
+be economic. It DOES prevent claiming historical reconstruction from this gate.
+Do not broaden the carrier search, import a historical controller, enable the
+blocker proposal or weaken this assertion to obtain a passing result.
+
+The six dependent stages remain UNRUN: suspended accounting observer pair,
+matched16 finite roots/all-entry guard equivalence, unchanged eight-root control,
+legacy blocker control, benchmark build and original-Conquest construction-only.
+No new candidate graph, root cost, all-entry certificate, measurement saving or
+complete memory peak is established. Private final-fill source remains default
+off; Current/Finder/WASM/public incumbents are unchanged. Parent coordination is
+needed to select a separate economic opportunity gate versus a historical
+reference/temporary-blocked composition. No full Conquest repeat is authorized
+by this stopped result. LOCAL released11:57:59UTC; all native process cleanup
+checks report zero survivors. R1/R2 failures and actual routes remain retained.

@@ -1,37 +1,20 @@
-# Armour: source-only final fill prepared; finite LOCAL pending
+# Armour: final-fill historical witness stopped; LOCAL released
 
-After293be87e parent selected generic three-held/two-target Exalt composition
-and entry-time investigation. Private default-off final stages now preserve
-below-capacity target progress via requested/priced ordinary Exalt, exact native
-eligibility and existing blocker/paid cleanup paths. Paired native finite tests,
-historical-word witness, same-census ledger/full-scan observation pair and
-original-Conquest construction-only capture are prepared. R1 native selector
-ran and stopped; later gates are UNRUN. Reviewer
-3b45b7c8 found no routing blocker atf5ab3122; source-only corrections now cover
-every final-side guard at every positive entry and ownership audits at suspended
-cursor checkpoints. Production observer/checker lifetime remain unchanged.
-R1 at16b0cf11 builds successfully but the adjacent historical-word selector
-throws on a reference terminal; six remaining stages are UNRUN. Source-only
-repair now records adjacent native operation/terminal dispositions while
-retaining strict P0 and historical plain-fill assertions. [R1 receipt](docs/active/2026-10-04-sol61-armour-recovery/final-fill-r1-summary.json)
-retains the failure; LOCAL released11:39:36UTC with no survivors. Revised test
-source needs fresh finite execution after parent slot reassignment. R2 renewed
-LOCAL/P0 pass; direct plain-fill assertion fails748/1 because one-target history
-uses Chaos/temporary blocker/offpolicy. [R2 receipt](docs/active/2026-10-04-sol61-armour-recovery/final-fill-r2-summary.json)
-retains findings. Corrected witness inspects only existing positive native Exalt
-exits for adjacent two-target plain fill, preserving strict assertions under the
-explicit coherent fixture-repair grant; later gates remain UNRUN.
-[Bounded request](docs/active/2026-10-04-sol61-armour-recovery/final-fill-finite-request.json)
-pins source/inputs; independent review3b45b7c8 retained; LOCAL released after R1
-fixture stop and needs parent reassignment. No new full Conquest run, cap increase or production activation.
-R11 remains diagnostic896765.8190299857, success1 but only968/12719 positive
-entries validated; no checked upper. Its150s covers the entire pipeline, without
-phase timing. Full recursive ownership scans occur after every entry cursor
-checkpoint; exact admission cache already exists. New profiling/reuse projections
-will test overhead opportunity without omitting entries or releasing the borrowed
-census. R11 memory876476133 remains incomplete between-step/reservation evidence,
-not aggregate peak or1GiB compliance. [Living record](docs/active/2026-10-04-sol61-armour-recovery/README.md)
-retains prior receipts, failures and all economic/consumer/Finder/WASM gaps.
+Tested source675c2f06642a25338310a6d7bfc578e27d4cc153 R3 builds successfully
+but strict historical plain-fill witness fails961checks/1failure. P0 still passes
+historicals3 Ember->EExalt/currentc5 Chaos. New three-held/PDR carrier has positive
+native root ordering; ordinary Exalt law preserves allfour goals with72positive
+exits perframe. History uses Chaos at0,0, temporary StrengthDex Bench->Exalt at1,0,
+and offpolicy failure at1,2. Bounded adjacent native-exit sets have ZERO historical
+plain Exalt matches. Strict assertion retained; no broader search or cap increase.
+[R3 receipt](docs/active/2026-10-04-sol61-armour-recovery/final-fill-r3-summary.json)
+retains failure, pins and cleanup. Six later finite/construction stages are UNRUN;
+no new graph/root/entry/economic/measurement qualification. Private Exalt candidate
+remains default-off. Separate economic gate versus historical/blocked-composition
+work needs parent selection. [Request](docs/active/2026-10-04-sol61-armour-recovery/final-fill-finite-request.json)
+marks STOPPED. LOCAL released11:57:59UTC, zero survivors. [Living record](docs/active/2026-10-04-sol61-armour-recovery/README.md)
+retains R1/R2/R3 and prior R11 diagnostic896765.82/968of12719entries. Production
+observer/checker lifetime unchanged; complete peak, Finder/control/WASM gaps open.
 
 # Qualified solver CI repair (2026-10-03)
 

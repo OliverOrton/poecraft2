@@ -1,7 +1,7 @@
 {
   "schema": "sol61_final_side_fill_finite_request_v1",
-  "status": "R2 build/P0/native Exalt laws pass but one-target historical plain-word assertion fails748/1. Retain blocked/off-policy findings; corrected bounded adjacent two-target witness prepared under explicit coherent repair grant. Remaining gates UNRUN.",
-  "basis_commit": "d748e8aff791b1b6d68a4e6dbfa63428a01435bd",
+  "status": "STOPPED: R3 strict historical plain-fill witness961checks/1failure; original P0 and native Exalt law pass, no plain historical match in bounded three72-exit frame sets. Six dependent stages UNRUN; no wider search/weakening/cap increase.",
+  "basis_commit": "675c2f06642a25338310a6d7bfc578e27d4cc153",
   "prior_qualified_source": "a585ec4666d7c83f1446e89e2f822261b72d4254",
   "source_files_sha256": {
     "engine/src/solver_compile.cpp": "35838754a73d7bc320c1265e12eed88a5fff32bc6bf5eb836ba881d6aeaea05a",
@@ -37,7 +37,7 @@
     }
   },
   "slots": {
-    "LOCAL": "Parent renewed LOCAL for corrected finite continuation and explicitly authorized straightforward fixture repairs within this grant; native semantic failures stop/report; terminal receipts retain phase release/no-survivor status",
+    "LOCAL": "RELEASED11:57:59UTC at substantive terminal result; no survivors; any separate finite gate/candidate change needs parent coordination",
     "compiler_jobs": 2,
     "execution": "serial, stop on first failure, existing isolated worker; fresh output only"
   },
@@ -161,7 +161,7 @@
     "memory": "existing conservative selected/reservation observations retain incomplete transient-overlap qualification; no complete1GiB proof claimed",
     "forbidden": "CLI rejects --partial-held-final-fill without construction-only selector or together with --partial-held-root-check; original-root/every-entry/economic gates for the full Conquest policy remain UNRUN"
   },
-  "next_decision": "review and execute finite batch only when parent grants LOCAL. Any actual Conquest root experiment needs a new finite-qualified graph/request identity and separate causal plan. Do not repeat R11 or increase caps.",
+  "next_decision": "Parent disposition of unsupported historical plain-word comparison. A distinct generic economic Exalt candidate cannot be called historical reconstruction. No further fixture widening, assertion weakening, production switch or full Conquest repeat under this stopped gate. Independent accounting/paired-root stages remain UNRUN.",
   "stop_on": "first semantic/resource/identity/under-count/work-debit/positive-entry discrepancy, native or host deadline, or survivor; preserve failure and clean process receipts; no retries for green",
   "exclusions": [
     "production Current/Finder activation",
@@ -175,5 +175,6 @@
   ],
   "independent_source_review": "3b45b7c839843ed69b8ce3d0a1cf21d6d93ebbd1: no fill-routing blocker at f5ab3122; added every-entry final-guard equivalence and suspended-cursor ownership coverage are still UNRUN",
   "prior_failed_gate": "final-fill-r1-summary.json and final-fill-r2-summary.json; failures/terminal routes retained; no native source/caps/input changes",
-  "reference_route_gate": "Strict original P0 and historical_plain_fill_frames>0 retained. One-target four-affix carrier natively routes Chaos/temporary-blocked Exalt/offpolicy and is not claimed direct plain-fill. Inspect only already enumerated positive Exalt exits (max72*3 tier frames) for adjacent two-target plain-fill word, with positive original-root primitive path, complete resource/mass/held preservation. No manufactured word/graph import."
+  "reference_route_gate": "Strict original P0 and historical_plain_fill_frames>0 retained. One-target four-affix carrier natively routes Chaos/temporary-blocked Exalt/offpolicy and is not claimed direct plain-fill. Inspect only already enumerated positive Exalt exits (max72*3 tier frames) for adjacent two-target plain-fill word, with positive original-root primitive path, complete resource/mass/held preservation. No manufactured word/graph import.",
+  "latest_terminal_gate": "final-fill-r3-summary.json"
 }
