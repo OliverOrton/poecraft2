@@ -98,6 +98,7 @@ import { useRef, type ReactNode } from "react";
 import { disconnectReact, renderReact } from "../react-host";
 import { formatModText } from "../mod-text";
 import { GameIcon } from "./pc-game-icon";
+import { InfluenceBadge, ItemStateBadge } from "./pc-item-badges";
 
 interface ItemCardProps {
     model: PcModListModel;
@@ -155,21 +156,19 @@ export function ItemCard({ model, slotHistory, onFracture, onTierChange, onRemov
     return <div className={`pc-mod-list ${target ? "pc-mod-list-target" : ""} ${corrupted ? "is-corrupted" : ""} pc-item-rarity-${model.rarity}`} data-mode={model.kind}>
         <header className="pc-item-card-header">
             <GameIcon assetKey={model.baseKey ?? "name:" + model.baseName} size="item" />
-            {model.baseName && <div className="pc-item-title-line"><strong>{model.baseName}</strong>{!!model.itemLevel && <span>iLvl {model.itemLevel}</span>}</div>}
+            {model.baseName && <div className="pc-item-title-line"><strong title={model.baseName}>{model.baseName}</strong>{!!model.itemLevel && <span>iLvl {model.itemLevel}</span>}</div>}
             <div className="pc-mod-list-header">
                 <span className="pc-item-heading">
                     <span className={`pc-rarity pc-rarity-${model.rarity}`}>{model.rarity}</span>
-                    {corrupted && <span className="pc-item-corrupted">Corrupted</span>}
-                    {model.kind === "concrete" && !!(model.itemFlags & 16) && <span>Foreseeing</span>}
-                    {model.kind === "concrete" && !!model.memoryStrands && <span>Memory strands: {model.memoryStrands}</span>}
-                    {model.kind === "concrete" && !!model.lifecycle && <span>{model.lifecycle === 1 ? "Consumed" : "Destroyed"}</span>}
+                    {corrupted && <ItemStateBadge state="corrupted">{target ? "Required: corrupted" : "Corrupted"}</ItemStateBadge>}
+                    {model.kind === "concrete" && !!(model.itemFlags & 16) && <ItemStateBadge state="foreseeing">Foreseeing</ItemStateBadge>}
+                    {model.kind === "concrete" && !!model.memoryStrands && <ItemStateBadge state="memory">Memory strands: {model.memoryStrands}</ItemStateBadge>}
+                    {model.kind === "concrete" && !!model.lifecycle && <ItemStateBadge state={model.lifecycle === 1 ? "consumed" : "destroyed"}>{model.lifecycle === 1 ? "Consumed" : "Destroyed"}</ItemStateBadge>}
                     {target && <span className="pc-item-target-badge">TARGET</span>}
-                    {target && model.implicitInfluences?.map(name => <span className="pc-item-influence" key={name}>{name}</span>)}
-                    {target && model.properties?.influenceBits !== undefined && <span className="pc-item-influences">
-                        {model.properties.influenceBits === 0 ? "No ordinary influence" : model.properties.influences.filter(entry => model.properties!.influenceBits! & (1 << ((entry.code ?? 1) - 1))).map(entry => entry.name).join(" · ")}
-                    </span>}
+                    {target && model.implicitInfluences?.map(name => <InfluenceBadge name={name} context="required" key={name} />)}
+                    {model.kind === "target" && model.properties && <TargetInfluences properties={model.properties} />}
                     {model.kind === "concrete" && !!model.influences.length && <span className="pc-item-influences">
-                        {model.influences.map(influence => <span key={influence} className="pc-item-influence"><GameIcon assetKey={"influence:" + influence} />{influence}</span>)}
+                        {model.influences.map(influence => <InfluenceBadge name={influence} key={influence} />)}
                     </span>}
                 </span>
                 <span className="pc-mod-count">{countLabel}</span>
@@ -187,7 +186,7 @@ export function ItemCard({ model, slotHistory, onFracture, onTierChange, onRemov
                 {model.properties.influences.map(influence => {
                     const bit = 1 << ((influence.code ?? 1) - 1);
                     return <label key={influence.key}><input type="checkbox" aria-label={influence.name} checked={Boolean((model.properties!.influenceBits ?? 0) & bit)}
-                        onChange={event => onProperties?.({influence_bits: event.target.checked ? (model.properties!.influenceBits ?? 0) | bit : (model.properties!.influenceBits ?? 0) & ~bit})} />{influence.name}</label>;
+                        onChange={event => onProperties?.({influence_bits: event.target.checked ? (model.properties!.influenceBits ?? 0) | bit : (model.properties!.influenceBits ?? 0) & ~bit})} /><InfluenceBadge name={influence.name} context="choice" /></label>;
                 })}
                 {target && model.properties.influenceBits !== undefined && <small>Exactly the selected influences{model.properties.influenceBits === 0 ? " (none)" : ""}.</small>}
             </fieldset>
@@ -223,6 +222,17 @@ export function ItemCard({ model, slotHistory, onFracture, onTierChange, onRemov
     </div>;
 }
 
+function TargetInfluences({properties}: {properties: ItemPropertyEditor}) {
+    if (properties.influenceBits === undefined) return <span className="pc-item-influence-context" data-influence-context="any">Any ordinary influence</span>;
+    if (properties.influenceBits === 0) return <span className="pc-item-influence is-exact" data-influence-context="exact-none">Exactly: no ordinary influence</span>;
+    const selected = properties.influences.filter(entry => properties.influenceBits! & (1 << ((entry.code ?? 1) - 1)));
+    const knownBits = selected.reduce((bits, entry) => bits | (1 << ((entry.code ?? 1) - 1)), 0);
+    return <span className="pc-item-influences">
+        {selected.map(entry => <InfluenceBadge key={entry.key} name={entry.name} context="exact" />)}
+        {(properties.influenceBits & ~knownBits) !== 0 && <span className="pc-item-influence-context">Exactly: influence labels unavailable</span>}
+    </span>;
+}
+
 function ModLines({ lines }: {lines: string[]}) {
     return <div className="pc-mod-slot-lines">{lines.map((line, index) =>
         <div key={index} className="pc-mod-slot-line">{formatModText(line)}</div>)}</div>;
@@ -246,13 +256,15 @@ function ConcreteSlot({ mod, side, index, onFracture, onRemove }: {
             if (!mod.fractured) onFracture?.({key: mod.key, modId: mod.sessionModId, side});
         }}>
         <SlotMeta side={side} index={index} tier={mod.tierIndex ? `T${mod.tierIndex}` : mod.crafted ? "C" : "—"} />
-        <div className="pc-mod-slot-content">
+        <div className="pc-mod-slot-content" tabIndex={0} aria-label={`${side} ${index + 1} modifier details`}>
             {mod.veiled ? <VeiledInscription index={index} /> : <ModLines lines={mod.textLines.length ? mod.textLines : [mod.key]} />}
             {!!mod.rollValues?.length && <div className="pc-mod-slot-tags">Roll values: {mod.rollValues.join(", ")}</div>}
-            {(!!tags.length || mod.fractured || mod.crafted) && <div className="pc-mod-slot-tags">
+            {(!!tags.length || mod.fractured || mod.crafted || (side !== "implicit" && onFracture)) && <div className="pc-mod-slot-tags">
                 {tags.map(tag => <span key={tag}>{tag}</span>)}
-                {mod.fractured && <span className="pc-mod-state is-fractured">Fractured</span>}
-                {mod.crafted && <span className="pc-mod-state is-crafted">Crafted</span>}
+                {mod.fractured && <ItemStateBadge state="fractured">Fractured</ItemStateBadge>}
+                {mod.crafted && <ItemStateBadge state="crafted">Crafted</ItemStateBadge>}
+                {side !== "implicit" && onFracture && !mod.fractured && <button type="button" className="pc-item-fracture-mod"
+                    aria-label={`Mark ${side} ${index + 1} as fractured`} onClick={() => onFracture({key: mod.key, modId: mod.sessionModId, side})}>Fracture</button>}
             </div>}
             {onRemove && <button type="button" className="pc-item-remove-mod" aria-label="Remove modifier" onClick={() => onRemove({key: mod.key, modId: mod.sessionModId, side})}>×</button>}
         </div>

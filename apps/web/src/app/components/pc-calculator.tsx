@@ -1,7 +1,6 @@
 import {createCalculatorGoalList, recoverCalculatorGoalList, calculatorGoalSet,
     selectedCalculatorResult, newCalculatorGoal, MAX_CALCULATOR_GOALS,
     CalculatorRequestLifetime, type CalculatorGoalDraft} from "../calculator-goal-set";
-import { clusterEnchantmentText } from "../cluster-configuration";
 import { itemSnapshotCluster } from "../workspace/persistence";
 import { PcCraftControls, type CraftPanel } from "./pc-craft-controls";
 import { disposeReact, renderReact } from "../react-host";
@@ -71,7 +70,7 @@ import {
     setPrice,
 } from "../workspace/prices";
 import type { PinnedEconomy } from "../workspace/economy-service";
-import { influenceLabels } from "../item-display";
+import { concreteItemFacts } from "../item-card-model";
 import { buildCalculatorTargetModel } from "../calculator-goal-model";
 import {
     estimatedActionSpendPerSuccess,
@@ -1400,21 +1399,17 @@ export class PcCalculator extends HTMLElement {
         const prefixIds = info.prefix_mod_ids as number[];
         const suffixIds = info.suffix_mod_ids as number[];
         const implicitIds = info.implicit_mod_ids as number[];
-        this.itemRarity = info.rarity as string;
-        this.itemClusterEnchantmentText = clusterEnchantmentText(info.cluster);
-        this.itemMemoryStrands = Number(info.memory_strands ?? 0);
-        this.itemLifecycle = Number(info.lifecycle ?? 0);
-        this.itemFlags = Number(info.item_flags ?? 0);
+        const facts = concreteItemFacts(info, this.catalog, {baseKey: this.base, baseName: this.baseDisplayName(), itemLevel: this.itemLevel});
+        this.itemRarity = facts.rarity;
+        this.itemClusterEnchantmentText = facts.clusterEnchantmentText ?? [];
+        this.itemMemoryStrands = facts.memoryStrands ?? 0;
+        this.itemLifecycle = facts.lifecycle ?? 0;
+        this.itemFlags = facts.itemFlags;
         this.itemInfluenceBits = Number(info.generic_influence_bits ?? 0);
         this.itemEnchantments = ((info.enchantment_mod_ids as number[]) ?? []).map(id => this.toSlot(id, new Set()));
-        this.itemInfluences = influenceLabels(
-            Number(info.generic_influence_bits ?? 0),
-            Number(info.searing_exarch_tier ?? 0),
-            Number(info.eater_of_worlds_tier ?? 0),
-            this.catalog,
-        );
-        this.itemMaxPrefix = (info.max_prefix as number) ?? prefixIds.length;
-        this.itemMaxSuffix = (info.max_suffix as number) ?? suffixIds.length;
+        this.itemInfluences = facts.influences;
+        this.itemMaxPrefix = facts.maxPrefix;
+        this.itemMaxSuffix = facts.maxSuffix;
         this.itemPrefixes = prefixIds.map((id) =>
             this.toSlot(id, fracturedP),
         );

@@ -1,4 +1,3 @@
-import { clusterEnchantmentText } from "../cluster-configuration";
 import { itemSnapshotCluster } from "../workspace/persistence";
 import { PcCraftControls, type CraftPanel } from "./pc-craft-controls";
 import { disposeReact, renderReact } from "../react-host";
@@ -44,7 +43,7 @@ import {
 } from "../workspace/persistence";
 import { workspace } from "../workspace/registry";
 import { openTextModal } from "../workspace/dirty-modal";
-import { influenceLabels } from "../item-display";
+import { concreteItemFacts } from "../item-card-model";
 import { PcBasePicker, BasePickerSelection } from "./pc-base-picker";
 import { PcModList, SlotMod, type ConcreteModListModel } from "./pc-mod-list";
 import { PcModPool } from "./pc-mod-pool";
@@ -743,27 +742,11 @@ export class PcEmulator extends HTMLElement {
 
         this.modList.setModel({
             properties: {influences: this.catalog?.genericInfluences ?? [], influenceBits: Number(info.generic_influence_bits ?? 0), corrupted: Boolean(Number(info.item_flags ?? 0) & 1)},
-            kind: "concrete",
-            clusterEnchantmentText: clusterEnchantmentText(info.cluster),
-            baseKey: this.base,
-            baseName: this.baseDisplayName(),
-            itemLevel: this.itemLevel,
-            rarity: info.rarity as string,
-            itemFlags: Number(info.item_flags ?? 0),
-            memoryStrands: Number(info.memory_strands ?? 0),
-            lifecycle: Number(info.lifecycle ?? 0),
-            influences: influenceLabels(
-                Number(info.generic_influence_bits ?? 0),
-                Number(info.searing_exarch_tier ?? 0),
-                Number(info.eater_of_worlds_tier ?? 0),
-                this.catalog,
-            ),
+            ...concreteItemFacts(info, this.catalog, {baseKey: this.base, baseName: this.baseDisplayName(), itemLevel: this.itemLevel}),
             prefixes,
             suffixes,
             implicits,
             enchantments: ((info.enchantment_mod_ids as number[]) ?? []).map(id => this.toSlot(id, new Set())),
-            maxPrefix: (info.max_prefix as number) ?? prefixes.length,
-            maxSuffix: (info.max_suffix as number) ?? suffixes.length,
         });
 
         const tab = this.modPool.getActiveTab();
