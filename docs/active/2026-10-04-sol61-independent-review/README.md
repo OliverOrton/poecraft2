@@ -449,3 +449,84 @@ unchanged deb65256 native partial-held293 receipt is proportionate: its function
 production source and frozen inputs are unchanged; this is not ordinary controller
 or every-entry/original-root economic qualification. Queued review fixtures,
 source hashes and commands remain unchanged.
+
+
+## Native save boundary and first independent LOCAL batch
+
+Owner runtime at862bd1b reports the query gate2728 with one failure: native save
+refuses `nonterminal representative state is not expanded`, despite matching
+60-state cache dimensions. Fresh-owner accounting now passes (fresh60,
+spent-owner124, retry60). These are owner-reported results; no checkpoint replay
+or malformed-load runtime was reached in that stopped selector.
+
+Native validate_cache (`solver_development_checkpoint.cpp:608-674`) requires
+EVERY interned nonterminal representative to be expanded. It does not restrict
+that requirement to decision-reachable states. Native save takes const inputs
+and validates before creating a temporary file (`:756-780`); the refusal does not
+consume admission work or alter an accepted incumbent. An available policy and
+matching vectors therefore do not establish checkpoint-export closure.
+Automatic programme evaluation can intern intermediate or subsequently rejected
+states (`solver_options.cpp:897-1003`, `solver_options_automatic.cpp:1430-1530`),
+whereas expansion schedules admitted row exits and choices
+(`solver_solve_expand.cpp:2837-2863`). That is a plausible source explanation,
+not an established cause for this fixture: the actual first blocking state has
+not been supplied. Before calling this merely an export restriction, identify
+that exact state and test its reachability from the original cache start through
+ALL admitted positive-probability row and choice transitions, with no epsilon
+cutoff. A positive-reachable unexpanded representative needs closure review.
+Do not resize, fabricate expanded flags, erase cache states, or relax the guard.
+
+Current native acceptance/every-entry validation does not call development
+save/load (`solver_solve_selective_completion.cpp:268-333`); checkpoint APIs and
+benchmark flags are optional. Thus this refusal alone does not block preparing
+recovery source behind a disabled gate. It does not qualify public recovery,
+nonempty query replay, lower/exact closure or any broader consumer. Retain the
+unsupported nonempty Eldritch checkpoint boundary separately.
+An existing ordinary closed witness is
+`engine/tests/test_solver_api.cpp:3124 run_development_checkpoint_replay_gate`:
+Normal BodyInt17 level86 to a one-slot Magic goal using Transmute/Alteration/
+Restart, successful native save/load and replay/value/strategy equality. The
+existing selector is `--solver-checkpoint-only data/compiled/current`; it was not
+run by this reviewer. Existing terminal query-only completion remains a separate
+empty-namespace witness, not nonempty recovery checkpoint qualification.
+
+Parent granted LOCAL for the originally pinned batch. All14 source byte pins and
+request SHA256bb456edb08636d8a9217c4566060410ef32ae88d38f1027108f5c0072a71732e
+matched before launch. The canonical Engine-only build used maximum2 compiler
+jobs and exited0 in187.3677s. Isolated compile exited1 in14.2189s with the unresolved
+real test symbol `run_solver_return_bridge_lifecycle_tests()`, called by the
+included test_solver_compile.cpp translation unit. Both supervised processes
+had no timeout, cancellation or survivor. The explicit stop condition applied:
+weighted, finder-generation and validator-budget are all UNRUN. There is no
+native Finder accounting result or production weighted-support counterexample.
+LOCAL was released promptly before documentation; no unchanged-failure rerun or
+production/owner source edit occurred.
+
+Raw first-batch logs/process receipts remain in `out/sol61-independent-review`;
+compact process metadata is retained in `finite-r1-processes.json`. The successful
+Engine archive SHA256 is
+179a3cfbeaa1ba8d9a542b1728d05b39333c231bb6fe558e86c9e5d6c30e2ab9.
+
+## Link correction and bounded recheck request
+
+Parent authorized a source-only linkage correction while CI holds LOCAL.
+Canonical engine/CMakeLists.txt links test_solver_compile.cpp together with
+`engine/tests/test_solver_solve.cpp`, whose line15691 defines the real lifecycle
+symbol. The new `review-recheck-request.json` adds that unchanged translation unit
+to the standalone g++ command. No stub, alternate implementation, test selector,
+production edit or witness assertion change is used. The corrected command is
+SOURCE PREPARED, UNCOMPILED; static dependency inspection is not successful link
+evidence. Fixture cpp and all14 original pins remain unchanged.
+
+The recheck has exactly4 serial stages: compile (1 compiler,180s host watchdog),
+then weighted, finder-generation and validator-budget (75s host/45s native each).
+It reuses the existing successful Engine archive; no build is authorized. It pins
+17 source files, the original production engine tree, archive/configuration/
+generated-header/build-receipt bytes, and requires an empty tracked production
+source diff against2ce0a75b. Any changed identity stops rather than silently
+rebuilding/substituting. Outputs use `out/sol61-independent-review/recheck-r2` to
+preserve the failed first receipt. Contract-negative mode exits may continue to
+the next independent mode; compile/setup failure, unexpected exit, timeout,
+cancellation or survivor stop the remainder. Each mode is attempted once.
+Additional timed policy runs, whole Finder/Current qualification, WASM and all
+broader suites remain excluded. LOCAL is requested; not held or consumed.

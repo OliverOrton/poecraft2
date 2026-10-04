@@ -1,0 +1,57 @@
+[
+  {
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 54232,
+    "process_identity_token": "54232:134355692551579704",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 187367.71550006233,
+    "stage": "build",
+    "command": [
+      "powershell",
+      "-NoProfile",
+      "-File",
+      "scripts/dev-engine.ps1",
+      "-Task",
+      "Engine",
+      "-Jobs",
+      "2"
+    ]
+  },
+  {
+    "exit_code": 1,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 73880,
+    "process_identity_token": "73880:134355694425262936",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 14218.899599974975,
+    "stage": "compile",
+    "command": [
+      "C:/msys64/ucrt64/bin/g++.exe",
+      "-O0",
+      "-std=c++20",
+      "-ffp-contract=off",
+      "-ffunction-sections",
+      "-fdata-sections",
+      "-static-libstdc++",
+      "-static-libgcc",
+      "-Iengine/include",
+      "-Iengine/src",
+      "-Ibuild/engine/generated",
+      "docs/active/2026-10-04-sol61-independent-review/review-native-witness.cpp",
+      "build/engine/libpoecraft_engine.a",
+      "-Wl,--gc-sections",
+      "-lPsapi",
+      "-o",
+      "out/sol61-independent-review/review-native-witness.exe"
+    ]
+  }
+]

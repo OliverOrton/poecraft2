@@ -1,0 +1,145 @@
+{
+  "schema": "sol61_independent_review_finite_recheck_v1",
+  "created_utc": "2026-10-04T06:43:25.345183+00:00",
+  "qualification": "SOURCE_PREPARED_COMPILE_RECHECK_AND_MODES_UNRUN",
+  "source_record_base_commit": "1d45d13df4870633f45705796a9f36d6465f1183",
+  "production_base_commit": "2ce0a75b4e98b2c5fff59be60f269df745bd63bc",
+  "reviewed_owner_candidate": "deb65256ca687bfbf9d2c43bb39c0074ea363772",
+  "worktree": "C:/Users/Oliver/Documents/poecraft2-sol61-independent-review-20261004",
+  "source_workspace_bytes_sha256": {
+    "docs/active/2026-10-04-sol61-independent-review/review-native-witness.cpp": "3a0749171b5a449b25151b48ac1246e4b3dbdbae03c323cd594e3d01a8033c72",
+    "engine/tests/test_solver_compile.cpp": "2f1216d25698797ad39925dae9f37c4a4716ef58c3c19ac9cdc2ed5a5351f9e8",
+    "engine/tests/tests.hpp": "c3bf0c184802fe22b2dbae580e98739102e3123e2410bbc45e4b78744ab45fb7",
+    "engine/src/solver_finder.cpp": "d3526665f3cccf6025e3c0fcec603ed423f1e85d4f8bb68b473bdce2cbf2824b",
+    "engine/src/solver_finder.hpp": "b0a880ecefbaf7cfc328b9c7c66029d9406a3c3cdc8f51760751f92a5e5349cc",
+    "engine/src/solver_selective_completion.cpp": "82d274a7cacb4597fb060345dfabc1ff16c6b23b330f96ad1a8de26d1c93caa3",
+    "engine/src/solver_selective_completion.hpp": "99805c9087e5f68bdc989614cda5c5fd0dbc7a59cd1f8db9c5e60ae4692e6df8",
+    "engine/src/solver_options_helpers.hpp": "575d705635d48d9c24543bbefd506180c3d1f83bc2ba621f7ac845cbbdbed15e",
+    "engine/src/solver_options_automatic.cpp": "e85c97e4d6ba591f4b00882864d2d9d7a60ab120b7a7788169c4a7f8523766a0",
+    "engine/src/solver_calc.cpp": "cc8660226e0692c90b577c97c719a3b6f202530d045538cd9f7c0b81591d6ebb",
+    "engine/src/solver_reforge.cpp": "84b13f4a4420da71e6c240cef2aa4106caea2835ea57293b30701bcb558edc19",
+    "scripts/dev-engine.ps1": "d78492851a6dc5b9594a29a4dd07c48651dbf05970b6bd6f298f03517d388ec8",
+    "scripts/engine-build-common.ps1": "d91773e5d56c501ebeb8ae6a945d5c479f2e0b4087d978238daaf8aac71d8cb9",
+    "tools/ingest/poecraft_ingest/solver_worker.py": "d6ad4e455b15908873465327d6a9c36eddc1b32b83abce216bcb91926efee1b6",
+    "engine/tests/test_solver_solve.cpp": "7b335919afda3522bb211aca413d061ed44680f3b43b432f36e1e71ba63c199a",
+    "engine/CMakeLists.txt": "51ba59e4cfd80f273e6f6e7280bb98c98f53b721ef485cdca298fb36cb12b614",
+    "engine/CMakePresets.json": "9020316cd14f0d1dd194f67ec62b20f58f4f892459afc9cd395f7114e8eeaac3"
+  },
+  "compiler_jobs_max": 1,
+  "serial": true,
+  "native_mode_watchdog_seconds": 45,
+  "native_continuation_bound": 40000,
+  "supervisor": "poecraft_ingest.solver_worker.run_isolated_process",
+  "output_directory": "out/sol61-independent-review/recheck-r2",
+  "requires_frozen_runtime_artifact": false,
+  "local_slot": "REQUESTED_AFTER_CI_SHORT_GATE; no current review LOCAL grant",
+  "stages": [
+    {
+      "id": "compile",
+      "command": [
+        "C:/msys64/ucrt64/bin/g++.exe",
+        "-O0",
+        "-std=c++20",
+        "-ffp-contract=off",
+        "-ffunction-sections",
+        "-fdata-sections",
+        "-static-libstdc++",
+        "-static-libgcc",
+        "-Iengine/include",
+        "-Iengine/src",
+        "-Ibuild/engine/generated",
+        "docs/active/2026-10-04-sol61-independent-review/review-native-witness.cpp",
+        "engine/tests/test_solver_solve.cpp",
+        "build/engine/libpoecraft_engine.a",
+        "-Wl,--gc-sections",
+        "-lPsapi",
+        "-o",
+        "out/sol61-independent-review/recheck-r2/review-native-witness.exe"
+      ],
+      "host_watchdog_seconds": 180,
+      "allowed_exit_codes": [
+        0
+      ],
+      "compiler_jobs": 1,
+      "canonical_link_dependency": "engine/CMakeLists.txt links test_solver_compile.cpp and test_solver_solve.cpp in poecraft_engine_tests; lifecycle symbol has its real definition in test_solver_solve.cpp:15691"
+    },
+    {
+      "id": "weighted",
+      "command": [
+        "out/sol61-independent-review/recheck-r2/review-native-witness.exe",
+        "weighted",
+        "out/sol61-independent-review/recheck-r2/weighted"
+      ],
+      "host_watchdog_seconds": 75,
+      "allowed_exit_codes": [
+        0,
+        1
+      ],
+      "predicted_source_only": "Contract-negative nonunit exits; unit controls/rewards must be inspected. No production nonunit reachability claim."
+    },
+    {
+      "id": "finder-generation",
+      "command": [
+        "out/sol61-independent-review/recheck-r2/review-native-witness.exe",
+        "finder-generation",
+        "out/sol61-independent-review/recheck-r2/finder-generation"
+      ],
+      "host_watchdog_seconds": 75,
+      "allowed_exit_codes": [
+        0,
+        1
+      ],
+      "predicted_source_only": "Ordinary plus automatic generation work exceeds cap50 and automatic work is absent from Finder report; actual product caller witness must establish reachability."
+    },
+    {
+      "id": "validator-budget",
+      "command": [
+        "out/sol61-independent-review/recheck-r2/review-native-witness.exe",
+        "validator-budget",
+        "out/sol61-independent-review/recheck-r2/validator-budget"
+      ],
+      "host_watchdog_seconds": 75,
+      "allowed_exit_codes": [
+        0,
+        1
+      ],
+      "predicted_source_only": "Unowned native validator consumes more than cap1 while shared exhausted owner refuses before execution. Real original-root census setup is mandatory."
+    }
+  ],
+  "stop": "Compile failure, exit2 or unexpected exit, setup/identity disagreement, timeout or survivor. Preserve contract-negatives and inspect every assertion. Each mode once; no unchanged-failure rerun. No Engine rebuild.",
+  "exclusions": [
+    "production edits",
+    "owner fixture/selector edits",
+    "frozen artifact/data changes",
+    "whole Finder incumbent qualification",
+    "whole Current recovery/economic qualification",
+    "main merge or push",
+    "WASM/browser/Simulator",
+    "new supervisor or benchmark infrastructure",
+    "additional Engine build or timed policy benchmark"
+  ],
+  "original_request_workspace_sha256": "bb456edb08636d8a9217c4566060410ef32ae88d38f1027108f5c0072a71732e",
+  "engine_reuse": {
+    "successful_build_receipt": "out/sol61-independent-review/build-process.json",
+    "build_exit_code": 0,
+    "build_survivor": false,
+    "production_engine_tree": "355658b8e82bf937ca90a8a1d08e710c52665a82",
+    "preflight_tracked_diff_must_be_empty_against": {
+      "revision": "2ce0a75b4e98b2c5fff59be60f269df745bd63bc",
+      "paths": [
+        "engine",
+        "scripts",
+        "tools/ingest/poecraft_ingest/solver_worker.py"
+      ]
+    },
+    "workspace_build_bytes_sha256": {
+      "build/engine/libpoecraft_engine.a": "179a3cfbeaa1ba8d9a542b1728d05b39333c231bb6fe558e86c9e5d6c30e2ab9",
+      "build/engine/CMakeCache.txt": "edaad56c098cbdad26a433eee26b2a71df88c5a0aa7a17d67e1eed43e8da674b",
+      "build/engine/build.ninja": "1703690874e6b099237de530227bb29417d789c00c572b018970b097777e666e",
+      "out/sol61-independent-review/build-process.json": "d71c60e1050277baba90313fc3f6f80b1d004ae8f2833ea910235649342eadc0",
+      "build/engine/generated/harvest_crafts.generated.hpp": "1f092eb6c642a9ab8b727720b18cdad065944e1103f49f04c2daf2040e248722"
+    },
+    "rebuild_authorized": false,
+    "on_identity_mismatch": "STOP and report; do not silently rebuild or substitute another artifact"
+  }
+}
