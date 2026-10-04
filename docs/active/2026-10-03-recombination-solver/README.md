@@ -426,3 +426,19 @@ draft as tested or transfer either component's historical receipts to it.
 Presentation migration can proceed against the [stable source interface handoff](ui-interface-handoff.md).
 It records connector geometry, authored-template wording and native trace provenance;
 execution adapters and the queued qualification gate remain with this owner.
+
+## Combined finite gate completed (2026-10-04)
+
+Native source `823657c0` passes header/DLL smoke and four focused selectors
+(237/358/105/300 checks), Python 12 tests plus 7 subtests, the independent Ring
+recycling export, and 1,000 native Builder trials at seed62667494 (1,000 successes;
+cost6826/actions11739). Cache repair `63ff9c12` is separate for UI cherry-pick; its
+async regression, pre-fix negative control and TypeScript pass. The source checkpoint
+links the compact receipt under `out/strategy-feeder/sol61-finite-20261004`.
+
+Retained failures led to standard-header/API-smoke fixes, admitted export IDs,
+frozen non-explicit fixture correction and explicit canonical A/B bindings. No
+represented modifier order was merged away. LOCAL is released with no owned
+survivors. Matching WASM, real planner worker/cancellation transport, full web tests,
+rendered combined UI and hosted combined qualification remain unrun/held. The
+unchanged metadata file used by the mocked cache test is not runtime qualification.

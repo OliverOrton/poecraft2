@@ -1,9 +1,9 @@
 {
-  "status": "SOURCE_ONLY_UNBUILT_UNQUALIFIED",
+  "status": "FOCUSED_NATIVE_FINITE_PASSED_WASM_WORKER_HELD",
   "programme": "combined estimated recombination and checked bounded Builder export",
-  "source_commit": "9736e766de959070b0c89fcb71281438ebd6f64c",
-  "engine_tree": "149bbc4ce0a555435d358d2f52a4c83f06d18166",
-  "web_source_tree": "68f0d291b3861695ff00e9690afd73fa438c5c8b",
+  "source_commit": "823657c0b67a793676e83285c4e05b85175a96ab",
+  "engine_tree": "4d11a36e6a7a6d9852cb292aca3c2b46e8d07088",
+  "web_source_tree": "cce82b9baf0bdbe444edaacd9349364033c9e2e2",
   "branch": "dot/sol61-recomb-builder-20261004",
   "worktree": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-recomb-builder-20261004",
   "main_base": "29d9e666b9d11dbe9ba58959f2598df9495dc49d",
@@ -33,19 +33,21 @@
     "1000 native compiled Builder trials at seed62667494 (NOT RUN)"
   ],
   "completed_checks": [
-    "Scoped git diff --check"
+    "Two-job Tests/static/shared native builds",
+    "Source-matched DLL/header smoke",
+    "Four native finite selectors: 237/358/105/300 checks, zero failures",
+    "Checked recycling Ring export and 1000 compiled native Builder trials, seed62667494, 1000 successes, cost6826/actions11739",
+    "Focused Python:12 tests and7 subtests",
+    "Focused asynchronous cache regression and pre-fix negative control",
+    "Web TypeScript noEmit",
+    "Scoped whitespace check"
   ],
   "unrun": [
-    "native build",
-    "native header/DLL checks",
-    "all new finite tests",
-    "1000 new Builder trials",
-    "focused Python checks",
-    "web tests",
-    "TypeScript",
     "matching WASM",
-    "actual worker route",
-    "rendered review"
+    "actual planner worker route/cancellation transport",
+    "full npm suite",
+    "combined rendered UI",
+    "hosted combined Build/Test"
   ],
   "not_implemented_or_held": [
     "Matching WASM/worker/planner exposure pending native dependency qualification; no cosmetic browser cancellation",
@@ -56,13 +58,12 @@
     "Robust repeated-policy cost bounds or synthesis"
   ],
   "local_slot": {
-    "granted": false,
-    "heavy_commands_started": 0,
-    "owned_processes": [],
-    "status": "No owned heavy process or compiler job; no slot held"
+    "released": true,
+    "owned_survivors": [],
+    "all_exec_sessions_complete": true
   },
   "next_batch": {
-    "purpose": "Source-matched native dependency and restricted export correctness gate before further adapters",
+    "purpose": "Matching WASM and genuinely cancellable planner worker/adapters after further source work and a new parent LOCAL grant",
     "compiler_jobs": 2,
     "build_owner": "scripts/dev-engine.ps1 -Task Tests / -Task Engine -Jobs 2",
     "native_selectors": [
@@ -74,7 +75,7 @@
     "python": "focused random recombination and strategy feeder tests against new isolated DLL",
     "artifact": "data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
     "requirements": [
-      "Parent LOCAL grant",
+      "New parent LOCAL grant; prior finite slot released",
       "Frozen native hash and interpreter/DLL preflight",
       "Deterministic bounded/blocking execution through existing supervision",
       "Retain failures; stop on unresolved contract/identity/mass/cap failure",
@@ -96,5 +97,19 @@
       "policy_improvement": "1e-10*max(1,V)"
     }
   },
-  "publication": "No main merge, push, deployment, data refresh or dev-server action. Do not integrate as qualified."
+  "publication": "No main merge, push, deployment, data refresh or dev-server action. Do not integrate as qualified.",
+  "initial_source_commit": "9736e766de959070b0c89fcb71281438ebd6f64c",
+  "qualification_receipt": "out/strategy-feeder/sol61-finite-20261004/qualification-receipt.json",
+  "cache_fix_commit": "63ff9c1242b49d0aed7002cb19c3c5749d8c9757",
+  "retained_failures": [
+    "build-tests.log missing standard includes",
+    "cache-regression.log missing metadata import fixture",
+    "cache-regression-02.log mock used canonical enum rather than public prefix enum",
+    "cache-baseline-negative.log expected pre-fix failure",
+    "recombination-solver.log invalid exported identifiers and taxonomy fixture",
+    "recombination-solver-02.log canonical taxonomy fixture and no-match",
+    "recombination-solver-03.log physical A/B modifier-order routing mismatch"
+  ],
+  "native_executable_sha256": "bcdf9165d9be4b27803594f4460c54708609d3b572fa169de48d56596c8075b0",
+  "native_dll_sha256": "32162f44f1f7c5f1b6ead3a61a4c40d996680a39d41e406b55df64daffd4761d"
 }
