@@ -45,8 +45,10 @@ graph and checker alongside the old verified winner before admitting another
 
   The retained-side treatment consumes one of the same eight attempts. Its
   graph-local exact entry census and resumable state-local admission validator
-  retain memory alongside the checker and old winner and debit logical reforge
-  work. Every positive-root-visit programme entry must validate; an incomplete
+  retain memory alongside the checker and old winner. Their logical work must
+  belong to the declared parent envelope; default Finder's ownership gap is
+  recorded below and is not repaired by sharing Current's implementation. Every
+  positive-root-visit programme entry must validate; an incomplete
   or capped validation is a refusal/censoring event, not an accepted checked
   policy. Finish releases active validation while retaining the previous best
   complete graph. The [K4 matched record](../active/2026-09-25-seed-retention/README.md#k4--matched-original-root-qualification)
@@ -201,6 +203,42 @@ releases live charges, never cumulative native work. New setup storage is distin
 from the completed retained-pool change's historical +16-byte measurement above.
 
 Some observational JSON projections are deliberately outside the proof's solver-owned cap and remain bounded by serialization limits. That does not make their process memory or elapsed construction time zero. Preserve the declared attribution in comparisons.
+
+<a id="measurement-boundary"></a>
+### Measured accounting and complete capacity are different obligations
+
+Committed native work survives interruption, refusal, rollback and coroutine
+destruction. Optional refusal may release unpublished allocations and preserve
+a compatible incumbent; final artifact revocation must clear its executable
+finite-upper authority. Transfer a checker debit exactly once and do not double
+charge a validator that already uses the shared owner. Current's attachment does
+not establish the same ownership in Finder or authored evaluation.
+
+The [independent October review](https://github.com/OliverOrton/poecraft2/blob/4c9f078d95e2c0c837ab7a408c4846420bac94db/docs/active/2026-10-04-sol61-independent-review/causal-research-handoff.md)
+finds inherited default-Finder witnesses committing 40 ordinary plus 48 automatic
+units while reporting 40 under cap 50, and an unowned reached-entry validator
+doing 48 units under cap 1. These are demonstrated ownership failures in those
+consumers, not a diagnosis of the frozen Conquest cost gap. Main's passing
+acceptance suite does not close them. Current's exhausted shared-owner control
+refuses child work and preserves the existing debit.
+
+Count simultaneous storage through disjoint owners. A result/census already
+included in a live checker charge cannot be added again or subtracted twice.
+The private measurement's 87.596 MB checker includes 54.621 MB result/census;
+at most 32.975 MB is redundant before overlap/transfer costs are accounted for.
+That is not a proven complete-coverage allowance or a qualified storage change.
+Aggregate solver ownership, transient growth, checker peaks, process RSS and
+WASM heap remain separate measurements. A final or last sampled ownership value
+does not establish the unseen maximum or the capacity needed to validate every
+entry. Incomplete census coverage cannot be linearly extrapolated into a minimum
+full allowance. Unmeasured peaks stay unmeasured.
+
+The native scratch limit (`max_owned_bytes`) and aggregate publication limit
+(`max_solver_owned_bytes`) have different owners. Preserve their exact boundary,
+zero/default semantics and old/new allocation overlap. The approved private
+3328599654-byte envelope is a new typed experimental cut, not evidence of an
+accidental product-budget reduction or a recovered historical integer. Its
+restored root run was never started. [Research limits](https://github.com/OliverOrton/poecraft2/blob/040993ec9bb8109cc1970df91c8bc9ec7ef97744/docs/active/2026-10-04-sol61-armour-recovery/PRO-HANDOFF.md).
 
 ## Reuse is evidence-specific
 

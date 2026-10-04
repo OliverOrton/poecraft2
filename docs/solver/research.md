@@ -130,6 +130,20 @@ according to their individual histories; the living record owns run chronology.
 <a id="rq-003"></a>
 ### RQ-003 — Can executable-policy quality be preserved while proof work scales?
 
+The October 4 source-only closeout separates demonstrated local construction
+loss, inherited Finder ownership failures and private qualification failures.
+The released 101311.35 Conquest policy finishes within its declared budget without
+a cap hit. A reachable partial-held historical continuation is legal but excluded
+by one bounded grammar gate; its full-root economic contribution and introducing
+change remain open. Generic plain fill does not reconstruct the failed historical
+plain-fill hypothesis. The private 210090.73 numerical result has only
+1717/12658 entries admitted and supplies no checked upper or recovered incumbent.
+The [solver handoff](https://github.com/OliverOrton/poecraft2/blob/040993ec9bb8109cc1970df91c8bc9ec7ef97744/docs/active/2026-10-04-sol61-armour-recovery/PRO-HANDOFF.md) and
+[independent causal account](https://github.com/OliverOrton/poecraft2/blob/4c9f078d95e2c0c837ab7a408c4846420bac94db/docs/active/2026-10-04-sol61-independent-review/causal-research-handoff.md)
+are published on separate research branches. New heavy work and activation are
+paused for Pro planning; the query branch's finite evidence is not a product
+WASM/quality qualification. [Acceptance contract](mathematics/numerical-closure.md#bounded-quality).
+
 The [September 22 capability programme](../active/2026-09-22-ordinary-capability/README.md)
 measures the current ordinary gap with matched base/goal/action/pricing scope:
 native Conquest-four C3746.1319409485764 versus actual unattended Calculator
@@ -612,6 +626,22 @@ reconciles the reported baseline with actual local changes, and gives every
 material finding a disposition: incorporated, open, refuted, duplicate, out of
 scope or blocked. Put accepted reasoning in its canonical mathematical owner,
 not only in an implementation prompt. Preserve original reports and claim history.
+
+**October 4 import disposition:** useful solver/reviewer originals remain once
+on their pinned research branches. Incorporated conditional reasoning: actual
+controller [occupancy and complete entry obligations](mathematics/policies.md#policy-difference),
+[capability stages](mathematics/search-and-resumption.md#capability-pipeline),
+[control-quality acceptance](mathematics/numerical-closure.md#bounded-quality),
+[immutable observation/live ownership and peak limits](resources-resume-replay.md#measurement-boundary),
+and the [unit-input terminal-kernel premise](transitions-reforge.md#terminal-unit-mass).
+Refuted: generic plain fill as reconstruction of the examined historical word.
+Scoped negative: default Finder's unowned debit. Open: original whole-regression
+cause, product-envelope admission of the historical word, automatic discovery,
+whole-root economics, complete peak and browser performance. Source-only R11
+failure-acceptance correction and proposed quality witness remain unbuilt/unrun;
+no experimental source or claim status is promoted by this documentation.
+The recombination uncertainty/robustness argument already resides in its
+[canonical native contract](../engine/recombination-solver.md); it stays conditional.
 
 The normal completion message is the receipt: imported path, canonical claims and
 sections, changes, disagreements, actual validation, local commit and real push

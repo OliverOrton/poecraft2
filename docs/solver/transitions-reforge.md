@@ -39,12 +39,16 @@ proof relations must be reconstructed and checked. Authored graph vocabulary
 stays v1. Historical benchmark receipts retain their original law and costs;
 new costs are not pure search-improvement comparisons.
 
-Native count-law version 2 binds memo/kernel signatures and lower, quotient and
-continuation identities. Action refinement contract 4 and evaluator certificate
-version 2 invalidate old assertions/values. Development checkpoint format 5
-rejects old-law rows and additionally checks the law version and session kind.
-The [execution record](../active/2026-10-02-reforge-law/README.md) owns tests and
-remaining native/WASM qualification; this reference alone confers no acceptance.
+Native count-law version 3 binds memo/kernel signatures and lower, quotient and
+continuation identities, including the approved single-side working law. Action
+refinement contract 5 and evaluator certificate version 3 invalidate old
+assertions/values. Combined development checkpoint format 7 rejects old formats
+and binds count law, original-root grammar and immutable cluster/session identity.
+Historical format 5 count-law evidence retains its original source.
+The [execution record](../active/2026-10-02-reforge-law/README.md) preserves its
+initial tests. The [combined product](../active/2026-10-04-sol61-product-integration/README.md)
+now supplies matching functional native/WASM acceptance; this does not create a
+new timed economic comparison or confer authority from this reference alone.
 
 ## Completion is an authority boundary
 
@@ -53,6 +57,21 @@ While suspended, the cursor owns scratch only. It cannot populate the ordinary r
 A valid lower-only abstraction may represent an unmaterialized action independently, but that is a separately justified relation. It does not make an incomplete native distribution complete. See [CLM-0008](claims.md#clm-0008).
 
 Observed choices retain their native information timing and source observation identity. A fixed policy evaluates its fixed choice rule; a lower model that grants extra choice must justify that relaxation. Neither may silently discard an outcome, retry branch, or mandatory internal program cost.
+
+<a id="terminal-unit-mass"></a>
+### A carrier-independent terminal kernel still needs unit input mass
+
+For weights \(p_i\) and the same terminal kernel \(K\) at each carrier,
+\(\sum_i p_i K=(\sum_i p_i)K\). Returning canonical \(K\) is valid only
+when the input is a complete unit probability distribution. Unequal weights
+that sum to one satisfy that premise; a subprobability or occupancy measure does
+not. The internal attempt helper's fixed wrapper starts at mass one, and the
+inspected Imprint extension carries whole prior support and rejects an illegal,
+unsupported or observed-choice extension as a whole. No intentional nonunit
+production caller was found. The 0.125 and tiny-mass diagnostics therefore expose
+the generalization's precondition, not a demonstrated production probability
+bug. They establish neither floating-law normalization nor an omitted positive
+branch in production. [Independent review](https://github.com/OliverOrton/poecraft2/blob/4c9f078d95e2c0c837ab7a408c4846420bac94db/docs/active/2026-10-04-sol61-independent-review/README.md).
 
 ## Work And Resources
 

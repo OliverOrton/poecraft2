@@ -58,6 +58,16 @@ independent occupancy or entry-cost evaluations. The old controller's largest
 cost contributions can guide which alternative to investigate; they do not
 certify how much a changed controller saves.
 
+Expected visits are not probabilities of ever using an operation: retries can
+make an occupancy count exceed one. A stage's root-weighted expenditure is not
+its conditional entry cost. Low observed spend on an action does not bound its
+effect on later costs. Cheaper acquisition can increase visits to an expensive
+completion stage, so replacing acquisition alone need not improve root cost.
+Any changed controller needs its own full paid continuations, properness and
+occupancy evaluation. The [October decomposition](https://github.com/OliverOrton/poecraft2/blob/040993ec9bb8109cc1970df91c8bc9ec7ef97744/docs/active/2026-10-04-sol61-armour-recovery/PRO-HANDOFF.md) illustrates
+this distinction, but its incomplete experimental entry admission supplies no
+publishable upper or measured recovery of the released incumbent.
+
 For a complete legal action at an entry whose every positive-mass exit has a
 compatible route and value under the same proper controller,
 \(Q_\pi(t,a)=c(t,a)+\sum_u P(u\mid t,a)J_\pi(u)\) prices taking that action
@@ -283,6 +293,14 @@ In a finite fixed-policy graph, a non-goal bottom strongly connected component r
 The graph used here must contain **all positive-probability outcomes**. A missing low-probability edge may be the only edge to a failure component. A default route or evaluator refusal is not an absorbing success.
 
 The entry qualifier matters. A compiled graph may contain an improper component unreachable from its original root. Root evaluation can still be proper. Asking for a continuation upper at an entry inside that component requires a new entry-specific argument and should fail.
+
+A numerical root evaluation also does not replace the native correspondence
+checks required by the producer's acceptance contract. When every strictly
+positive reached programme entry must be admitted, a capped census or validator
+leaves that obligation incomplete even if the root equations are proper and
+converged. Do not infer admission of unchecked entries, drop tiny positive mass,
+or pair a diagnostic scalar with an unqualified artifact. This is an acceptance
+refusal, not proof that the proposed native policy is mathematically invalid.
 
 A simple graph demonstrates the distinction: root \(r\) goes to the goal for cost 1; a separate node \(z\) loops forever. The policy is proper from \(r\), not from \(z\). The existence of both nodes in one serialized strategy does not extend root authority to \(z\).
 
@@ -579,6 +597,17 @@ visit to an entry during mandatory program work is not a control return.
 This is an application of [CLM-0002](../claims.md#clm-0002),
 [CLM-0003](../claims.md#clm-0003) and [CLM-0004](../claims.md#clm-0004), with no
 lower, action-retirement or all-action optimality authority.
+
+A bounded constructor may cover fewer entries than the native mechanics permit.
+Requiring every goal slot on a held side before constructing an Eldritch growth
+word can miss a legal partial-held continuation. The [October causal review](https://github.com/OliverOrton/poecraft2/blob/4c9f078d95e2c0c837ab7a408c4846420bac94db/docs/active/2026-10-04-sol61-independent-review/causal-research-handoff.md)
+demonstrates one positive original-root carrier whose historical Ember/Exalt word
+is legal and preserves its incoming affixes, while the released bounded grammar
+routes it to acquisition. This proves a local composition omission, not absence
+from all search, a missing primitive, whole-policy economic recovery or the
+introducing change. A generic extension must retain exact item/tier/blocker and
+capacity guards, every positive exit and paid setup/recovery. Modifier-family
+presence or a goal mask alone cannot establish that a desired tier is rollable.
 
 One constructive native domain is an ordinary Rare item with no fractured
 affix, locked side, unresolved offer/checkpoint or incompatible persistent

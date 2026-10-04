@@ -220,7 +220,8 @@ See [Workspace](workspace.md) and [Economy](../economy/README.md).
 The feeder extension retains operation nodes and existing control-flow edges,
 with explicit resource slot assignments shown as item ports. It has no general
 concurrent scheduler or publishing/account resource contract. Executable
-recombination stays held pending resource-slot integration of the qualified native pair Apply.
+advanced random recombination Apply remains held; the qualified ordinary native
+pair Apply is integrated through explicit paid resource slots.
 Aggregate Simulator node/edge overlays, empirical focus/trim and publishing
 remain deferred in [Product Notes](NOTES.md), the
 [solver roadmap](../future/solver-roadmap.md), and other `future/` references.
@@ -310,7 +311,7 @@ contracts with the existing condition editor, and shows explicit item ports on
 the board. Save/import, clone and draft Undo/Redo preserve the complete reference.
 No crafting interpreter or probability law is added to TypeScript.
 
-### Typed Builder item flow (component qualified; combined integration pending)
+### Typed Builder item flow (combined product qualified at 81d4f471)
 
 Recombination has two input dots (`input_a`, `input_b`) and one `output` dot.
 New Donor item and Saved feeder blocks set `source_only: true`: they have only
@@ -368,7 +369,13 @@ net profit/investment, without guessed salvage.
 Matching native/header/DLL, focused Python, WASM, full web and final TypeScript
 acceptance pass. The final controlled Chrome Builder fixture passed 122 assertions
 and actual UI/native-worker Run N 1000; prior fixture failures are retained.
-Oliver owns screenshot visual review, and full product-server rendering remains
-unrun. The living feeder record pins this component's 4ad40580 baseline; integration
-with later solver main 29d9e666 requires its own combined qualification. No exact
-inventory or broader pair-law authority is promoted.
+The [combined product record](../active/2026-10-04-sol61-product-integration/README.md)
+now qualifies integration over solver main 29d9e666 at 81d4f471: all 18 native
+targets, the complete 38-file real-WASM/web chain and TypeScript pass hosted.
+The b04 packaged render passes continuity, real A/B bindings/output identity,
+native read-only card, inventory/paid receipts/cost and trace navigation. The
+exact tested tab-return fixture is integrated. Earlier failures remain retained;
+pair before-item snapshots, nested child steps and unconfigured cluster snapshots
+are explicit exclusions. Oliver owns screenshot visual review. The older feeder
+record retains its own 4ad40580 component identity. No exact inventory or broader
+pair-law authority is promoted.

@@ -257,6 +257,43 @@ The reader should be able to recover the following from a result:
 
 A display field is a projection of these facts, not a substitute for them.
 
+<a id="bounded-quality"></a>
+### A checked upper and a capability ceiling answer different questions
+
+For a declared request identity \(I\) and computational budget \(B\), let
+\(U_{\mathrm{ret}}(I,B)\) be the cheapest compatible, checked artifact that is
+currently owned and exportable, or infinity if none is eligible. An independently
+checked control can define a predeclared capability ceiling:
+
+\[
+U_{\mathrm{ret}}(I,B)\le
+U_{\mathrm{control}}(I)(1+\delta_{\mathrm{quality}})+\tau_{\mathrm{existing}}.
+\]
+
+The control must match the original root, terminal/extras/tier rules, native law,
+prices, action/restart scope and evaluation contract. Budget, activation, source,
+executable and worker identities decide which discovery comparisons are valid.
+The quality allowance is declared before observing the candidate and is separate
+from existing numerical tolerances and optimality-gap rules. The proposed small
+deterministic witness uses zero quality allowance. A real-case ceiling needs a
+qualified current-law control and an explicit acceptance decision; historical
+best cost or an arbitrary percentage cannot supply it.
+
+A valid expensive fallback can satisfy every executable-policy check while an
+eligible cheaper alternative never reaches checking. Suppressing generation in a
+test should preserve fallback validity but fail its declared capability ceiling.
+Chaos also passes whenever its checked cost meets that ceiling; no particular
+operation sequence is required. Without a qualified control, report quality
+unqualified. A capability miss does not by itself establish an invalid policy.
+The comparison gives no new lower bound or exact-closure authority.
+
+Record actual time/work to first feasible and first control-quality artifact,
+without backdating either. Historical best, presently retained artifact and
+delivered artifact are distinct. Censored checking or mandatory positive-entry
+validation cannot be counted as a qualifying observation. These are acceptance
+and reporting requirements; the missing-candidate witness, timed quality smokes
+and nine-case cohort remain unqualified at this closeout. [Search-stage distinction](search-and-resumption.md#capability-pipeline).
+
 <a id="reference"></a>
 ## 7. Independent references check particular layers
 

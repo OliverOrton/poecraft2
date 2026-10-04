@@ -1,4 +1,28 @@
-# Combined UI/recombination locally qualified; hosted checks pending
+# Combined UI/recombination released at 81d4f471
+
+Main publication and remote source are verified at
+`81d4f47106993d7c36af502595fcba24fa0b7e51`. Exact-source isolated Windows
+[37206763122](https://github.com/OliverOrton/poecraft2/actions/runs/37206763122)
+completed successfully: 234 ingest passed/5 skipped, 25 economy passed,
+302 bindings passed, all 18 CTest targets passed in 760.39s, the complete
+38-file web chain and TypeScript passed. Build took 424s and Test 1656s.
+Solver knowledge 37206763077 passed. Main-specific Windows
+[37209887436](https://github.com/OliverOrton/poecraft2/actions/runs/37209887436)
+is tracked separately; a docs-only follow-up inherits matching production source
+evidence and does not claim native was rerun. The JSON qualification receipt
+below retains its earlier pre-hosted observation; this terminal evidence
+supersedes that status without changing its source/artifact identities.
+
+The native corpus was validate-only; this full functional pass does not qualify
+the proposed real nine-case quality cohort or diagnose the original two Python
+scheduler failures on 29d9. Separate CI worker repair remains outside main.
+Both [solver research](https://github.com/OliverOrton/poecraft2/blob/040993ec9bb8109cc1970df91c8bc9ec7ef97744/docs/active/2026-10-04-sol61-armour-recovery/PRO-HANDOFF.md) and
+[independent review](https://github.com/OliverOrton/poecraft2/blob/4c9f078d95e2c0c837ab7a408c4846420bac94db/docs/active/2026-10-04-sol61-independent-review/causal-research-handoff.md)
+are published separately and remain unqualified for production. No experimental
+solver merge, new solve/build, deployment, dev-server restart or data refresh
+is part of this source-only closeout.
+
+## Retained local gate and artifact evidence
 
 The combined product at b04eec10892d6eaeb69e8645bccad9eb60a29699 passes the
 compositional local gate. Its engine/bindings, WASM50c98f55/MJS8ec20cf7,16 frozen

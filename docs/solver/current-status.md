@@ -1,21 +1,42 @@
 # Solver current status
 
-**Reviewed capability snapshot â€” qualification remains scoped to its receipts.**
-Reviewed code: `ae24e0bb8797fb953cb8b9eb5c8ef040fbba203c`.
-The later [IC native follow-up](../active/2026-09-27-current-incumbent-continuity/README.md#continued-native-repair)
-changes initial renewal checking, one-affix selective cleanup and private-service
-work debiting. Its own receipts qualify that delta; historical A4/A5 and browser
-measurements below retain their original build identities.
-The [W reconciliation](../active/2026-09-27-fresh-session-reconciliation/README.md)
-checked source and existing local U/P receipts without rerunning them.
-This page is not a new proof, benchmark
-ledger, generated research series or sequencing owner. [HANDOFF](../../HANDOFF.md)
-owns the selected work, running processes and remaining experiment allowance.
+**Reviewed released source: `81d4f47106993d7c36af502595fcba24fa0b7e51`.**
+Main contains the qualified UI/recombination integration over `29d9e666`.
+The exact-source isolated Windows [run 37206763122](https://github.com/OliverOrton/poecraft2/actions/runs/37206763122)
+passes Python, all 18 native targets, matching real WASM/web tests and TypeScript;
+solver-knowledge run 37206763077 also passes. Main-specific Windows run
+37209887436 remains a separate result. The [product record](../active/2026-10-04-sol61-product-integration/README.md)
+owns current source/artifact and rendered evidence. This is functional acceptance,
+not a new representative-policy quality baseline.
 
-A later documentation-only commit need not change this code revision. On a
-relevant code/runtime change, review the delta and refresh affected rows; do not
-transfer old qualification to a new build by editing the heading. Follow each
-record for its actual executable, scope and measured revision.
+Historical rows below retain their named source, target, law, activation and
+consumer identities. Full tests do not retroactively establish their economics,
+Finder activation or browser latency. Reviewed prior snapshot `ae24e0bb` and
+[IC](../active/2026-09-27-current-incumbent-continuity/README.md#continued-native-repair)/
+[W](../active/2026-09-27-fresh-session-reconciliation/README.md) receipts remain
+historical evidence. A documentation-only follow-up does not change source
+qualification. [HANDOFF](../../HANDOFF.md) owns selected sequencing.
+
+## Solver research is published separately; capability changes paused
+
+[Solver checkpoint `040993ec`](https://github.com/OliverOrton/poecraft2/blob/040993ec9bb8109cc1970df91c8bc9ec7ef97744/docs/active/2026-10-04-sol61-armour-recovery/PRO-HANDOFF.md) and
+[independent review `4c9f078d`](https://github.com/OliverOrton/poecraft2/blob/4c9f078d95e2c0c837ab7a408c4846420bac94db/docs/active/2026-10-04-sol61-independent-review/causal-research-handoff.md)
+are published research branches and are absent from main. The default-off private
+controller has finite construction evidence but incomplete entry admission,
+no checked full-root upper, recovery, activation or matching WASM qualification.
+The latest benchmark exception correction is unbuilt/unrun; its preceding binary
+does not qualify it. The approved larger-envelope root attempt never started.
+
+Released Current's law-3 Conquest policy is proper, cost-complete at 101311.35 and
+ends at requested bounded Finish with cap mask zero. The saved historical law-3
+graph evaluates at 85970.67, but its admission to the priced product envelope is
+not established. One reachable partial-held historical word demonstrates a
+bounded grammar omission; whole-regression cause and whole-policy repair remain
+open. Private observer/memory stops do not explain that released stop. Finder's
+inherited shared-work ownership negatives remain open. The deterministic
+missing-candidate gate, two quality smokes and nine-case cohort are unqualified;
+no real quality allowance is approved here. Preserved dirty Bow4 is not established
+as Oliver's separately improved request. New heavy work is paused for Pro planning.
 
 The [isolated Finder Essence follow-up](../active/2026-10-02-finder-essence/README.md)
 qualifies bounded native satisfying-tier acquisition, semantic goal roles,
@@ -25,32 +46,25 @@ private and Current's producer default is unchanged. Real-data economics and
 WASM/worker acceptance remain unqualified; no exact checker quotient is retained
 at the grammar checkpoint.
 
-## Combined recombination/Builder draft (2026-10-04)
+## Combined recombination/Builder product qualification (2026-10-04)
 
-The isolated [combined source checkpoint](../active/2026-10-03-recombination-solver/README.md#combined-sol-61-source-checkpoint-2026-10-04)
-drafts explicit estimated v3 scenarios, successful full-item checked removal
-children and restricted native policy export/check. It is UNBUILT / UNQUALIFIED;
-component receipts do not qualify it. Native/worker/WASM acceptance remains held.
-Current/Finder and general exact inventory evaluation gain no new authority.
+The [combined product](../active/2026-10-04-sol61-product-integration/README.md)
+is released at `81d4f471`, with native source matching the qualified R handoff,
+WASM `50c98f55` / MJS `8ec20cf7`, runtime `82fb60a2`, economy `de282eec` and all
+16 frozen inputs unchanged. Exact-source hosted acceptance covers 18 native
+targets and the complete 38-file real-WASM/web chain. The b04 packaged render
+and exact tab-return fixture pass UI continuity, paid typed A/B flow, real native
+output identity, read-only trace card, inventory, paid costs and navigation.
+The artifact retains its actual b04 source/build identity; it is not rebound to
+the later test/documentation commit. Eight screenshots remain retained locally.
 
-## Authored feeder qualification (2026-10-03)
-
-The isolated [feeder programme](../active/2026-10-03-strategy-feeder/README.md)
-adds pinned paid native child invocations, output predicates and explicit
-resource recycling. Its source-matched native/web/TypeScript and WASM evidence
-is retained. The [integration receipt](../active/2026-10-03-feeder-integration/README.md)
-adds shared DLL/header, unfiltered298 Python bindings and52 controlled rendered
-Builder assertions with zero page errors; full product-server rendering remains
-unrun. Current/Finder
-producers and exact closure are unchanged. Exact inventory/feeder evaluation
-stay held. A later typed-port Builder recombination source checkpoint delegates
-to the existing qualified pair Apply. Matching native/DLL/WASM/web and final
-TypeScript pass. Its final controlled Chrome fixture passes 122 assertions and
-the actual native worker 1,000-run UI check; earlier failures are retained. Visual
-review/full-server rendering remain unrun, and latest solver-main combination
-is not qualified here. LOCAL is released. Ordinary rare kernel refusals remain;
-fancy blocking/exclusive admission is separate owner work. This row extends no
-exact authority.
+Paid feeder invocation and successful checked full-item children, restricted
+policy export/check and explicit all-in attempt scenarios are qualified within
+their contracts. General exact inventory/feeder/recycling evaluation stays held.
+Advanced random v3 Apply is analysis-only; scenario minima do not establish robust
+retry bounds. Native gold/dust quantities remain unknown. Unsupported inputs and
+joint laws still refuse. Current/Finder producers, lower and exactness authorities
+gain no activation from this integration. [Native contract](../engine/recombination-solver.md).
 
 ## Approved reforge count-law correction (2026-10-02)
 
@@ -61,7 +75,8 @@ they do not qualify this source. Shared sampling/exact kernels serve Calculator,
 Current, Finder, authored evaluation and compound/retained rows. Graph structure
 may be reusable because ordinary support is unchanged, while law-bound values,
 certificates and checkpoints must be independently rebuilt. Its 1,352,300 finite native checks qualify this correction separately;
-WASM/worker and timed real-data qualification remain unrun. Cluster activation
+Matching released WASM/worker functional acceptance now passes in the combined
+product; its full suite does not create a new timed quality comparison. Cluster activation
 and unresolved ordinary/Abyss jewel laws remain separate owner boundaries.
 ## Ordinary product Foulborn/Finder finite delta (2026-10-02)
 
@@ -354,7 +369,7 @@ and original-root grammar changes plus immutable cluster identity; standalone
 5/6 are refused. Fixed-currency Lock transport v2 likewise binds law/configuration.
 Default capability discovery discloses unavailable current Fossil laws as filtered;
 explicit selected primitives/loadouts/dependencies retain their refusal. Matching
-combined product acceptance remains pending; historical owner cost receipts are
+combined functional acceptance passes at `81d4f471`; historical owner cost receipts are
 not transferred across the approved rare-count law. Pause after this batch.
 
 ## Persistent multi-preview Lock isolated qualification (2026-10-03)
@@ -364,6 +379,7 @@ and approved the versioned independent cached simulation model. Native lifecycle
 portable seen/unseen outcome reservations and Emulator controls pass isolated
 native/shared/header builds, 64 focused Python contracts, matching WASM, the
 complete nine-file worker/web Lock chain and TypeScript. The programme receipt
-pins this delta; combined-feature integration and rendered review remain unrun.
+pins this delta; combined-feature functional acceptance and the scoped packaged
+render now pass in the product record. Oliver's visual review remains separate.
 No adaptive exact value or ordinary Calculator, Current,
 Finder, authored Simulator, pending Unveil or donor-preview admission is added.

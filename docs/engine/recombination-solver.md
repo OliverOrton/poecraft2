@@ -199,9 +199,9 @@ and recorded receipt replay remain the declared authorized model. No new selecte
 mode, broader solver admission, frontend mechanics or experiment supervisor follows.
 This mathematical contract is source-only and does not grant heavy work or activation.
 
-## Draft checked single-item feeder and Builder bridge
+## Checked single-item feeder and Builder bridge
 
-The isolated combined source adds a checked acquisition law for successful
+The released combined source adds a checked acquisition law for successful
 single-current-item children using the shared native full-item Annul, Scour and
 crafted-removal kernels. Full outputs, rolls, flags and all positive mass remain
 represented. Native routers, fixed-policy properness, complete paid start/action
@@ -229,7 +229,12 @@ are not the evaluation of one fixed policy or robust retry-cost bounds.
 The versioned C API binds full request/result records, exact documents, prices,
 outputs, initial ownership, limits and checker identities. Cancellation callbacks
 interrupt native discovery/work and Simulator source/child/pair boundaries; pair
-commit stays atomic and paid resources are retained. Matching browser/WASM routing
-is held until source-matched finite qualification, including real interruption.
-This draft is not product activation or qualification. The programme source
-checkpoint records the original Ring witness and every unrun/held stage.
+commit stays atomic and paid resources are retained. The
+[combined product record](../active/2026-10-04-sol61-product-integration/README.md)
+qualifies released 81d4f471 with matching native/WASM acceptance, the full web
+chain, TypeScript and the b04 packaged native-worker render. Component lifecycle
+negatives remain distinguished from rendered flow evidence. The released engine
+is the qualified R source, not the separate solver research branch. The original
+Ring witness and historical failed/unrun stages remain in their programme record.
+This restricted integration supplies no Current/Finder activation, general exact
+inventory authority, robust uncertainty certificate or advanced random Apply.

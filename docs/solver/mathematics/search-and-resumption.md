@@ -36,6 +36,26 @@ dominance premises still decide whether any action may be retired.
 
 The documented carrier ordering uses progress, side capacity, blockers, and other observations as priorities, while proof values have separate owners. This is the correct conceptual separation. It does not prove the current scheduling implementation fair. [Scheduling and Bellman Search](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/scheduling-bellman.md).
 
+<a id="capability-pipeline"></a>
+### Capability must be followed through each search stage
+
+Native support, grammar eligibility, effective consumer activation, generation,
+numerical checking, positive-entry validation, retention and export are separate
+events. A legal local controller proves an opportunity; authored replay proves
+evaluation of the supplied graph. Neither proves automatic discovery under a
+named budget. Current, Finder and the real browser worker each require their own
+activation, ownership and output evidence. A censored stage leaves later claims
+unqualified; an expensive checked fallback does not establish that no cheaper
+eligible candidate exists. The [capability ceiling](numerical-closure.md#bounded-quality)
+tests delivery against a declared control without changing proof authority.
+
+The October receipts demonstrate a local partial-held construction omission.
+They do not establish its full-root economic contribution or the original
+regression cause. In particular, the released 101311.35 policy reaches requested
+bounded Finish with cap mask zero; the private observer and memory refusals
+explain private qualification failures, not that released stop. Source attribution
+must retain this distinction. [Independent causal account](https://github.com/OliverOrton/poecraft2/blob/4c9f078d95e2c0c837ab7a408c4846420bac94db/docs/active/2026-10-04-sol61-independent-review/causal-research-handoff.md).
+
 ### First-policy debt and later continuation cost
 
 For a nonterminal ordinary item at the requested rarity, with distinct required
@@ -191,6 +211,19 @@ A global value update may change question 4 without changing question 1. A fixed
 A safe implementation can freeze a candidate's selection snapshot, allow only compatible append-only continuation growth, and perform full ordinary evaluation before publication. Alternatively, it can explicitly rebase and revalidate affected dependencies. It must not quietly mix a prefix justified by one boundary snapshot with a suffix whose numerical justification assumes a different one. [CLM-0021](../claims.md#clm-0021).
 
 This is a sufficient snapshot discipline, not a claim that all mixed-time candidate construction is inherently invalid. Any completed policy may be independently evaluated from scratch. The risk is **reusing cached evidence** whose dependency contract no longer holds.
+
+### Reusing an observation requires its own lifetime contract
+
+An immutable entry census can have a cached ownership charge while its transitive
+buffers, capacities and aliases remain unchanged. It does not freeze a mutable
+validator, calculator cache, checker scratch or parent ledger. Refresh those live
+owners at each required checkpoint, including suspension and exceptions. A faster
+observer must leave graph, probability, paid resources, debits and admission
+unchanged; timing parity alone cannot establish complete peak-memory coverage.
+Release/cancellation discards unpublished storage without refunding committed
+native work. [Accounting obligations](../resources-resume-replay.md#measurement-boundary).
+This applies the existing snapshot premise and does not qualify the private
+observer source for product activation.
 
 ### A proof handoff is distinct from requested delivery
 
