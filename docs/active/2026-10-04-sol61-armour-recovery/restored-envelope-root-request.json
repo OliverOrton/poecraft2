@@ -1,13 +1,13 @@
 {
   "schema": "sol61_samegraph_restored_envelope_request_v1",
-  "status": "SOURCE READY PROPOSAL; new benchmark UNBUILT and root UNRUN; reviewer and parentLOCAL assignment required; no new run authorization inferred from source-only preparation",
-  "basis_commit": "db4ad864c362ba48da41552757b91771a21e0c54",
+  "status": "HELD: Oliver requested solver break/Pro research. Catchfix and focused error fixture SOURCE ONLY UNBUILT/UNRUN. Parent/reviewer/new LOCAL selection required before any native command; prior build evidence is f1ea94f8 only.",
+  "basis_commit": "f1ea94f82ad378ef4296785c5cbab11131697387",
   "source_files_sha256": {
     "engine/src/solver_compile.cpp": "35838754a73d7bc320c1265e12eed88a5fff32bc6bf5eb836ba881d6aeaea05a",
     "engine/src/solver_compile_contracts.hpp": "b156eed5a8e3c13a1159365b0a3e4ccd6a50234927d07f3c9d506789409735f3",
     "engine/src/solver_selective_completion.cpp": "55aae11d9143570808f4543dce066e824940441c87857249d1dbe6f877b00433",
     "engine/src/solver_selective_completion.hpp": "cff99b2e0a96ba91f5dd8c3ce5b07d4cc1b5529d72befdb1c2644d351b24cdda",
-    "engine/benchmarks/solver_benchmark.cpp": "3caa9e79009bdd3751cf81b3a16b7c1db95f29f9c4eb2f5ddeb7c3ee1a1e569c",
+    "engine/benchmarks/solver_benchmark.cpp": "1ba88ba54867f12a8e6dd9a67f28a9656b78531546b42b11aee9451e2a7f28ee",
     "engine/tests/test_main.cpp": "82a2aae41073c57633bad1647f5b1facf4c320596ed3ace802f0bfb32d4369b7",
     "engine/tests/test_solver_compile.cpp": "13a0cda987bf3ac3e87458af6564ff8753c609831edbcce5609107bab2eeeed9",
     "engine/tests/tests.hpp": "f6d8cde9c553dd80a174c9b9081b4a29d7d314ec7d9ec91a295075337b2beb05",
@@ -105,6 +105,14 @@
       "host_watchdog_seconds": 600
     },
     {
+      "phase": "benchmark-failure-injection-gate",
+      "argv": [
+        "build/engine/poecraft_solver_benchmark.exe",
+        "--partial-held-error-gate-only"
+      ],
+      "host_watchdog_seconds": 30
+    },
+    {
       "phase": "samegraph-restored-envelope-original-root-and-all-entries",
       "argv": [
         "build/engine/poecraft_solver_benchmark.exe",
@@ -124,5 +132,12 @@
   ],
   "reuse": "Keep1GiB R1/R2 and39066finite evidence; do not rerun unchanged failed arm; same-candidate FNV/SHA/bindings/generation/root/census resources semantic identity checked against retained control before upper acceptance.",
   "after_result": "Immediate parent final withLOCALreleasedUTC/no survivors/allentry/refusal/cost/work/phases/actualliveownership/binary/source/graph identity before docs. No uncheckedfinancial gain or publicCurrent/Finder/WASM activation.",
-  "stop_on": "first semantic/resource/goal/scope/graph/case/price/ledger/debit/positiveentry mismatch, native/host/watchdog/memory cap or survivor. Preserve failure/unrun phases; no repeated unchanged run, arbitrary growth beyondapproved3.1, droppedtinyentries, approximate merging or improper closure authority."
+  "stop_on": "first semantic/resource/goal/scope/graph/case/price/ledger/debit/positiveentry mismatch, native/host/watchdog/memory cap or survivor. Preserve failure/unrun phases; no repeated unchanged run, arbitrary growth beyondapproved3.1, droppedtinyentries, approximate merging or improper closure authority.",
+  "benchmark_failure_review": {
+    "reviewer": "173e584121e41e601ec9355c73d4fde7e2dc6dd9",
+    "finding": "final ownership snapshot exception could leave entries_accepted true and rejected_error+checkedupper/exit0",
+    "prepared_fix": "all four typed failure catches clear entry acceptance via shared benchmark phase wrapper; complete/exit also requires exact success status. Later failure catches already clear acceptance.",
+    "focused_fixture": "--partial-held-error-gate-only:36assertions; inject all four exceptions after entriesaccepted=true, cleanup snapshot succeeds, require acceptancefalse/originalerror/failureexit2; four success-status controls.",
+    "execution": "UNBUILT/UNRUN on solver break"
+  }
 }

@@ -994,3 +994,16 @@ On complete coverage report observed selected/reserved ownership rather than
 inventing a minimum; on refusal preserve the actual live component cut. Cost210k
 still exceeds released101311/supplied historical85970. Current/Finder activation,
 economic/controller recovery, complete peak/cohort/WASM/publication remain open.
+
+## Solver break and source-only Pro checkpoint
+
+Oliver selected a solver break before the restored-budget root ran.
+[Pro handoff](PRO-HANDOFF.md) owns the compact research disposition and
+[economic decomposition](economic-decomposition.json) retains exact existing
+receipt arithmetic. The two costly retained-stage Eldritch Chaos choices,
+historical plain-fill failure, incomplete all-entry acceptance, truthful
+aggregate peak gap and unrun benchmark catch fix remain explicit.
+[Wind-down receipt](restored-envelope-build-winddown-summary.json) records
+f1ea94f8 build/preflight only, LOCAL release and no survivors. Latest source is
+unbuilt/unrun; research branch publication belongs to the sole integrator,
+without a main merge or policy activation.

@@ -1,33 +1,29 @@
-# Armour:39066 finite pass; restored approved envelope source proposal ready
+# Armour research checkpoint: solver break; Pro handoff ready
 
-Source db4ad864 qualifies native live observer/ownership:39066checks0failures,
-real scratchmax_owned_bytes identity, zeroentry/work pressure refusal, shared48
-retained debit and suspended cleanup. ONE samegraph root keeps exactcost210090.73/
-resources/actions/probabilities but1717/12658entry memory refusal after11.108s.
-Memory observation141.157->.787s; no qualified upper/economic gain/activation.
-[R2 receipt](docs/active/2026-10-04-sol61-armour-recovery/entry-observer-r2-summary.json)
-retains exact identities/cut and immediate13:44:21UTC release/zero survivors.
+Oliver paused native/solver runs and further capability implementation. LOCAL
+is released with no survivors; the restored3328599654-byte root NEVER ran.
+[Pro handoff](docs/active/2026-10-04-sol61-armour-recovery/PRO-HANDOFF.md) owns
+proven native partial-held construction, exact source/graph identities, negative
+hypotheses, economic decomposition and unrun qualifications. Sole integrator
+may publish the isolated research branch for Pro; do not merge experimental
+code into main or activate Current/Finder/WASM.
 
-Parent explicitly restores approved3.1GiB aggregate envelope;1GiB is not an
-immutable user limit. Review8e9dc70b recommends checker/census RETAINED. Checker
-87.596MB includes complete result/census54.621MB; maximum redundant release32.975MB
-is not enough evidence for a lifetime change. Completion minimum remains UNKNOWN.
-[Ownership cut](docs/active/2026-10-04-sol61-armour-recovery/retained-root-ownership-analysis.json)
-retains measured versus derived fields and full transient peak gap.
+39,066 finite checks atdb4ad864 pass. Samegraph210090.726c root success1 remains
+unqualified1717/12658entries at1GiB; live memory observer141.157->.787s does not
+improve policy cost. Private after-fill210090.726c versus old private896765.819c
+is distinct from released101311.355c/history85970.673c.
+[Economic receipt](docs/active/2026-10-04-sol61-armour-recovery/economic-decomposition.json)
+locates63876c one-suffix and101876c three-prefix-ready EChaos spends. Exact
+recorded-resource arithmetic is not matched new-source or counterfactual proof.
 
-[Samegraph proposal](docs/active/2026-10-04-sol61-armour-recovery/restored-envelope-root-request.json)
-pins conservative floor3.1GiB=3328599654bytes and a derived case differing ONLY
-in aggregate cap. Exact historical deployed byte constant remains unconfirmed;
-reviewer/parent reconcile before launch. Benchmark-only source counts actual
-retained economy/options copies, caches only immutable allocations with phase
-audits, and captures live full-audited validator/checker components BEFORE release.
-No result transfer/early release; all12658entries/caps/debits/graph required.
-New benchmark UNBUILT/UNRUN; no LOCAL held. Proposed next is max2jobs benchmark
-build +ONE root150native/165host/50Mwork after reviewer+parentLOCAL assignment.
-Reuse39066 finite evidence; retain1GiB failures; no unchanged retry or extra cap
-escalation. Economic210k remains above released101311/historical85970; historical
-plain-fill negative, complete peak/cohort/Finder/WASM/publication gaps remain.
-[Living record](docs/active/2026-10-04-sol61-armour-recovery/README.md) owns details.
+f1ea94f8 benchmark build/20pins passed15.641s, no root run. Review173e5841 found
+one-shot finalownership failure could retain entry acceptance. Prepared
+benchmark-only correction clears all failure catches and requires success status
+for upper/exit0;36injected failure assertions remain UNBUILT/UNRUN on this break.
+[Held gate](docs/active/2026-10-04-sol61-armour-recovery/restored-envelope-root-request.json)
+records exactcap floor3.1GiB within approved envelope, historicalinteger unverified,
+checker/census retention and all unchanged deadlines/caps. No fresh budget/
+capability/run authority follows from the checkpoint.
 
 # Qualified solver CI repair (2026-10-03)
 

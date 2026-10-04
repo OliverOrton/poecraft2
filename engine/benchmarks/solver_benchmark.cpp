@@ -3227,6 +3227,72 @@ void create_case_objects(
 }
 
 
+// Shared by the real root phase and its finite one-shot failure fixture.
+// Any exception invalidates entry acceptance, including errors after the last
+// entry passed but before its final ownership snapshot completed.
+template <typename Work>
+void run_generated_root_checked_phase(Work&& work, bool& entries_accepted,
+        std::string& status, std::string& refusal, std::string& cap_reason) {
+    try { work(); }
+    catch (const poecraft::solver::SolverResourceLimit& error) {
+        entries_accepted = false;
+        status = "censored_capacity"; refusal = error.what(); cap_reason = error.cap_name();
+    } catch (const std::length_error& error) {
+        entries_accepted = false;
+        status = "censored_capacity"; refusal = error.what();
+    } catch (const poecraft::solver::StrategyEvalUnsupported& error) {
+        entries_accepted = false;
+        status = "refused_unsupported"; refusal = error.what();
+    } catch (const std::exception& error) {
+        entries_accepted = false;
+        status = "rejected_error"; refusal = error.what();
+    }
+}
+
+int generated_root_check_exit_code(const bool root_accepted,
+        const bool entries_accepted, const std::string& status) {
+    return root_accepted && entries_accepted && status == "checked_root_and_all_positive_entries" ? 0 : 2;
+}
+
+unsigned run_generated_root_failure_gate_tests() {
+    unsigned checks = 0;
+    const auto require_check = [&](const bool condition) {
+        ++checks;
+        if (!condition) throw std::logic_error("generated root failure gate fixture failed");
+    };
+    for (unsigned failure = 0; failure < 4; ++failure) {
+        bool entries_accepted = true;
+        std::string status = "checked_root_and_all_positive_entries",refusal,cap_reason;
+        unsigned snapshots = 0;
+        run_generated_root_checked_phase([&] {
+            ++snapshots; // Injection occurs after complete-entry acceptance.
+            if (failure == 0) throw poecraft::solver::SolverResourceLimit("max_solver_owned_bytes",17);
+            if (failure == 1) throw std::length_error("injected output allocation failure");
+            if (failure == 2) throw poecraft::solver::StrategyEvalUnsupported("injected unsupported check");
+            throw std::logic_error("injected final ownership snapshot failure");
+        },entries_accepted,status,refusal,cap_reason);
+        const auto rejected_status = status,rejected_refusal = refusal;
+        require_check(!entries_accepted);
+        require_check(status == (failure < 2 ? "censored_capacity" :
+            failure == 2 ? "refused_unsupported" : "rejected_error"));
+        require_check(!refusal.empty());
+        require_check(cap_reason == (failure == 0 ? "max_solver_owned_bytes" : ""));
+        // The subsequent cleanup snapshot succeeds: a one-shot error must not
+        // regain acceptance or lose its original diagnostic and failure exit.
+        run_generated_root_checked_phase([&] { ++snapshots; },
+            entries_accepted,status,refusal,cap_reason);
+        require_check(snapshots == 2);
+        require_check(!entries_accepted);
+        require_check(status == rejected_status && refusal == rejected_refusal);
+        require_check(generated_root_check_exit_code(true,entries_accepted,status) == 2);
+    }
+    require_check(generated_root_check_exit_code(true,true,"checked_root_and_all_positive_entries") == 0);
+    require_check(generated_root_check_exit_code(false,true,"checked_root_and_all_positive_entries") == 2);
+    require_check(generated_root_check_exit_code(true,false,"checked_root_and_all_positive_entries") == 2);
+    require_check(generated_root_check_exit_code(true,true,"rejected_error") == 2);
+    return checks;
+}
+
 // Full fixed-policy check of a freshly generated native candidate. The caller
 // retains graph/control/prices and the checker owns its complete result/census
 // until the validator is destroyed. No imported graph or consumer activation.
@@ -3384,7 +3450,7 @@ int check_generated_partial_root(poecraft::solver::CalcContext& calc,
         eval.policy_decision_entries.push_back(std::move(occurrence));
     }
     caller_eval_owned = caller_eval_bytes(); // All dynamic options are now prepared; only scalar caps change below.
-    try {
+    run_generated_root_checked_phase([&] {
         if (outer(false) < outer(true))
             throw std::logic_error("generated root outer accounting audit exceeded fast count");
         const auto headroom = memory();
@@ -3426,15 +3492,7 @@ int check_generated_partial_root(poecraft::solver::CalcContext& calc,
             validator.reset(); // Borrowed census references end before checker/result changes.
             memory();
         }
-    } catch (const SolverResourceLimit& error) {
-        status = "censored_capacity"; refusal = error.what(); cap_reason = error.cap_name();
-    } catch (const std::length_error& error) {
-        status = "censored_capacity"; refusal = error.what();
-    } catch (const StrategyEvalUnsupported& error) {
-        status = "refused_unsupported"; refusal = error.what();
-    } catch (const std::exception& error) {
-        status = "rejected_error"; refusal = error.what();
-    }
+    },entries_accepted,status,refusal,cap_reason);
     if (entry_phase_started) entry_wall_ms = milliseconds(entry_phase_began,Clock::now());
     else checker_wall_ms = milliseconds(checker_phase_began,Clock::now());
     if (validator) {
@@ -3468,7 +3526,8 @@ int check_generated_partial_root(poecraft::solver::CalcContext& calc,
         status = "rejected_accounting"; refusal += ":aggregate committed debit disagrees with phase work";
         entries_accepted = false;
     }
-    const bool complete = root_accepted && entries_accepted;
+    const auto exit_code = generated_root_check_exit_code(root_accepted,entries_accepted,status);
+    const bool complete = exit_code == 0;
     const double target = 85970.67347138176;
     std::ostringstream report; report<<std::setprecision(17)
         <<"{\"kind\":\"generated_partial_held_root_check_v1\",\"case\":"<<escape_json(required_string(specification,"id"))
@@ -3539,7 +3598,7 @@ int check_generated_partial_root(poecraft::solver::CalcContext& calc,
     checker.reset();
     // A bounded cap/time/semantic refusal is a terminal recorded experiment,
     // not permission to repeat or to publish an unchecked financial result.
-    return complete ? 0 : 2;
+    return exit_code;
 }
 
 // Construction-only diagnostic on the frozen original request. The existing
@@ -7463,6 +7522,11 @@ std::string compiler_name() {
 
 int main(int argc, char** argv) {
     try {
+        if (argc == 2 && std::string(argv[1]) == "--partial-held-error-gate-only") {
+            const auto checks = run_generated_root_failure_gate_tests();
+            std::cout << "generated root failure gate tests: " << checks << " checks, 0 failures\n";
+            return 0;
+        }
         const Arguments args = parse_arguments(argc, argv);
         const fs::path corpus_path = fs::absolute(args.corpus);
         const fs::path corpus_dir = corpus_path.parent_path();

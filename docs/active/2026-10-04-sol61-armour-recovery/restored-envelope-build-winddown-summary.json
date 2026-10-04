@@ -1,0 +1,47 @@
+{
+  "schema": "sol61_restored_build_winddown_v1",
+  "build": {
+    "source_commit": "f1ea94f82ad378ef4296785c5cbab11131697387",
+    "stages": [
+      {
+        "phase": "build-benchmark",
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 89048,
+        "process_identity_token": "89048:134355974725908222",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 15640.663400059566
+      }
+    ],
+    "unrun": [
+      "samegraph-restored-envelope-original-root-and-all-entries"
+    ],
+    "owned_processes": [],
+    "local_slot": "PARENT RESERVED; build complete, ROOT WAITING REVIEW",
+    "root_run_started": false,
+    "stop_requested": false,
+    "finished_utc": "2026-10-04T14:24:48.480175+00:00"
+  },
+  "binary": {
+    "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_solver_benchmark.exe",
+    "sha256": "513809b89a79345f8e0d7e596fd397edd1f8cd42531922ecebee13226e39c2b4",
+    "source_commit": "f1ea94f82ad378ef4296785c5cbab11131697387"
+  },
+  "cleanup": {
+    "source_commit_built": "f1ea94f82ad378ef4296785c5cbab11131697387",
+    "build_finished_utc": "2026-10-04T14:24:48.480175+00:00",
+    "LOCAL_released_utc": "2026-10-04T14:41:36.595828+00:00",
+    "owned_processes": [],
+    "survivor": false,
+    "root_run_started": false,
+    "root_gate": "HELD on review and now Oliver solver-break instruction",
+    "latest_catchfix": "UNBUILT/UNRUN; prior f1 binary not evidence for new source"
+  },
+  "preflight": "f1ea94f8 all20pins exact3328599654 cap-only case passed",
+  "latest_source_status": "benchmark-only catch repair and36failureinjectionassertions SOURCEONLY UNBUILT/UNRUN; no root run or further capabilities;39066evidence qualifies preceding unchanged native code only",
+  "publication": "sole parent integrator owns research-branch push; no main merge/activation"
+}
