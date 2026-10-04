@@ -316,3 +316,28 @@ Until that grant, continue candidate/evidence review source-only. Source-ready
 fixtures are not a qualification receipt or a production repair. Initial review
 findings and release limits above remain, except R1 is now corrected at source
 in deb65256 and pending the owner's corrected runtime gates.
+
+## Narrow production reachability follow-up while LOCAL is queued
+
+At the parent's request, a source-only caller trace covered engine/src plus
+engine/include, bindings, apps and tools. Production direct cooperative calls
+are only the fixed-unit wrapper (`solver_options_helpers.hpp:1689`) and Imprint
+frontier extension (line2548). `solver_options.cpp:251,294,324,566,1125` all invoke
+the fixed-unit wrapper, which supplies `{entry_state,1.0}`. The bindings/UI/tools
+search found no additional direct caller. These two production files have no
+2ce0a75b..deb65256 delta.
+
+Imprint starts from `{state_id,1.0}` at lines2377-2410. The extension receives the
+entire frontier support at lines2548-2550. It rejects incomplete/illegal/choice
+results at lines2568-2573; retained support is the complete moved entry vector
+at lines2604-2609. Goal-mask inspection and pruning do not condition that vector:
+next prefixes share the unchanged support at lines2686-2701. Illegal positive
+entries reject the whole extension; Pareto/depth/economic pruning removes whole
+prefixes. There is no surviving-mass selection or rescaling at these callers.
+Thus, under the existing full native unit-kernel contract, unit mass is an
+inductive invariant in exact arithmetic. This rules out an intentional0.125-style
+production support path in the inspected source; it does not certify bitwise
+normalization, floating drift, underflow or every native primitive law. R3 stays
+a latent general-helper contract finding, not a demonstrated production EV bug.
+No fixture/request pin changed, and no native command was launched. Pause for
+parent LOCAL or the next candidate/evidence; do not recreate the queued batch.
