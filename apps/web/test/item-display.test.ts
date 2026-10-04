@@ -264,7 +264,7 @@ assert.match(influenceLabels(NaN, 0, 0, null)[0], /information unavailable/);
 
 // Live/snapshot metadata use one projection. Native sessions still close on both paths.
 const { concreteItemFacts } = await import("../src/app/item-card-model");
-const nativeInfo = {rarity: "rare", item_flags: 17, memory_strands: 20, lifecycle: 1,
+const nativeInfo = {rarity: "Rare", item_flags: 17, memory_strands: 20, lifecycle: 1,
     generic_influence_bits: 32, searing_exarch_tier: 3, eater_of_worlds_tier: 2,
     prefix_mod_ids: [7], suffix_mod_ids: [], implicit_mod_ids: [], enchantment_mod_ids: [],
     fractured_prefix_mod_ids: [7], fractured_suffix_mod_ids: [], max_prefix: 3, max_suffix: 3};
@@ -282,6 +282,12 @@ assert.deepEqual(preview.prefixes[0].rollValues, [10]);
 assert.equal(preview.prefixes[0].fractured, true);
 assert.equal(preview.prefixes[0].crafted, true);
 assert.deepEqual(closed, ["item", "session"]);
+// Native enum casing stays intact while imported cards use the live-view label
+// and semantic colour classes (saved snapshots can contain "Rare").
+assert.equal(preview.rarity, "Rare");
+const nativeCaseMarkup = renderToStaticMarkup(createElement(ItemCard, {model: preview}));
+assert.match(nativeCaseMarkup, /pc-item-rarity-rare/);
+assert.match(nativeCaseMarkup, /class="pc-rarity pc-rarity-rare">rare<\/span>/);
 closed.length = 0;
 await assert.rejects(readItemCard({...previewClient, modInfo: async () => {throw new Error("unavailable modifier");}} as unknown as typeof client,
     1, influenceCatalog, {base: "base", itemLevel: 86, state: {}}, identity.baseName), /unavailable modifier/);

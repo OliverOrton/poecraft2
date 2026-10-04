@@ -98,7 +98,7 @@ import { useRef, type ReactNode } from "react";
 import { disconnectReact, renderReact } from "../react-host";
 import { formatModText } from "../mod-text";
 import { GameIcon } from "./pc-game-icon";
-import { InfluenceBadge, ItemStateBadge } from "./pc-item-badges";
+import { InfluenceBadge, ItemStateBadge, RarityBadge } from "./pc-item-badges";
 
 interface ItemCardProps {
     model: PcModListModel;
@@ -153,13 +153,13 @@ export function ItemCard({ model, slotHistory, onFracture, onTierChange, onRemov
             <ul className="pc-mod-slots">{rows}</ul>
         </section>;
     }
-    return <div className={`pc-mod-list ${target ? "pc-mod-list-target" : ""} ${corrupted ? "is-corrupted" : ""} pc-item-rarity-${model.rarity}`} data-mode={model.kind}>
+    return <div className={`pc-mod-list ${target ? "pc-mod-list-target" : ""} ${corrupted ? "is-corrupted" : ""} pc-item-rarity-${model.rarity.toLowerCase()}`} data-mode={model.kind}>
         <header className="pc-item-card-header">
             <GameIcon assetKey={model.baseKey ?? "name:" + model.baseName} size="item" />
             {model.baseName && <div className="pc-item-title-line"><strong title={model.baseName}>{model.baseName}</strong>{!!model.itemLevel && <span>iLvl {model.itemLevel}</span>}</div>}
             <div className="pc-mod-list-header">
                 <span className="pc-item-heading">
-                    <span className={`pc-rarity pc-rarity-${model.rarity}`}>{model.rarity}</span>
+                    <RarityBadge rarity={model.rarity} />
                     {corrupted && <ItemStateBadge state="corrupted">{target ? "Required: corrupted" : "Corrupted"}</ItemStateBadge>}
                     {model.kind === "concrete" && !!(model.itemFlags & 16) && <ItemStateBadge state="foreseeing">Foreseeing</ItemStateBadge>}
                     {model.kind === "concrete" && !!model.memoryStrands && <ItemStateBadge state="memory">Memory strands: {model.memoryStrands}</ItemStateBadge>}

@@ -26,7 +26,7 @@ import { GameIcon, GameItemName } from "./pc-game-icon";
 import { isCorrupted, influenceLabels } from "../item-display";
 import { getEngine } from "../engine-service";
 import type { Catalog } from "../engine-protocol";
-import { InfluenceBadge, ItemStateBadge } from "./pc-item-badges";
+import { InfluenceBadge, ItemStateBadge, RarityBadge } from "./pc-item-badges";
 
 export class PcStash extends HTMLElement {
     private unsubscribe: (() => void) | null = null;
@@ -98,7 +98,7 @@ export class PcStash extends HTMLElement {
                     <GameIcon assetKey={strategy ? graph?.base_state.base_key ?? "" : record.base} size="item" />
                     <div className="pc-stash-meta"><span className="pc-stash-name">{record.name} {corrupted && <ItemStateBadge state="corrupted">Corrupted</ItemStateBadge>}</span><span className="pc-stash-base">{detail}</span>
                         {!strategy && <span className="pc-item-heading">
-                            {rarity && <span className={`pc-rarity pc-rarity-${rarity}`}>{rarity}</span>}
+                            {rarity && <RarityBadge rarity={rarity} />}
                             {!!(Number(state?.item_flags ?? 0) & 16) && <ItemStateBadge state="foreseeing">Foreseeing</ItemStateBadge>}
                             {!!Number(state?.memory_strands ?? 0) && <ItemStateBadge state="memory">Memory strands: {Number(state?.memory_strands)}</ItemStateBadge>}
                         </span>}

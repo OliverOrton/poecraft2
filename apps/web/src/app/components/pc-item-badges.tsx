@@ -15,6 +15,14 @@ export function InfluenceBadge({name, context = "actual"}: {
     </span>;
 }
 
+/** Native snapshots and card adapters can differ in enum casing. Presentation
+ * uses one label/class vocabulary without changing the stored/native value.
+ */
+export function RarityBadge({rarity}: {rarity: string}) {
+    const key = rarity.toLowerCase();
+    return <span className={`pc-rarity pc-rarity-${key}`}>{key}</span>;
+}
+
 /** State wording comes from the owning item or goal adapter, not from colour. */
 export function ItemStateBadge({state, children}: {
     state: "corrupted" | "foreseeing" | "memory" | "consumed" | "destroyed" | "fractured" | "crafted";
