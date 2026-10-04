@@ -23,6 +23,21 @@
   "network_refresh": false,
   "executed_alternative": "Reviewer explicitly allowed a non-refresh metadata path. A later separately approved command copied unchanged UI build-info.json only as an import fixture for the mocked cache regression; no bundle script was retried.",
   "limitation": "The mock import metadata identifies another source and existing WASM. It is not combined product/runtime qualification.",
-  "future_authorization": "No retry or alternative bundle generation is authorized in this source-only turn; parent must resolve the restriction before any proposed future build:data/npm pretest.",
-  "reviewer_full_message": "This action was rejected due to unacceptable risk.\nReason: The command mutates generated web data artifacts via the bundle-build script despite the explicit no-data-refresh boundary; run the test only after creating required metadata through an approved non-refresh path.\nDo not bypass this rejection through a workaround or indirect execution. Continue with a safer alternative, or carry out checks to prove that the action is authorized or low risk before trying again. Complete unaffected work without asking for confirmation. Report anything that remains blocked, clarify why it was blocked by auto-review, inform the user of the risk and ask for approval."
+  "future_authorization": "Parent clarified same-frozen-bytes deterministic packaging is authorized. Once LOCAL is explicitly granted for the product gate, retry the SAME exact rejected command ONCE, with existing context evidence and no added authorization evidence in tool arguments. No retry while UI owns LOCAL. If rejected again, stop; no workaround, indirect execution or other executor.",
+  "reviewer_full_message": "This action was rejected due to unacceptable risk.\nReason: The command mutates generated web data artifacts via the bundle-build script despite the explicit no-data-refresh boundary; run the test only after creating required metadata through an approved non-refresh path.\nDo not bypass this rejection through a workaround or indirect execution. Continue with a safer alternative, or carry out checks to prove that the action is authorized or low risk before trying again. Complete unaffected work without asking for confirmation. Report anything that remains blocked, clarify why it was blocked by auto-review, inform the user of the risk and ask for approval.",
+  "authorization_clarification": {
+    "source": "Parent delegation following source checkpoint a97e2cdd, 2026-10-04",
+    "scope": "No upstream game/economy refresh, changed runtime selection or altered frozen inputs. Deterministic packaging of the SAME verified bytes through the existing script is within the approved implementation/qualification.",
+    "local_script_verified_against_main": "29d9e666b9d11dbe9ba58959f2598df9495dc49d",
+    "local_and_main_git_blob": "0a0a534e5c1996024c5549877857925cd15ab4d7",
+    "materially_identical": true,
+    "before_receipt": "out/strategy-feeder/sol61-finite-20261004/bundle-input-preflight.json",
+    "input_count": 16,
+    "runtime_lock_sha256": "bafe2c54c2659348c8fa6836564b9300a9ffb0ac5f86d717302176b7239c0ad1",
+    "economy_index_sha256": "2d71a5a96a669ac835b6e5bc06750c12ef8e5af3d7d9966c43fec0c62e86a2cd",
+    "before_hashes_and_read_only_recheck_equal": true,
+    "after_product_gate_hashes": "Not yet available; gate unrun. Recheck all before inputs immediately before and after the authorized command.",
+    "retry_attempted": false,
+    "original_rejection_retained": true
+  }
 }

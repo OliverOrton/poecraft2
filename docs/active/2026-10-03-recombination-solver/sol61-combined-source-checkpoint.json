@@ -78,7 +78,7 @@
       "node apps/web/node_modules/tsx/dist/cli.mjs apps/web/test/strategy-modifier-cache.test.ts",
       "node apps/web/node_modules/typescript/bin/tsc --noEmit --project apps/web/tsconfig.json"
     ],
-    "full_product_gate": "Separate parent decision resolving the exact bundle approval rejection before npm pretest/build:data or product metadata/bundle writes. Direct fixture tests read frozen bytes in memory and are test owners, not substitute product bundles.",
+    "full_product_gate": "After explicit parent LOCAL grant, one retry of the exact previously denied command is conditionally authorized by parent clarification of same-frozen-byte packaging. Verify script identical to main and before/after immutable hashes. Do not add evidence to retry tool arguments; stop on renewed denial with no workaround or other executor. Full npm product qualification remains later/unrun.",
     "artifact": "data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
     "execution": "Serial causal stages through existing solver_worker.run_isolated_process/watchdog, deterministic logs, process identity/cleanup. No new orchestration service.",
     "per_stage_limits": {
@@ -100,7 +100,7 @@
     "stop": "Stop on identity/probability/resource/export/properness/cap/compilation failure; retain failure, do not raise caps or repeat for green.",
     "requirements": [
       "New explicit parent LOCAL grant",
-      "No denied bundle command retry or alternate bundle generation",
+      "One exact denied-command retry only after LOCAL grant and immutable-input/source preflight; no alternative bundle generation or executor",
       "Release LOCAL immediately on completion/failure; prove no owned survivors"
     ],
     "timed_research_runs": 0
@@ -141,6 +141,8 @@
       "Worker termination discards read-only partial planning evidence; no partial feasible result is claimed.",
       "Existing paid Builder cancellation within a synchronous worker chunk is not newly qualified by this planner transport."
     ],
-    "bundle_rejection": "bundle-review-rejection.json"
-  }
+    "bundle_rejection": "bundle-review-rejection.json",
+    "source_commit": "a97e2cdd0947dc7048474e2c92cd49a572fc0a97"
+  },
+  "bundle_input_preflight": "out/strategy-feeder/sol61-finite-20261004/bundle-input-preflight.json"
 }

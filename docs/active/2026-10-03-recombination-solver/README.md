@@ -463,6 +463,13 @@ serial stage limits, compiler jobs=2, cleanup and remaining product gates.
 The [bundle approval receipt](bundle-review-rejection.json) retains the exact
 rejected command and full reviewer reason. Nothing ran from that command and
 no retry occurred. The script would deterministically bundle existing frozen
-bytes but mutate derived public bundles and metadata. Future product bundling
-requires parent resolution of that authorization boundary. Test fixtures reading
-frozen bytes in memory do not qualify product bundle/source metadata.
+bytes but mutate derived public bundles and metadata. Parent subsequently clarified the boundary: packaging exactly the same verified
+bytes is approved; upstream refresh, runtime selection changes and frozen-input
+changes remain excluded. The local bundler is identical to verified main
+`29d9e666` (Git blob `0a0a534e5c1996024c5549877857925cd15ab4d7`). Read-only
+preflight recorded 16 unchanged input hashes, including all referenced economy
+snapshots. Upon a new LOCAL grant, one retry of the exact rejected command is
+allowed; stop on renewed denial. No retry ran during this source-only turn.
+Before/after product-gate hashes must be compared; after hashes remain pending.
+Test fixtures reading frozen bytes in memory do not qualify product bundle/source
+metadata.
