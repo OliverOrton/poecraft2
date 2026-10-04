@@ -3429,6 +3429,7 @@ int check_generated_partial_root(poecraft::solver::CalcContext& calc,
         <<",\"entry_wall_ms\":"<<entry_wall_ms<<",\"checker_steps\":"<<checker_steps<<",\"entry_advances\":"<<entry_advances
         <<",\"memory_observation_calls\":"<<memory_observation_calls<<",\"memory_observation_ns\":"<<memory_observation_ns
         <<",\"entry_live_memory_observation_ns\":"<<entry_live_observation_ns
+        <<",\"entry_memory_observer\":\"native_selected_allocation_ledger\""
         <<",\"aggregate_memory_observation_complete\":false"
         <<",\"root_accepted\":"<<(root_accepted?"true":"false")
         <<",\"all_positive_entries_accepted\":"<<(entries_accepted?"true":"false")

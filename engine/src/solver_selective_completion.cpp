@@ -1141,6 +1141,13 @@ std::uint64_t SelectiveProgrammeEntryValidator::active_work() const {
 }
 
 std::uint64_t SelectiveProgrammeEntryValidator::estimated_owned_bytes() const {
+    // Use the same live selected-allocation ledger as native admission caps.
+    // Cursor scratch is live; cached inactive contexts and shared payloads are
+    // maintained by their existing allocation/rollback owners, not sampled here.
+    return fast_estimated_owned_bytes();
+}
+
+std::uint64_t SelectiveProgrammeEntryValidator::full_estimated_owned_bytes() const {
     return sizeof(*this) + (work_budget_ == nullptr ? 0 :
         work_budget_->estimated_owned_bytes()) + (calc_ == nullptr ? 0 :
         calc_->estimated_owned_bytes());
@@ -1183,7 +1190,7 @@ bool SelectiveProgrammeEntryValidator::advance(
         if (estimated_owned_bytes() >= limits_.max_solver_owned_bytes)
             throw std::length_error(
                 "native programme has no exact admission memory");
-        const auto owner_bytes = work_budget_ == nullptr ? 0 : work_budget_->estimated_owned_bytes();
+        const auto owner_bytes = work_budget_ == nullptr ? 0 : work_budget_->fast_estimated_owned_bytes();
         admission_.max_solver_owned_bytes =
             limits_.max_solver_owned_bytes - sizeof(*this) - owner_bytes;
         calc_->set_solve_resource_caps(limits_.max_discovered_states,

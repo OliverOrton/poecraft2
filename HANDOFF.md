@@ -1,27 +1,28 @@
-# Armour: separate generic candidate gate authorized; history stays negative
+# Armour: source-only exact entry observer prepared; review/LOCAL pending
 
-Parent disposition accepts historical equivalence as negative, preserves its
-failing selector/assertion, and assigns LOCAL for six separately named generic
-candidate stages on the SAME source/caps. [Candidate request](docs/active/2026-10-04-sol61-armour-recovery/generic-final-fill-candidate-request.json)
-reuses R3 exact build and passing P0/native law checks; later correctness/ownership/
-construction stages remain UNRUN. No full Conquest repeat or wider historical
-search. If gates pass, propose a distinct economic comparison for parent selection.
+Original-root generic final-fill R1 at8ce6db84 matches ordinary generated
+7602779656003707844/bedc2a47...49337a. Root cost210090.72616079813/success1,
+but native150s stops entry validation976/12658: no qualified upper/retention/
+activation or economic gain versus released101311/historical85970. Full memory
+observations consume141.157s of144.575sentry phase. [R1 receipt](docs/active/2026-10-04-sol61-armour-recovery/generic-final-fill-root-r1-summary.json)
+retains source/binary/phases/work/input/graph identity, sampled-memory gap and
+zero-survivor LOCAL release13:04:31UTC. Parent was notified immediately; CI owns LOCAL.
 
-Tested source675c2f06642a25338310a6d7bfc578e27d4cc153 R3 builds successfully
-but strict historical plain-fill witness fails961checks/1failure. P0 still passes
-historicals3 Ember->EExalt/currentc5 Chaos. New three-held/PDR carrier has positive
-native root ordering; ordinary Exalt law preserves allfour goals with72positive
-exits perframe. History uses Chaos at0,0, temporary StrengthDex Bench->Exalt at1,0,
-and offpolicy failure at1,2. Bounded adjacent native-exit sets have ZERO historical
-plain Exalt matches. Strict assertion retained; no broader search or cap increase.
-[R3 receipt](docs/active/2026-10-04-sol61-armour-recovery/final-fill-r3-summary.json)
-retains failure, pins and cleanup. Six later finite/construction stages are UNRUN;
-no new graph/root/entry/economic/measurement qualification. Private Exalt candidate
-remains default-off. Separate economic gate versus historical/blocked-composition
-work needs parent selection. [Request](docs/active/2026-10-04-sol61-armour-recovery/final-fill-finite-request.json)
-marks STOPPED. LOCAL released11:57:59UTC, zero survivors. [Living record](docs/active/2026-10-04-sol61-armour-recovery/README.md)
-retains R1/R2/R3 and prior R11 diagnostic896765.82/968of12719entries. Production
-observer/checker lifetime unchanged; complete peak, Finder/control/WASM gaps open.
+Parent selects existing exact selected-allocation ledger for validator hot
+observation, with full traversal retained for independent audit. Source prepared;
+new finite [request](docs/active/2026-10-04-sol61-armour-recovery/entry-observer-finite-request.json)
+requires every suspended/completed audit, refusal below full selected peak,
+query staging/cancellation/reset/retry audits, unchanged paired/legacy roots and
+blocker/Finder compatibility. ALL new native stages UNRUN; reviewer and parent
+slot clearance required. [Same-graph follow-through](docs/active/2026-10-04-sol61-armour-recovery/entry-observer-root-follow-through-request.json)
+is conditional after finite pass, ONE invocation, original150native/165host/
+50Mwork/1GiB, retained checker/census and every12658entry; no unchanged R1 repeat.
+
+Prior20708/zero finite candidate checks at6097f93d remain separately pinned.
+Historical plain-fill selector961/1 remains negative. Private producer default
+off, public proposals/incumbents unchanged. Full aggregate transient peak,
+economic/controller recovery, cohort/Finder/WASM/publication gaps remain open.
+[Living record](docs/active/2026-10-04-sol61-armour-recovery/README.md) owns details.
 
 # Qualified solver CI repair (2026-10-03)
 

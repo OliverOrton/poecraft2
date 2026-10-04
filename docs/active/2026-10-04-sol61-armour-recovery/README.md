@@ -806,3 +806,74 @@ max2 compiler jobs. No broader historical search, imported reference controller,
 full Conquest economic repeat, production observer switch or peak/release claim.
 If the separate candidate gate passes, its next artifact is an exact proposed
 original-request economic comparison, not a historical reconstruction claim.
+
+
+## Generic candidate finite pass and original-root R1
+
+[Finite receipt](generic-final-fill-r1-summary.json) records source6097f93d:
+20,708 checks/zero failures across ownership, sixteen paired roots, eight legacy
+roots and blocker controls. The 878 control/777 treatment positive entries and
+all routing guards passed. The independent ownership pair audited every one of
+36 checkpoints (30 suspended/six completed), preserving exact48 logical/active
+work and retained checker/census. Construction from the frozen original Conquest
+request produced graph7602779656003707844, SHA256bedc2a47...49337a,108nodes and
+20programmes. This qualified a distinct generic candidate, not historical graph
+reconstruction; R1/R2/R3's historical plain-fill negative remains unchanged.
+
+[Original-root R1](generic-final-fill-root-r1-summary.json) pins source8ce6db84
+and binaryf88bd35a...aa247. Two-job build passes. The ONE generated root check
+matches the complete graph bytes and original request/prices/caps. Its native
+root converges with success1, zero listed failures/leaks/unresolved, diagnostic
+cost210090.72616079813. Entry validation is censored at the150s native deadline:
+976/12658positive entries, no refused census entries. Therefore no qualified
+upper, retention, activation or economic improvement. It remains above released
+101311.35474896732 and supplied historical85970.67347138176. No unchanged repeat.
+
+Phases are.346586s generation,5.126750s checker and144.574907s entry validation.
+Full memory observations during entry validation consume141.1568795s. Logical
+work is1884694/50M. Selected sampled peak677032103 and reservation-inclusive
+878621351bytes are NOT complete aggregate peak/cap proof. The checker/census
+remains alive throughout. Existing supervisor reports exit2, no host watchdog,
+cancellation or survivors; LOCAL released13:04:31UTC and immediately returned
+to the parent before documentation. Bulk evidence stays under
+out/sol61-armour/generic-final-fill-root-r1.
+
+## Source-only entry observer follow-through
+
+Parent selects removing redundant full ownership scans; CI owns LOCAL. The
+[finite request](entry-observer-finite-request.json) and [conditional same-graph
+root request](entry-observer-root-follow-through-request.json) are prepared,
+ALL new native stages UNRUN and awaiting reviewer/LOCAL clearance.
+
+The shared validator's hot estimate reuses CalcContext's existing native
+selected-allocation ledger, already used by admission memory enforcement. Full
+traversal remains independently accessible for diagnostics and reconciliation.
+No new cache or allocation approximation is introduced. Immutable selected base
+is measured once at context construction; existing mutation owners update state,
+operator, distribution/kernel/shared-template and context storage. Dynamic
+shallow accounting includes the live coroutine/checkpoint/scratch context.
+Cancellation destroys the coroutine before restoring staged allocations and
+reconciling shared payload ledgers; reset/retry use existing refresh boundaries.
+The costly full scan walks accumulated distribution/kernel/template storage;
+this source retains zero cold carrier admission contexts. Checker lifetime,
+borrowed immutable census, all positive entries, original native intent/resource
+semantics, budgets/deadlines and production proposal selection remain unchanged.
+
+The finite gate preserves the full-versus-ledger six-entry pair with every
+suspended/completed checkpoint audited, and adds a cap one byte below the
+independent full selected peak that must refuse rather than complete. Existing
+work/discovery/memory refusal controls audit post-rollback storage. The paired
+sixteen roots and eight legacy roots audit each validation checkpoint, while
+query fixtures audit semantic snapshots, mixed/nonuniform setup, cache order,
+active staged admission, cancellation, exhausted-work rollback, memory rollback,
+retry and reset. Legacy blocker and actual protected Finder consumers remain
+separate compatibility checks. No native evidence for these additions exists
+yet; full aggregate transient peak remains an explicit gap.
+
+Only after finite qualification/reviewer approval and parent assignment is the
+ONE same-candidate root follow-through selected: graph7602779656003707844,
+original frozen request/prices/laws/caps,150native/165host,50Mwork/1GiB and all
+12658entries. Reuse R1's root cost/census control; do not rerun unchanged failed
+full-scan arm. Completion would qualify entries/resource delivery, not close the
+economic gap or historical reconstruction. No Current/Finder producer activation,
+result transfer/early checker release, control-cohort/WASM qualification or push.

@@ -4492,6 +4492,7 @@ void run_solver_admission_query_tests(const bool development_checkpoint_diagnost
             PC_CHECK(std::abs(mass-1.0) < 1e-12);
             PC_CHECK(result.emplace(planner_operator_semantic_key(option),std::move(s)).second);
         }
+        PC_CHECK(calc.fast_estimated_owned_bytes() >= calc.audited_estimated_owned_bytes());
         return result;
     };
     const auto compare = [&](const Snapshots& a, const Snapshots& b) {
@@ -4649,6 +4650,7 @@ void run_solver_admission_query_tests(const bool development_checkpoint_diagnost
     bool staged = false;
     for (unsigned step = 0; step < 40000; ++step) {
         completed_full = interleaved.advance_state_local_automatic_candidates(interleaved_state,limits,interrupted,1);
+        PC_CHECK(interleaved.fast_estimated_owned_bytes() >= interleaved.audited_estimated_owned_bytes());
         staged = interleaved.operators().size() > committed_operators &&
             interleaved_owner.telemetry().reforge_logical_work_v1 > committed_work;
         if (completed_full || staged) break;
@@ -4656,6 +4658,7 @@ void run_solver_admission_query_tests(const bool development_checkpoint_diagnost
     PC_CHECK(staged && !completed_full);
     const auto interrupted_work = interleaved_owner.telemetry().reforge_logical_work_v1;
     interleaved.cancel_state_local_automatic_candidates(interleaved_state);
+    PC_CHECK(interleaved.fast_estimated_owned_bytes() >= interleaved.audited_estimated_owned_bytes());
     PC_CHECK(interleaved.operators().size() == committed_operators);
     PC_CHECK(interleaved_owner.telemetry().reforge_logical_work_v1 == interrupted_work);
     const auto committed_after = interleaved.admit_state_local_automatic_candidates(interleaved_state,committed_request);
@@ -4684,6 +4687,7 @@ void run_solver_admission_query_tests(const bool development_checkpoint_diagnost
     try { (void)exhausted.admit_state_local_automatic_candidates(exhausted_state,exhausted_request); }
     catch (const SolverResourceLimit& limit) { post_commit_refused = limit.cap_name() == "max_reforge_work"; }
     PC_CHECK(post_commit_refused);
+    PC_CHECK(exhausted.fast_estimated_owned_bytes() >= exhausted.audited_estimated_owned_bytes());
     PC_CHECK(exhausted.operators().size() == operators_before_refusal);
     PC_CHECK(interleaved_owner.telemetry().reforge_logical_work_v1 == debit_before_refusal);
     PC_CHECK(exhausted.telemetry().automatic_admission_reforge_logical_work_v1 == 0 &&
@@ -4999,6 +5003,7 @@ void run_solver_admission_query_tests(const bool development_checkpoint_diagnost
     const auto operators_before = resumable.operators().size();
     StateLocalAutomaticBatch pending;
     PC_CHECK(!resumable.advance_state_local_automatic_candidates(state,request,pending,1));
+    PC_CHECK(resumable.fast_estimated_owned_bytes() >= resumable.audited_estimated_owned_bytes());
     auto other = request;
     other.query = eldritch_admission_query(PC_SIDE_SUFFIX,ActionType::EldritchAnnul,false);
     bool mismatch = false;
@@ -5006,6 +5011,7 @@ void run_solver_admission_query_tests(const bool development_checkpoint_diagnost
     catch (const std::invalid_argument&) { mismatch = true; }
     PC_CHECK(mismatch);
     resumable.cancel_state_local_automatic_candidates(state);
+    PC_CHECK(resumable.fast_estimated_owned_bytes() >= resumable.audited_estimated_owned_bytes());
     PC_CHECK(resumable.operators().size() == operators_before);
     const auto resumed = resumable.admit_state_local_automatic_candidates(state,request);
     PC_CHECK(!resumed.cached && !resumed.admitted_operators.empty());
@@ -5014,6 +5020,7 @@ void run_solver_admission_query_tests(const bool development_checkpoint_diagnost
     for (const auto index : resumed.admitted_operators)
         PC_CHECK(!resumable.is_candidate_operator_admitted_for_state(different_state,index));
     resumable.reset_solve_telemetry();
+    PC_CHECK(resumable.fast_estimated_owned_bytes() >= resumable.audited_estimated_owned_bytes());
     for (const auto index : resumed.admitted_operators)
         PC_CHECK(!resumable.is_candidate_operator_admitted_for_state(state,index));
     PC_CHECK(!resumable.admit_state_local_automatic_candidates(state,request).cached);
@@ -5045,6 +5052,7 @@ void run_solver_admission_query_tests(const bool development_checkpoint_diagnost
         work_refused = limit.cap_name() == "max_reforge_work";
     }
     PC_CHECK(work_refused);
+    PC_CHECK(capped.fast_estimated_owned_bytes() >= capped.audited_estimated_owned_bytes());
     PC_CHECK(budget_owner.telemetry().reforge_logical_work_v1 == 1);
     PC_CHECK(capped.operators().size() == capped_operators);
     budget_owner.set_solve_resource_caps(100000,100000000,false);
@@ -5068,6 +5076,7 @@ void run_solver_admission_query_tests(const bool development_checkpoint_diagnost
         memory_refused = limit.cap_name() == "max_solver_owned_bytes";
     }
     PC_CHECK(memory_refused && memory_capped.operators().size() == memory_operators);
+    PC_CHECK(memory_capped.fast_estimated_owned_bytes() >= memory_capped.audited_estimated_owned_bytes());
     PC_CHECK(!memory_capped.admit_state_local_automatic_candidates(memory_state,request).cached);
     auto tiny = limits; tiny.query = static_cast<AutomaticAdmissionQuery>(255);
     bool invalid = false;
@@ -5949,7 +5958,13 @@ void run_solver_partial_held_recovery_tests(const bool compound_blocker_only, co
         unsigned entries = 0;
         try {
             SelectiveProgrammeEntryValidator validator(calc,session,control,checked.policy_entries,prices,limits);
-            for (unsigned step = 0; step < 40000 && !validator.done(); ++step) validator.advance();
+            unsigned audits = 0;
+            for (unsigned step = 0; step < 40000 && !validator.done(); ++step) {
+                validator.advance();
+                PC_CHECK(validator.estimated_owned_bytes() >= validator.audited_estimated_owned_bytes());
+                ++audits;
+            }
+            PC_CHECK(audits > 0);
             PC_CHECK(validator.done() && validator.validated_entries() == checked.policy_entries.entries.size());
             entries = validator.positive_entries();
             PC_CHECK(entries > 0);
@@ -6042,6 +6057,9 @@ void run_solver_entry_budget_tests() {
         PC_CHECK(validator.done() == expected_done);
         PC_CHECK(refusal == expected_refusal);
         PC_CHECK(validator.logical_work() <= maximum_work);
+        // Refusal/rollback leaves the same owned storage observable: already
+        // committed work is retained, publication is not inferred from a cache.
+        PC_CHECK(validator.estimated_owned_bytes() >= validator.audited_estimated_owned_bytes());
         PC_CHECK(expected_done ? validator.validated_entries() == census.entries.size() :
             validator.validated_entries() < census.entries.size());
         if (expected_done) PC_CHECK(validator.logical_work() == 48);
@@ -6088,7 +6106,7 @@ void run_solver_entry_budget_tests() {
     // Causal ownership-observation witness on one unchanged control/census.
     // Native caps and checker lifetime do not change between these two arms.
     unsigned control_steps = 0;
-    std::uint64_t control_work = 0, control_active = 0;
+    std::uint64_t control_work = 0, control_active = 0, control_audited_peak = 0;
     for (const bool fast : {false,true}) {
         SelectiveProgrammeEntryValidator validator(source,session,control,census,prices,limits);
         std::uint64_t observation_ns = 0, advance_ns = 0, audit_ns = 0, peak = 0;
@@ -6101,7 +6119,7 @@ void run_solver_entry_budget_tests() {
             auto began = std::chrono::steady_clock::now();
             validator.advance(1); advance_ns += elapsed(began); ++steps;
             began = std::chrono::steady_clock::now();
-            const auto bytes = fast ? validator.fast_estimated_owned_bytes() : validator.estimated_owned_bytes();
+            const auto bytes = fast ? validator.estimated_owned_bytes() : validator.full_estimated_owned_bytes();
             observation_ns += elapsed(began); peak = std::max(peak,bytes);
             PC_CHECK(bytes < limits.max_solver_owned_bytes);
             // Audit after every admission checkpoint, including incomplete
@@ -6112,6 +6130,8 @@ void run_solver_entry_budget_tests() {
             const auto ledger = validator.fast_estimated_owned_bytes();
             audit_ns += elapsed(began); ++audits;
             PC_CHECK(ledger >= audited);
+            PC_CHECK(validator.estimated_owned_bytes() == ledger);
+            if (!fast) control_audited_peak = std::max(control_audited_peak,audited);
             if (validator.validated_entries() == previous_entries) ++suspended_audits;
             else ++completed_audits;
             previous_entries = validator.validated_entries();
@@ -6132,6 +6152,31 @@ void run_solver_entry_budget_tests() {
             static_cast<unsigned long long>(audit_ns),audits,suspended_audits,completed_audits,
             static_cast<unsigned long long>(peak));
     }
+    // A cap immediately below the independently observed full selected peak
+    // must refuse the same native admission rather than complete by omitting
+    // suspended cursor/local-context storage. This is selected-owner peak
+    // safety, not a claim about unobserved process/aggregate transient peaks.
+    PC_CHECK(control_audited_peak > 1);
+    auto below_peak = limits; below_peak.max_solver_owned_bytes = control_audited_peak-1;
+    SelectiveProgrammeEntryValidator peak_capped(source,session,control,census,prices,below_peak);
+    bool peak_refused = false;
+    unsigned peak_steps = 0;
+    try {
+        while (!peak_capped.done() && peak_steps < 40000) {
+            peak_capped.advance(1); ++peak_steps;
+            PC_CHECK(peak_capped.estimated_owned_bytes() >= peak_capped.audited_estimated_owned_bytes());
+        }
+    } catch (const SolverResourceLimit& error) {
+        peak_refused = error.cap_name() == "max_solver_owned_bytes";
+    } catch (const std::length_error& error) {
+        peak_refused = std::string(error.what()).find("no exact admission memory") != std::string::npos;
+    }
+    PC_CHECK(peak_refused && !peak_capped.done());
+    PC_CHECK(peak_capped.estimated_owned_bytes() >= peak_capped.audited_estimated_owned_bytes());
+    std::printf("native entry selected peak safety: full_peak=%llu cap=%llu refused=%u steps=%u validated=%u positive=%u logical=%llu checker_retained=1 complete_aggregate_peak=0\n",
+        static_cast<unsigned long long>(control_audited_peak),static_cast<unsigned long long>(below_peak.max_solver_owned_bytes),
+        peak_refused,peak_steps,peak_capped.validated_entries(),peak_capped.positive_entries(),
+        static_cast<unsigned long long>(peak_capped.logical_work()));
     // The original immutable result and all six positive entries stayed alive.
     PC_CHECK(finder_evaluation_accepted(checker.result()) && checker.result().policy_entries.entries.size() == 6);
 }

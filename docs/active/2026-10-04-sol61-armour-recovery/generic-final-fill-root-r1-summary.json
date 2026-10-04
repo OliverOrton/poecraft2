@@ -1,0 +1,183 @@
+{
+  "schema": "sol61_generic_final_fill_root_r1_summary_v1",
+  "source_commit": "8ce6db846eab51ec9734f47e2a113970e8dd9d5f",
+  "binary": {
+    "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-armour-20261004\\build\\engine\\poecraft_solver_benchmark.exe",
+    "sha256": "f88bd35a450a02e2211a65f28a539e305a3346bad37daac440de35610b0aa247",
+    "source_commit": "8ce6db846eab51ec9734f47e2a113970e8dd9d5f"
+  },
+  "outcome": "STOPPED native150s during strictly positive entry validation; root diagnostic only, no qualified policy upper/retention/activation or economic improvement",
+  "root": {
+    "kind": "generated_partial_held_root_check_v1",
+    "case": "sol61-trace-conquest5-currentmodel-120",
+    "status": "censored_time",
+    "phase": "positive_entries",
+    "refusal": "",
+    "cap_reason": "",
+    "economy_id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "graph_hash": "7602779656003707844",
+    "private_final_fill": true,
+    "generation_wall_ms": 346.5862,
+    "checker_wall_ms": 5126.7498,
+    "entry_wall_ms": 144574.9072,
+    "checker_steps": 10040,
+    "entry_advances": 5859,
+    "memory_observation_calls": 15905,
+    "memory_observation_ns": 141345970600,
+    "entry_live_memory_observation_ns": 141156879500,
+    "aggregate_memory_observation_complete": false,
+    "root_accepted": true,
+    "all_positive_entries_accepted": false,
+    "checked_feasible_upper": false,
+    "root_cost": 210090.72616079813,
+    "checked_cost": null,
+    "supplied_historical_reference_cost": 85970.67347138176,
+    "meets_supplied_reference_cost": false,
+    "consumer_retention_or_activation": false,
+    "historical_graph_imported": false,
+    "positive_entries": 12658,
+    "validated_entries": 976,
+    "census_entries": 12658,
+    "census_refused_entries": 0,
+    "success": 1,
+    "unresolved": 0,
+    "failure": 0,
+    "stop": 0,
+    "not_applied": 0,
+    "no_matching_edge": 0,
+    "generation_logical_work": 233575,
+    "checker_logical_work": 933384,
+    "checker_active_work": 279657,
+    "entry_logical_work": 717735,
+    "entry_active_work": 717735,
+    "aggregate_committed_logical_work": 1884694,
+    "aggregate_work_cap": 50000000,
+    "aggregate_selected_peak": 677032103,
+    "aggregate_reserved_peak": 878621351,
+    "transient_reservation": 201589248,
+    "aggregate_memory_cap": 1073741824,
+    "checker_live_bytes": 87596436,
+    "checker_internal_peak_bytes": 133064129,
+    "checker_retained_for_census": true,
+    "requested_finish_observed": true,
+    "requested_seconds": 120,
+    "native_seconds": 150,
+    "step_work_items": 8,
+    "checker_limits": {
+      "states": 800000,
+      "pairs": 1215000,
+      "transitions": 10000000,
+      "owned_bytes": 790241977,
+      "logical_work": 49766425
+    },
+    "resolved_limits": {
+      "max_states": 800000,
+      "max_discovered_states": 800000,
+      "max_expanded_states": 200000,
+      "max_rows": 1215000,
+      "max_transitions": 10000000,
+      "max_compiled_nodes": 100000,
+      "max_compiled_edges": 400000,
+      "max_strategy_json_bytes": 67108864,
+      "max_telemetry_json_bytes": 2097152
+    },
+    "resolved_actions": [
+      "transmute",
+      "augment",
+      "alteration",
+      "regal",
+      "alchemy",
+      "chaos",
+      "exalt",
+      "annul",
+      "scour",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+      "harvest_reforge:defences",
+      "harvest_reforge:physical",
+      "harvest_augment:defences",
+      "harvest_augment:physical",
+      "fracture",
+      "restart"
+    ],
+    "wall_ms": 150054.8563
+  },
+  "comparison": "Original-root210090.72616079813 is above released101311.35474896732 and supplied historical85970.67347138176. OldR11 root896765.8190299857 remains diagnostic only, with different source and graph; no matched-source timing/memory comparison claimed.",
+  "graph_sha256": "bedc2a4718e4622a301b0efd9159335fbe41db46f1b521c8d3bdac619249337a",
+  "local_release": {
+    "source_commit": "8ce6db846eab51ec9734f47e2a113970e8dd9d5f",
+    "stages": [
+      {
+        "phase": "build-benchmark",
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 33172,
+        "process_identity_token": "33172:134355925051974064",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 15335.28280002065
+      },
+      {
+        "phase": "generated-final-fill-original-root-and-all-entries",
+        "exit_code": 2,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 40656,
+        "process_identity_token": "40656:134355925209696540",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 150587.58860011585
+      }
+    ],
+    "unrun": [],
+    "owned_processes": [],
+    "local_slot": "RELEASED at terminal batch result",
+    "stop_requested": false,
+    "finished_utc": "2026-10-04T13:04:31.330553+00:00"
+  },
+  "bulk_directory": "out/sol61-armour/generic-final-fill-root-r1",
+  "bulk_files": {
+    "out/sol61-armour/generic-final-fill-root-r1/request.json": {
+      "sha256": "78cd59de0f064a718aea859952fabff6fd8dc6dfae720e8578308eaf4a0d4a97",
+      "bytes": 11578
+    },
+    "out/sol61-armour/generic-final-fill-root-r1/completion.json": {
+      "sha256": "f719f4fe506d54a93dfb9f5a3c14db213d47e342be1a7774cad4775fe6e7e845",
+      "bytes": 1090
+    },
+    "out/sol61-armour/generic-final-fill-root-r1/generic-final-fill-root.json": {
+      "sha256": "18487867c4ed091dd507d735b481a8c689b6e4b8e0bf75ee995de2de32c67960",
+      "bytes": 11172
+    },
+    "out/sol61-armour/generic-final-fill-root-r1/generic-final-fill-root.json.strategy.json": {
+      "sha256": "bedc2a4718e4622a301b0efd9159335fbe41db46f1b521c8d3bdac619249337a",
+      "bytes": 39418
+    },
+    "out/sol61-armour/generic-final-fill-root-r1/build-benchmark.receipt.json": {
+      "sha256": "95fd0c9d3509ff271dec2c19a10c739660821beb92e673057227c8f1528b2093",
+      "bytes": 315
+    },
+    "out/sol61-armour/generic-final-fill-root-r1/generated-final-fill-original-root-and-all-entries.receipt.json": {
+      "sha256": "f4a6dd5a12f79e804988bbe263105e554a48ffb008659cb042228bf59fbe2c6e",
+      "bytes": 316
+    }
+  },
+  "next_parent_direction": "SOURCE ONLY exact incremental/cached ownership observer; native admission allocation owners, retained checker/census/every12658entry and unchanged deadlines/caps. Reviewer before native run; CI owns LOCAL.",
+  "qualification_gaps": "All-entry census976/12658; complete aggregate transient peak unproved; Current/Finder/control cohort/WASM/public activation unrun; historical plain-fill reconstruction negative retained."
+}

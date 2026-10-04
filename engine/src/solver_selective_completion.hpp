@@ -190,9 +190,11 @@ class SelectiveProgrammeEntryValidator {
     std::uint64_t logical_work() const;
     std::uint64_t active_work() const;
     std::uint64_t estimated_owned_bytes() const;
-    // Finite diagnostic comparison only: the retained census stays borrowed.
-    // Existing consumers retain the full ownership calculation until qualified.
+    // Selected-allocation ledger, with full traversal retained for independent
+    // diagnostic comparison/reconciliation. The immutable census stays borrowed
+    // from its live checker; these accessors do not transfer or release it.
     std::uint64_t fast_estimated_owned_bytes() const;
+    std::uint64_t full_estimated_owned_bytes() const;
     std::uint64_t audited_estimated_owned_bytes() const;
 
   private:
