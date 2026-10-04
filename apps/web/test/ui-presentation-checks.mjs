@@ -63,6 +63,8 @@ export async function checkWorkbenchPresentation(page) {
 export async function captureUiCheckpoint(page, name) {
     const directory = process.env.POECRAFT_UI_CAPTURE_DIR;
     if (!directory) return;
+    const selected = process.env.POECRAFT_UI_CAPTURE_ONLY?.split(',').map(value => value.trim());
+    if (selected && !selected.includes(name)) return;
     await mkdir(directory, {recursive: true});
     const viewport = page.viewportSize();
     await page.setViewportSize({width: 1536, height: 864});
@@ -177,7 +179,10 @@ export async function checkBuilderPresentation(page) {
             assert.equal(port.radius, '50%'); assert.equal(port.top, '48px');
         }
     }
-    const field = page.locator('.pc-strategy-inspector input').first();
+    const routing = page.locator('.pc-strategy-inspector .pc-edge-routing');
+    const routingWasOpen = await routing.count() ? await routing.evaluate(element => element.open) : null;
+    if (routingWasOpen === false) await routing.locator('summary').click();
+    const field = page.locator('.pc-strategy-inspector input:visible:not(:disabled)').first();
     const style = await field.evaluate(element => {
         const style = getComputedStyle(element);
         return {text: style.color, fill: style.backgroundColor, boundary: style.borderTopColor};
@@ -190,5 +195,6 @@ export async function checkBuilderPresentation(page) {
     const clipped = await page.locator('.pc-edge-card-leaf').evaluateAll(leaves => leaves.filter(leaf =>
         leaf.scrollHeight > leaf.closest('.pc-edge-card-row').clientHeight + 1).map(leaf => leaf.textContent));
     assert.deepEqual(clipped, [], 'Edge card text fits its existing row geometry');
+    if (routingWasOpen === false) await routing.locator('summary').click();
     return {nodeWidth: 210, portDiameter: 14, sourceBaselinePortTop: 48, keyboardFocus: true, edgeRowsFit: true};
 }

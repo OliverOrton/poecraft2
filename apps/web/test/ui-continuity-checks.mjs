@@ -21,6 +21,7 @@ export async function checkUiContinuity(page) {
     await checkEmulatorLayout(page);
     const presentation = await checkWorkbenchPresentation(page);
     const itemPresentation = await checkItemPresentationSemantics(page);
+    console.log(JSON.stringify({checkpoint: "item-presentation", presentation, itemPresentation}));
     await captureUiCheckpoint(page, "emulator");
     await checkEmulatorHistory(page);
     await checkCraftChoices(page);
@@ -86,7 +87,10 @@ export async function checkUiContinuity(page) {
     assert.equal(await page.locator('[data-action="group-mode"][data-path="root"][data-mode="all"]').getAttribute('aria-pressed'), 'true');
     assert.equal(await page.locator('[data-action="group-mode"][data-path="0"][data-mode="any"]').getAttribute('aria-pressed'), 'true');
     await page.locator('[data-action="condition-type"][data-path="0.0"]').selectOption('has_mod_family');
+    const builderPresentation = await checkBuilderPresentation(page);
+    console.log(JSON.stringify({checkpoint: "builder-presentation", builderPresentation}));
     await page.getByRole('button', {name: 'Choose modifiers', exact: true}).click();
+    await captureUiCheckpoint(page, "builder");
     await page.getByRole('searchbox', {name: 'Search modifiers'}).fill('maximum life');
     await page.locator('.pc-modifier-family').first().click();
     await page.locator('[data-action="modifier-tier"]').selectOption('2');
@@ -100,8 +104,8 @@ export async function checkUiContinuity(page) {
     condition = JSON.parse(await page.locator('[data-action="json"]').inputValue());
     assert.match(JSON.stringify(condition), /"min_tier":0/);
     await checkStrategyHistory(page);
-    const builderPresentation = await checkBuilderPresentation(page);
-    await captureUiCheckpoint(page, "builder");
+    // Check the populated condition text after tier/history edits as well as empty rows.
+    await checkBuilderPresentation(page);
     await page.locator('.pc-tab-title').filter({hasText: /^Calculator/}).click();
     await page.waitForFunction(() => document.querySelector('.pc-calc-answer-value')?.textContent);
     await page.waitForFunction(() => !document.querySelector('pc-calculator')?.busy);
@@ -112,27 +116,103 @@ export async function checkUiContinuity(page) {
     await page.locator('.pc-tab-title').filter({hasText: /^Untitled$/}).click();
     await page.waitForFunction(() => document.querySelector('pc-emulator')?.item && !document.querySelector('pc-emulator')?.busy);
     assert.ok(await page.locator('pc-emulator .pc-mod-slot.is-filled').count() >= 4);
+    // A restored context can roll identical Chaos snapshots. Establish a native
+    // normal -> rare predecessor so saved-item Undo tests a real state change.
+    for (const action of ['scour', 'alchemy']) {
+        await page.locator(`pc-emulator [data-simple-action="${action}"]:not(:disabled)`).click();
+        await page.waitForFunction(() => !document.querySelector('pc-emulator')?.busy);
+    }
+    assert.ok(await page.locator('pc-emulator .pc-mod-slot.is-filled').count() >= 4);
+    const itemProperties = page.locator('pc-emulator .pc-item-properties');
+    const propertiesWereOpen = await itemProperties.evaluate(element => element.open);
+    if (!propertiesWereOpen) await itemProperties.locator('summary').click();
+    // Stash parity needs a nonempty actual influence, supplied through the
+    // existing native-backed item editor rather than by patching its view model.
+    await itemProperties.getByRole('checkbox', {name: 'Shaper', exact: true}).check();
+    await page.waitForFunction(() => !document.querySelector('pc-emulator')?.busy);
+    await page.locator('pc-emulator .pc-item-card-header [data-influence-context="actual"]').waitFor();
+    assert.equal(await page.evaluate(async () => {
+        const emulator = document.querySelector('pc-emulator');
+        return Number((await emulator.client.itemInfo(emulator.item, emulator.session)).generic_influence_bits);
+    }), 32);
     const artwork = page.locator('pc-emulator .pc-game-art');
     assert.ok(await artwork.count() > 3);
-    // Larger currency rows can leave icons outside the scrolling pane. Firefox
-    // correctly defers those lazy images until they are brought into view.
+    // Lazy artwork loads only when rendered: open the influence choices and
+    // bring currency icons into view, then restore the disclosure state.
     for (const image of await artwork.all()) {
         await image.scrollIntoViewIfNeeded();
-        await page.waitForFunction(image => image.complete && image.naturalWidth > 0, await image.elementHandle());
+        const handle = await image.elementHandle();
+        try {
+            await page.waitForFunction(image => image.complete && image.naturalWidth > 0, handle);
+        } catch (error) {
+            const describe = image => ({src: image.currentSrc || image.src, complete: image.complete,
+                naturalWidth: image.naturalWidth, connected: image.isConnected,
+                loading: image.loading, rect: image.getBoundingClientRect().toJSON(),
+                control: image.closest('button')?.textContent});
+            console.error(JSON.stringify({checkpoint: "artwork-load-failure",
+                image: await handle.evaluate(describe),
+                currentImages: await artwork.evaluateAll(images => images.map(image => ({
+                    src: image.currentSrc || image.src, complete: image.complete,
+                    naturalWidth: image.naturalWidth, connected: image.isConnected,
+                    rect: image.getBoundingClientRect().toJSON()})))}));
+            throw error;
+        }
     }
+    if (!propertiesWereOpen) await itemProperties.locator('summary').click();
     const itemMods = await page.locator('pc-emulator .pc-mod-slot.is-filled').allTextContents();
+    const itemFacts = await page.locator('pc-emulator pc-mod-list').evaluate(element => {
+        const model = element.model;
+        return {baseKey: model.baseKey, baseName: model.baseName, itemLevel: model.itemLevel,
+            rarity: model.rarity, rarityColor: getComputedStyle(element.querySelector('.pc-rarity')).color,
+            influences: model.influences};
+    });
     await page.locator('pc-emulator [data-cmd="save-as"]').click();
     await page.locator('.pc-text-modal input').fill('UI continuity item');
     await page.locator('.pc-text-modal [data-action="accept"]').click();
     await page.waitForFunction(() => document.querySelector('.pc-emu-name')?.textContent === 'Saved: UI continuity item');
+    const savedHistory = await page.evaluate(() => {
+        const emulator = document.querySelector('pc-emulator');
+        const current = emulator.undoHistory.at(emulator.undoHistory.cursor);
+        const previous = emulator.undoHistory.at(emulator.undoHistory.cursor - 1);
+        return {cursor: emulator.undoHistory.cursor, action: current.entry.action,
+            previousAction: previous?.entry.action,
+            sameSnapshot: JSON.stringify(current.snapshot) === JSON.stringify(previous?.snapshot)};
+    });
+    assert.equal(savedHistory.sameSnapshot, false, 'Saved-item history fixture has a changed predecessor');
     await page.locator('pc-emulator [data-cmd="undo"]:not(:disabled)').click();
     await page.waitForFunction(() => !document.querySelector('pc-emulator')?.busy);
-    assert.equal(await page.evaluate(() => document.querySelector('pc-emulator').dirty), true);
+    const dirtyAfterUndo = await page.evaluate(() => document.querySelector('pc-emulator').dirty);
+    if (!dirtyAfterUndo) console.error(JSON.stringify({checkpoint: "saved-history-undo-failure", savedHistory,
+        restored: await page.evaluate(() => {
+            const emulator = document.querySelector('pc-emulator');
+            const frame = emulator.undoHistory.at(emulator.undoHistory.cursor);
+            return {cursor: emulator.undoHistory.cursor, action: frame.entry.action,
+                equalsSaved: JSON.stringify(frame.snapshot) === emulator.savedStateKey,
+                currentWork: Boolean(emulator.currentWork)};
+        })}));
+    assert.equal(dirtyAfterUndo, true);
     await page.locator('pc-emulator [data-cmd="redo"]:not(:disabled)').click();
     await page.waitForFunction(() => !document.querySelector('pc-emulator')?.busy);
     assert.equal(await page.evaluate(() => document.querySelector('pc-emulator').dirty), false);
     await page.getByRole('button', {name: 'Stash', exact: true}).click();
     const saved = page.locator('.pc-stash-item').filter({hasText: 'UI continuity item'});
+    await saved.waitFor();
+    await page.locator('pc-stash .pc-stash-list[aria-busy="false"]').waitFor();
+    assert.equal(await page.locator('pc-stash [role="alert"]').count(), 0);
+    const savedIdentity = await page.locator('pc-stash').evaluate(element => {
+        const record = element.records.find(record => record.name === 'UI continuity item');
+        return {id: record.id, baseKey: record.base, itemLevel: record.itemLevel};
+    });
+    assert.ok(savedIdentity.id);
+    assert.equal(savedIdentity.baseKey, itemFacts.baseKey);
+    assert.equal(savedIdentity.itemLevel, itemFacts.itemLevel);
+    assert.ok((await saved.locator('.pc-stash-base').innerText()).includes(itemFacts.baseName));
+    assert.equal(await saved.locator('.pc-rarity').textContent(), itemFacts.rarity.toLowerCase());
+    assert.equal(await saved.locator('.pc-rarity').evaluate(element => getComputedStyle(element).color), itemFacts.rarityColor);
+    assert.equal(await saved.locator('.pc-rarity').evaluate(element => element.classList.contains(`pc-rarity-${element.textContent}`)), true);
+    assert.deepEqual(itemFacts.influences, ['Shaper']);
+    assert.deepEqual(await saved.locator('[data-influence-context="actual"]').allTextContents(), itemFacts.influences);
+    assert.equal(await saved.locator('[data-influence-context="required"], [data-influence-context="exact"], [data-influence-context="any"]').count(), 0);
     await captureUiCheckpoint(page, 'stash');
     await saved.getByRole('button', {name: 'Import copy', exact: true}).click();
     await page.locator('pc-emulator .pc-mod-slot.is-filled').first().waitFor();
@@ -146,6 +226,6 @@ export async function checkUiContinuity(page) {
     await imported.waitFor({state: 'detached'});
     return {presentation, itemPresentation, builderPresentation, crafts: true, handoffs: true, coverageGoal: true, draftRecovery: true, restart: true,
         namespacedAction: true, nestedConditions: true, tierAndAnyTier: true, tabLifecycle: true, artwork: true,
-        stashRoundTrip: true, dirtyClose: true, emulatorHistory: true, strategyHistory: true, edgeReconnection: true,
+        stashRoundTrip: true, stashNativeFacts: true, dirtyClose: true, emulatorHistory: true, strategyHistory: true, edgeReconnection: true,
         craftChoices: true, craftTooltips: true, stableModSlots: true, calculatorComparison: true, harvestMaterials: true, historySpend: true};
 }
