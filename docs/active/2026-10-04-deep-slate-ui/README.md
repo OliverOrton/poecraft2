@@ -58,9 +58,10 @@ and serialize browser/build/test work with the parent. Do not launch solve batch
 
 The Builder's feature/protocol/graph work belongs to its separate owner. Its
 geometry is retained, including 14px circular connection ports despite the new
-28px default button minimum. Builder-specific warm theme literals, graph rank/
-active/taken semantics, and Unveil's deliberate green illustration remain for
-bounded migration/review; this is not a claim that every app surface is cleaned.
+28px default button minimum. The audited Builder panels, fields, node/edge cards, trace and result surfaces now
+use the shared slate/text/status tokens. Graph rank/active/taken semantics and
+Unveil's deliberate green illustration retain their existing colors. Builder
+font metrics and wrapped edge text still require actual rendered qualification.
 Dense modifier footprints remain 72px (targets 96px), with keyboard-accessible
 inner scrolling for long content. Rendered density/zoom/keyboard/preview review
 is still required before qualification; the source changes alone do not prove it.
@@ -70,3 +71,16 @@ The recombination branch currently overlaps only by appending
 Preserve that feature rule when integrating; UI work does not edit its controllers
 or protocol. The CI branch has no overlapping web diff in the inspected revision.
 All commits stay local; CI/integrator owns merging and pushing qualified changes.
+
+## Builder continuation
+
+The parent authorized the Builder presentation slice after its owner published
+`ffa93611` (`ui-interface-handoff.md`), with runtime source pinned to
+`9736e766de959070b0c89fcb71281438ebd6f64c`. That handoff was read directly.
+Presentation preserves 210px nodes, 14px ports, source/terminal connector rules,
+A/B port positions, reconnect hit geometry, authored-vs-actual item identity, paid
+feeder provenance, native cost completeness and seven execution resource slots.
+No execution adapters, graph/history owner, native or WASM changes are permitted.
+The current additional source slice updates only the audited style owner;
+actual/authoring item and trace adapters are still pending on a coherent Builder
+source base. LOCAL has not been granted, so browser/font/wrap checks remain unrun.
