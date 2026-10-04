@@ -493,3 +493,22 @@ zero owned survivors. WASM/MJS outputs are preserved uncommitted and unqualified
 passing native `823657c0` remains separate. The transport receipt under
 `out/strategy-feeder/sol61-transport-20261004/qualification-receipt.json` retains
 source/artifact/build identities, successful stages, failure and unrun stages.
+
+## Reconnected source-only fixture repair (2026-10-04)
+
+After KIDS reconnected, checkpoint `5c288abe`, all16 frozen inputs and retained
+MJS `8ec20cf7` / WASM `c8b4991a` hashes matched. Engine, facade and production
+adapter source scopes are unchanged from compiled `43ef96cf`; no owned survivor
+was found. CI owns LOCAL; no new build, test or packaging command ran.
+
+The web Ring fixture now adds each candidate through native `pc_item_edit_json`,
+which checks all canonical groups and updates the item only on success. It
+verifies the full accepted prefix list/flags and full-item preservation on known
+group refusal; unexpected failures stop. A deliberate overlapping-goal case
+keeps the planner's refusal guard. The same-revision negative case changes only
+child document content, preserving its cost/output law to isolate identity.
+
+The test-only repair is unrun. The next requested LOCAL batch begins with the
+repaired planner/export/Ring1000 fixture, followed by remaining pair/feeder/client
+and TypeScript checks. Reuse the matching build and successful lifetime/cache
+stages; preserve the one successful exact bundle retry without repeating it.

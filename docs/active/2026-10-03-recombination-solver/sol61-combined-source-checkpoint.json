@@ -63,22 +63,20 @@
     "all_exec_sessions_complete": true
   },
   "next_batch": {
-    "status": "BLOCKED_FIXTURE_INPUT_REPAIR_AND_NEW_PARENT_LOCAL_REQUIRED",
-    "purpose": "Source-matched planner WASM, real worker lifetime/identity, Ring checked export and affected web adapters",
+    "status": "REQUEST_PARENT_LOCAL_AFTER_CI",
+    "purpose": "Qualify causal native-group fixture repair and finish remaining transport/planner/export/feeder checks using the retained matching WASM",
     "compiler_jobs": 2,
-    "build_command": "$env:EMCC_CORES='2'\n$env:BINARYEN_CORES='2'\npowershell -NoProfile -File scripts/build-wasm.ps1",
+    "build_command": null,
     "sdk_parallelism_evidence": "C:/emsdk/upstream/emscripten/tools/utils.py get_num_cores reads EMCC_CORES; shared.py run_multiple_processes and system_libs.py ninja owner use it.",
     "qualification_commands": [
-      "node apps/web/node_modules/tsx/dist/cli.mjs apps/web/test/recombination-planner-lifetime.test.ts",
       "node apps/web/node_modules/tsx/dist/cli.mjs apps/web/test/recombination-planner-wasm.test.ts",
       "node apps/web/node_modules/tsx/dist/cli.mjs apps/web/test/recombination-wasm.test.ts",
       "node apps/web/node_modules/tsx/dist/cli.mjs apps/web/test/engine-feeder.test.ts",
       "node apps/web/node_modules/tsx/dist/cli.mjs apps/web/test/engine-client-transfer.test.ts",
       "node apps/web/node_modules/tsx/dist/cli.mjs apps/web/test/strategy-feeder.test.ts",
-      "node apps/web/node_modules/tsx/dist/cli.mjs apps/web/test/strategy-modifier-cache.test.ts",
       "node apps/web/node_modules/typescript/bin/tsc --noEmit --project apps/web/tsconfig.json"
     ],
-    "full_product_gate": "After explicit parent LOCAL grant, one retry of the exact previously denied command is conditionally authorized by parent clarification of same-frozen-byte packaging. Verify script identical to main and before/after immutable hashes. Do not add evidence to retry tool arguments; stop on renewed denial with no workaround or other executor. Full npm product qualification remains later/unrun.",
+    "full_product_gate": "Exact authorized bundle retry succeeded once; preserve its receipt and all16 unchanged inputs. Do not repeat packaging in the next focused batch. Product/hosted integration metadata remains a later integration-owner gate.",
     "artifact": "data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
     "execution": "Serial causal stages through existing solver_worker.run_isolated_process/watchdog, deterministic logs, process identity/cleanup. No new orchestration service.",
     "per_stage_limits": {
@@ -95,13 +93,14 @@
       "policy_iterations": 32
     },
     "qualification_trials": "Current owner-approved 1000 actual compiled-worker Ring trials seed62667494; retained component feeder tests keep their separate regression identity.",
-    "reuse": "Preserve native823657c0 qualification and successful transport build/lifetime receipt43ef96cf. Repair the finite fixture identity before a new LOCAL grant; production source/artifact hashes unchanged need no repeated WASM compile.",
+    "reuse": "Retained MJS8ec20cf7/WASMc8b4991a match compiled source43ef96cf and unchanged engine/facade/production adapter scopes. Reuse successful build, lifetime and cache evidence; no WASM/native/Python rebuild or exact bundle retry needed for this test-only repair.",
     "receipts": "New source/tree, WASM/MJS hashes and matching request/model/economy/data/checker pins under out/strategy-feeder; native DLL/exe receipts remain 823657c0.",
     "stop": "Stop on identity/probability/resource/export/properness/cap/compilation failure; retain failure, do not raise caps or repeat for green.",
     "requirements": [
-      "New explicit parent LOCAL grant",
-      "One exact denied-command retry only after LOCAL grant and immutable-input/source preflight; no alternative bundle generation or executor",
-      "Release LOCAL immediately on completion/failure; prove no owned survivors"
+      "New parent LOCAL grant after CI",
+      "Source-scope and artifact/frozen-input identity preflight against retained receipts",
+      "Serial focused checks with existing watchdog/memory owner; stop on causal contract/identity failure",
+      "Release LOCAL immediately; report no owned survivors"
     ],
     "timed_research_runs": 0
   },
@@ -121,7 +120,7 @@
   "native_executable_sha256": "bcdf9165d9be4b27803594f4460c54708609d3b572fa169de48d56596c8075b0",
   "native_dll_sha256": "32162f44f1f7c5f1b6ead3a61a4c40d996680a39d41e406b55df64daffd4761d",
   "pending_adapter": {
-    "status": "WASM_BUILD_LIFETIME_PASSED_PLANNER_FIXTURE_FAILED",
+    "status": "FIXTURE_REPAIRED_SOURCE_ONLY_RETAINED_WASM_UNQUALIFIED",
     "source_scope": "request-owned read-only planner worker and strict native WASM JSON facade",
     "native_dependency": "823657c0b67a793676e83285c4e05b85175a96ab",
     "native_engine_source_unchanged": true,
@@ -164,7 +163,11 @@
       "hosted combined Build/Test"
     ],
     "worker_ring_trials": 0,
-    "artifact_disposition": "Matching compiled WASM/MJS remain uncommitted and unqualified for integration; preserve them for a causal fixture repair, not a repeat build."
+    "artifact_disposition": "Matching compiled WASM/MJS remain uncommitted and unqualified for integration; preserve them for a causal fixture repair, not a repeat build.",
+    "fixture_repair": "Use pc_item_edit_json via EngineClient.editItem for all explicit additions; native full canonical group conflict checks own candidate admission. Verify accepted complete slot keys/flags and refused full-item atomicity. Skip only declared group conflicts; unexpected errors stop. Retain a deliberate overlapping-goal refusal case.",
+    "reconciliation_receipt": "out/strategy-feeder/sol61-transport-20261004/reconnected-reconciliation.json",
+    "revision_negative_case": "Different embedded child content at the same revision changes only document name, preserving the output/cost law so the test isolates revision identity.",
+    "new_checks_run": false
   },
   "bundle_input_preflight": "out/strategy-feeder/sol61-finite-20261004/bundle-input-preflight.json"
 }
