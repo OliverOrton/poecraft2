@@ -1,3 +1,15 @@
+# Combined UI/recombination local gate passed (2026-10-04)
+
+Product b04eec10 passes38 web files compositionally, final affected checks/TS,
+Vite/package,5 immutable native captures and full render r9 including paid A/B,
+native card/cost/identity/navigation. Exact tested tab-return fixture is integrated;
+this follow-up changes test/docs only.18 pins unchanged,8 screenshots retained,
+LOCAL released/no survivors. The [living record](docs/active/2026-10-04-sol61-product-integration/README.md)
+owns source identities, old failures, scope and preview paths. Isolated branch
+publication/actual hosted checks are selected; main merge held. Final native/hosted
+qualification remains pending; solver experiments and separate CI repair excluded.
+No deployment/dev-server/data refresh; archived build stays honestly bound to b04.
+
 # Combined product gate R1 retained (2026-10-04)
 
 Metadata, TypeScript and trace-preview passed at5a46f465. Full npm failed before

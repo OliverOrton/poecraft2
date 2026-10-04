@@ -222,7 +222,15 @@ export async function checkRetainedNativeBuilder(page, evidence, capture) {
     await page.setViewportSize({width: 1440, height: 1100});
     const selector = '#pc-integrated-native-fixture';
     try {
-        await page.waitForFunction(() => document.querySelector('pc-strategy-editor')?.engineReady);
+        // The full continuity fixture ends after Stash/import/close navigation.
+        // Return through the existing visible document tab before borrowing its
+        // established engine context and native item-preview component hook.
+        await page.locator('.pc-tab-title').filter({hasText: /^Imported Emulator item$/}).click();
+        await page.locator('pc-strategy-editor:visible').waitFor();
+        await page.waitForFunction(() => {
+            const editor = document.querySelector('pc-strategy-editor');
+            return editor?.engineReady && editor.client && editor.dataId > 0 && editor.catalog && editor.bases.length;
+        });
         await page.evaluate(({graph, result, edgeId}) => {
             if (document.querySelector('#pc-integrated-native-fixture')) throw new Error('Native fixture already mounted');
             const editor = document.querySelector('pc-strategy-editor');

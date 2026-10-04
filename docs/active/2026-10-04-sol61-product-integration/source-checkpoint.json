@@ -1,5 +1,5 @@
 {
-  "status": "COMBINED_PRODUCT_SOURCE_READY_FOR_BOUNDED_GATE_UNRUN",
+  "status": "LOCAL_COMPOSITIONAL_QUALIFICATION_PASSED_HOSTED_PENDING",
   "production_and_assertion_source": "ad5c45d4fd72d6a4125c3bf97b56688a28ec6b54",
   "branch": "dot/sol61-ui-recomb-integration-20261004",
   "worktree": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-ui-recomb-integration-20261004",
@@ -119,7 +119,7 @@
   ],
   "runtime_manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
   "product_metadata": {
-    "state": "not_generated",
+    "state": "b04 generated through unchanged owner and immutable package verified; follow-up does not rebind build-info",
     "owner": "scripts/build-data-bundle.mjs",
     "owner_blob": "0a0a534e5c1996024c5549877857925cd15ab4d7",
     "requirement": "Generate through unchanged owner only after final adapter/test source is committed and a parent LOCAL batch is granted. Recheck all16 frozen inputs; do not copy another checkout build-info or hand-edit derived metadata."
@@ -127,10 +127,10 @@
   "rendered_gate": {
     "builder_contract_environment": "POECRAFT_UI_BUILDER_CONTRACT=resource-v1",
     "legacy_default": "legacy-48",
-    "dedicated_AB_and_trace_helpers": "wired into existing full runner when native evidence directory and resource-v1 are explicitly selected; unrun"
+    "dedicated_AB_and_trace_helpers": "passed resource-v1 actual archived worker/native captures inr9"
   },
   "trace_adapter": {
-    "state": "imported_source_only_unrun",
+    "state": "qualified native model/card/authority/navigation, missing carrier/configuration facts held",
     "presentation_owner_path": "apps/web/src/app/components/pc-run-trace.ts",
     "context_owner_path": "apps/web/src/app/components/pc-strategy-editor.tsx",
     "native_preview_owner_path": "apps/web/src/app/item-preview.ts",
@@ -141,23 +141,23 @@
     "integration_commit": "aa9934dfbab01f2b1a66ecc22797043c0b52cd74"
   },
   "remaining": [
-    "Parent LOCAL grant and existing memory-limited supervision entrypoint",
-    "Matching committed-source product metadata",
-    "Full TypeScript and focused trace preview regression",
-    "Complete npm with native result/planner/export captures",
-    "Packaged real-worker rendered integration checks",
-    "Whole-product final native and hosted matching-source qualification",
-    "Separate CI equal-race cause remains unresolved at323c5ba7"
+    "whole-product final native and hosted exact follow-up checks",
+    "main integration conditions",
+    "CI repair branch/idempotency correctness remains separate",
+    "representative solver quality cohort and capability ceilings",
+    "adaptive browser solver performance"
   ],
   "whitespace": {
     "conflict_files_diff_check": "passed",
     "whole_merge_diff_check": "two inherited trailing spaces in unchanged OFL.txt licence text; exact licensed bytes retained"
   },
   "heavy_work_this_checkpoint": false,
-  "local_slot": "solver owner; not held here",
+  "local_slot": "released; no survivors",
   "publication": {
-    "main_merged": false,
+    "isolated_branch_authorized": true,
+    "branch": "dot/sol61-ui-recomb-integration-20261004",
     "pushed": false,
+    "main_merged": false,
     "deployment": false
   },
   "trace_contract_handoff": {
@@ -171,5 +171,8 @@
     "capture_required_in_granted_combined_gate": "Actual result.traces/examples and full planner/checked_export; never reconstruct old per-entry rolls/sequence from summaries"
   },
   "editor_changes": "UI adapter context/disposal-only delta; modifier cache repair retained",
-  "native_capture_and_rendered_assertion_source": "ad5c45d4fd72d6a4125c3bf97b56688a28ec6b54"
+  "native_capture_and_rendered_assertion_source": "ad5c45d4fd72d6a4125c3bf97b56688a28ec6b54",
+  "qualified_product_source": "b04eec10892d6eaeb69e8645bccad9eb60a29699",
+  "current_qualification": "qualification-composition.json",
+  "test_only_followup": "Exact r9 tested tab-return fixture plus docs; archived build remains b04"
 }

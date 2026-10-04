@@ -1,48 +1,69 @@
-# Combined product gate prepared; all new checks unrun
+# Combined UI/recombination locally qualified; hosted checks pending
 
-Current production/assertion source ad5c45d4 includes UI adapter d178c304 imported
-as aa9934df. Native/bindings and both qualified artifacts remain unchanged. All16
-frozen hashes match. The [bounded gate plan](gate-plan.json) is selected for a
-later parent LOCAL grant; no test/build/browser/metadata generation ran here.
-MJS syntax and8 affected TypeScript syntax parses pass; full typing is unrun.
+The combined product at b04eec10892d6eaeb69e8645bccad9eb60a29699 passes the
+compositional local gate. Its engine/bindings, WASM50c98f55/MJS8ec20cf7,16 frozen
+inputs, runtime82fb60a2 and economyde282eec remain unchanged. The exact tested
+one-file rendered fixture correction is now integrated; this follow-up changes
+only that test and documentation. It returns through the visible Imported Emulator
+item tab after continuity navigation and uses the established native preview hook.
+All original geometry, card, cost, identity and navigation assertions are intact.
 
-Optional immutable native capture now saves complete planner/export responses,
-existing paid-feeder results and mixed-carrier traces/examples through existing
-worker test calls. A separate native imported reference card is read with owned
-item/session cleanup; original requests, trials, prices and caps are unchanged.
-Raw mixed-carrier response is saved before reference-card reading. Capture binds
-the exact generated product commit, loader/WASM and frozen runtime identity.
+The [qualification receipt](qualification-composition.json) owns complete source
+pins, per-file compositional evidence, bounded process receipts and all8 screenshot
+paths/hashes. The existing38-file web chain completed as25+5+8 across retained
+bounded batches. The earlier full npm commands failed at their next files; they
+are not relabelled green. Fresh b04 strategy-model/planner-WASM/engine-feeder checks,
+TypeScript and the exact trace-preview owned execution cover final affected code.
+The unchanged engine/strategy fixtures retain their original trial counts; no
+additional simulation is required for this test/documentation integration.
 
-The existing full rendered runner invokes dedicated A/B/trace/card/navigation
-checks only with explicit resource-v1 and the same native evidence directory.
-It verifies evidence.build equals the packaged product build. A test-only grid
-spreads original fixture view positions; original native graph/result stays in
-its immutable capture. Requested/default source ports are reported separately.
-The temporary view performs no crafting/planning/simulation, waits for imported
-preview cleanup and restores the viewport. All new assertions remain unrun.
+At b04, native capture passes in211.9s, Vite in2.8s and immutable packaging in1.8s.
+Five exact-source captures retain full planner/checked-export, Ring, paid feeder,
+mixed-carrier raw result and independently native-read reference card facts.
+Render r7 failed at live editor lookup after full continuity ended in another
+document; dedicated integrated assertions were not reached. The real tab-return
+fixture correction passes render r9 in13.6s, preserving the full existing flow.
 
-The shared card adapter is source-complete, retaining full raw envelopes/receipts,
-physical identities, native cumulative costs, readonly facts and stale/disposal
-checks. Missing configuration or native carrier information remains unavailable;
-pair before-item snapshots and nested child steps are never reconstructed.
+Render r9 passes full UI continuity, all resource-v1 connector vocabulary, both
+paid A/B supply anchors and reconnect handles, physical native output identity,
+read-only shared card, full inventory/paid receipts/native cumulative known costs,
+and keyboard trace selection/highlights/boundaries. It uses the actual packaged
+worker; mocked native-boundary tests remain a separate qualification. Missing
+pair before-item snapshots, nested child steps and configured cluster snapshots
+without configuration remain explicit exclusions. No new solver quality ceiling,
+lower bound, optimality or adaptive browser-performance claim follows.
 
-CI323c5ba7 separately retains the173-pass/1-fail idempotency gate and failure-only
-exact payload/Git diagnostics. Its actual cause is unresolved: accepted source
-was clean14122ab1; failed counterpart was not saved. No volatile timestamp/UUID
-occurs in the hashed payload. No conflict detection/canonicalization was changed.
-Do not delay independent UI qualification behind that diagnostic branch, or
-transfer its required hosted release qualification to a local UI pass.
+Archived directory8a6fe6d3 and build IDbe91598d are distinct identities. Build-info
+and all5 captures still name the actual b04 product and compare equal in full.
+The archived metadata is not overwritten or rebound to this test/docs follow-up.
+Both18 input/native hashes and5 capture hashes match before/after render.
+Native source tree4d11a36e remains the qualified R handoff; solver experimental
+source and the separate CI repair branch are not included.
 
-The seven-stage request is metadata60s, TypeScript60s, focused60s, full npm600s,
-Vite120s, package/verify60s, full rendered120s;4GiB owned-tree cap and5s cleanup,
-serial/no compilers/no added solver run. Preserve tighter child180s/locator30s
-bounds. Reuse the parent/R existing memory-limited supervisor; its entrypoint
-must be resolved before launch. Isolated dependency materialization must match
-the unchanged lock and avoid owner/dev-server writes. No new supervisor, install,
-data refresh, main publication or deployment is requested.
+Render supervision uses the existing locally checked worker blobf532376a as an
+execution adapter, not a product-code change:120s outer bound,4GiB owned-job cap,
+unchanged30s locators and separate5s pipe drain/job-close verification. Peak owned
+job memory is2.05GB. Root absence and owned-job drain are proved; fresh CIM finds
+no gate processes. LOCAL is released. Original r1-r7 failures and the unrun r8
+context-retention proposal remain distinguishable; only the minimal r9 tab fix
+is integrated.
 
-Previous source preparation and historical handoff below remain scoped to their
-own commits; current source/remaining status is in source-checkpoint.json.
+Preview choices are Emulator, Calculator goal and integrated connector/trace
+views. All8 original screenshots are preserved. The integrated card is asserted
+through the native model but lies below the retained trace screenshot's viewport;
+that image alone is not visual evidence of the full card.
+
+The isolated combined branch is selected for publication and actual hosted checks.
+Main merge remains held for required checks and source integration conditions.
+Whole-product final native/hosted qualification is pending. A docs-only hosted
+result cannot replace required unrun/failed native evidence. No deployment,
+dev-server action, data/economy refresh or normal checkout edit is performed.
+
+## Historical source preparation and retained gate failures
+
+The sections below retain their original source-scoped statements. Their earlier
+unrun/pending status is superseded by the current receipt above, not retroactively
+converted into success.
 
 # Combined UI and recombination product integration
 

@@ -1,0 +1,245 @@
+{
+  "state": "LOCAL_COMPOSITIONAL_PRODUCT_QUALIFICATION_PASSED_HOSTED_PENDING",
+  "recorded_at": "2026-10-04T13:41:53.859838+00:00",
+  "qualified_product_source": "b04eec10892d6eaeb69e8645bccad9eb60a29699",
+  "qualification_identity": "Actual immutable b04 product; committed follow-up contains the exact tested fixture and docs only. Archived build is not rebound to follow-up HEAD.",
+  "product_trees": {
+    "engine": "4d11a36e6a7a6d9852cb292aca3c2b46e8d07088",
+    "bindings": "5d7944a631bbd1b8aa8a0a6366dcdd80ba66357a",
+    "apps/web/src": "83c521f0da327281f0f54f78269e73bc677ee2be"
+  },
+  "owner_handoffs": {
+    "recombination_builder": "cfea56c0df744cd5fdc3a69db83a33acacbd76d1",
+    "ui": "637fcef462e01def3cdf54770a402db710242c67"
+  },
+  "frozen_and_native_sha256": {
+    "scripts/build-data-bundle.mjs": "013b3664b44adca64c6f16af2f6225f6853d6f1ecc6b04fc6a54262995b29ca2",
+    "apps/web/runtime.lock.json": "bafe2c54c2659348c8fa6836564b9300a9ffb0ac5f86d717302176b7239c0ad1",
+    "data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d/manifest.json": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d/game-data.json": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e",
+    "data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d/strings.json": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6",
+    "fixtures/repoe/production-source-manifest.json": "320d92fe2b7292046431fc955b9a2a7be7079e8a05119abb8fc161c7a32180ca",
+    "apps/web/public/economy/league-index.json": "2d71a5a96a669ac835b6e5bc06750c12ef8e5af3d7d9966c43fec0c62e86a2cd",
+    "apps/web/public/game-assets/catalog.json": "dd5affbe6a73f208bcdbb54074f9ad983536ffcaddcb689089a350c2d2eaffb0",
+    "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92",
+    "apps/web/public/economy/snapshots/9dece258da8894eb75cbb28115c89cca3149a03b885510e10ab6c22836dbc2fc.json": "f6f5d0ade010423d20303af6714cbf6ff5bd0f8af1f7f03dba6f603ff31442b6",
+    "apps/web/public/economy/snapshots/7da0b6fe6884582874c8e75bbcc19e2c9cf76388992a68d546f14c967a469702.json": "ec93341dff8f7b1b69209ae6fb5589f09d39c686ab824aca46c1ce3176fd4a31",
+    "apps/web/public/economy/snapshots/49d5d98e06d6271a6d799a7cee2b8c79f3b7d0319321ed9df90289033a6db615.json": "3a6c5f53c7e7e2b05c70fa75471a9f11f63a2ec2981b8e483a9bcbd618ea3ba2",
+    "apps/web/public/economy/snapshots/9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f.json": "9cae91c13f2c8a6bb06fe0d22487cfc77ca44983817a221de131e5fc3e72cb0e",
+    "apps/web/public/economy/snapshots/8feaa2c8e0ae609baace236430f00d9baef171e56ade19cfadaec83c5ad2527e.json": "95774f68dcb610e5669cf866d2d128bce62a1d204b75bfbb39278e29c22891ff",
+    "apps/web/public/economy/snapshots/6b0ef5a757e4adc23bd753f9d9f69a2f96ace9c9f4eddf5fddac1424b0973e5f.json": "51a7a77833a1d6ab629fe7b07bf8afd3f8952e8b2e931a1ea1f4be0ebcad2d2b",
+    "apps/web/public/economy/snapshots/494a62ac05535e4a2671acdb190c74327e4e50b2f403a3aed1d18edad73e29c9.json": "992b82f831976ffa6098a68f95e1c3a17ad1ab4f04dc7404f1a302c3599bd696",
+    "bindings/wasm/dist/poecraft_engine.wasm": "50c98f555d4ef9f6786c9a5fcfd138442a5d01ae1b3759b09712dbae059cdd9c",
+    "bindings/wasm/dist/poecraft_engine.mjs": "8ec20cf7c0f86cbad4c5d0638e0733da3110610cf02091c0807d4b87186d2b97"
+  },
+  "runtime_manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+  "economy_snapshot_identity": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+  "archived_package": {
+    "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-ui-recomb-integration-20261004\\dist\\public-artifacts\\web\\8a6fe6d36822a5199d48ffb3e8f5ad9fb99c39f713c82c2d31e5bf1b0b18b837",
+    "directory_identity": "8a6fe6d36822a5199d48ffb3e8f5ad9fb99c39f713c82c2d31e5bf1b0b18b837",
+    "build_id": "be91598d7440b26ad3ffb9b92cbfb8e54edc62d08a4a4fb172c63f2ba765cc04",
+    "build_info_sha256": "50251e4d70b60ae602b2f6524fdfb2844b5764981746aa6e13fae644d1c7135d",
+    "source": "b04eec10892d6eaeb69e8645bccad9eb60a29699",
+    "working_tree_dirty": false
+  },
+  "web_chain": {
+    "total_files": 38,
+    "qualification": "Compositional completion, not a single all-green npm invocation.",
+    "segments": [
+      {
+        "source": "d9ffc95630a398ce6de49db390a0521d19f6f3b6",
+        "receipt": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-ui-recomb-integration-20261004\\out\\sol61-product-integration\\gate-d9ffc956-r2\\batch.json",
+        "stage_exit": 1,
+        "completed_files": [
+          "test/engine-smoke.test.ts",
+          "test/engine-client-transfer.test.ts",
+          "test/calculator-delivery.test.ts",
+          "test/worker-finish-control.test.ts",
+          "test/solver-benchmark-corpus.test.ts",
+          "test/bestiary-bindings.test.ts",
+          "test/hinekora-bindings.test.ts",
+          "test/hinekora-controls.test.ts",
+          "test/item-display.test.ts",
+          "test/trace-item-preview.test.ts",
+          "test/unveil-controls.test.ts",
+          "test/calculator-currency-controls.test.ts",
+          "test/mod-text.test.ts",
+          "test/calculator-goal-item.test.ts",
+          "test/calculator-goal-set.test.ts",
+          "test/recombination-wasm.test.ts",
+          "test/recombination-planner-lifetime.test.ts",
+          "test/recombination-planner-ownership.test.ts",
+          "test/recombination-planner-wasm.test.ts",
+          "test/odds-presentation.test.ts",
+          "test/solve-workspace.test.ts",
+          "test/solver-lab-export.test.ts",
+          "test/solver-result-presentation.test.ts",
+          "test/workspace-model.test.ts",
+          "test/edit-history.test.ts"
+        ],
+        "retained_failure": "Next file workspace-resources could not find pinned Playwright executable; first25 completed."
+      },
+      {
+        "source": "d9ffc95630a398ce6de49db390a0521d19f6f3b6",
+        "receipt": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-ui-recomb-integration-20261004\\out\\sol61-product-integration\\gate-d9ffc956-r3\\batch.json",
+        "stage_exit": 1,
+        "completed_files": [
+          "test/workspace-resources.test.ts",
+          "test/craft-costs.test.ts",
+          "test/base-picker-model.test.ts",
+          "test/cluster-configuration.test.ts",
+          "test/engine-clusters.test.ts"
+        ],
+        "retained_failure": "Next strategy-model assertion caught inherited Harvest label encoding; existing assertion preserved."
+      },
+      {
+        "source": "de6de6443220bdd8d3ee5b188712ef3ab5785856",
+        "receipt": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-ui-recomb-integration-20261004\\out\\sol61-product-integration\\gate-de6de644-r4\\batch.json",
+        "stage_exit": 0,
+        "completed_files": [
+          "test/strategy-model.test.ts",
+          "test/strategy-modifier-cache.test.ts",
+          "test/strategy-feeder.test.ts",
+          "test/engine-feeder.test.ts",
+          "test/strategy-layout.test.ts",
+          "test/strategy-calculator-mode.test.ts",
+          "test/economy-service.test.ts",
+          "test/hosted-tester.test.ts"
+        ]
+      }
+    ],
+    "final_affected_checks": {
+      "source": "b04eec10892d6eaeb69e8645bccad9eb60a29699",
+      "strategy_model_and_planner_wasm_and_engine_feeder": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-ui-recomb-integration-20261004\\out\\sol61-product-integration\\gate-b04eec10-r7\\batch.json",
+      "trace_preview_owned_execution": "C:\\Users\\Oliver\\Documents\\poecraft2-ci-supervision-20261004\\out\\sol61-ci-supervision\\owned-handle-gate-r1\\batch.json"
+    },
+    "reuse_basis": "Only display labels changed after prior web segments; final strategy-model and trace checks retained. Native/bindings/WASM/runtime/prices and all38 test assertions remain unchanged."
+  },
+  "typescript": {
+    "source": "b04eec10892d6eaeb69e8645bccad9eb60a29699",
+    "receipt": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-ui-recomb-integration-20261004\\out\\sol61-product-integration\\gate-b04eec10-r5\\batch.json",
+    "passed": true,
+    "qualification_note": "TypeScript stage passed independently; later trace process-lifetime classification failed in this old execution adapter."
+  },
+  "vite_and_package": {
+    "source": "b04eec10892d6eaeb69e8645bccad9eb60a29699",
+    "receipt": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-ui-recomb-integration-20261004\\out\\sol61-product-integration\\gate-b04eec10-r7\\batch.json",
+    "passed": true
+  },
+  "native_captures": {
+    "source": "b04eec10892d6eaeb69e8645bccad9eb60a29699",
+    "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-ui-recomb-integration-20261004\\out\\sol61-product-integration\\gate-b04eec10-r7\\native-evidence",
+    "files_sha256": {
+      "mixed-carrier-native-response.json": "a41a1fdd8c8d0e78f58b6ffd24d3164856fbb80d1ae1befe2858401c95abc0bb",
+      "mixed-carrier-native-run.json": "8952d0519644eaa611ecf9f0e343642c47a0c183b2d6bd27480d9b743e9a6552",
+      "paid-feeder-native-run.json": "0451620b6bcf246721961357836711ed5902d4b0b3f6bd5ef3da5aa5c2b58953",
+      "ring-native-run.json": "fbb001f56abab8d4634bb2597e2504563127f872c360be85041529e7f0702250",
+      "ring-planner-response.json": "4dc416196972ffe173066eed656ec17367fae94976b1ac776f0c2acfe9f6a35a"
+    },
+    "calls": "Existing original planner/checked-export and1000-trial native fixtures only; full requests/results/raw traces/native reference card retained."
+  },
+  "render": {
+    "passed": true,
+    "receipt": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-ui-recomb-integration-20261004\\out\\sol61-product-integration\\render-b04eec10-r9\\receipt.json",
+    "receipt_sha256": "9b5f3a2d3031ac83d543891d5701064bf652ad271814fafb0b10ff9801bd52b2",
+    "completion": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-ui-recomb-integration-20261004\\out\\sol61-product-integration\\render-b04eec10-r9\\completion.json",
+    "wall_ms": 13626.273500034586,
+    "peak_job_memory_bytes": 2050400256,
+    "worker_blob": "f532376adbde79d9f31da1bc2d97e1b24fe2f5d9",
+    "product_worker_changed": false,
+    "bounds": {
+      "execution_seconds": 120,
+      "job_memory_bytes": 4294967296,
+      "locator_seconds": 30,
+      "pipe_drain_seconds": 5,
+      "job_close_verify_seconds": 5
+    },
+    "cleanup": "Actual owned-job drain and root absence proved; fresh CIM table empty. Independent cleanup waits are not asserted to total5s.",
+    "checks": [
+      "full UI continuity",
+      "full resource-v1 vocabulary210px/14px; A36/B78/ordinary54",
+      "both physical supply edge anchors/reconnect handles",
+      "native active_output identity and read-only shared card",
+      "raw inventory/paid receipts/native cumulative costs",
+      "keyboard navigation/exact highlight/boundaries",
+      "artwork and font fallback"
+    ],
+    "exclusions": [
+      "missing pair before-item snapshots",
+      "nested child steps",
+      "configured cluster snapshots without configuration"
+    ]
+  },
+  "fixture_fix": {
+    "path": "apps/web/test/integrated-builder-ui-checks.mjs",
+    "tested_sha256": "2cad8a044442489b5dfc153a6830d8e02243fbcd59d2a9c21500f51c9c9cbadb",
+    "patch_sha256": "03db3e303f219254699aed301da5ba3f801010794b5a23424601fd3cfc475816",
+    "change": "Real Imported Emulator item tab click and visible editor readiness after continuity; original setItemPreviewContext and all assertions unchanged.",
+    "tested_harness": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-ui-recomb-integration-20261004\\apps\\web\\test\\out\\render-harness-r9",
+    "unrun_global_context_overlay": "r8 superseded; never executed or integrated"
+  },
+  "screenshots": {
+    "chromium-builder.png": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-ui-recomb-integration-20261004\\out\\sol61-product-integration\\render-b04eec10-r9\\screenshots\\chromium-builder.png",
+      "sha256": "61216aaeb22485e1c05da45c798939f84fb5183f7360277c43a136d441f0ad2b"
+    },
+    "chromium-calculator-goal.png": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-ui-recomb-integration-20261004\\out\\sol61-product-integration\\render-b04eec10-r9\\screenshots\\chromium-calculator-goal.png",
+      "sha256": "ecdc681708efa76269ff3d6559a3bec1c7361f901c0be05a660f2f3b5da61116"
+    },
+    "chromium-calculator-input.png": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-ui-recomb-integration-20261004\\out\\sol61-product-integration\\render-b04eec10-r9\\screenshots\\chromium-calculator-input.png",
+      "sha256": "4038623ba34f846e94b1b8ecf0b9275dd507a1ac6b6367d223649bfd411bbd07"
+    },
+    "chromium-emulator.png": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-ui-recomb-integration-20261004\\out\\sol61-product-integration\\render-b04eec10-r9\\screenshots\\chromium-emulator.png",
+      "sha256": "86969eae68e6034f81caa1bfdc4b9899003e295333437974d63a48e1a7aa7a34"
+    },
+    "chromium-font-fallback.png": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-ui-recomb-integration-20261004\\out\\sol61-product-integration\\render-b04eec10-r9\\screenshots\\chromium-font-fallback.png",
+      "sha256": "3c14b340b674833e7f84dc9770487efdd4173fd30fadc47f6d0b38530bfa29a7"
+    },
+    "chromium-integrated-ab-board.png": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-ui-recomb-integration-20261004\\out\\sol61-product-integration\\render-b04eec10-r9\\screenshots\\chromium-integrated-ab-board.png",
+      "sha256": "c73b288667eba520e36492bd4c8f522f9d1f7b383d383af3aa5f9fac988dc1ba"
+    },
+    "chromium-integrated-mixed-native-trace.png": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-ui-recomb-integration-20261004\\out\\sol61-product-integration\\render-b04eec10-r9\\screenshots\\chromium-integrated-mixed-native-trace.png",
+      "sha256": "fff1797f0dafad146dc3651dce36f5eac67f84372fb71b388bc4489e1ecca39b"
+    },
+    "chromium-stash.png": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sol61-ui-recomb-integration-20261004\\out\\sol61-product-integration\\render-b04eec10-r9\\screenshots\\chromium-stash.png",
+      "sha256": "a7e31479e48dfc3cb0c366b844636888ee13cd564af520222e42e33e93b04e60"
+    }
+  },
+  "recommended_preview": [
+    "chromium-emulator.png",
+    "chromium-calculator-goal.png",
+    "chromium-integrated-mixed-native-trace.png"
+  ],
+  "retained_failures": {
+    "r1": "Missing ignored compiled runtime before native execution.",
+    "r2": "Missing pinned Playwright executable after25 completed files.",
+    "r3": "Inherited Harvest label encoding.",
+    "r4": "Inherited Restart label encoding; native results retained at their original source.",
+    "r5_r6": "Strict old process owner denied-image classification; old unproved image remains unproved.",
+    "r7": "Editor context lookup after continuity navigation; integrated assertions not reached. Exact tab-return fix passes inr9."
+  },
+  "held_qualification": [
+    "whole-product final native and hosted exact follow-up checks",
+    "main integration conditions",
+    "CI repair branch/idempotency correctness remains separate",
+    "representative solver quality cohort and capability ceilings",
+    "adaptive browser solver performance"
+  ],
+  "solver_research_imported": false,
+  "new_optimality_or_quality_claim": false,
+  "publication": {
+    "isolated_branch_authorized": true,
+    "branch": "dot/sol61-ui-recomb-integration-20261004",
+    "pushed": false,
+    "main_merged": false,
+    "deployment": false
+  },
+  "local_slot": "released; no survivors"
+}
