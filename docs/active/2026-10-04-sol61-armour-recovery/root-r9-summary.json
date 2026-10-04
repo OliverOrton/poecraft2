@@ -1,0 +1,33 @@
+{
+  "source_commit": "9c0c31d112c7b19346f9a6526e7b07882b8b7a6b",
+  "stages": [
+    {
+      "phase": "build-tests",
+      "exit_code": 1,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 42404,
+      "process_identity_token": "42404:134355830484270203",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 211473.35190000013
+    }
+  ],
+  "unrun": [
+    "generic-entry-budget",
+    "guarded-recovery-owner-compatibility",
+    "legacy-blocker-and-entry-compatibility",
+    "build-benchmark",
+    "generated-conquest-original-root-and-entries"
+  ],
+  "owned_processes": [],
+  "local_slot": "RELEASED at terminal batch result",
+  "stop_requested": false,
+  "finished_utc": "2026-10-04T10:27:39.901079+00:00",
+  "schema": "sol61_generated_root_gate_build_failure_v1",
+  "failure": "test_solver_compile.cpp5763 calls StrategyEvalProgress.done bool as function; production archive built; focused/native stages all UNRUN",
+  "qualification": "no new native/economic evidence",
+  "bulk_evidence": "out/sol61-armour/root-r9"
+}

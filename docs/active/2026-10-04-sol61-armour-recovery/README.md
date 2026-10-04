@@ -495,3 +495,16 @@ all source/runtime/request/economy bytes and serial finite/build/full-root phase
 All are currently UNRUN; LOCAL is free per parent but not yet granted to this
 request. Stop at first failure; no cap increase or automatic experiment repeats.
 Final economic control cohort, consumer activation and matching WASM remain later.
+
+## R9 build refusal retained; mechanical fixture correction
+
+At source9c0c31d1 the two-job Tests build stopped after211.473s: new fixture
+line5763 called StrategyEvalProgress.done as a function. Production archive
+compiled, but no new test binary or native stage ran. [Receipt](root-r9-summary.json)
+retains the failure, all five unrun stages and empty survivor list; bulk log is
+out/sol61-armour/root-r9/build-tests.log. The correction changes only that bool
+field access. Native semantics, source owner repair, requests/caps and proposed
+Conquest graph/check remain identical. Existing parent grant explicitly covers
+straightforward fixture repairs; resume the declared unrun gate from a fresh
+batch directory/source pin. No semantic/financial result is inferred from build
+success or from the previously qualified1cc4f8ff source.

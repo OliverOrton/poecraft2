@@ -5760,7 +5760,7 @@ void run_solver_entry_budget_tests() {
     }
     StrategyEvalWork checker(prepared.strategy,eval);
     for (unsigned step = 0; step < 40000 && !checker.progress().done; ++step) checker.step(1);
-    PC_CHECK(checker.progress().done()); if (!checker.progress().done()) return;
+    PC_CHECK(checker.progress().done); if (!checker.progress().done) return;
     const auto& checked = checker.result();
     PC_CHECK(finder_evaluation_accepted(checked)); if (!finder_evaluation_accepted(checked)) return;
     const auto& census = checked.policy_entries;

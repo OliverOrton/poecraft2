@@ -1,7 +1,7 @@
 {
   "schema": "sol61_generated_conquest_root_request_v1",
-  "status": "SOURCE ONLY; unbuilt/unrun; parent controls LOCAL and requests precise gate when ready",
-  "basis_commit": "d452cef2f15075adb2c629dd4202d29f20c4ee63",
+  "status": "R9 build failed fixture bool-as-function typo; source-only mechanical correction prepared under existing parent authorization",
+  "basis_commit": "9c0c31d112c7b19346f9a6526e7b07882b8b7a6b",
   "prior_qualified_source": "1cc4f8ffa48d2bfdb2f99116120300a9455e2905",
   "independent_prior_review": "2e68974a0d2f2cbfd426ee98852019056bb179b7",
   "accounting_prerequisite": "review5d35ab6c generic unowned/stricter-local reached-entry owner and explicit discovery cap; Finder generation/attachment lifecycle and early checker release deferred",
@@ -12,7 +12,7 @@
     "engine/src/solver_selective_completion.hpp": "c1d91dc2c83ebc112888b32f58386fa3246b1f0d0bd9660df9fa545d4d1ef3f1",
     "engine/benchmarks/solver_benchmark.cpp": "26738d370360a3f29ab095bb3e4ffee7d7796a41bd000a2ed303c3cacea80530",
     "engine/tests/test_main.cpp": "b4ac51fd0cf645bd29e874501ff2af6b6c5b0f54fc78d0144c044094167c076e",
-    "engine/tests/test_solver_compile.cpp": "df496283f4f338286f1cc56a725c3633790bad12e3fb5bdfa10d1061e342d52c",
+    "engine/tests/test_solver_compile.cpp": "f34f8297a3054a33f88e9be89563a5b34d190061eee8949b9cc201e75fa6a43e",
     "engine/tests/tests.hpp": "b17c4b3f436b11e77016afccff6f7ae54d06b92d3bd3499f7ae63d4aa2dc02ca",
     "engine/src/solver_calc.cpp": "41198cac24afe47b3c65fc07094b6fffa4138f5f69fb656e2339a2a52d3e34b1",
     "engine/src/solver_calc_types.hpp": "2035b3939d546fb868578b00ee86f358978cbac32d804a4b63a9e2f47fdadd02"
@@ -37,7 +37,7 @@
     }
   },
   "slots": {
-    "LOCAL": "not yet granted for this request",
+    "LOCAL": "parent grant includes straightforward fixture repairs; R9 stopped and cleaned; declared finite/native stages remain unrun",
     "compiler_jobs": 2,
     "execution": "serial; first failure stops dependent stages"
   },
