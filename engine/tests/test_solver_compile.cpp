@@ -13,6 +13,7 @@
 #include "../src/solver_diagnostic_options.hpp"
 #include "../src/json.hpp"
 #include "../src/solver_dirty_guidance.hpp"
+#include "../src/reforge_count_law.hpp"
 #include "poecraft/bitset.h"
 #include "poecraft/item_state.h"
 
@@ -20,6 +21,7 @@
 #include <cmath>
 #include <cstdio>
 #include <fstream>
+#include <filesystem>
 #include <memory>
 #include <map>
 #include <set>
@@ -4408,6 +4410,14 @@ void run_solver_admission_query_tests() {
     PC_CHECK(wrong_side && wrong_action);
 
     auto session = make_compile_session();
+    auto data = std::const_pointer_cast<DataImpl>(session->data);
+    data->metamod_no_attack_code = 20;
+    data->metamod_no_caster_code = 21;
+    data->metamod_prefixes_locked_code = 22;
+    data->metamod_suffixes_locked_code = 23;
+    data->metamod_multimod_code = 24;
+    session->bench_mod_ids = {9};
+    session->flags[9] = 1 << 1;
     session->base_spawn_weight = {7,11,19,23,31,37,43,101,53,59};
     session->base_roll_weight = session->base_spawn_weight;
     const auto registry = build_action_registry(*session);
@@ -4552,6 +4562,170 @@ void run_solver_admission_query_tests() {
             PC_CHECK(queried.admit_state_local_automatic_candidates(state,limits).cached);
         }
     }
+    // Mixed-family admission and unequal prices retain the complete native
+    // programme law. Compare to an independently filtered full batch, including
+    // cheap/full cache order; only selected intents acquire query completion.
+    auto mixed_goal = goal;
+    mixed_goal.automatic_candidate_kind_mask |=
+        automatic_candidate_kind_bit(AutomaticCandidateKind::PermanentBench) |
+        automatic_candidate_kind_bit(AutomaticCandidateKind::TemporaryBenchBlocker);
+    auto unequal_prices = prices;
+    for (unsigned tier = 1; tier <= 4; ++tier) {
+        unequal_prices["eldritch_ember:" + std::to_string(tier)] = .17 * tier;
+        unequal_prices["eldritch_ichor:" + std::to_string(tier)] = 2.3 * tier;
+    }
+    unequal_prices["eldritch_exalt"] = 7.9;
+    unequal_prices["eldritch_annul"] = .43;
+    unequal_prices["eldritch_chaos"] = 3.1;
+    auto mixed_limits = limits; mixed_limits.prices = &unequal_prices;
+    mixed_limits.query = eldritch_admission_query(
+        PC_SIDE_PREFIX, ActionType::EldritchExalt, false);
+    const auto filtered = [&](CalcContext& calc, const StateLocalAutomaticBatch& batch) {
+        auto result = batch;
+        result.admitted_operators.erase(std::remove_if(
+            result.admitted_operators.begin(), result.admitted_operators.end(),
+            [&](const auto index) { return !matches(calc.operators().at(index),
+                PC_SIDE_PREFIX, ActionType::EldritchExalt, false); }),
+            result.admitted_operators.end());
+        return result;
+    };
+    CalcContext mixed_reference(session,mixed_goal,registry,{chaos});
+    const auto mixed_state = mixed_reference.intern_item(root);
+    auto unrestricted = mixed_limits; unrestricted.query = AutomaticAdmissionQuery::Unrestricted;
+    const auto mixed_full = mixed_reference.admit_state_local_automatic_candidates(mixed_state,unrestricted);
+    const auto mixed_expected = snapshot(mixed_reference,mixed_state,filtered(mixed_reference,mixed_full));
+    PC_CHECK(!mixed_expected.empty());
+    for (const bool cheap_first : {false,true}) {
+        CalcContext mixed(session,mixed_goal,registry,{chaos});
+        const auto entry = mixed.intern_item(root);
+        auto cheap = mixed_limits; cheap.cheap_programs_only = true;
+        if (cheap_first) PC_CHECK(mixed.admit_state_local_automatic_candidates(entry,cheap).admitted_operators.empty());
+        const auto selected = mixed.admit_state_local_automatic_candidates(entry,mixed_limits);
+        PC_CHECK(!selected.cached);
+        compare(mixed_expected,snapshot(mixed,entry,selected));
+        for (const auto index : selected.admitted_operators)
+            PC_CHECK(matches(mixed.operators().at(index),PC_SIDE_PREFIX,ActionType::EldritchExalt,false));
+        PC_CHECK(mixed.admit_state_local_automatic_candidates(entry,mixed_limits).cached);
+        if (!cheap_first) PC_CHECK(mixed.admit_state_local_automatic_candidates(entry,cheap).admitted_operators.empty());
+        const auto full_after = mixed.admit_state_local_automatic_candidates(entry,unrestricted);
+        PC_CHECK(!full_after.cached);
+        compare(mixed_expected,snapshot(mixed,entry,filtered(mixed,full_after)));
+        PC_CHECK(mixed.admit_state_local_automatic_candidates(entry,unrestricted).cached);
+        if (!cheap_first) {
+            PC_CHECK(selected.phases.reforge_logical_work_v1 < mixed_full.phases.reforge_logical_work_v1);
+            PC_CHECK(selected.decisions.size() < mixed_full.decisions.size());
+            std::printf("mixed admission witness: typed_work=%llu full_work=%llu typed_decisions=%zu full_decisions=%zu\n",
+                static_cast<unsigned long long>(selected.phases.reforge_logical_work_v1),
+                static_cast<unsigned long long>(mixed_full.phases.reforge_logical_work_v1),
+                selected.decisions.size(), mixed_full.decisions.size());
+        }
+    }
+
+    // Preserve an already committed query while cancelling a different full
+    // admission after native work and operator staging. Work belongs to the
+    // shared owner even when publication is rolled back; retry is uncached.
+    CalcContext interleaved_owner(session,goal,registry,{chaos});
+    interleaved_owner.set_solve_resource_caps(100000,100000000,false);
+    CalcContext interleaved(session,goal,registry,{chaos});
+    interleaved.set_reforge_work_budget_owner(&interleaved_owner);
+    const auto interleaved_state = interleaved.intern_item(root);
+    auto committed_request = limits;
+    committed_request.query = eldritch_admission_query(PC_SIDE_PREFIX,ActionType::EldritchExalt,false);
+    const auto committed = interleaved.admit_state_local_automatic_candidates(interleaved_state,committed_request);
+    const auto committed_semantics = snapshot(interleaved,interleaved_state,committed);
+    const auto committed_operators = interleaved.operators().size();
+    const auto committed_work = interleaved_owner.telemetry().reforge_logical_work_v1;
+    PC_CHECK(committed_work > 0 && !committed.admitted_operators.empty());
+    StateLocalAutomaticBatch interrupted;
+    bool completed_full = false;
+    bool staged = false;
+    for (unsigned step = 0; step < 40000; ++step) {
+        completed_full = interleaved.advance_state_local_automatic_candidates(interleaved_state,limits,interrupted,1);
+        staged = interleaved.operators().size() > committed_operators &&
+            interleaved_owner.telemetry().reforge_logical_work_v1 > committed_work;
+        if (completed_full || staged) break;
+    }
+    PC_CHECK(staged && !completed_full);
+    const auto interrupted_work = interleaved_owner.telemetry().reforge_logical_work_v1;
+    interleaved.cancel_state_local_automatic_candidates(interleaved_state);
+    PC_CHECK(interleaved.operators().size() == committed_operators);
+    PC_CHECK(interleaved_owner.telemetry().reforge_logical_work_v1 == interrupted_work);
+    const auto committed_after = interleaved.admit_state_local_automatic_candidates(interleaved_state,committed_request);
+    PC_CHECK(committed_after.cached);
+    compare(committed_semantics,snapshot(interleaved,interleaved_state,committed_after));
+    const auto full_retry = interleaved.admit_state_local_automatic_candidates(interleaved_state,limits);
+    PC_CHECK(!full_retry.cached);
+    PC_CHECK(interleaved_owner.telemetry().reforge_logical_work_v1 > interrupted_work);
+    PC_CHECK(interleaved.admit_state_local_automatic_candidates(interleaved_state,limits).cached);
+    // Refuse a different uncached intent after the same owner has committed
+    // native work. The completed query/full memberships survive the refusal;
+    // increasing the allowance permits a new uncached, correctly charged try.
+    auto exhausted_carrier = root; exhausted_carrier.eater_of_worlds_tier = 1;
+    const auto exhausted_state = interleaved.intern_item(exhausted_carrier);
+    auto exhausted_request = limits;
+    exhausted_request.query = eldritch_admission_query(PC_SIDE_SUFFIX,ActionType::EldritchChaos,true);
+    const auto debit_before_refusal = interleaved_owner.telemetry().reforge_logical_work_v1;
+    const auto operators_before_refusal = interleaved.operators().size();
+    interleaved_owner.set_solve_resource_caps(100000,debit_before_refusal,false);
+    bool post_commit_refused = false;
+    try { (void)interleaved.admit_state_local_automatic_candidates(exhausted_state,exhausted_request); }
+    catch (const SolverResourceLimit& limit) { post_commit_refused = limit.cap_name() == "max_reforge_work"; }
+    PC_CHECK(post_commit_refused);
+    PC_CHECK(interleaved.operators().size() == operators_before_refusal);
+    PC_CHECK(interleaved_owner.telemetry().reforge_logical_work_v1 == debit_before_refusal);
+    interleaved_owner.set_solve_resource_caps(100000,100000000,false);
+    PC_CHECK(interleaved.admit_state_local_automatic_candidates(interleaved_state,committed_request).cached);
+    const auto exhaustion_retry = interleaved.admit_state_local_automatic_candidates(exhausted_state,exhausted_request);
+    PC_CHECK(!exhaustion_retry.cached && !exhaustion_retry.admitted_operators.empty());
+    PC_CHECK(interleaved_owner.telemetry().reforge_logical_work_v1 > debit_before_refusal);
+
+
+    // A completed typed membership round-trips through the existing coarse
+    // checkpoint without creating completion for the unrestricted envelope.
+    // The one enabled primitive has the same law as the chosen direct intent,
+    // so the completed coarse graph already owns all its native exact exits.
+    auto checkpoint_root = root; checkpoint_root.searing_exarch_tier = 1;
+    const auto direct_exalt = registry.index_by_id.at("eldritch_exalt");
+    CalcContext saved(session,goal,registry,{direct_exalt},false,false,true);
+    const auto saved_state = saved.intern_item(checkpoint_root);
+    SolveOptions checkpoint_caps;
+    checkpoint_caps.max_states = checkpoint_caps.max_discovered_states = 10000;
+    checkpoint_caps.max_expanded_states = 10000;
+    checkpoint_caps.max_solver_owned_bytes = 256ull << 20;
+    checkpoint_caps.max_reforge_work = 1000000;
+    SolveWork checkpoint_work(saved,checkpoint_root,prices,checkpoint_caps);
+    for (unsigned step = 0; step < 40000 && !checkpoint_work.progress().done; ++step)
+        checkpoint_work.step(8);
+    PC_CHECK(checkpoint_work.progress().done);
+    auto checkpoint_query = limits;
+    checkpoint_query.query = eldritch_admission_query(PC_SIDE_PREFIX,ActionType::EldritchExalt,true);
+    const auto saved_query = saved.admit_state_local_automatic_candidates(saved_state,checkpoint_query);
+    PC_CHECK(!saved_query.cached && !saved_query.admitted_operators.empty());
+    const auto path = std::filesystem::temp_directory_path() / "poecraft-eldritch-query-membership.pcsg";
+    bool checkpoint_loaded = false;
+    CalcContext replay(session,goal,registry,{direct_exalt},false,false,true);
+    try {
+        saved.save_development_solve_checkpoint(path.string(),"eldritch-query-native-fixture-v1");
+        replay.load_development_solve_checkpoint(path.string(),"eldritch-query-native-fixture-v1");
+        checkpoint_loaded = true;
+    } catch (const std::exception& error) {
+        std::printf("query checkpoint witness: %s\n",error.what());
+    }
+    PC_CHECK(checkpoint_loaded);
+    if (checkpoint_loaded) {
+        const auto loaded_query = replay.admit_state_local_automatic_candidates(saved_state,checkpoint_query);
+        PC_CHECK(loaded_query.cached && loaded_query.admitted_operators == saved_query.admitted_operators);
+        compare(snapshot(saved,saved_state,saved_query),snapshot(replay,saved_state,loaded_query));
+        const auto loaded_full = replay.admit_state_local_automatic_candidates(saved_state,limits);
+        PC_CHECK(!loaded_full.cached && loaded_full.query == AutomaticAdmissionQuery::Unrestricted);
+        PC_CHECK(replay.admit_state_local_automatic_candidates(saved_state,limits).cached);
+        for (const auto index : loaded_query.admitted_operators)
+            PC_CHECK(replay.is_candidate_operator_admitted_for_state(saved_state,index));
+    }
+    std::error_code remove_error;
+    std::filesystem::remove(path,remove_error);
+    PC_CHECK(!remove_error);
+
     // A query cannot grant a family disabled by the original request.
     auto disabled_goal = goal; disabled_goal.automatic_candidate_kind_mask = 0;
     CalcContext disabled(session,disabled_goal,registry,{chaos});
@@ -4645,6 +4819,119 @@ void run_solver_admission_query_tests() {
     catch (const std::invalid_argument&) { invalid = true; }
     PC_CHECK(invalid);
     PC_CHECK(capped.admit_state_local_automatic_candidates(capped_state,request).cached);
+}
+
+void run_solver_partial_held_witness_tests(const char* artifact_dir) {
+    if (!artifact_dir) throw std::runtime_error("partial held witness requires frozen native artifact");
+    const auto artifact = std::filesystem::absolute(artifact_dir);
+    const auto repo = artifact.parent_path().parent_path().parent_path();
+    const auto read = [](const std::filesystem::path& path) {
+        std::ifstream input(path, std::ios::binary);
+        if (!input) throw std::runtime_error("missing partial held witness input: " + path.string());
+        std::ostringstream text; text << input.rdbuf(); return text.str();
+    };
+    const auto data = load_data_impl(read(artifact / "manifest.json"),
+        read(artifact / "strings.json"), read(artifact / "game-data.json"));
+    const auto qualification = repo / "docs/active/2026-10-03-sol61-recovery/qualification/law3";
+    const auto case_text = read(qualification / "cases/conquest5-product.json");
+    const auto request = json::Parser(case_text.data(),case_text.size()).parse();
+    PC_CHECK(request.at("id").as_string() == "sol61-trace-conquest5-currentmodel-120");
+    PC_CHECK(request.at("start").at("mods").as_array().empty());
+    auto session = std::make_shared<SessionImpl>(); session->data = data;
+    session->base_index = data->base_by_path.at(request.at("session").at("base_metadata_path").as_string());
+    session->item_level = request.at("session").at("item_level").as_int();
+    build_session(*session);
+    const auto mod = [&](const std::string& key) {
+        const auto global = data->mod_pos_by_key.at(key);
+        return session->session_id_by_global_id.at(data->mod_global_ids.at(global));
+    };
+    const auto below = [&](const std::uint32_t target) {
+        for (std::uint32_t id = 0; id < session->mod_count; ++id)
+            if (session->family_id[id] == session->family_id[target] &&
+                session->family_tier_index[id] == 2 && session->base_spawn_weight[id] > 0)
+                return id;
+        throw std::runtime_error("partial held witness has no native tier-two family member");
+    };
+    GoalSpec goal; goal.rarity = PC_RARITY_RARE;
+    for (const auto& slot : request.at("goal").at("slots").as_array()) {
+        const auto id = mod(slot.at("family_mod_key").as_string());
+        GoalSlot wanted; wanted.family_id = session->family_id[id];
+        wanted.min_tier = slot.at("min_tier").as_int(); goal.slots.push_back(wanted);
+    }
+    PC_CHECK(goal.slots.size() == 5);
+    const std::vector<std::uint32_t> picks{
+        mod("LocalBaseArmourAndEvasionRating8"),
+        below(mod("LocalIncreasedArmourAndEvasionAndStunRecovery6")),
+        mod("AdditionalPhysicalDamageReduction5_"),
+        below(mod("ChanceToSuppressSpellsHigh5___"))};
+    // A single positive native Chaos pick ordering is enough for reachability.
+    // Use the owner's draw law and the actual weighted pool after every pick;
+    // this mass is one ordering, not the complete carrier probability.
+    pc_item_state root; pc_item_clear(&root); root.rarity = PC_RARITY_RARE;
+    auto carrier = root;
+    const auto count_law = rare_reforge_count_law(RareReforgeCountKind::Equipment);
+    double ordering_mass = 0;
+    for (const auto& draw : count_law.draws)
+        if (draw.count == 4) ordering_mass += double(draw.weight) / count_law.denominator;
+    for (const auto id : picks) {
+        ActionContextImpl context(0); context.session = session;
+        const auto& pool = get_weighted_pool(context,&carrier,PoolBuildRequest{});
+        const auto selected = std::find_if(pool.entries.begin(),pool.entries.end(),
+            [&](const auto& candidate) { return candidate.session_mod_id == id; });
+        PC_CHECK(selected != pool.entries.end() && pool.total_weight > 0);
+        if (selected == pool.entries.end() || pool.total_weight == 0) return;
+        PC_CHECK(selected->final_weight > 0);
+        ordering_mass *= double(selected->final_weight) / pool.total_weight;
+        PC_CHECK(pc_item_add_mod(&carrier,session->gen_type[id],id,
+            session->primary_group[id],0,nullptr) == PC_RESULT_OK);
+    }
+    PC_CHECK(ordering_mass > 0 && std::isfinite(ordering_mass));
+    PC_CHECK(carrier.prefix_count == 2 && carrier.suffix_count == 2 &&
+        carrier.searing_exarch_tier == 0 && carrier.eater_of_worlds_tier == 0);
+    ActionRegistryBuildOptions build; build.exhaustive_fossils = false;
+    const auto registry = build_action_registry(*session,build);
+    CalcContext calc(session,goal,registry,{registry.index_by_id.at("chaos")},
+        false,false,false,std::nullopt,{},false,{},true);
+    calc.set_solve_resource_caps(10000,1000000,false,1073741824ull);
+    const auto carrier_state = calc.intern_item(carrier);
+    PC_CHECK(satisfied_goal_mask(calc.state(carrier_state)) == ((1u << 0) | (1u << 3)));
+    PC_CHECK(!calc.is_goal_state(calc.state(carrier_state)));
+    const auto first_paid = [&](const StrategyImpl& strategy) {
+        auto node = strategy.start_node;
+        for (std::size_t step = 0; step <= strategy.nodes.size(); ++step) {
+            const auto& current = strategy.nodes.at(node);
+            if (current.kind == StrategyNodeKind::Operation) return node;
+            if (current.kind == StrategyNodeKind::Terminal)
+                throw std::runtime_error("partial held carrier routed to terminal");
+            const auto edge = std::find_if(current.edges.begin(),current.edges.end(),
+                [&](const auto& candidate) { return candidate.is_default ||
+                    evaluate_compiled_condition(candidate.condition,*session,carrier); });
+            if (edge == current.edges.end()) throw std::runtime_error("partial held carrier has no native route");
+            node = edge->target;
+        }
+        throw std::runtime_error("partial held carrier has an unpaid routing cycle");
+    };
+    const auto historical_json = read(qualification / "policies/conquest5-historical.strategy.json");
+    const auto current_json = read(qualification / "policies/conquest5-current.strategy.json");
+    const auto historical = compile_strategy_json(session,historical_json.data(),historical_json.size());
+    const auto current = compile_strategy_json(session,current_json.data(),current_json.size());
+    PC_CHECK(exact_item_state_key(historical->start_item) == exact_item_state_key(root));
+    PC_CHECK(exact_item_state_key(current->start_item) == exact_item_state_key(root));
+    const auto old_route = first_paid(*historical), new_route = first_paid(*current);
+    PC_CHECK(historical->nodes[old_route].id == "s3" &&
+        historical->nodes[old_route].action.type == ActionType::EldritchEmber);
+    PC_CHECK(current->nodes[new_route].id == "c5" &&
+        current->nodes[new_route].action.type == ActionType::Chaos);
+    const auto& next = historical->nodes[old_route].edges;
+    PC_CHECK(next.size() == 1 && next.front().is_default);
+    if (next.size() == 1) PC_CHECK(historical->nodes[next.front().target].action.type == ActionType::EldritchExalt);
+    std::printf("partial held native witness: law=%llu ordering_mass=%.17g goal_mask=%u historical=%s current=%s key=",
+        static_cast<unsigned long long>(kRareReforgeCountLawVersion),ordering_mass,
+        satisfied_goal_mask(calc.state(carrier_state)),historical->nodes[old_route].id.c_str(),
+        current->nodes[new_route].id.c_str());
+    for (const auto word : exact_item_state_key(carrier))
+        std::printf("%016llx,",static_cast<unsigned long long>(word));
+    std::printf("\n");
 }
 
 void run_solver_growth_tests(const bool blocker) {

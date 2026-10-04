@@ -271,6 +271,12 @@ start rarity, source and profile must accompany every reused number.
 
 ## Unresolved or incompletely qualified
 
+The selected [Conquest/armour recovery execution](../active/2026-10-04-sol61-armour-recovery/README.md)
+is source-only from qualified query `2ce0a75b`. Native partial-held routing and
+additional query fixtures await the parent-controlled LOCAL slot; controller
+generation, ownership transfer, new economics and matching WASM are unqualified.
+
+
 **Ordinary lower reconciliation:** U4 enabled `native_retention_diagnostic=reuse`
 and published A4/A5 retention lowers 198.83350/405.36940. P3 ordinary reports
 omit that activation and have no retention contribution; their lowers are

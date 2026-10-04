@@ -1,0 +1,148 @@
+{
+  "schema": "sol61_armour_source_audit_v1",
+  "qualification": "SOURCE_ONLY_UNRUN_NATIVE_GATES",
+  "foundation": "2ce0a75b4e98b2c5fff59be60f269df745bd63bc",
+  "local_main": "29d9e666b9d11dbe9ba58959f2598df9495dc49d",
+  "worktree": "C:/Users/Oliver/Documents/poecraft2-sol61-armour-20261004",
+  "branch": "dot/sol61-armour-recovery-20261004",
+  "frozen_inputs_sha256": {
+    "docs/active/2026-10-03-sol61-recovery/qualification/law3/cases/conquest5-product.json": "49bc43f7fa8616ab0f798d8e5c5a2e0c3e79342a51a1636446f2d80e65147642",
+    "docs/active/2026-10-03-sol61-recovery/qualification/law3/cases/conquest5.json": "b19c588b2f004fac7db6dae7fddb3f384693a18d722245f96f4a7c27d0dcd299",
+    "docs/active/2026-10-03-sol61-recovery/qualification/law3/policies/conquest5-historical.strategy.json": "725fcf645903621ec123961846c82143632bcee9d3a0da30302fc002d167720a",
+    "docs/active/2026-10-03-sol61-recovery/qualification/law3/policies/conquest5-current.strategy.json": "d65787d11ad895d5925ce9dd4d0aefde483e53bc25df3a80a6a9dfe7a0d7e053",
+    "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92"
+  },
+  "partial_held_witness": {
+    "base": {
+      "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyStrDex20",
+      "base_name": "Conquest Lamellar",
+      "item_class_key": "Body Armour",
+      "item_level": 86,
+      "minimum_item_level": 86
+    },
+    "original_root": {
+      "mods": [],
+      "rarity": "rare",
+      "with_implicits": false
+    },
+    "prefixes": [
+      {
+        "family_mod_key": "LocalBaseArmourAndEvasionRating8",
+        "tier": 1
+      },
+      {
+        "family_mod_key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+        "tier": 2
+      }
+    ],
+    "suffixes": [
+      {
+        "family_mod_key": "AdditionalPhysicalDamageReduction5_",
+        "tier": 1
+      },
+      {
+        "family_mod_key": "ChanceToSuppressSpellsHigh5___",
+        "tier": 2
+      }
+    ],
+    "eldritch_tiers": [
+      0,
+      0
+    ],
+    "expected_goal_mask": 9,
+    "expected_historical_paid_word": [
+      "eldritch_ember:1",
+      "eldritch_exalt"
+    ],
+    "expected_current_paid_word": [
+      "chaos"
+    ],
+    "native_execution": "UNRUN",
+    "native_key": "PENDING_NATIVE_WITNESS",
+    "positive_reachability": "UNRUN: test uses native count law and sequential weighted pools; reports one ordering mass"
+  },
+  "diagnostic_provenance": {
+    "graph_sha256": "c9335356b9e8450b514dc9786f693b95277c0df7ae654eae89904698ecc51886",
+    "probe_source_sha256": "17132b1af765fa971e23689995a93936b317c304a68d2d436ba0b7d4e2986acb",
+    "request_sha256": "e49ab9e5b7f6a7fa37ed4fe8fa4b1735b196965588e49cac8ab8e26640b856d9",
+    "prior_source_commit": "c263ed2475b5db7c6508c7155450fa04390c339c",
+    "case_sha256": "b19c588b2f004fac7db6dae7fddb3f384693a18d722245f96f4a7c27d0dcd299",
+    "runtime_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "economy_content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "probe_command_identity_sha256": "46eb13de8b2b4764b8f19f7129a5668dc1116386f9e8cd921229291ef076f86b",
+    "finding": "Probe forces producer proposal3 through the existing Current service; it does not import a historical graph. Its graph matches the published 99095.4091604038 diagnostic exactly.",
+    "classification": "generated diagnostic; not ordinary proposal enumeration or public activation",
+    "comparison": {
+      "session": true,
+      "start": true,
+      "goal": true,
+      "economy": true,
+      "caps": true,
+      "product_action_envelope": false
+    },
+    "limitation": "Old case has no product_action_envelope. Do not attribute a future comparison across changed action-resolution scope to typed query alone. Native production source pins and qualification identities also differ."
+  },
+  "production_edits": [],
+  "heavy_commands_launched": [],
+  "timed_case_invocations": 0,
+  "local_slot": "NOT_GRANTED; CI owns initial slot",
+  "owned_heavy_processes": [],
+  "finite_batch_request": {
+    "compiler_jobs": 2,
+    "build": [
+      "powershell",
+      "-File",
+      "scripts/dev-engine.ps1",
+      "-Task",
+      "Tests",
+      "-Jobs",
+      "2"
+    ],
+    "build_host_watchdog_seconds": 600,
+    "serial_tests": [
+      {
+        "args": [
+          "--solver-partial-held-witness-only",
+          "data/compiled/current"
+        ],
+        "host_watchdog_seconds": 60
+      },
+      {
+        "args": [
+          "--solver-admission-query-only"
+        ],
+        "host_watchdog_seconds": 180
+      }
+    ],
+    "supervisor": "poecraft_ingest.solver_worker.run_isolated_process",
+    "stop": "Stop batch on any failed assertion, semantic/identity failure, timeout or survivor; preserve raw stdout/receipts. No automatic repeat or cap increase.",
+    "witness_native_caps": {
+      "states": 10000,
+      "logical_work": 1000000,
+      "solver_owned_bytes": 1073741824
+    },
+    "query_context_caps": {
+      "solver_owned_bytes": 268435456,
+      "states": 10000,
+      "checkpoint_logical_work": 1000000,
+      "shared_owner_logical_work": 100000000
+    }
+  },
+  "checks": {
+    "git_diff_check": "PASSED",
+    "native_build": "UNRUN_PENDING_LOCAL",
+    "partial_held_witness": "UNRUN_PENDING_LOCAL",
+    "expanded_query_fixtures": "UNRUN_PENDING_LOCAL",
+    "route_extension": "NOT_STARTED_PENDING_P0_P1",
+    "ownership_transfer": "NOT_IMPLEMENTED_PENDING_MEASURED_FINITE_GATE",
+    "timed_cohort": "UNRUN",
+    "WASM": "UNRUN"
+  },
+  "source_files_sha256": {
+    "engine/tests/test_solver_compile.cpp": "2b270412e6ae27a6be6bef4292ed65cc81e933fa89682c4bae19c370660b41a6",
+    "engine/tests/test_main.cpp": "25d53853b5877cba993ba36bcf417b227adef42ad5760cdf8ec232b6c18bfa94",
+    "engine/tests/tests.hpp": "f996892603d40071ecd2d5dea3a8ceea4e01892b11d84f5daab567b555d2914f"
+  },
+  "remote_main_verified": "29d9e666b9d11dbe9ba58959f2598df9495dc49d",
+  "created_utc": "2026-10-04T04:20:59.531022+00:00"
+}

@@ -1,3 +1,15 @@
+# Armour recovery source checkpoint; LOCAL requested (2026-10-04)
+
+Isolated `dot/sol61-armour-recovery-20261004` starts from qualified query `2ce0a75b`,
+with main `29d9e666` unchanged. The [living programme](docs/active/2026-10-04-sol61-armour-recovery/README.md)
+owns frozen partial-held native routing and missing query fixtures, all unrun.
+LOCAL is ungranted to this task; no heavy invocation or process exists. Next:
+parent grants two-job Tests build plus bounded serial witness/query selectors;
+stop on semantic/identity failure before route-generation or lifetime changes.
+Recovered `c9335356` probe is forced proposal3 construction, contradicting the
+reports' import label; old case lacks the new product action envelope. No
+production edit, activation, WASM, timed cohort or publication occurred.
+
 # Qualified solver CI repair (2026-10-03)
 
 Source `e6f2b8bc` and rebuilt WASM `9d65393c` repair completed no-action
