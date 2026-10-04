@@ -1,0 +1,12 @@
+native entry budget: unowned-1 done=0 refusal=max_reforge_work logical=1 validated=0 positive=6 owned=80814
+native entry budget: unowned-47 done=0 refusal=max_reforge_work logical=47 validated=0 positive=6 owned=81490
+native entry budget: unowned-48 done=1 refusal= logical=48 validated=6 positive=6 owned=90605
+native entry budget: exhausted-shared done=0 refusal=max_reforge_work logical=0 validated=0 positive=6 owned=47117
+native entry budget: stricter-local done=0 refusal=max_reforge_work logical=1 validated=0 positive=6 owned=80814
+native entry budget: exact-shared done=1 refusal= logical=48 validated=6 positive=6 owned=56908
+native entry budget: discovery-one done=0 refusal=max_discovered_states logical=26 validated=0 positive=6 owned=80814
+native entry capacity detail: native programme has no exact admission memory
+native entry budget: memory-one done=0 refusal=max_owned_bytes logical=0 validated=0 positive=6 owned=70066
+native entry accounting witness: observer=full steps=36 entries=6 logical=48 active=48 observation_ns=30900 advance_ns=1236200 audited_ns=42100 audits=36 suspended_audits=30 completed_audits=6 validator_selected_peak=159315 checker_retained=1
+native entry accounting witness: observer=ledger steps=36 entries=6 logical=48 active=48 observation_ns=8100 advance_ns=1211500 audited_ns=47000 audits=36 suspended_audits=30 completed_audits=6 validator_selected_peak=159331 checker_retained=1
+native entry budget tests: 196 checks, 0 failures

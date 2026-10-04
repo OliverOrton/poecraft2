@@ -1,28 +1,24 @@
 # Independent review handoff
 
-Review worktree: poecraft2-sol61-independent-review-20261004.
-Latest separation check:99a58e7e/source675c2f06; no semantic objection to
-parent-selected six-stage economic-candidate gate. R3 remains961checks/1failure;
-native log/receipt hashes verified, no reviewer heavy command.
-12 prepared source and3 frozen input pins verified; no reviewer heavy command.
-CI owns LOCAL; all new finite fill/observer/construction gates unrun here.
+Latest native receipt review:6097f93d generic-final-fill-r1. All12 source/3frozen
+input/3compiled runtime pins and both binary identities verify.6 receipts agree,
+exit0/no timeout/cancel/survivor; reviewer ran no heavy command. CI owns LOCAL.
 
-- No new fill routing blocker demonstrated. Default-off final stages preserve
-  native held/capacity/blocker/pricing premises and paid cleanup.
-- R7/R8: source amended675c2f06 for all guards/positive entries and per-checkpoint
-  suspended ownership audits; native qualification pending. Current full
-  estimator unchanged. Historical match assertion5310 remains failed/preserved.
-- R6/P2: complete aggregate transient peak evidence remains held; no demonstrated
-  1GiB overrun. Owner now explicitly qualifies sampled R11 reports.
-- Finder R2 remains open: earlier reviewer cap50 actual88/report40. Generic
-  validator owner was source-addressed9c; later owner native qualification was
-  parent-reported, not re-reviewed in this cut.
-- R5 was independently source/receipt reviewed: eight R8 roots,878 entries,5944
-  checks. Parent R11 root-only896765.82 and968/12719 entries give no economics.
+- 20708 checks pass;16 matched original roots validate878control/777candidate
+ entries. All8 synthetic candidate costs improve under identical scope/prices.
+- R7 finite all-guard equivalence and R8 six-entry suspended/complete ownership
+ audit gaps are now qualified in their finite cuts.36 audits each:30suspended,
+ 6completed,48logical/active. No production observer/performance qualification.
+- Conquest construction:108nodes/20programmes,c69 Exalt, graph FNV7602779656003707844,
+ SHA256bedc2a4718e4622a301b0efd9159335fbe41db46f1b521c8d3bdac619249337a.
+ Positive exact native words preserved; whole new root/every-entry unrun.
+- One changed-candidate bounded full-root/all-entry gate is valid next, after
+ explicit selector/new graph pin source review. Current CLI7288-7289 refuses
+ final-fill+root-check; checker3246-3247 pins old R8. Keep150native/165host/50M/1GiB.
+- R6 aggregate transient peak and Finder generation R2 remain open. Historical
+ R3 remains961checks/1failure, separate negative hypothesis.
 
-[Living record](README.md) / [f5 review](final-fill-f5-source-review.json) /
-[pinned finite request](owner-final-fill-f5-request.json).
-Prepared finite gate is reasonable under parent LOCAL; no Conquest root run is
-prepared. Hold consumer activation, fast-observer switch, complete peak claims,
-full closure/economics, final frozen controls and WASM. No production edits or
-main merge/push here. Earlier reviewer canonical/owner R8 evidence preserved.
+[Living record](README.md) / [exact native review](generic-final-fill-r1-review.json).
+No activation, full closure, Conquest economics/retention, final frozen controls
+or WASM approval. Parent alone controls LOCAL/integration; no main merge/push.
+Earlier native reviewer/owner evidence and failed historical assertions preserved.

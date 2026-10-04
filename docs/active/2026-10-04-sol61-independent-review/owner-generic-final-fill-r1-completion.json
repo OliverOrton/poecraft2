@@ -1,0 +1,88 @@
+{
+  "source_commit": "6097f93d2e232c22c28b0a22339a22c59c062cc2",
+  "stages": [
+    {
+      "phase": "entry-budget-and-independent-accounting-observer-pair",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 67312,
+      "process_identity_token": "67312:134355892670143298",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 34.72390002571046
+    },
+    {
+      "phase": "same-request-paired-final-fill-sixteen-finite-roots",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 2216,
+      "process_identity_token": "2216:134355892670498385",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 687.9621997941285
+    },
+    {
+      "phase": "unchanged-eight-root-and-878-entry-control",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 9996,
+      "process_identity_token": "9996:134355892677396038",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 372.2475999966264
+    },
+    {
+      "phase": "legacy-blocker-native-consumer-control",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 91592,
+      "process_identity_token": "91592:134355892681117466",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 113.67839993909001
+    },
+    {
+      "phase": "build-benchmark",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 83980,
+      "process_identity_token": "83980:134355892682273662",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 15476.901000132784
+    },
+    {
+      "phase": "original-request-ordinary-generated-final-word-construction-only",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 22100,
+      "process_identity_token": "22100:134355892841777059",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 909.2686998192221
+    }
+  ],
+  "unrun": [],
+  "owned_processes": [],
+  "local_slot": "RELEASED at terminal batch result",
+  "stop_requested": false,
+  "finished_utc": "2026-10-04T12:08:04.832537+00:00"
+}

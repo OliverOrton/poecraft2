@@ -1,0 +1,125 @@
+private final fill pair: fixture=0 treatment=0 exalt_price=0.42999999999999999 requested_chaos_and_exalt
+private recovery native accounting: fast=103979 audited=103971 conservative_excess=8
+private guarded carrier: fixture=0 target_side=0 rollable=1 routed_final=eldritch_exalt
+private guard projection: fixture=0 guards=2 positive_entry_guard_pairs=290 native_pool_equivalent
+private exact entry reuse projection: fixture=0 treatment=0 positives=145 carriers=145 carrier_occurrences=145 potential_redundant=0 none_dropped
+private partial fixture=0 anchor=3 original_root_cost=282.224787 positive_entries=145 nodes=102 programs=20 owned=7646
+private final fill pair: fixture=1 treatment=0 exalt_price=0.42999999999999999 requested_chaos_and_exalt
+private recovery native accounting: fast=103979 audited=103971 conservative_excess=8
+private guarded carrier: fixture=1 target_side=1 rollable=1 routed_final=eldritch_exalt
+private guard projection: fixture=1 guards=2 positive_entry_guard_pairs=290 native_pool_equivalent
+private exact entry reuse projection: fixture=1 treatment=0 positives=145 carriers=145 carrier_occurrences=145 potential_redundant=0 none_dropped
+private partial fixture=1 anchor=3 original_root_cost=282.189717985 positive_entries=145 nodes=102 programs=20 owned=7646
+private final fill pair: fixture=2 treatment=0 exalt_price=0.42999999999999999 requested_chaos_and_exalt
+private recovery native accounting: fast=103979 audited=103971 conservative_excess=8
+private guarded carrier: fixture=2 target_side=0 rollable=1 routed_final=eldritch_exalt
+private guard projection: fixture=2 guards=2 positive_entry_guard_pairs=290 native_pool_equivalent
+private exact entry reuse projection: fixture=2 treatment=0 positives=145 carriers=145 carrier_occurrences=145 potential_redundant=0 none_dropped
+private partial fixture=2 anchor=4 original_root_cost=274.525596464 positive_entries=145 nodes=102 programs=20 owned=7646
+private final fill pair: fixture=3 treatment=0 exalt_price=0.42999999999999999 requested_chaos_and_exalt
+private recovery native accounting: fast=89089 audited=89081 conservative_excess=8
+private guarded carrier: fixture=3 target_side=1 rollable=1 routed_final=eldritch_exalt
+private guard projection: fixture=3 guards=2 positive_entry_guard_pairs=158 native_pool_equivalent
+private exact entry reuse projection: fixture=3 treatment=0 positives=79 carriers=79 carrier_occurrences=79 potential_redundant=0 none_dropped
+private partial fixture=3 anchor=4 original_root_cost=274.390726972 positive_entries=79 nodes=90 programs=14 owned=7182
+compound blocker native reachability: picks=3,2,5,7 secondary_group10_mod=2 goal_mask=10 ordering_mass=0.00021919330543368763 original_root_mass=0.017031484841614736 rollable_missing_target_mask=0
+compound blocker exact carrier key:70636974656d7631,0000000000000001,0000000000000002,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000002,0000000000000006,0000000000000002,000000000000000d,0000000000000000,0000000000000000,0000000000000000,00000000ffffffff,0000000000000006,0000000000000003,000000000000000c,0000000000000000,0000000000000000,0000000000000000,00000000ffffffff,0000000000000002,0000000000000006,0000000000000005,0000000000000014,0000000000000000,0000000000000000,0000000000000000,00000000ffffffff,0000000000000006,0000000000000007,0000000000000015,0000000000000000,0000000000000000,0000000000000000,00000000ffffffff,0000000000000000,0000000000000000,
+private final fill pair: fixture=4 treatment=0 exalt_price=0.42999999999999999 requested_chaos_and_exalt
+private recovery native accounting: fast=123419 audited=123411 conservative_excess=8
+private guarded carrier: fixture=4 target_side=0 rollable=0 routed_final=eldritch_chaos
+private guard projection: fixture=4 guards=2 positive_entry_guard_pairs=210 native_pool_equivalent
+private exact entry reuse projection: fixture=4 treatment=0 positives=105 carriers=105 carrier_occurrences=105 potential_redundant=0 none_dropped
+private partial fixture=4 anchor=3 original_root_cost=274.559625906 positive_entries=105 nodes=102 programs=20 owned=7646
+compound blocker native reachability: picks=3,2,5,7 secondary_group10_mod=2 goal_mask=10 ordering_mass=0.00021919330543368763 original_root_mass=0.017031484841614736 rollable_missing_target_mask=0
+compound blocker exact carrier key:70636974656d7631,0000000000000001,0000000000000002,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000002,0000000000000006,0000000000000005,0000000000000014,0000000000000000,0000000000000000,0000000000000000,00000000ffffffff,0000000000000006,0000000000000007,0000000000000015,0000000000000000,0000000000000000,0000000000000000,00000000ffffffff,0000000000000002,0000000000000006,0000000000000002,000000000000000d,0000000000000000,0000000000000000,0000000000000000,00000000ffffffff,0000000000000006,0000000000000003,000000000000000c,0000000000000000,0000000000000000,0000000000000000,00000000ffffffff,0000000000000000,0000000000000000,
+private final fill pair: fixture=5 treatment=0 exalt_price=0.42999999999999999 requested_chaos_and_exalt
+private recovery native accounting: fast=123419 audited=123411 conservative_excess=8
+private guarded carrier: fixture=5 target_side=1 rollable=0 routed_final=eldritch_chaos
+private guard projection: fixture=5 guards=2 positive_entry_guard_pairs=210 native_pool_equivalent
+private exact entry reuse projection: fixture=5 treatment=0 positives=105 carriers=105 carrier_occurrences=105 potential_redundant=0 none_dropped
+private partial fixture=5 anchor=3 original_root_cost=274.523961891 positive_entries=105 nodes=102 programs=20 owned=7646
+compound blocker native reachability: picks=3,2,5,7 secondary_group10_mod=7 goal_mask=10 ordering_mass=0.00018729344839751061 original_root_mass=0.018899252609993832 rollable_missing_target_mask=0
+compound blocker exact carrier key:70636974656d7631,0000000000000001,0000000000000002,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000002,0000000000000006,0000000000000002,000000000000000d,0000000000000000,0000000000000000,0000000000000000,00000000ffffffff,0000000000000006,0000000000000003,000000000000000c,0000000000000000,0000000000000000,0000000000000000,00000000ffffffff,0000000000000002,0000000000000006,0000000000000005,0000000000000014,0000000000000000,0000000000000000,0000000000000000,00000000ffffffff,0000000000000006,0000000000000007,0000000000000015,0000000000000000,0000000000000000,0000000000000000,00000000ffffffff,0000000000000000,0000000000000000,
+private final fill pair: fixture=6 treatment=0 exalt_price=0.42999999999999999 requested_chaos_and_exalt
+private recovery native accounting: fast=123115 audited=123107 conservative_excess=8
+persistent blocker carrier escape: fixture=6 route=paid_chaos price=100 full_mass=1.0000000000000002
+persistent blocker native cut: fixture=6 retained_mod7_blocks_goal0_after_target_clear
+private guard projection: fixture=6 guards=2 positive_entry_guard_pairs=154 native_pool_equivalent
+private exact entry reuse projection: fixture=6 treatment=0 positives=77 carriers=77 carrier_occurrences=77 potential_redundant=0 none_dropped
+private partial fixture=6 anchor=3 original_root_cost=1058.41163574 positive_entries=77 nodes=102 programs=20 owned=7646
+compound blocker native reachability: picks=3,2,5,7 secondary_group10_mod=7 goal_mask=10 ordering_mass=0.00018729344839751061 original_root_mass=0.018899252609993832 rollable_missing_target_mask=0
+compound blocker exact carrier key:70636974656d7631,0000000000000001,0000000000000002,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000002,0000000000000006,0000000000000005,0000000000000014,0000000000000000,0000000000000000,0000000000000000,00000000ffffffff,0000000000000006,0000000000000007,0000000000000015,0000000000000000,0000000000000000,0000000000000000,00000000ffffffff,0000000000000002,0000000000000006,0000000000000002,000000000000000d,0000000000000000,0000000000000000,0000000000000000,00000000ffffffff,0000000000000006,0000000000000003,000000000000000c,0000000000000000,0000000000000000,0000000000000000,00000000ffffffff,0000000000000000,0000000000000000,
+private final fill pair: fixture=7 treatment=0 exalt_price=0.42999999999999999 requested_chaos_and_exalt
+private recovery native accounting: fast=123115 audited=123107 conservative_excess=8
+persistent blocker carrier escape: fixture=7 route=paid_chaos price=100 full_mass=1.0000000000000002
+persistent blocker native cut: fixture=7 retained_mod7_blocks_goal0_after_target_clear
+private guard projection: fixture=7 guards=2 positive_entry_guard_pairs=154 native_pool_equivalent
+private exact entry reuse projection: fixture=7 treatment=0 positives=77 carriers=77 carrier_occurrences=77 potential_redundant=0 none_dropped
+private partial fixture=7 anchor=3 original_root_cost=1058.40531371 positive_entries=77 nodes=102 programs=20 owned=7646
+private final fill pair: fixture=0 treatment=1 exalt_price=0.42999999999999999 requested_chaos_and_exalt
+private recovery native accounting: fast=103979 audited=103971 conservative_excess=8
+private final fill native witness: fixture=0 ordering_mass=1.7073260389839896e-05 fill_mass=1 cleanup_words=2 blocked_misses=1 held_mask=7 target_progress_preserved
+private guarded carrier: fixture=0 target_side=0 rollable=1 routed_final=eldritch_exalt
+private guard projection: fixture=0 guards=4 positive_entry_guard_pairs=528 native_pool_equivalent
+private exact entry reuse projection: fixture=0 treatment=1 positives=132 carriers=132 carrier_occurrences=132 potential_redundant=0 none_dropped
+private partial fixture=0 anchor=3 original_root_cost=214.752322377 positive_entries=132 nodes=108 programs=20 owned=7766
+private final fill pair: fixture=1 treatment=1 exalt_price=0.42999999999999999 requested_chaos_and_exalt
+private recovery native accounting: fast=103979 audited=103971 conservative_excess=8
+private final fill native witness: fixture=1 ordering_mass=1.7073260389839896e-05 fill_mass=1 cleanup_words=2 blocked_misses=1 held_mask=7 target_progress_preserved
+private guarded carrier: fixture=1 target_side=1 rollable=1 routed_final=eldritch_exalt
+private guard projection: fixture=1 guards=4 positive_entry_guard_pairs=528 native_pool_equivalent
+private exact entry reuse projection: fixture=1 treatment=1 positives=132 carriers=132 carrier_occurrences=132 potential_redundant=0 none_dropped
+private partial fixture=1 anchor=3 original_root_cost=214.717347269 positive_entries=132 nodes=108 programs=20 owned=7766
+private final fill pair: fixture=2 treatment=1 exalt_price=0.42999999999999999 requested_chaos_and_exalt
+private recovery native accounting: fast=103979 audited=103971 conservative_excess=8
+private final fill native witness: fixture=2 ordering_mass=1.7073260389839896e-05 fill_mass=1 cleanup_words=1 blocked_misses=0 held_mask=7 target_progress_preserved
+private guarded carrier: fixture=2 target_side=0 rollable=1 routed_final=eldritch_exalt
+private guard projection: fixture=2 guards=4 positive_entry_guard_pairs=528 native_pool_equivalent
+private exact entry reuse projection: fixture=2 treatment=1 positives=132 carriers=132 carrier_occurrences=132 potential_redundant=0 none_dropped
+private partial fixture=2 anchor=4 original_root_cost=203.760964031 positive_entries=132 nodes=108 programs=20 owned=7766
+private final fill pair: fixture=3 treatment=1 exalt_price=0.42999999999999999 requested_chaos_and_exalt
+private recovery native accounting: fast=89089 audited=89081 conservative_excess=8
+private final fill native witness: fixture=3 ordering_mass=1.7073260389839896e-05 fill_mass=1 cleanup_words=1 blocked_misses=0 held_mask=7 target_progress_preserved
+private guarded carrier: fixture=3 target_side=1 rollable=1 routed_final=eldritch_exalt
+private guard projection: fixture=3 guards=4 positive_entry_guard_pairs=284 native_pool_equivalent
+private exact entry reuse projection: fixture=3 treatment=1 positives=71 carriers=71 carrier_occurrences=71 potential_redundant=0 none_dropped
+private partial fixture=3 anchor=4 original_root_cost=203.626108405 positive_entries=71 nodes=96 programs=14 owned=7302
+compound blocker native reachability: picks=3,2,5,7 secondary_group10_mod=2 goal_mask=10 ordering_mass=0.00021919330543368763 original_root_mass=0.017031484841614736 rollable_missing_target_mask=0
+compound blocker exact carrier key:70636974656d7631,0000000000000001,0000000000000002,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000002,0000000000000006,0000000000000002,000000000000000d,0000000000000000,0000000000000000,0000000000000000,00000000ffffffff,0000000000000006,0000000000000003,000000000000000c,0000000000000000,0000000000000000,0000000000000000,00000000ffffffff,0000000000000002,0000000000000006,0000000000000005,0000000000000014,0000000000000000,0000000000000000,0000000000000000,00000000ffffffff,0000000000000006,0000000000000007,0000000000000015,0000000000000000,0000000000000000,0000000000000000,00000000ffffffff,0000000000000000,0000000000000000,
+private final fill pair: fixture=4 treatment=1 exalt_price=0.42999999999999999 requested_chaos_and_exalt
+private recovery native accounting: fast=123419 audited=123411 conservative_excess=8
+private final fill native witness: fixture=4 ordering_mass=1.9451010939400147e-05 fill_mass=0.99999999999999989 cleanup_words=2 blocked_misses=1 held_mask=7 target_progress_preserved
+private guarded carrier: fixture=4 target_side=0 rollable=0 routed_final=eldritch_chaos
+private guard projection: fixture=4 guards=4 positive_entry_guard_pairs=368 native_pool_equivalent
+private exact entry reuse projection: fixture=4 treatment=1 positives=92 carriers=92 carrier_occurrences=92 potential_redundant=0 none_dropped
+private partial fixture=4 anchor=3 original_root_cost=206.582144477 positive_entries=92 nodes=108 programs=20 owned=7766
+compound blocker native reachability: picks=3,2,5,7 secondary_group10_mod=2 goal_mask=10 ordering_mass=0.00021919330543368763 original_root_mass=0.017031484841614736 rollable_missing_target_mask=0
+compound blocker exact carrier key:70636974656d7631,0000000000000001,0000000000000002,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000002,0000000000000006,0000000000000005,0000000000000014,0000000000000000,0000000000000000,0000000000000000,00000000ffffffff,0000000000000006,0000000000000007,0000000000000015,0000000000000000,0000000000000000,0000000000000000,00000000ffffffff,0000000000000002,0000000000000006,0000000000000002,000000000000000d,0000000000000000,0000000000000000,0000000000000000,00000000ffffffff,0000000000000006,0000000000000003,000000000000000c,0000000000000000,0000000000000000,0000000000000000,00000000ffffffff,0000000000000000,0000000000000000,
+private final fill pair: fixture=5 treatment=1 exalt_price=0.42999999999999999 requested_chaos_and_exalt
+private recovery native accounting: fast=123419 audited=123411 conservative_excess=8
+private final fill native witness: fixture=5 ordering_mass=1.9451010939400147e-05 fill_mass=0.99999999999999989 cleanup_words=2 blocked_misses=1 held_mask=7 target_progress_preserved
+private guarded carrier: fixture=5 target_side=1 rollable=0 routed_final=eldritch_chaos
+private guard projection: fixture=5 guards=4 positive_entry_guard_pairs=368 native_pool_equivalent
+private exact entry reuse projection: fixture=5 treatment=1 positives=92 carriers=92 carrier_occurrences=92 potential_redundant=0 none_dropped
+private partial fixture=5 anchor=3 original_root_cost=206.546554486 positive_entries=92 nodes=108 programs=20 owned=7766
+compound blocker native reachability: picks=3,2,5,7 secondary_group10_mod=7 goal_mask=10 ordering_mass=0.00018729344839751061 original_root_mass=0.018899252609993832 rollable_missing_target_mask=0
+compound blocker exact carrier key:70636974656d7631,0000000000000001,0000000000000002,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000002,0000000000000006,0000000000000002,000000000000000d,0000000000000000,0000000000000000,0000000000000000,00000000ffffffff,0000000000000006,0000000000000003,000000000000000c,0000000000000000,0000000000000000,0000000000000000,00000000ffffffff,0000000000000002,0000000000000006,0000000000000005,0000000000000014,0000000000000000,0000000000000000,0000000000000000,00000000ffffffff,0000000000000006,0000000000000007,0000000000000015,0000000000000000,0000000000000000,0000000000000000,00000000ffffffff,0000000000000000,0000000000000000,
+private final fill pair: fixture=6 treatment=1 exalt_price=0.42999999999999999 requested_chaos_and_exalt
+private recovery native accounting: fast=123115 audited=123107 conservative_excess=8
+private final fill native witness: fixture=6 ordering_mass=6.6781716215632005e-05 fill_mass=1 cleanup_words=1 blocked_misses=0 held_mask=7 target_progress_preserved
+persistent blocker carrier escape: fixture=6 route=paid_chaos price=100 full_mass=1.0000000000000002
+persistent blocker native cut: fixture=6 retained_mod7_blocks_goal0_after_target_clear
+private guard projection: fixture=6 guards=4 positive_entry_guard_pairs=252 native_pool_equivalent
+private exact entry reuse projection: fixture=6 treatment=1 positives=63 carriers=63 carrier_occurrences=63 potential_redundant=0 none_dropped
+private partial fixture=6 anchor=3 original_root_cost=1042.07083688 positive_entries=63 nodes=108 programs=20 owned=7766
+compound blocker native reachability: picks=3,2,5,7 secondary_group10_mod=7 goal_mask=10 ordering_mass=0.00018729344839751061 original_root_mass=0.018899252609993832 rollable_missing_target_mask=0
+compound blocker exact carrier key:70636974656d7631,0000000000000001,0000000000000002,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000000,0000000000000002,0000000000000006,0000000000000005,0000000000000014,0000000000000000,0000000000000000,0000000000000000,00000000ffffffff,0000000000000006,0000000000000007,0000000000000015,0000000000000000,0000000000000000,0000000000000000,00000000ffffffff,0000000000000002,0000000000000006,0000000000000002,000000000000000d,0000000000000000,0000000000000000,0000000000000000,00000000ffffffff,0000000000000006,0000000000000003,000000000000000c,0000000000000000,0000000000000000,0000000000000000,00000000ffffffff,0000000000000000,0000000000000000,
+private final fill pair: fixture=7 treatment=1 exalt_price=0.42999999999999999 requested_chaos_and_exalt
+private recovery native accounting: fast=123115 audited=123107 conservative_excess=8
+private final fill native witness: fixture=7 ordering_mass=6.6781716215632005e-05 fill_mass=1 cleanup_words=1 blocked_misses=0 held_mask=7 target_progress_preserved
+persistent blocker carrier escape: fixture=7 route=paid_chaos price=100 full_mass=1.0000000000000002
+persistent blocker native cut: fixture=7 retained_mod7_blocks_goal0_after_target_clear
+private guard projection: fixture=7 guards=4 positive_entry_guard_pairs=252 native_pool_equivalent
+private exact entry reuse projection: fixture=7 treatment=1 positives=63 carriers=63 carrier_occurrences=63 potential_redundant=0 none_dropped
+private partial fixture=7 anchor=3 original_root_cost=1042.06622119 positive_entries=63 nodes=108 programs=20 owned=7766
+private paired final fill tests: 14036 checks, 0 failures

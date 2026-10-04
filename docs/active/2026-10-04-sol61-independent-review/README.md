@@ -1160,3 +1160,49 @@ pair audits after each checkpoint, including unfinished entries, and requires
 positive suspended-audit count. Source/API/production unchanged otherwise; these
 checks have not executed in R3's stopped batch. Earlier peak/Finder/economic
 qualification holds remain.
+
+
+## Generic final-fill native finite and construction receipts
+
+Independently read/hash-reviewed generic-final-fill-r1 at6097f93d2e232c22c28b0a22339a22c59c062cc2.
+12 source pins,3 frozen Conquest request/economy/manifest pins and3 compiled runtime
+pins match. Reused Tests binary675c2f06 matches declared SHA and identical source;
+new Benchmark binary matches its build identity. All6 terminal receipts agree
+with completion and report exit0/no timeout/cancellation/survivor. Reviewer ran
+no heavy command. Exact compact review/pairs/observer metrics/artifact hashes are
+in generic-final-fill-r1-review.json, with copied request/completion/native pair
+and ownership logs/construction receipt. Other bulk evidence remains owner out.
+
+20708 checks pass:196 entry/observer,14036 matched pair,6305 unchanged eight-root
+control and171 legacy blocker.16 accepted matched roots cover878 control and777
+candidate positive entries, all actually validated. Each candidate cost is lower
+in the same synthetic scope/prices; no real-case financial transfer follows.
+R7 is CLOSED FOR THESE FINITE ROOTS: all4 treatment rollability guards compare
+with actual native eligible pools at every positive entry. All compatibility,
+secondary-group/persistent blocker, paid cleanup, request/price/identity and
+orientation obligations pass. R8 is CLOSED FOR THE SIX-ENTRY FIXTURE: each observer
+audits36 checkpoints,30 suspended/6 completed, same48 logical/active work, no
+undercount and retained checker. Observations30.9us full/8.1us ledger in a single
+fixed-order finite pair are not robust performance or R11 time attribution.
+Production observer stays full; no validation skip/reuse certificate. Every
+exact carrier/occurrence projection reports zero duplicate classes.
+
+Actual frozen Conquest construction generates108nodes/20programmes,39418bytes,
+FNV7602779656003707844/SHA256bedc2a4718e4622a301b0efd9159335fbe41db46f1b521c8d3bdac619249337a.
+Existing c21 partial Ember1/Exalt word is retained. Final carrier has positive
+original ordering5.3568735870151188e-9 and selects ordinary Exalt atc69,72 exits,
+mass.99999999999999944, preserving all incoming4 goals, paid resource Exalt1.
+Whole Conquest root/every-entry/economics remains UNRUN for this changed graph.
+
+One changed-candidate original-root/all-entry experiment under unchanged120+30
+native/165host,50M work,1GiB limits is a valid next selected cut. SOURCE PREREQUISITE:
+benchmark7288-7289 currently forbids final-fill+root-check;3246-3247 pins old R8
+graph. Declare the new diagnostic root mode and regenerated new graph identity
+explicitly, preserving old R8 mode. Review that actual narrow diff before LOCAL;
+do not run the old selector against new bytes or import captured graph. Preserve
+original probabilities/prices/caps/epsilon, checker/census lifetime and exactly-
+once committed debit. Phase elapsed/call counts in existing compact output can
+resolve R11 timing ambiguity; do not add another supervisor. R6 complete transient
+peak evidence remains open and explicitly qualified. Historical R3 remains failed
+and separate. Hold activation/full closure, Conquest financial retention, final
+frozen control cohort and WASM pending their actual evidence.
