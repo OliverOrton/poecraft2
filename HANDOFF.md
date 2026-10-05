@@ -70,8 +70,10 @@ Keep the old six-hour cancelled CI negative and later failure receipts intact.
 The [October 5 CI continuation](docs/active/2026-10-04-sol61-ci-supervision/README.md)
 ports only scheduler-test ownership/diagnostics from fresh main. A forced main
 assertion demonstrates the post-summary thread hang; the candidate's 15-test
-suite and two forced-failure exits pass locally. The original hosted five-second
-completion cause and real-artifact/hosted integration remain open. LOCAL is
+suite and two forced-failure exits pass locally. A later 26-test real-artifact
+identity/service gate also passes with mocked computation and an explicitly
+historical executable. Original hosted five-second cause and full hosted/native
+integration remain open. LOCAL is
 released with no survivor; parent review gates publication and integration.
 
 Eight earlier integration screenshots are verified locally in the product record.

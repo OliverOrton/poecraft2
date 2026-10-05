@@ -123,5 +123,56 @@
         }
       ]
     }
-  ]
+  ],
+  "real_artifact_identity_service_gate": {
+    "test_source": "fc652ca6e267b0a76803a4c3d6fd4c4b3fffd63f",
+    "test_count": 26,
+    "pytest_wall_seconds": 98.45,
+    "outer_wall_ms": 98945.42999984697,
+    "adapter_blob": "f532376adbde79d9f31da1bc2d97e1b24fe2f5d9",
+    "watchdog_seconds": 300,
+    "cleanup_drain_seconds": 5,
+    "command": [
+      "C:\\Users\\Oliver\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "-m",
+      "pytest",
+      "tools/ingest/tests/test_solver_lab_unattended_hardening.py",
+      "--import-mode=importlib",
+      "-p",
+      "no:cacheprovider",
+      "-q",
+      "--maxfail=1",
+      "--basetemp",
+      "out/ci-lifecycle-real-artifact-r1/pytest"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "survivor": false,
+    "descendants_after_parent_exit": false,
+    "cleanup_error": null,
+    "cleanup_drain_timed_out": false,
+    "original_identity_after": "proved_absent",
+    "fixture_hashes_unchanged": true,
+    "fixture_hashes": {
+      "benchmark": "97fb69b6b61070d601f8b8127634bd3d522ac0368e5d23402d8cef8243807900",
+      "runtime": {
+        "game-data.json": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e",
+        "manifest.json": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+        "strings.json": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6"
+      }
+    },
+    "historical_executable_source": "29d9e666b9d11dbe9ba58959f2598df9495dc49d",
+    "historical_native_engine_tree": "b608549914ec4ba5d73753f34cafc1390ff16bb0",
+    "current_native_engine_tree": "4d11a36e6a7a6d9852cb292aca3c2b46e8d07088",
+    "current_native_source_compatible": false,
+    "computation": "mocked",
+    "real_artifact_identity_service_qualified": true,
+    "native_execution_qualified": false,
+    "full_hosted_qualified": false,
+    "receipt_sha256": "b78524a9f2611a1339af64ea093b20f920e5937522318a63773cdaaf6c8cfb03",
+    "log_sha256": "40b6aeab12ef45522ecad820c1da5047910ffd2acf7efcc2f8af61f47f740579",
+    "survivor_check_sha256": "1479db878ef0878be9d009caaef14e794bb54ea28d6ec0bfe31bd3e2add292c0",
+    "readiness_receipt_sha256": "45a85cff4abdfd97bf4582c5cd5333c6af62ff8617b03d7c12bcae184a1fd67a"
+  }
 }
