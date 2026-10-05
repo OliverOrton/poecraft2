@@ -282,3 +282,38 @@ A console/notification-handle lifetime interaction is a testable inference,
 not proof that this conhost owns the pipe, that the bundled Ninja matches
 upstream, or that earlier failures share one cause. No runner/CMake acceptance
 patch or speculative launch occurs in the solver branch.
+
+### Source gates remaining after the accepted control
+
+Local evidence commit 9265ddf9 retains the matched control and all execution
+negatives. Separate source commit 2482d742 prepares the finite tail checker and
+names the existing refusing guard; it is explicitly unbuilt/unrun.
+
+The normal joint checkpoint in solver_solve_focused.cpp follows a completed
+upper pass. continue_initial_candidate in solver_solve_incremental.cpp excludes
+an existing output incumbent. The existing publication preflight can discover
+missing continuations before Finish, but requested bounded Finish skips that
+preflight, and a checked fallback bypasses the terminal joint attempt. These
+source gates are consistent with the control's counters; they do not identify
+the exact historical refusal branches or prove a cheaper closed joint policy
+was available. The existing joint builder copies frontier values only with
+statewise authority and otherwise requires complete native selected support.
+
+The finite 35-member check is a fixed-graph physical-tail diagnostic. Its
+separate full-identity seed-role fixture is not the product's 28-candidate
+owner. Neither creates a complete product coarse domain nor performs new
+all-positive native-programme admission. If the one-word comparison loses,
+preserve that result and select a complete complementary tail before a root
+treatment. If it wins, a newly composed controller still needs complete root
+checking, every positive programme entry, owned resource census, compatible
+retention and the actual exported bytes. A seed refusal alone does not justify
+spending slot 2 or widening construction.
+
+For the separate Annul/inevitable-Chaos hypothesis, actions_basic.cpp preserves
+fractured and locked slots in reforge and removes only eligible slots in Annul.
+Removing a lock or pool-blocking modifier can change the following law. Any
+finite elision must establish the same complete preserved-affix, draw, payment
+and control law at every positive exit, with no intermediate goal or choice.
+It cannot reuse a root scalar as a persistent-implicit tail certificate. This
+remains a conditional economic candidate; no native elision or saving is built,
+tested, retained or activated here.
