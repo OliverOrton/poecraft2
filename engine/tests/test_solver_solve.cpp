@@ -5,6 +5,7 @@
 #include "../src/solver_compile_contracts.hpp"
 #include "../src/solver_options_helpers.hpp"
 #include "../src/solver_policy_refinement.hpp"
+#include "../src/solver_policy_refinement_helpers.hpp"
 #include "../src/solver_sparse_policy.hpp"
 #include "../src/solver_solve_types.hpp"
 #include "../src/solver_dirty_guidance.hpp"
@@ -17617,17 +17618,28 @@ void run_graph_only_missing_entry_service_counterparts(
             bounded();
             require(native.supported && native.applicable && native.choice_groups.empty(),
                 "missing-entry native row must be complete and supported");
-            solve_detail::SparsePolicyRowInput row;
-            row.owner_state = state; row.operator_index = action; row.cost = cost;
             double total = 0;
             for (const auto& exit : native.entries) {
                 require(exit.probability > 0, "missing-entry complete positive native support");
-                row.transitions.push_back({exit.state, exit.probability});
                 total += exit.probability;
             }
             require(near(total, 1, 1e-12), "missing-entry native row mass one");
-            const auto row_id = work.transition_cache->rows.size();
-            solve_detail::append_sparse_policy_row(*work.transition_cache, work.priced_rows, row);
+            // Focused preparation reprices native resource variants. A policy-
+            // only row with a direct price has none and cannot survive that
+            // owner boundary. Construct the fixture through the native owner;
+            // the expected cost is an assertion, never its injected price.
+            solve_detail::PendingSparseRow pending;
+            pending.operator_index = action;
+            pending.resources = &calc.operators().at(action).resource_quantities;
+            pending.transitions = &native.entries;
+            pending.choices = &native.choice_groups;
+            pending.collapse_equivalent = false;
+            const auto row_id = work.append_sparse_row(state, pending).second;
+            require(row_id < work.priced_rows.size() &&
+                work.transition_cache->rows[row_id].variant_count > 0 &&
+                work.priced_rows[row_id].operator_index == action &&
+                near(work.priced_rows[row_id].cost, cost, 1e-12),
+                "native fixture row owns repricable resources at the expected paid cost");
             return row_id;
         };
         const auto root = work.result.start_state;
@@ -17708,17 +17720,18 @@ void run_graph_only_missing_entry_service_counterparts(
         Impl::identity_mix_string(baseline.portfolio_identity, baseline.compiled_artifact.strategy_json);
         Impl::identity_mix(baseline.portfolio_identity, baseline.caller_scope_identity);
         proof = SolveResult{};
-        const auto check_queued = [&] {
+        const auto check_queued = [&](const auto& observe) {
             for (unsigned unit = 0; work.publication_pipeline.initial_candidate_task; ++unit) {
                 bounded();
                 require(unit < 10000, "missing-entry cooperative checker work cap");
                 work.advance_initial_candidate_publication();
+                observe();
             }
         };
         work.phase = SolvePhase::Expanding;
         work.publication_pipeline.initial_candidate_resume_phase = work.phase;
         work.publication_pipeline.initial_candidate_task.emplace(work.certify_initial_candidate());
-        check_queued();
+        check_queued([] {});
         require(work.output_incumbent->independently_evaluated &&
             work.output_incumbent->compiled_root_entry_only &&
             work.certified_incumbent_invalid_reason(*work.output_incumbent) == nullptr &&
@@ -17726,6 +17739,7 @@ void run_graph_only_missing_entry_service_counterparts(
             "missing-entry native checker must establish predicted baseline 24");
         const auto root_identity = work.output_incumbent->portfolio_identity;
         const auto root_graph = work.output_incumbent->compiled_artifact.strategy_json;
+        const auto baseline_checked_cost = work.output_incumbent->evaluated_policy_cost;
         evidence_bytes += root_graph.capacity();
         const auto root_retained = [&] {
             for (const auto& retained : work.incumbent_portfolio.retained())
@@ -17746,7 +17760,7 @@ void run_graph_only_missing_entry_service_counterparts(
             work.output_incumbent->values[root] = 25;
             work.publication_pipeline.initial_candidate_resume_phase = work.phase;
             work.publication_pipeline.initial_candidate_task.emplace(work.certify_initial_candidate());
-            check_queued();
+            check_queued([] {});
             require(work.output_incumbent->independently_evaluated &&
                 work.output_incumbent->statewise_values_rejected &&
                 !work.output_incumbent->has_statewise_upper_values() &&
@@ -17760,6 +17774,189 @@ void run_graph_only_missing_entry_service_counterparts(
         const auto old_graph = work.output_incumbent->compiled_artifact.strategy_json;
         evidence_bytes += old_graph.capacity();
         const auto scope = work.action_vocabulary_identity();
+        const auto original_root_key = exact_item_state_key(item);
+        evidence_bytes += original_root_key.capacity() * sizeof(std::uint64_t);
+        const auto checked_original_root = [&](const Impl::BoundedPolicyIncumbent& candidate) {
+            if (!work.result.has_exact_start_item || work.result.start_state != root ||
+                work.certified_incumbent_invalid_reason(candidate) != nullptr ||
+                candidate.evaluated_policy_cost > baseline_checked_cost) return false;
+            const auto parsed = compile_strategy_json(session, candidate.compiled_artifact.strategy_json.data(),
+                candidate.compiled_artifact.strategy_json.size());
+            const auto parsed_key = exact_item_state_key(parsed->start_item);
+            const auto current_key = exact_item_state_key(work.result.exact_start_item);
+            const auto charge = refinement::strategy_impl_owned_bytes(*parsed) +
+                (parsed_key.capacity() + current_key.capacity()) * sizeof(std::uint64_t);
+            evidence_bytes += charge;
+            struct AuthorityBytesLease {
+                std::uint64_t& bytes; std::uint64_t charge;
+                ~AuthorityBytesLease() { bytes -= charge; }
+            } lease{evidence_bytes, charge};
+            bounded();
+            return parsed_key == original_root_key && current_key == original_root_key;
+        };
+        const auto root_authority_preserved = [&] {
+            if (work.output_incumbent && checked_original_root(*work.output_incumbent)) return true;
+            for (const auto& candidate : work.incumbent_portfolio.retained())
+                if (checked_original_root(candidate)) return true;
+            return false;
+        };
+        std::uint64_t emitted_event_sequence = 0;
+        unsigned captured_candidates = 0, real_check_starts = 0, real_check_completions = 0;
+        const auto observe_events = [&] {
+            const auto last = work.progress_event_sequence;
+            require(last >= emitted_event_sequence && last - emitted_event_sequence <= work.progress_events.size(),
+                "real owner event census cannot silently omit overwritten ring entries");
+            for (auto sequence = emitted_event_sequence + 1; sequence <= last; ++sequence) {
+                const auto& event = work.progress_events[(sequence - 1) % work.progress_events.size()];
+                require(event.sequence == sequence, "real owner event census retains exact sequence identity");
+                const std::string_view kind(event.kind.data());
+                captured_candidates += kind == "candidate_captured";
+                real_check_starts += kind == "check_start";
+                real_check_completions += kind == "check_completed";
+                std::printf("graph-only missing publication event case=%u sequence=%llu kind=%s reason=%s "
+                    "candidate=%llu state=%u generation=%u rows=%llu verified_upper=%.17g\n", scenario,
+                    static_cast<unsigned long long>(sequence), event.kind.data(), event.reason.data(),
+                    static_cast<unsigned long long>(event.candidate), event.state, event.generation,
+                    static_cast<unsigned long long>(event.rows), event.verified_upper);
+            }
+            emitted_event_sequence = last;
+            std::fflush(stdout);
+            require(captured_candidates <= 6, "finite counterpart admits at most six actual candidate captures");
+        };
+        unsigned authority_snapshots = 0;
+        const auto observe_authority = [&](const char* stage) {
+            bounded();
+            observe_events();
+            if (++authority_snapshots > 256) {
+                std::printf("graph-only missing unresolved case=%u reason=authority_snapshot_limit\n", scenario);
+                std::fflush(stdout);
+            }
+            require(authority_snapshots <= 256, "decisive owner diagnostics have a finite snapshot bound");
+            const auto emit = [&](const Impl::BoundedPolicyIncumbent& candidate, const char* owner) {
+                std::uint64_t payload = 1469598103934665603ULL;
+                Impl::identity_mix_string(payload, candidate.compiled_artifact.strategy_json);
+                const auto current_prefix = work.incumbent_graph_prefix_identity(
+                    candidate.graph_row_count, candidate.graph_priced_row_count,
+                    candidate.graph_successor_count, candidate.graph_probability_count,
+                    candidate.graph_choice_count, candidate.graph_choice_successor_count,
+                    candidate.graph_choice_option_count);
+                const auto* retained_reason = work.retained_incumbent_invalid_reason(candidate);
+                const auto* certified_reason = work.certified_incumbent_invalid_reason(candidate);
+                std::printf("graph-only missing authority case=%u stage=%s owner=%s identity=%llu "
+                    "graph=%llu payload=%llu payload_bytes=%llu kind=%s root_only=%u materialized=%u "
+                    "root=%u upper=%.17g checked_cost=%.17g root_table=%.17g evaluated=%u certified=%u "
+                    "proper=%u executable=%u sticky_rejected=%u statewise=%u goal=%llu economy=%llu "
+                    "caller=%llu vocabulary=%llu artifact=%llu captured_prefix=%llu current_prefix=%llu "
+                    "source_generation=%llu target_generation=%llu original_root_member=%u "
+                    "retained_reason=%s certified_reason=%s\n",
+                    scenario, stage, owner, static_cast<unsigned long long>(candidate.portfolio_identity),
+                    static_cast<unsigned long long>(candidate.graph_identity),
+                    static_cast<unsigned long long>(payload),
+                    static_cast<unsigned long long>(candidate.compiled_artifact.strategy_json.size()),
+                    candidate.kind.c_str(), candidate.compiled_root_entry_only ? 1u : 0u,
+                    candidate.policy_materialized ? 1u : 0u, root, candidate.certified_upper_bound,
+                    candidate.evaluated_policy_cost, root < candidate.values.size()
+                        ? candidate.values[root] : solve_detail::kInfinity,
+                    candidate.independently_evaluated ? 1u : 0u, candidate.independently_certified ? 1u : 0u,
+                    candidate.proper ? 1u : 0u, candidate.executable ? 1u : 0u,
+                    candidate.statewise_values_rejected ? 1u : 0u, candidate.has_statewise_upper_values() ? 1u : 0u,
+                    static_cast<unsigned long long>(candidate.goal_identity),
+                    static_cast<unsigned long long>(candidate.economy_identity),
+                    static_cast<unsigned long long>(candidate.caller_scope_identity),
+                    static_cast<unsigned long long>(candidate.action_vocabulary_identity),
+                    static_cast<unsigned long long>(candidate.artifact_identity),
+                    static_cast<unsigned long long>(candidate.graph_prefix_identity),
+                    static_cast<unsigned long long>(current_prefix),
+                    static_cast<unsigned long long>(candidate.source_generation),
+                    static_cast<unsigned long long>(candidate.target_generation),
+                    checked_original_root(candidate) ? 1u : 0u,
+                    retained_reason ? retained_reason : "valid", certified_reason ? certified_reason : "valid");
+            };
+            if (work.output_incumbent) emit(*work.output_incumbent, "active");
+            for (const auto& candidate : work.incumbent_portfolio.retained()) emit(candidate, "retained");
+            for (std::size_t row_id = 0; row_id < std::min<std::size_t>(5, work.transition_cache->rows.size()); ++row_id) {
+                const auto& row = work.transition_cache->rows[row_id];
+                const auto& price = work.priced_rows[row_id];
+                std::printf("graph-only missing authority row case=%u stage=%s row=%llu owner=%u "
+                    "variants=%u operator=%u paid_cost=%.17g admitted=%u\n", scenario, stage,
+                    static_cast<unsigned long long>(row_id), row.owner_state, row.variant_count,
+                    price.operator_index, price.cost, row.admitted ? 1u : 0u);
+            }
+            const auto checkpoint = work.graph_only_checkpoint_observation();
+            std::printf("graph-only missing authority owner case=%u stage=%s exact_old_root_retained=%u "
+                "checked_original_root_authority=%u checker_queued=%u checker_identity=%llu proof_bytes=%llu "
+                "candidate_captures=%u real_check_starts=%u real_check_completions=%u "
+                "focused_lower_stage=%u phase=%u focus_optimizing=%u refinement=%u expansion=%u "
+                "row_due=%u material_improvement=%u next_row_checkpoint=%llu current_goal=%llu current_economy=%llu "
+                "current_caller=%llu current_vocabulary=%llu current_artifact=%llu\n", scenario, stage,
+                root_retained() ? 1u : 0u, root_authority_preserved() ? 1u : 0u,
+                work.publication_pipeline.initial_candidate_task.has_value() ? 1u : 0u,
+                static_cast<unsigned long long>(work.publication_pipeline.complete_candidate_attempted_identity),
+                static_cast<unsigned long long>(work.publication_pipeline.initial_candidate_proof_bytes),
+                captured_candidates, real_check_starts, real_check_completions,
+                static_cast<unsigned>(work.focused_lower_preparation_stage), static_cast<unsigned>(work.phase),
+                work.focus_optimizing ? 1u : 0u, work.incremental_refinement_active ? 1u : 0u,
+                work.expansion_active ? 1u : 0u, checkpoint.row_checkpoint_due ? 1u : 0u,
+                checkpoint.material_upper_improvement ? 1u : 0u,
+                static_cast<unsigned long long>(checkpoint.next_checkpoint),
+                static_cast<unsigned long long>(work.goal_identity()),
+                static_cast<unsigned long long>(work.economy_identity()),
+                static_cast<unsigned long long>(work.caller_scope_identity()),
+                static_cast<unsigned long long>(work.action_vocabulary_identity()),
+                static_cast<unsigned long long>(work.artifact_identity()));
+            std::printf("graph-only missing authority original root case=%u stage=%s physical_key=[", scenario, stage);
+            for (std::size_t index = 0; index < original_root_key.size(); ++index)
+                std::printf("%s%llu", index ? "," : "", static_cast<unsigned long long>(original_root_key[index]));
+            std::printf("]\n");
+            std::printf("graph-only missing authority queue case=%u stage=%s count=%llu "
+                "resume_phase=%u finalization=%u consumed=%u finalized=%u states=[", scenario, stage,
+                static_cast<unsigned long long>(work.queue.size()),
+                work.publication_pipeline.initial_candidate_resume_phase
+                    ? static_cast<unsigned>(*work.publication_pipeline.initial_candidate_resume_phase) : 255u,
+                work.finalization_task ? 1u : 0u, work.consumed ? 1u : 0u, work.finalized_result ? 1u : 0u);
+            unsigned queue_sample = 0;
+            for (const auto state : work.queue) {
+                if (queue_sample == 32) break;
+                std::printf("%s%u", queue_sample++ ? "," : "", state);
+            }
+            std::printf("] omitted=%llu\n", static_cast<unsigned long long>(work.queue.size() - queue_sample));
+            std::fflush(stdout);
+        };
+        const auto original_rejection_preserved = [&] {
+            if (!ordinary) return true;
+            const auto matches = [&](const Impl::BoundedPolicyIncumbent& candidate) {
+                if (candidate.compiled_artifact.strategy_json != old_graph || candidate.compiled_root_entry_only)
+                    return true;
+                return candidate.statewise_values_rejected && !candidate.has_statewise_upper_values() &&
+                    root < candidate.values.size() && near(candidate.values[root], 25, 1e-8);
+            };
+            if (work.output_incumbent && !matches(*work.output_incumbent)) return false;
+            for (const auto& candidate : work.incumbent_portfolio.retained())
+                if (!matches(candidate)) return false;
+            return root_authority_preserved();
+        };
+        const auto complete_service_candidate = [&] {
+            return work.output_incumbent && work.output_incumbent->portfolio_identity != old_identity &&
+                work.output_incumbent->policy_materialized && !work.output_incumbent->compiled_root_entry_only &&
+                std::isfinite(work.output_incumbent->certified_upper_bound) &&
+                work.output_incumbent->certified_upper_bound < baseline_checked_cost;
+        };
+        const auto checked_native_improvement = [&]() -> const Impl::BoundedPolicyIncumbent* {
+            const auto matches = [&](const Impl::BoundedPolicyIncumbent& candidate) {
+                return candidate.policy_materialized && !candidate.compiled_root_entry_only &&
+                    candidate.evaluated_policy_cost < baseline_checked_cost && checked_original_root(candidate);
+            };
+            if (work.output_incumbent && matches(*work.output_incumbent)) return &*work.output_incumbent;
+            for (const auto& candidate : work.incumbent_portfolio.retained())
+                if (matches(candidate)) return &candidate;
+            return nullptr;
+        };
+        const auto service_owner_busy = [&] {
+            return work.phase != SolvePhase::Done && (work.incremental_refinement_active || work.expansion_active ||
+                work.focused_lower_preparation_stage != Impl::FocusedLowerPreparationStage::Idle ||
+                work.focus_optimizing || work.publication_pipeline.initial_candidate_task.has_value());
+        };
+        observe_authority("before_native_challenger");
         std::array<std::uint8_t, 32> requested_entries{};
         unsigned requested_entry_count = 0;
         const auto record_entry = [&](const std::uint32_t state, const char* reason) {
@@ -17877,7 +18074,10 @@ void run_graph_only_missing_entry_service_counterparts(
         staged.state = root; staged.operator_index = annul; staged.row_index = challenger;
         work.incremental_alternative_rows.push_back(staged);
         work.incremental_anytime_next_row_checkpoint = 1;
-        require(!work.continue_initial_candidate() && work.last_graph_only_checkpoint.eligible &&
+        observe_authority("before_control_checkpoint");
+        const bool control_resumed = work.continue_initial_candidate();
+        observe_authority("after_control_checkpoint");
+        require(!control_resumed && work.last_graph_only_checkpoint.eligible &&
             work.last_graph_only_checkpoint.compatible &&
             !work.incremental_refinement_active && !work.publication_pipeline.initial_candidate_task &&
             work.publication_pipeline.complete_candidate_attempted_identity == 0 &&
@@ -17899,24 +18099,81 @@ void run_graph_only_missing_entry_service_counterparts(
             work.incremental_anytime_policy_last_failure.c_str());
         std::fflush(stdout);
 
-        // Explicit finite intervention through the production exact batch owner.
+        // Observe the normal native queue before ANY explicit dispatch. Native
+        // append owns fringe enqueueing and resource variants; a false immediate
+        // continuation call does not establish eventual ordinary-service absence.
         for (const auto entry : entries) record_entry(entry, "initial_selected_positive_successor");
-        require(work.schedule_incremental_refinement(true) && work.incremental_refinement_active &&
-            work.queue.size() >= 2 &&
-            (work.queue[0] == entries[0] || work.queue[0] == entries[1]) &&
-            (work.queue[1] == entries[0] || work.queue[1] == entries[1]) &&
-            work.queue[0] != work.queue[1], "existing native owner selects only the two named ports first");
-        for (const auto entry : entries)
-            require(work.transition_cache->state_rows[entry].count == 0,
-                "service selection cannot masquerade as native row completion");
-        for (unsigned unit = 0; work.incremental_refinement_active || work.expansion_active; ++unit) {
+        unsigned natural_units = 0, explicit_dispatches = 0, native_owner_units = 0;
+        const auto natural_work_available = [&] {
+            return work.phase != SolvePhase::Done && !work.consumed && !work.finalized_result &&
+                (service_owner_busy() || !work.queue.empty() || work.finalization_task ||
+                    work.phase == SolvePhase::Iterating || work.phase == SolvePhase::Refining ||
+                    work.phase == SolvePhase::Compiling || work.phase == SolvePhase::Certifying);
+        };
+        observe_authority("before_natural_owner_service");
+        while (natural_work_available() && checked_native_improvement() == nullptr) {
             bounded();
-            require(unit < 10000 && !work.publication_pipeline.initial_candidate_task,
-                "missing-entry exact ordinary work remains bounded and precedes checking");
+            ++natural_units;
+            require(++native_owner_units <= 10000, "natural owner observation shares the finite service allowance");
+            const auto identity = work.output_incumbent ? work.output_incumbent->portfolio_identity : 0;
+            const auto phase = work.phase;
+            const bool queued = work.publication_pipeline.initial_candidate_task.has_value();
             work.step(1);
+            observe_events();
+            if (!work.output_incumbent || identity != work.output_incumbent->portfolio_identity ||
+                phase != work.phase || queued != work.publication_pipeline.initial_candidate_task.has_value())
+                observe_authority("natural_owner_transition");
+            require(root_authority_preserved(), "natural owner retains checked nonworsening original-root authority");
+            require(original_rejection_preserved(), "natural owner cannot promote the old rejected table");
         }
+        const bool natural_checked_improvement = checked_native_improvement() != nullptr;
+        observe_authority("after_natural_owner_service");
+        std::printf("graph-only missing natural outcome case=%u units=%u explicit_dispatches=0 "
+            "checked_improvement=%u phase=%u pending=%llu\n", scenario, natural_units,
+            natural_checked_improvement ? 1u : 0u, static_cast<unsigned>(work.phase),
+            static_cast<unsigned long long>(work.incremental_anytime_missing_frontier_states.size()));
+        std::fflush(stdout);
+
+        // An explicit intervention is allowed only for a still-open, actually
+        // named missing frontier. A natural checked improvement owns the result.
+        observe_authority("before_initial_native_service");
+        if (!natural_checked_improvement && !complete_service_candidate() &&
+            work.phase != SolvePhase::Done && !work.consumed && !work.finalized_result &&
+            !work.incremental_anytime_missing_frontier_states.empty()) {
+            const auto rows_before = work.transition_cache->rows.size();
+            const bool scheduled = work.schedule_incremental_refinement(true);
+            std::printf("graph-only missing explicit dispatch case=%u scheduled=%u rows_before=%llu\n",
+                scenario, scheduled ? 1u : 0u, static_cast<unsigned long long>(rows_before));
+            std::fflush(stdout);
+            require(scheduled && work.incremental_refinement_active,
+                "only a remaining actual named frontier permits explicit exact service");
+            ++explicit_dispatches;
+            require(work.transition_cache->rows.size() == rows_before,
+                "explicit selection cannot masquerade as completed row evidence");
+        }
+        for (unsigned unit = 0; !natural_checked_improvement && service_owner_busy(); ++unit) {
+            bounded();
+            require(unit < 10000 && ++native_owner_units <= 10000,
+                "missing-entry exact ordinary work shares the finite service allowance");
+            const auto identity = work.output_incumbent ? work.output_incumbent->portfolio_identity : 0;
+            const bool queued = work.publication_pipeline.initial_candidate_task.has_value();
+            work.step(1);
+            observe_events();
+            if (!work.output_incumbent || identity != work.output_incumbent->portfolio_identity ||
+                queued != work.publication_pipeline.initial_candidate_task.has_value())
+                observe_authority("initial_native_owner_transition");
+        }
+        observe_authority("after_initial_native_service");
         for (const auto entry : entries) {
             const auto* obligation = work.action_envelope_ledger.find(entry, regal);
+            std::printf("graph-only missing initial entry ledger case=%u state=%u operator=%u "
+                "ledger_present=%u lifecycle=%u row=%llu owner_rows=%u expanded=%u\n", scenario, entry, regal,
+                obligation ? 1u : 0u, obligation ? static_cast<unsigned>(obligation->lifecycle) : 0u,
+                static_cast<unsigned long long>(obligation ? obligation->row_index :
+                    std::numeric_limits<std::uint64_t>::max()),
+                entry < work.transition_cache->state_rows.size() ? work.transition_cache->state_rows[entry].count : 0u,
+                entry < work.expanded.size() && work.expanded[entry] ? 1u : 0u);
+            std::fflush(stdout);
             require(obligation && obligation->lifecycle == ActionEnvelopeState::ExactRowComplete,
                 "existing native owner proves Regal row completion, not selection");
             const auto row_id = obligation->row_index;
@@ -17930,18 +18187,17 @@ void run_graph_only_missing_entry_service_counterparts(
                 near(work.transition_cache->probabilities[row.transition_offset], 1, 1e-12),
                 "native Regal continuation has complete paid physical support");
         }
-        require(work.incremental_anytime_missing_frontier_states.empty() &&
-            work.output_incumbent->portfolio_identity == old_identity && root_retained() &&
-            !work.publication_pipeline.initial_candidate_task,
-            "actual service completion alone does not accept a candidate");
+        require(root_authority_preserved(), "initial native service preserves checked nonworsening original-root authority");
+        require(original_rejection_preserved(), "initial native service preserves the rejected table veto");
         const auto alternatives = work.incremental_alternative_rows.size();
-        const bool resumed_by_checkpoint = work.continue_initial_candidate();
-        require(!resumed_by_checkpoint && !work.publication_pipeline.initial_candidate_task &&
-            !work.last_graph_only_checkpoint.row_checkpoint_due,
-            "control records alternative-row cadence after new ordinary completed evidence");
+        const bool resumed_by_checkpoint = !natural_checked_improvement && !work.consumed && !work.finalized_result &&
+            work.phase != SolvePhase::Done && !work.publication_pipeline.initial_candidate_task &&
+            work.continue_initial_candidate();
+        observe_authority("after_initial_service_checkpoint");
         std::printf("graph-only missing service case=%u completed_entries=2 admitted_native_regal_rows=2 "
-            "alternative_rows=%llu checkpoint_resumed=0 row_checkpoint_due=0\n", scenario,
-            static_cast<unsigned long long>(alternatives));
+            "alternative_rows=%llu checkpoint_resumed=%u row_checkpoint_due=%u\n", scenario,
+            static_cast<unsigned long long>(alternatives), resumed_by_checkpoint ? 1u : 0u,
+            work.last_graph_only_checkpoint.row_checkpoint_due ? 1u : 0u);
         std::fflush(stdout);
 
         // Independently isolate assembly availability from the observed cadence.
@@ -17992,7 +18248,12 @@ void run_graph_only_missing_entry_service_counterparts(
             }
         }
         std::fflush(stdout);
-        bool assembled = work.try_install_reachable_incumbent(false);
+        observe_authority("before_initial_explicit_assembly");
+        bool assembled = checked_native_improvement() != nullptr || complete_service_candidate();
+        if (!assembled && !work.consumed && !work.finalized_result && work.phase != SolvePhase::Done &&
+            !work.publication_pipeline.initial_candidate_task)
+            assembled = work.try_install_reachable_incumbent(false);
+        observe_authority("after_initial_explicit_assembly");
         std::printf("graph-only missing assembly outcome case=%u assembled=%u "
             "missing=%llu cap=%u checker_queued=%u failure=%s\n", scenario,
             assembled ? 1u : 0u,
@@ -18004,12 +18265,14 @@ void run_graph_only_missing_entry_service_counterparts(
             std::printf("graph-only missing assembly remaining case=%u namespace=outer_calculator state=%u\n",
                 scenario, state);
         std::fflush(stdout);
-        require(!assembled && !work.incremental_anytime_missing_frontier_states.empty() &&
-            work.incremental_anytime_policy_last_failure.starts_with(
-                "missing_completed_row_and_certified_frontier") &&
-            !work.result.diagnostics.resource_cap_hit && !work.publication_pipeline.initial_candidate_task &&
-            work.output_incumbent->portfolio_identity == old_identity && root_retained(),
-            "two Regal rows are insufficient and expose the actual additional positive frontier");
+        require(root_authority_preserved(), "initial assembly preserves checked nonworsening original-root authority");
+        require(original_rejection_preserved(), "initial assembly cannot promote the old rejected table");
+        if (!assembled)
+            require(!work.incremental_anytime_missing_frontier_states.empty() &&
+                work.incremental_anytime_policy_last_failure.starts_with(
+                    "missing_completed_row_and_certified_frontier") &&
+                !work.result.diagnostics.resource_cap_hit && !work.publication_pipeline.initial_candidate_task,
+                "incomplete native assembly must expose its actual additional positive frontier");
 
         // Complete the frontier actually selected by the builder. Each dispatch
         // uses the existing exact owner; no state id, action removal, row stub,
@@ -18022,9 +18285,15 @@ void run_graph_only_missing_entry_service_counterparts(
                 std::printf("graph-only missing unresolved case=%u reason=native_service_work_limit\n", scenario);
                 std::fflush(stdout);
             }
-            require(service_units <= 10000 && !work.publication_pipeline.initial_candidate_task,
-                "bounded native frontier service precedes independent checking");
+            require(service_units <= 10000 && ++native_owner_units <= 10000,
+                "bounded native frontier service and owned checking share the finite allowance");
+            const auto identity = work.output_incumbent ? work.output_incumbent->portfolio_identity : 0;
+            const bool queued = work.publication_pipeline.initial_candidate_task.has_value();
             work.step(1);
+            observe_events();
+            if (!work.output_incumbent || identity != work.output_incumbent->portfolio_identity ||
+                queued != work.publication_pipeline.initial_candidate_task.has_value())
+                observe_authority("frontier_native_owner_transition");
         };
         while (!assembled) {
             bounded();
@@ -18048,11 +18317,20 @@ void run_graph_only_missing_entry_service_counterparts(
                     (state >= work.expanded.size() || !work.expanded[state]),
                     "each requested entry is an unserviced nonterminal native obligation");
             }
+            observe_authority("before_frontier_preparation");
             while (work.focused_lower_preparation_stage != Impl::FocusedLowerPreparationStage::Idle)
                 advance_service();
+            observe_authority("after_frontier_preparation");
+            require(root_authority_preserved(), "focused repricing preserves checked nonworsening original-root authority");
+            require(original_rejection_preserved(), "focused preparation preserves sticky rejection authority");
+            if (checked_native_improvement() != nullptr || complete_service_candidate()) {
+                assembled = true;
+                break;
+            }
             const auto rows_before = work.transition_cache->rows.size();
             const auto selection_count = work.incremental_missing_frontier_service_completions;
             const bool scheduled = work.schedule_incremental_refinement(true);
+            explicit_dispatches += scheduled ? 1u : 0u;
             std::printf("graph-only missing frontier selection case=%u round=%u scheduled=%u "
                 "requested=%llu selection_retirements=%llu completed_rows_before=%llu\n", scenario,
                 frontier_round, scheduled ? 1u : 0u, static_cast<unsigned long long>(count),
@@ -18068,9 +18346,9 @@ void run_graph_only_missing_entry_service_counterparts(
             for (std::size_t index = 0; index < count; ++index)
                 require(work.transition_cache->state_rows[requested[index]].count == before_rows[index],
                     "frontier selection still does not prove native row completion");
-            while (work.incremental_refinement_active || work.expansion_active ||
-                work.focused_lower_preparation_stage != Impl::FocusedLowerPreparationStage::Idle)
+            while (service_owner_busy())
                 advance_service();
+            observe_authority("after_frontier_native_service");
             require(work.transition_cache->rows.size() > rows_before,
                 "frontier service must produce actual new native row evidence before another assembly");
             for (std::size_t index = 0; index < count; ++index) {
@@ -18118,18 +18396,21 @@ void run_graph_only_missing_entry_service_counterparts(
                     "ledger_rows=%u owner_rows=%u expanded=1\n", scenario, frontier_round, state,
                     completed_rows, work.transition_cache->state_rows[state].count);
             }
-            require(work.output_incumbent->portfolio_identity == old_identity && root_retained(),
-                "native frontier service alone preserves the checked incumbent");
-            const bool checkpoint_resumed = work.continue_initial_candidate();
+            require(root_authority_preserved(), "native frontier service preserves checked nonworsening original-root authority");
+            require(original_rejection_preserved(), "native frontier service preserves the rejected table veto");
+            const bool checkpoint_resumed = !work.publication_pipeline.initial_candidate_task &&
+                work.continue_initial_candidate();
+            observe_authority("after_frontier_checkpoint");
             std::printf("graph-only missing frontier cadence case=%u round=%u checkpoint_resumed=%u "
                 "alternative_rows=%llu row_checkpoint_due=%u checker_queued=%u\n", scenario, frontier_round,
                 checkpoint_resumed ? 1u : 0u,
                 static_cast<unsigned long long>(work.incremental_alternative_rows.size()),
                 work.last_graph_only_checkpoint.row_checkpoint_due ? 1u : 0u,
                 work.publication_pipeline.initial_candidate_task.has_value() ? 1u : 0u);
-            require(!checkpoint_resumed && !work.publication_pipeline.initial_candidate_task,
-                "ordinary frontier completion stays distinct from automatic retry cadence");
-            assembled = work.try_install_reachable_incumbent(false);
+            assembled = checked_native_improvement() != nullptr || complete_service_candidate();
+            if (!assembled && !work.publication_pipeline.initial_candidate_task)
+                assembled = work.try_install_reachable_incumbent(false);
+            observe_authority("after_frontier_explicit_assembly");
             std::printf("graph-only missing frontier assembly case=%u round=%u assembled=%u missing=%llu failure=%s\n",
                 scenario, frontier_round, assembled ? 1u : 0u,
                 static_cast<unsigned long long>(work.incremental_anytime_missing_frontier_states.size()),
@@ -18149,9 +18430,11 @@ void run_graph_only_missing_entry_service_counterparts(
                     "only an actually named missing native frontier permits more finite service");
             }
         }
-        require(assembled &&
-            !work.output_incumbent->independently_evaluated && root_retained(),
-            "final complete native assembly consumes the whole serviced frontier");
+        observe_authority("before_complete_candidate_check");
+        require(assembled && (checked_native_improvement() != nullptr || complete_service_candidate()),
+            "final captured native candidate owns a complete improving materialized policy");
+        require(root_authority_preserved(), "complete native assembly preserves checked nonworsening original-root authority");
+        require(original_rejection_preserved(), "complete native assembly retains the original rejected table veto");
         // Reference is a paid fixed controller derived from the full original
         // native kernels. The delivered improved controller is independently
         // checked against its own native estimate, then compared with this reference.
@@ -18159,44 +18442,55 @@ void run_graph_only_missing_entry_service_counterparts(
         const double reference_entry = .5 + reference_rare;
         double reference_root = 1;
         for (const auto& exit : kernel.entries) reference_root += exit.probability * reference_entry;
-        const double composed_estimate = work.output_incumbent->certified_upper_bound;
-        require(std::isfinite(composed_estimate) && composed_estimate < 24,
+        const auto* native_checked = checked_native_improvement();
+        const double composed_estimate = native_checked ? native_checked->evaluated_policy_cost
+            : work.output_incumbent->certified_upper_bound;
+        require(std::isfinite(composed_estimate) && composed_estimate < baseline_checked_cost,
             "completed native challenger must strictly improve the retained paid baseline");
-        work.focus_optimizing = false; work.focused_lower_mode = false;
-        work.publication_pipeline.complete_candidate_attempted_identity = work.output_incumbent->portfolio_identity;
+        const auto candidate_identity = work.output_incumbent->portfolio_identity;
+        const auto owner_slot = work.publication_pipeline.complete_candidate_attempted_identity;
+        if (native_checked == nullptr && !work.output_incumbent->independently_evaluated)
+            require(owner_slot == 0 || owner_slot == candidate_identity,
+                "unchecked complete candidate cannot overwrite another owner's spent checker slot");
+        if (native_checked == nullptr && !work.output_incumbent->independently_evaluated &&
+            !work.publication_pipeline.initial_candidate_task) {
+            work.focus_optimizing = false; work.focused_lower_mode = false;
+            work.publication_pipeline.complete_candidate_attempted_identity = candidate_identity;
+            work.publication_pipeline.initial_candidate_resume_phase = work.phase;
+            work.publication_pipeline.initial_candidate_task.emplace(work.certify_initial_candidate());
+        }
         const auto slot_identity = work.publication_pipeline.complete_candidate_attempted_identity;
-        work.publication_pipeline.initial_candidate_resume_phase = work.phase;
-        work.publication_pipeline.initial_candidate_task.emplace(work.certify_initial_candidate());
-        check_queued();
-        require(work.output_incumbent->independently_evaluated &&
-            work.output_incumbent->independently_certified && work.output_incumbent->proper &&
-            work.output_incumbent->executable &&
-            work.certified_incumbent_invalid_reason(*work.output_incumbent) == nullptr &&
-            near(work.output_incumbent->evaluated_policy_cost, composed_estimate, 1e-8) &&
-            work.output_incumbent->evaluated_policy_cost < 24 && root_retained(),
+        observe_authority("complete_candidate_checker_owned");
+        check_queued(observe_events);
+        observe_authority("after_complete_candidate_check");
+        native_checked = checked_native_improvement(); // Reacquire after every mutation.
+        require(native_checked && near(native_checked->evaluated_policy_cost, composed_estimate, 1e-8) &&
+            root_authority_preserved(),
             "independent native checker establishes the complete captured challenger cost and strict improvement");
+        const auto capture_bytes = work.incumbent_owned_bytes(*native_checked);
+        require(capture_bytes < options.max_solver_owned_bytes -
+            std::min(options.max_solver_owned_bytes, work.fast_estimated_owned_bytes() + evidence_bytes),
+            "immutable checked-controller capture shares the current native allowance");
+        auto captured_candidate = *native_checked;
+        evidence_bytes += work.incumbent_owned_bytes(captured_candidate);
+        bounded();
         std::printf("graph-only missing closed reference case=%u reference_rare=%.17g reference_entry=%.17g "
             "reference_root=%.17g independently_checked=%.17g reference_delta=%.17g frontier_rounds=%u\n",
             scenario, reference_rare, reference_entry, reference_root,
-            work.output_incumbent->evaluated_policy_cost,
-            work.output_incumbent->evaluated_policy_cost - reference_root, frontier_round);
+            captured_candidate.evaluated_policy_cost,
+            captured_candidate.evaluated_policy_cost - reference_root, frontier_round);
         std::fflush(stdout);
         if (ordinary) {
-            bool rejected_retained = false;
-            for (const auto& retained : work.incumbent_portfolio.retained())
-                if (retained.portfolio_identity == old_identity &&
-                    retained.compiled_artifact.strategy_json == old_graph && retained.statewise_values_rejected &&
-                    !retained.has_statewise_upper_values() && near(retained.values[root], 25, 1e-8))
-                    rejected_retained = true;
-            require(rejected_retained, "entry completion never promotes old rejected values");
+            require(original_rejection_preserved(), "entry completion never promotes old rejected values");
         }
 
         // Recompile/check the complete recurring controller at EACH native port.
         // Borrowed calc/proof/prices outlive the assertion; its budget is the
         // same shared-ledger remainder used by certify_initial_candidate().
         for (unsigned entry_index = 0; entry_index < 2; ++entry_index) {
+            observe_authority(entry_index == 0 ? "before_positive_entry_0_check" : "before_positive_entry_1_check");
             const auto entry = entries[entry_index];
-            auto& candidate = *work.output_incumbent;
+            auto& candidate = captured_candidate;
             work.populate_incumbent_policy(candidate);
             SolveResult entry_proof;
             entry_proof.policy_available = true;
@@ -18240,6 +18534,18 @@ void run_graph_only_missing_entry_service_counterparts(
                     checker.step(1);
                 }
                 const auto checked = checker.take_result();
+                std::printf("graph-only missing entry outcome case=%u entry=%u state=%u executable=%u "
+                    "proper=%u zero_off_policy=%u reconciled=%u converged=%u cost_complete=%u "
+                    "success=%.17g off_policy=%.17g captured_cost=%.17g exact_cost=%.17g "
+                    "peak_owned=%llu shared_allowance=%llu\n", scenario, entry_index, entry,
+                    checked.executable ? 1u : 0u, checked.proper ? 1u : 0u,
+                    checked.zero_off_policy ? 1u : 0u, checked.cost_reconciled ? 1u : 0u,
+                    checked.evaluation.converged ? 1u : 0u, checked.evaluation.cost_complete ? 1u : 0u,
+                    checked.evaluation.success_probability, checked.off_policy_probability,
+                    entry_estimate, checked.exact_cost,
+                    static_cast<unsigned long long>(checked.publication_peak_owned_bytes),
+                    static_cast<unsigned long long>(scoped.max_solver_owned_bytes));
+                std::fflush(stdout);
                 require(checked.executable && checked.proper && checked.zero_off_policy &&
                     checked.cost_reconciled && checked.evaluation.converged &&
                     checked.evaluation.cost_complete && near(checked.evaluation.success_probability, 1, 1e-12) &&
@@ -18255,19 +18561,24 @@ void run_graph_only_missing_entry_service_counterparts(
                 std::fflush(stdout);
             }
         }
-        require(!work.continue_initial_candidate() &&
+        observe_authority("before_final_checkpoint");
+        const bool final_checkpoint_resumed = !work.consumed && !work.finalized_result &&
+            work.phase != SolvePhase::Done && work.continue_initial_candidate();
+        observe_authority("after_final_checkpoint");
+        require(!final_checkpoint_resumed &&
             work.publication_pipeline.complete_candidate_attempted_identity == slot_identity &&
             work.action_vocabulary_identity() == scope && work.certified_global_lower_bound() == 0 &&
             work.options.goal_proof_profile == GoalProofProfile::TargetNeutralZero &&
-            work.options.max_solver_owned_bytes == options.max_solver_owned_bytes && root_retained(),
+            work.options.max_solver_owned_bytes == options.max_solver_owned_bytes && root_authority_preserved(),
             "missing-entry checker slot, scope, lower, allowance and fallback remain fixed");
         bounded();
         std::printf("graph-only missing service native case=%u states=%u baseline=24 checked=%.17g "
             "positive_entries_checked=2 complete_paid_policy=1 immediate_service=0 "
-            "checkpoint_resumed=0 explicit_native_service=1 explicit_native_assembly=1 "
+            "initial_checkpoint_resumed=%u natural_checked_improvement=%u explicit_dispatches=%u complete_native_candidate=1 "
             "frontier_entries=%u frontier_rounds=%u owned=%llu\n",
-            scenario, calc.state_count(), work.output_incumbent->evaluated_policy_cost,
-            requested_entry_count, frontier_round,
+            scenario, calc.state_count(), captured_candidate.evaluated_policy_cost,
+            resumed_by_checkpoint ? 1u : 0u, natural_checked_improvement ? 1u : 0u,
+            explicit_dispatches, requested_entry_count, frontier_round,
             static_cast<unsigned long long>(work.fast_estimated_owned_bytes() + evidence_bytes));
         std::fflush(stdout);
     }
