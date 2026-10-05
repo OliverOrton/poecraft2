@@ -1,0 +1,41 @@
+{
+  "source_commit": "fdf043ba96cd81881062a34eb8bb929b81006e62",
+  "engine_tree": "b5300829e2f5beac073cc9b370e3fb32c911571f",
+  "parent_source": "f1c5f28a68cf10f966d6ed34ca1f23a809ddf06e",
+  "changed_engine_files": [
+    "engine/tests/test_solver_solve.cpp"
+  ],
+  "test_file_sha256": "1cdcc8721baf3399da27bbdcbd4d17f99c00de539f303a3c78dd63feeec85394",
+  "test_file_bytes": 817460,
+  "unchanged_production_treatment_sha256": "790f9a13eb0728054317d50bf617138232ab5c4c02de5070fd9dc3f656ea0ca4",
+  "unchanged_selector_source_sha256": "542dc26c5f0e984df4908e097f7dfddd44b7a9664bd5ab5a0b9d8643a5654325",
+  "delta": [
+    "length-n policy entries with kNoId",
+    "length-n policy rows with UINT64_MAX",
+    "length-n zero reachability",
+    "existing progress trace output on baseline failure"
+  ],
+  "independent_baseline_requirement_unchanged": true,
+  "supplied_graph_unchanged": true,
+  "expected_economics_unchanged": true,
+  "native_source_prepared": true,
+  "built": false,
+  "tested": false,
+  "activated": false,
+  "economics_measured": false,
+  "original_failed_cases_completed": 0,
+  "original_failed_cases_total": 3,
+  "old_failure_reason_authority": "source inferred; runtime payload uncaptured",
+  "old_tests_binary_sha256": "43f9ec25c820ef3e31bf5564f73e29eeb2465d3af678a4cb3c311a9728d01e8c",
+  "old_binary_qualifies_corrected_fixture": false,
+  "build_owner": "CI",
+  "new_build_runs": 0,
+  "native_reruns": 0,
+  "root_slot2_spent": false,
+  "bounds": {
+    "native_states": 32,
+    "owned_bytes": 536870912,
+    "native_seconds": 60,
+    "host_seconds": 75
+  }
+}

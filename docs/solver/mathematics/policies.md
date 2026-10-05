@@ -971,6 +971,12 @@ proposes correcting placeholder shape while preserving the independent checker,
 root-only value role and all previous negatives. No corrected fixture is built
 or tested here; the conditional algebra remains a prediction.
 
+Parent subsequently approves the fixture-only placeholder correction at
+fdf043ba. Correctly sized invalid/zero tables restore the explicit input role
+without granting any nonroot value or action authority. The supplied graph,
+independent checking requirement and conditional algebra are unchanged. This
+source correction is unbuilt/untested; the original 0/3 failure remains retained.
+
 <a id="cost-only-entry-service"></a>
 ### A cost-only proposal at an actual verified entry
 

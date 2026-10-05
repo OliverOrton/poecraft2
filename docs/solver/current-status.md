@@ -105,6 +105,13 @@ not logged. [Diagnosis and proposed fixture-only correction](../active/2026-10-0
 preserve this evidence limit. No correction or rerun; costs 13 and 3 remain
 unproved, CI retains build ownership, and root slot 2 remains unused.
 
+Parent then approves only the fixture's correctly sized invalid/zero placeholders
+and existing progress output on failure. Source fdf043ba96cd81881062a34eb8bb929b81006e62
+changes one test file, SHA-256 1cdcc8721baf3399da27bbdcbd4d17f99c00de539f303a3c78dd63feeec85394.
+Production treatment, graph, expected economics and independent baseline gate
+are unchanged. The correction remains unbuilt/untested; CI owns the next changed
+object/link. Preserve the prior 0/3 receipt and source-inferred diagnostic limit.
+
 [Solver checkpoint `040993ec`](https://github.com/OliverOrton/poecraft2/blob/040993ec9bb8109cc1970df91c8bc9ec7ef97744/docs/active/2026-10-04-sol61-armour-recovery/PRO-HANDOFF.md) and
 [independent review `4c9f078d`](https://github.com/OliverOrton/poecraft2/blob/4c9f078d95e2c0c837ab7a408c4846420bac94db/docs/active/2026-10-04-sol61-independent-review/causal-research-handoff.md)
 are published research branches and are absent from main. The default-off private

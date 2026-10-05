@@ -98,6 +98,15 @@ programme diagnosis proposes only correctly sized invalid/zero placeholders
 plus existing progress-ring failure output; neither is applied. Source remains
 frozen, no rerun granted, CI owns builds and root slot 2 remains unused.
 
+Parent next approves only the fixture placeholders and existing progress dump.
+Frozen source fdf043ba96cd81881062a34eb8bb929b81006e62 changes one test file;
+engine tree b5300829e2f5beac073cc9b370e3fb32c911571f, test SHA-256
+1cdcc8721baf3399da27bbdcbd4d17f99c00de539f303a3c78dd63feeec85394.
+Production joint service, independent baseline requirement, supplied graph and
+predicted costs are unchanged. Source-only, no build/rerun: CI owns the changed
+test object and link, then solver awaits verified binary and a later parent LOCAL
+for the same bounded selector. Prior 0/3 evidence and root slot 2 stay preserved.
+
 Published research checkpoints, both absent from main:
 
 - [Solver `040993ec`: Pro handoff](https://github.com/OliverOrton/poecraft2/blob/040993ec9bb8109cc1970df91c8bc9ec7ef97744/docs/active/2026-10-04-sol61-armour-recovery/PRO-HANDOFF.md)

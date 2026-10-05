@@ -465,3 +465,22 @@ zero reachability placeholders, preserving root-only authority and independent
 checking; failure diagnostics can emit the existing progress ring. No correction
 is applied. Source stays frozen, CI owns later builds, slot 2 is unused and all
 preceding economic/orchestration negatives remain retained.
+
+### Approved fixture-only correction prepared for CI
+
+Parent approves only the explicit placeholder correction and existing progress
+output on baseline failure. Source fdf043ba96cd81881062a34eb8bb929b81006e62 changes
+only engine/tests/test_solver_solve.cpp: length-n invalid policy/row entries,
+zero reachability and a failure dump of the existing progress ring. The baseline
+independent-check requirement, supplied graph, predicted economics, paid native
+laws, production joint service, scope and bounds are unchanged. Engine tree is
+b5300829e2f5beac073cc9b370e3fb32c911571f; changed test-file SHA-256 is
+1cdcc8721baf3399da27bbdcbd4d17f99c00de539f303a3c78dd63feeec85394.
+
+This correction is source-only: no build or selector runs. CI owns the changed
+test object and link; solver awaits matching verified binary and a later parent
+LOCAL grant for the same three finite cases. The prior 0/3 receipt, source-inferred
+failure reason versus uncaptured runtime payload, and unproved 13-to-3 prediction
+remain intact. The [static handoff](checks/root-only-joint-fixture-correction-20261005/preflight.json)
+pins exactly the changed file and unchanged production inputs. Root slot 2 stays
+unused; no activation, source expansion or checker weakening is introduced.

@@ -81,3 +81,14 @@ flags, vector widths and certified_incumbent_invalid_reason would retain future
 check_refused reasons instead of discarding them. No production instrumentation
 or checker gate change is needed. These corrections are proposals only: native
 source stays frozen, with CI owning later builds and no rerun granted here.
+
+## Later approved source-only correction
+
+Parent subsequently approves the three correctly sized placeholder assignments
+and existing progress output on failure. Source fdf043ba96cd81881062a34eb8bb929b81006e62
+applies only that test-file delta; test SHA-256 is
+1cdcc8721baf3399da27bbdcbd4d17f99c00de539f303a3c78dd63feeec85394.
+The independent baseline requirement, graph, production service and predicted
+economics are unchanged. This later correction is unbuilt/untested and does not
+qualify the old binary or erase the source-inferred/uncaptured-runtime distinction
+above. CI owns subsequent builds; no native rerun or new root occurs here.
