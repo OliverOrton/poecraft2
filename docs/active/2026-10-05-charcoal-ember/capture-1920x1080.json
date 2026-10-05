@@ -1,0 +1,108 @@
+{
+  "artifact_source": "7fd6a48e41b97c1aca5fa10775f668bb6fc9b028",
+  "build_id": "2f68b13e5a1fd1620d58af91d3df50aab1ad3790d6537e6866ef6b3da370a04f",
+  "archive": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-2\\charcoal-ember\\dist\\public-artifacts\\web\\46358c48550a2ebce49c1e0ca339fc7fc971c1a6739957604fd8e262c83f2254",
+  "resolution": [
+    1920,
+    1080
+  ],
+  "harness_delta": "Only capture viewport 1536x864 -> 1920x1080; all existing assertions retained.",
+  "worker_blob": "f532376adbde79d9f31da1bc2d97e1b24fe2f5d9",
+  "native_builds": 0,
+  "wasm_builds": 0,
+  "solver_searches": 0,
+  "simulator_trials": 0,
+  "stage_status": "passed",
+  "original_identity": "proved_absent",
+  "wall_ms": 11157.15410001576,
+  "archive_unchanged": true,
+  "screenshots": [
+    {
+      "filename": "chromium-builder.png",
+      "sha256": "defb78521ee5e252005fa5cb1fb859d45f44e88b6093e74a203f6785d1181abc",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "pixels_inspected": true,
+      "bytes": 197315
+    },
+    {
+      "filename": "chromium-calculator-goal.png",
+      "sha256": "60d6caae858f59d3147cf6f689a2b2c0244a71f96dedd108d44e37afce98a207",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "pixels_inspected": true,
+      "bytes": 281838
+    },
+    {
+      "filename": "chromium-emulator.png",
+      "sha256": "2c292b47b9071e832824e313bf4d005c4598ae454231550a733298feec0f5566",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "pixels_inspected": true,
+      "bytes": 302009
+    },
+    {
+      "filename": "chromium-stash.png",
+      "sha256": "6bd2add34e9d171ecf8ab8b582663eaf633e6b9b2fce0179d36ddf4764d95bee",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "pixels_inspected": true,
+      "bytes": 46627
+    }
+  ],
+  "library_delivery": [
+    {
+      "filename": "poecraft2-charcoal-ember-1920x1080-emulator.png",
+      "confirmed": true,
+      "library_file_id": "libfile_cfb2a22f9d8c8191a065812819e66e6d",
+      "file_id": "file_00000000121c81fdbbcbe24d25c8f9ad",
+      "library_path": "/poecraft2-charcoal-ember-1920x1080-emulator.png",
+      "version": 0,
+      "metadata_exit": 1,
+      "metadata_error": "Windows Python lacks os.setxattr",
+      "local_path": "C:/Users/Oliver/Documents/Codex/2026-10-04/task-2/charcoal-ember/out/charcoal-ember/render-1080p-r1/library-delivery/poecraft2-charcoal-ember-1920x1080-emulator.png"
+    },
+    {
+      "filename": "poecraft2-charcoal-ember-1920x1080-calculator-goal.png",
+      "confirmed": true,
+      "library_file_id": "libfile_5b28eedf7608819196f0a5ba4bda2029",
+      "file_id": "file_00000000c77882308ac5e1dbcc2f697c",
+      "library_path": "/poecraft2-charcoal-ember-1920x1080-calculator-goal.png",
+      "version": 0,
+      "metadata_exit": 1,
+      "metadata_error": "Windows Python lacks os.setxattr",
+      "local_path": "C:/Users/Oliver/Documents/Codex/2026-10-04/task-2/charcoal-ember/out/charcoal-ember/render-1080p-r1/library-delivery/poecraft2-charcoal-ember-1920x1080-calculator-goal.png"
+    },
+    {
+      "filename": "poecraft2-charcoal-ember-1920x1080-builder.png",
+      "confirmed": true,
+      "library_file_id": "libfile_4ce969d5e38c81918a9cc400f4fed977",
+      "file_id": "file_00000000c2b88230b3e06cf7c8eb23ac",
+      "library_path": "/poecraft2-charcoal-ember-1920x1080-builder.png",
+      "version": 0,
+      "metadata_exit": 1,
+      "metadata_error": "Windows Python lacks os.setxattr",
+      "local_path": "C:/Users/Oliver/Documents/Codex/2026-10-04/task-2/charcoal-ember/out/charcoal-ember/render-1080p-r1/library-delivery/poecraft2-charcoal-ember-1920x1080-builder.png"
+    },
+    {
+      "filename": "poecraft2-charcoal-ember-1920x1080-stash.png",
+      "confirmed": true,
+      "library_file_id": "libfile_a669753df9c881919fcf386812b37a0d",
+      "file_id": "file_00000000edc0823092e79a4a2f437192",
+      "library_path": "/poecraft2-charcoal-ember-1920x1080-stash.png",
+      "version": 0,
+      "metadata_exit": 1,
+      "metadata_error": "Windows Python lacks os.setxattr",
+      "local_path": "C:/Users/Oliver/Documents/Codex/2026-10-04/task-2/charcoal-ember/out/charcoal-ember/render-1080p-r1/library-delivery/poecraft2-charcoal-ember-1920x1080-stash.png"
+    }
+  ],
+  "cim_survivors": 0
+}

@@ -90,3 +90,33 @@ already-created item was retried and no helper was patched. Byte-identical
 deliverable copies and all original screenshots remain under
 `out/charcoal-ember/gate-r1/`, with their verified hashes. Library screenshot
 delivery is complete; local metadata remains an executor limitation.
+
+## Separate 1920×1080 desktop capture
+
+Oliver requested standard-resolution screenshots while on his phone. Parent
+explicitly selected a 1920×1080 desktop default while the desktop/portrait choice
+was unanswered. A separately granted single render at the same immutable
+artifact passes in 11.16s. The diagnostic copy of the existing harness changes
+only the capture viewport from 1536×864 to 1920×1080, then restores the ordinary
+test viewport; every original assertion remains. No source code, builds, native
+work, solver search or Simulator trial is added. All archive components remain
+unchanged. LOCAL is released, original process identity is proved absent, all
+cleanup flags are clear and fresh CIM census finds zero survivors.
+
+The [separate capture receipt](capture-1920x1080.json) preserves hashes and
+Library/file/version identities for four new actual rendered PNGs. Their headers
+confirm 1920×1080 and their pixels were inspected; they are not resized copies.
+The original 1536×864 qualification and screenshots above remain distinct.
+
+| 1920×1080 actual app view | New Library identity |
+|---|---|
+| Emulator | `libfile_cfb2a22f9d8c8191a065812819e66e6d` |
+| Calculator goal | `libfile_5b28eedf7608819196f0a5ba4bda2029` |
+| Builder picker | `libfile_4ce969d5e38c81918a9cc400f4fed977` |
+| Stash | `libfile_a669753df9c881919fcf386812b37a0d` |
+
+One ordered supported direct batch confirms all four creates. Required current
+metadata writeback was attempted within that call for every original file and
+retains the same Windows `os.setxattr` limitation; no already-created file was
+retried. The current 1080p evidence is under
+`out/charcoal-ember/render-1080p-r1/`; product activation remains unchanged.
