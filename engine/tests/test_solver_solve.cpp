@@ -16983,6 +16983,9 @@ void run_solver_setup_service_tests() {
     }
 }
 
+void run_graph_only_missing_entry_service_counterparts(
+    std::chrono::steady_clock::time_point started);
+
 void run_solver_root_only_joint_service_tests() {
     using Impl = SolveWorkTestAccess::Impl;
     const auto started = std::chrono::steady_clock::now();
@@ -17526,6 +17529,441 @@ void run_solver_root_only_joint_service_tests() {
             queued ? 1u : 0u, static_cast<unsigned long long>(work.incremental_anytime_policy_attempts),
             work.incremental_anytime_policy_last_failure.c_str(),
             static_cast<unsigned long long>(work.fast_estimated_owned_bytes()));
+        std::fflush(stdout);
+    }
+    run_graph_only_missing_entry_service_counterparts(started);
+}
+
+void run_graph_only_missing_entry_service_counterparts(
+    const std::chrono::steady_clock::time_point started) {
+    using Impl = SolveWorkTestAccess::Impl;
+    const auto require = [](bool condition, const char* reason) {
+        PC_CHECK(condition);
+        if (!condition) throw std::runtime_error(reason);
+    };
+    for (const unsigned scenario : {6u, 7u}) {
+        const bool ordinary = scenario == 7;
+        auto session = make_solve_session();
+        auto& data = const_cast<DataImpl&>(*session->data);
+        for (std::uint32_t mod = 0; mod < session->mod_count; ++mod) {
+            if (mod == 0 || mod == 5) continue;
+            pc_bitset_clear(session->normal_random_roll_mask.data(), mod);
+            pc_bitset_clear(session->positive_spawn_weight_mask.data(), mod);
+            pc_bitset_clear(session->positive_base_weight_mask.data(), mod);
+            session->base_spawn_weight[mod] = session->base_roll_weight[mod] = 0;
+            data.spawn_weights[mod] = 0;
+        }
+        const auto registry = build_action_registry(*session);
+        const auto annul = registry.index_by_id.at("annul");
+        const auto regal = registry.index_by_id.at("regal");
+        const auto scour = registry.index_by_id.at("scour");
+        const auto alchemy = registry.index_by_id.at("alchemy");
+        GoalSpec goal;
+        goal.rarity = PC_RARITY_RARE;
+        GoalSlot slot; slot.family_id = 100; slot.min_tier = 1;
+        goal.slots.push_back(slot);
+        CalcContext calc(session, goal, registry, {annul, regal, scour, alchemy},
+            false, true, false, std::nullopt, {}, true);
+        pc_item_state item; pc_item_clear(&item); item.rarity = PC_RARITY_MAGIC;
+        require(pc_item_add_mod(&item, PC_SIDE_PREFIX, 0,
+            session->primary_group[0], 0, nullptr) == PC_RESULT_OK,
+            "missing-entry Magic goal mod");
+        require(pc_item_add_mod(&item, PC_SIDE_SUFFIX, 5,
+            session->primary_group[5], 0, nullptr) == PC_RESULT_OK,
+            "missing-entry Magic junk mod");
+        SolveOptions options;
+        options.goal_progress_gated_reforges = true;
+        options.high_impact_executable_uppers = true;
+        options.allow_economic_restart = false;
+        options.state_certificate_control = false;
+        options.goal_proof_profile = GoalProofProfile::TargetNeutralZero;
+        options.native_continuation_search = NativeContinuationSearchMode::Ordinary;
+        options.max_states = options.max_discovered_states = options.max_expanded_states = 32;
+        options.candidate_evaluation_limits.max_states = 32;
+        options.max_solver_owned_bytes = 512ull * 1024 * 1024;
+        options.max_strategy_json_bytes = 1024 * 1024;
+        Impl work(calc, item,
+            {{"annul", 1}, {"regal", .5}, {"scour", 10}, {"alchemy", 1}}, options);
+        require(work.delayed_operator_indices.empty() &&
+            !work.incremental_action_generation && work.incremental_envelope_closed,
+            "missing-entry counterpart preserves normal-constructor negative");
+        work.transition_cache = std::make_shared<SolveTransitionCache>();
+        work.priced_rows.clear();
+        std::uint64_t evidence_bytes = 0;
+        const auto bounded = [&] {
+            require(calc.state_count() <= 32, "missing-entry native state cap");
+            require(std::chrono::steady_clock::now() - started < std::chrono::seconds(60),
+                "missing-entry aggregate native deadline");
+            const auto live = work.fast_estimated_owned_bytes();
+            require(live < options.max_solver_owned_bytes &&
+                evidence_bytes < options.max_solver_owned_bytes - live,
+                "missing-entry shared live ownership cap");
+            require(!work.result.diagnostics.resource_cap_hit,
+                "missing-entry counterpart must not silently lose resource support");
+        };
+        const auto append_native = [&](std::uint32_t state, std::uint32_t action, double cost) {
+            const auto native = calc.outcomes(state, action, true);
+            bounded();
+            require(native.supported && native.applicable && native.choice_groups.empty(),
+                "missing-entry native row must be complete and supported");
+            solve_detail::SparsePolicyRowInput row;
+            row.owner_state = state; row.operator_index = action; row.cost = cost;
+            double total = 0;
+            for (const auto& exit : native.entries) {
+                require(exit.probability > 0, "missing-entry complete positive native support");
+                row.transitions.push_back({exit.state, exit.probability});
+                total += exit.probability;
+            }
+            require(near(total, 1, 1e-12), "missing-entry native row mass one");
+            const auto row_id = work.transition_cache->rows.size();
+            solve_detail::append_sparse_policy_row(*work.transition_cache, work.priced_rows, row);
+            return row_id;
+        };
+        const auto root = work.result.start_state;
+        append_native(root, scour, 10);
+        const auto scoured = calc.outcomes(root, scour, true);
+        require(scoured.entries.size() == 1 && near(scoured.entries[0].probability, 1),
+            "missing-entry baseline Scour support");
+        const auto empty = scoured.entries[0].state;
+        append_native(empty, alchemy, 1);
+        const auto filled = calc.outcomes(empty, alchemy, true);
+        require(filled.entries.size() == 1 && near(filled.entries[0].probability, 1) &&
+            calc.state(filled.entries[0].state).rarity == PC_RARITY_RARE,
+            "missing-entry baseline Alchemy support");
+        const auto rare = filled.entries[0].state;
+        append_native(rare, annul, 1);
+        std::uint32_t loss = kNoId;
+        double goal_mass = 0;
+        for (const auto& exit : calc.outcomes(rare, annul, true).entries) {
+            if (calc.is_goal_state(calc.state(exit.state))) goal_mass += exit.probability;
+            else {
+                require(loss == kNoId, "missing-entry baseline single loss port");
+                loss = exit.state;
+            }
+        }
+        require(loss != kNoId && near(goal_mass, .5, 1e-12),
+            "missing-entry baseline native Rare Annul oracle");
+        append_native(loss, scour, 10);
+        const auto recovery = calc.outcomes(loss, scour, true);
+        require(recovery.entries.size() == 1 && recovery.entries[0].state == empty &&
+            near(recovery.entries[0].probability, 1), "missing-entry baseline paid recovery");
+        const auto baseline_states = calc.state_count();
+        work.transition_cache->state_rows.resize(baseline_states);
+        work.result.values.assign(baseline_states, 0);
+        work.result.goal_states.assign(baseline_states, 0);
+        work.result.expanded.assign(baseline_states, 1);
+        work.expanded = work.result.expanded; work.expanded_count = baseline_states;
+        for (std::uint32_t state = 0; state < baseline_states; ++state)
+            work.result.goal_states[state] = calc.is_goal_state(calc.state(state));
+        require(work.try_install_reachable_incumbent(false) &&
+            !work.output_incumbent->independently_evaluated,
+            "missing-entry native baseline is constructed before independent checking");
+        auto& baseline = *work.output_incumbent;
+        work.populate_incumbent_policy(baseline);
+        SolveResult proof;
+        proof.policy_available = true; proof.policy_status = SolvePolicyStatus::BoundedFeasible;
+        proof.start_state = root; proof.has_exact_start_item = true; proof.exact_start_item = item;
+        proof.values = baseline.values; proof.policy = baseline.policy;
+        proof.policy_reachable = baseline.policy_reachable;
+        proof.goal_states = work.result.goal_states; proof.expanded = work.result.expanded;
+        proof.upper_bound = proof.evaluated_policy_cost = baseline.certified_upper_bound;
+        proof.options = work.options;
+        const auto compile_live = work.estimated_owned_bytes();
+        const auto proof_bytes = solve_detail::solve_result_owned_bytes(proof);
+        require(compile_live < options.max_solver_owned_bytes &&
+            proof_bytes < options.max_solver_owned_bytes - compile_live,
+            "missing-entry root compiler shared allowance");
+        PolicyCompilationTelemetry emitted;
+        baseline.compiled_artifact.strategy_json = compile_policy_strategy_json(calc, proof,
+            "native missing-entry fallback", &emitted, options.max_strategy_json_bytes, nullptr,
+            options.max_solver_owned_bytes - compile_live - proof_bytes,
+            PolicyRouteDefaultMode::CertificationFailClosed);
+        baseline.compiled_artifact.nodes = emitted.nodes;
+        baseline.compiled_artifact.edges = emitted.edges;
+        emitted = PolicyCompilationTelemetry{};
+        baseline.compiled_artifact.policy_decision_bindings.clear();
+        baseline.compiled_root_entry_only = true;
+        baseline.policy_materialized = false;
+        baseline.policy.assign(baseline_states, PolicyOperatorRef{});
+        baseline.policy_rows.assign(baseline_states, std::numeric_limits<std::uint64_t>::max());
+        baseline.policy_reachable.assign(baseline_states, 0);
+        baseline.policy_row_costs.clear(); baseline.frontier_operators.clear();
+        baseline.choice_sources.clear(); baseline.behavioral_representative_by_state.clear();
+        baseline.unveil_preferences.clear(); baseline.option_unveil_preferences.clear();
+        baseline.values.assign(baseline_states, solve_detail::kInfinity);
+        baseline.values[root] = proof.upper_bound;
+        baseline.compilation_provenance = "native_missing_entry_root_pending_check";
+        baseline.portfolio_identity = 1469598103934665603ULL;
+        Impl::identity_mix_string(baseline.portfolio_identity, baseline.compiled_artifact.strategy_json);
+        Impl::identity_mix(baseline.portfolio_identity, baseline.caller_scope_identity);
+        proof = SolveResult{};
+        const auto check_queued = [&] {
+            for (unsigned unit = 0; work.publication_pipeline.initial_candidate_task; ++unit) {
+                bounded();
+                require(unit < 10000, "missing-entry cooperative checker work cap");
+                work.advance_initial_candidate_publication();
+            }
+        };
+        work.phase = SolvePhase::Expanding;
+        work.publication_pipeline.initial_candidate_resume_phase = work.phase;
+        work.publication_pipeline.initial_candidate_task.emplace(work.certify_initial_candidate());
+        check_queued();
+        require(work.output_incumbent->independently_evaluated &&
+            work.output_incumbent->compiled_root_entry_only &&
+            work.certified_incumbent_invalid_reason(*work.output_incumbent) == nullptr &&
+            near(work.output_incumbent->evaluated_policy_cost, 24, 1e-8),
+            "missing-entry native checker must establish predicted baseline 24");
+        const auto root_identity = work.output_incumbent->portfolio_identity;
+        const auto root_graph = work.output_incumbent->compiled_artifact.strategy_json;
+        evidence_bytes += root_graph.capacity();
+        const auto root_retained = [&] {
+            for (const auto& retained : work.incumbent_portfolio.retained())
+                if (retained.portfolio_identity == root_identity && retained.compiled_root_entry_only &&
+                    retained.compiled_artifact.strategy_json == root_graph &&
+                    work.certified_incumbent_invalid_reason(retained) == nullptr) return true;
+            return false;
+        };
+        require(root_retained(), "missing-entry separate checked root fallback");
+        if (ordinary) {
+            work.output_incumbent.reset();
+            require(work.try_install_reachable_incumbent(false) &&
+                !work.output_incumbent->compiled_root_entry_only &&
+                !work.output_incumbent->independently_evaluated,
+                "missing-entry ordinary baseline is unchecked before perturbation");
+            work.output_incumbent->certified_upper_bound = 25;
+            work.output_incumbent->evaluated_policy_cost = 25;
+            work.output_incumbent->values[root] = 25;
+            work.publication_pipeline.initial_candidate_resume_phase = work.phase;
+            work.publication_pipeline.initial_candidate_task.emplace(work.certify_initial_candidate());
+            check_queued();
+            require(work.output_incumbent->independently_evaluated &&
+                work.output_incumbent->statewise_values_rejected &&
+                !work.output_incumbent->has_statewise_upper_values() &&
+                near(work.output_incumbent->evaluated_policy_cost, 24, 1e-8) &&
+                near(work.output_incumbent->values[root], 25, 1e-8) &&
+                near(work.output_incumbent->reconciliation_absolute_delta, 1, 1e-8) &&
+                work.certified_incumbent_invalid_reason(*work.output_incumbent) == nullptr &&
+                root_retained(), "missing-entry actual sticky rejection preserves checked graph 24");
+        }
+        const auto old_identity = work.output_incumbent->portfolio_identity;
+        const auto old_graph = work.output_incumbent->compiled_artifact.strategy_json;
+        evidence_bytes += old_graph.capacity();
+        const auto scope = work.action_vocabulary_identity();
+        work.incremental_action_generation = true;
+        work.incremental_envelope_closed = false;
+        work.incremental_upper_policy_dirty = true;
+        require(!work.begin_incremental_upper_policy_pass() &&
+            work.incremental_upper_policy_passes_requested == 1 &&
+            work.incremental_upper_policy_passes_started == 0 &&
+            work.incremental_upper_policy_passes_rejected == 1 &&
+            work.incremental_upper_policy_last_failure ==
+                (ordinary ? "seed_rejected_statewise_values_without_focused_fallback"
+                          : "seed_root_only_incumbent_without_focused_fallback"),
+            "missing-entry fixture keeps the focused statewise veto");
+
+        // These are new native exits, not deleted rows of the baseline graph.
+        const auto challenger = append_native(root, annul, 1);
+        const auto kernel = calc.outcomes(root, annul, true);
+        require(kernel.entries.size() == 2, "missing-entry exactly two positive native ports");
+        std::array<pc_item_state, 2> exact_entries;
+        std::array<std::uint32_t, 2> entries{kNoId, kNoId};
+        for (unsigned entry = 0; entry < 2; ++entry) {
+            pc_item_clear(&exact_entries[entry]); exact_entries[entry].rarity = PC_RARITY_MAGIC;
+            const auto mod = entry == 0 ? 0u : 5u;
+            require(pc_item_add_mod(&exact_entries[entry], entry == 0 ? PC_SIDE_PREFIX : PC_SIDE_SUFFIX,
+                mod, session->primary_group[mod], 0, nullptr) == PC_RESULT_OK,
+                "missing-entry physical native exit item");
+            const auto expected = project_item(*session, calc.layout(), exact_entries[entry]);
+            for (const auto& exit : kernel.entries)
+                if (calc.state(exit.state) == expected) {
+                    require(entries[entry] == kNoId && near(exit.probability, .5, 1e-12),
+                        "missing-entry native physical port probability");
+                    entries[entry] = exit.state;
+                }
+            require(entries[entry] != kNoId && entries[entry] >= baseline_states &&
+                !calc.is_goal_state(calc.state(entries[entry])),
+                "missing-entry port is genuinely new and nonterminal");
+        }
+        require(entries[0] != entries[1], "missing-entry distinct physical ports");
+        work.transition_cache->state_rows.resize(calc.state_count());
+        work.result.values.resize(calc.state_count(), 0);
+        work.result.goal_states.resize(calc.state_count(), 0);
+        work.result.expanded.resize(calc.state_count(), 0);
+        work.expanded.resize(calc.state_count(), 0);
+        work.queued.resize(calc.state_count(), 0);
+        for (const auto entry : entries)
+            require(!work.expanded[entry] && work.transition_cache->state_rows[entry].count == 0,
+                "missing-entry has no ordinary row or broad service before native handoff");
+        work.transition_cache->rows[challenger].admitted = false;
+        Impl::IncrementalAlternativeRow staged;
+        staged.state = root; staged.operator_index = annul; staged.row_index = challenger;
+        work.incremental_alternative_rows.push_back(staged);
+        work.incremental_anytime_next_row_checkpoint = 1;
+        require(!work.continue_initial_candidate() && work.last_graph_only_checkpoint.eligible &&
+            work.last_graph_only_checkpoint.compatible &&
+            !work.incremental_refinement_active && !work.publication_pipeline.initial_candidate_task &&
+            work.publication_pipeline.complete_candidate_attempted_identity == 0 &&
+            work.incremental_anytime_missing_frontier_states.size() == 2 &&
+            work.incremental_anytime_policy_last_failure.starts_with(
+                "missing_completed_row_and_certified_frontier"),
+            "control exposes eligible graph-only skipped immediate native service");
+        for (const auto entry : entries)
+            require(std::find(work.incremental_anytime_missing_frontier_states.begin(),
+                work.incremental_anytime_missing_frontier_states.end(), entry) !=
+                    work.incremental_anytime_missing_frontier_states.end(),
+                "control retains every actual positive missing port");
+        require(work.output_incumbent->portfolio_identity == old_identity &&
+            work.output_incumbent->compiled_artifact.strategy_json == old_graph && root_retained() &&
+            work.action_vocabulary_identity() == scope && work.certified_global_lower_bound() == 0,
+            "control retains native checked fallback and all authority");
+        std::printf("graph-only missing control case=%u ports=2 rows=0 eligible=1 immediate_service=0 "
+            "checker_queued=0 baseline=24 reason=%s\n", scenario,
+            work.incremental_anytime_policy_last_failure.c_str());
+        std::fflush(stdout);
+
+        // Explicit finite intervention through the production exact batch owner.
+        require(work.schedule_incremental_refinement(true) && work.incremental_refinement_active &&
+            work.queue.size() >= 2 &&
+            (work.queue[0] == entries[0] || work.queue[0] == entries[1]) &&
+            (work.queue[1] == entries[0] || work.queue[1] == entries[1]) &&
+            work.queue[0] != work.queue[1], "existing native owner selects only the two named ports first");
+        for (const auto entry : entries)
+            require(work.transition_cache->state_rows[entry].count == 0,
+                "service selection cannot masquerade as native row completion");
+        for (unsigned unit = 0; work.incremental_refinement_active || work.expansion_active; ++unit) {
+            bounded();
+            require(unit < 10000 && !work.publication_pipeline.initial_candidate_task,
+                "missing-entry exact ordinary work remains bounded and precedes checking");
+            work.step(1);
+        }
+        for (const auto entry : entries) {
+            const auto* obligation = work.action_envelope_ledger.find(entry, regal);
+            require(obligation && obligation->lifecycle == ActionEnvelopeState::ExactRowComplete,
+                "existing native owner proves Regal row completion, not selection");
+            const auto row_id = obligation->row_index;
+            require(row_id < work.transition_cache->rows.size() && row_id < work.priced_rows.size(),
+                "completed native entry row has current owned indices");
+            const auto& row = work.transition_cache->rows[row_id];
+            const auto& price = work.priced_rows[row_id];
+            require(row.owner_state == entry && row.admitted && price.operator_index == regal &&
+                near(price.cost, .5, 1e-12) && row.choice_count == 0 && row.transition_count == 1 &&
+                work.transition_cache->successors[row.transition_offset] == rare &&
+                near(work.transition_cache->probabilities[row.transition_offset], 1, 1e-12),
+                "native Regal continuation has complete paid physical support");
+        }
+        require(work.incremental_anytime_missing_frontier_states.empty() &&
+            work.output_incumbent->portfolio_identity == old_identity && root_retained() &&
+            !work.publication_pipeline.initial_candidate_task,
+            "actual service completion alone does not accept a candidate");
+        const auto alternatives = work.incremental_alternative_rows.size();
+        const bool resumed_by_checkpoint = work.continue_initial_candidate();
+        require(!resumed_by_checkpoint && !work.publication_pipeline.initial_candidate_task &&
+            !work.last_graph_only_checkpoint.row_checkpoint_due,
+            "control records alternative-row cadence after new ordinary completed evidence");
+        std::printf("graph-only missing service case=%u completed_entries=2 admitted_native_regal_rows=2 "
+            "alternative_rows=%llu checkpoint_resumed=0 row_checkpoint_due=0\n", scenario,
+            static_cast<unsigned long long>(alternatives));
+        std::fflush(stdout);
+
+        // Independently isolate assembly availability from the observed cadence.
+        require(work.try_install_reachable_incumbent(false) &&
+            !work.output_incumbent->independently_evaluated && root_retained(),
+            "existing complete native assembly consumes completed entry evidence");
+        work.focus_optimizing = false; work.focused_lower_mode = false;
+        work.publication_pipeline.complete_candidate_attempted_identity = work.output_incumbent->portfolio_identity;
+        const auto slot_identity = work.publication_pipeline.complete_candidate_attempted_identity;
+        work.publication_pipeline.initial_candidate_resume_phase = work.phase;
+        work.publication_pipeline.initial_candidate_task.emplace(work.certify_initial_candidate());
+        check_queued();
+        require(work.output_incumbent->independently_evaluated &&
+            work.output_incumbent->independently_certified && work.output_incumbent->proper &&
+            work.output_incumbent->executable &&
+            work.certified_incumbent_invalid_reason(*work.output_incumbent) == nullptr &&
+            near(work.output_incumbent->evaluated_policy_cost, 14.5, 1e-8) && root_retained(),
+            "independent native checker must establish predicted composed cost 14.5");
+        if (ordinary) {
+            bool rejected_retained = false;
+            for (const auto& retained : work.incumbent_portfolio.retained())
+                if (retained.portfolio_identity == old_identity &&
+                    retained.compiled_artifact.strategy_json == old_graph && retained.statewise_values_rejected &&
+                    !retained.has_statewise_upper_values() && near(retained.values[root], 25, 1e-8))
+                    rejected_retained = true;
+            require(rejected_retained, "entry completion never promotes old rejected values");
+        }
+
+        // Recompile/check the complete recurring controller at EACH native port.
+        // Borrowed calc/proof/prices outlive the assertion; its budget is the
+        // same shared-ledger remainder used by certify_initial_candidate().
+        for (unsigned entry_index = 0; entry_index < 2; ++entry_index) {
+            const auto entry = entries[entry_index];
+            auto& candidate = *work.output_incumbent;
+            work.populate_incumbent_policy(candidate);
+            SolveResult entry_proof;
+            entry_proof.policy_available = true;
+            entry_proof.policy_status = SolvePolicyStatus::BoundedFeasible;
+            entry_proof.start_state = entry; entry_proof.has_exact_start_item = true;
+            entry_proof.exact_start_item = exact_entries[entry_index];
+            entry_proof.values = candidate.values; entry_proof.policy = candidate.policy;
+            entry_proof.policy_reachable = candidate.policy_reachable;
+            entry_proof.goal_states.resize(calc.state_count());
+            for (std::uint32_t state = 0; state < calc.state_count(); ++state)
+                entry_proof.goal_states[state] = calc.is_goal_state(calc.state(state));
+            entry_proof.expanded = work.expanded;
+            entry_proof.lower_bound = work.certified_global_lower_bound();
+            entry_proof.upper_bound = entry_proof.evaluated_policy_cost = 13.5;
+            require(work.publication_pipeline.initial_candidate_proof_bytes == 0,
+                "entry checker does not overlap another owned proof");
+            work.publication_pipeline.initial_candidate_proof_bytes =
+                solve_detail::solve_result_owned_bytes(entry_proof);
+            struct ProofBytesLease {
+                std::uint64_t& bytes;
+                ~ProofBytesLease() { bytes = 0; }
+            } lease{work.publication_pipeline.initial_candidate_proof_bytes};
+            const auto live = work.estimated_owned_bytes() + evidence_bytes;
+            const auto retained = estimated_retained_solver_bytes(calc, &entry_proof);
+            const auto external = live > retained ? live - retained : 0;
+            require(external < options.max_solver_owned_bytes,
+                "entry checker external owned bytes leave a shared allowance");
+            SolveOptions scoped = options;
+            scoped.max_solver_owned_bytes -= external;
+            entry_proof.options = scoped;
+            {
+                refinement::CompiledPolicyAssertionWork checker(calc, entry_proof, work.prices, scoped,
+                    "native positive missing-entry controller", nullptr, nullptr, nullptr,
+                    false, false, false, refinement::CompiledPolicyAssertionMode::StatewisePolicy);
+                for (unsigned unit = 0; !checker.progress().done; ++unit) {
+                    bounded();
+                    require(unit < 10000, "positive-entry checker work cap");
+                    checker.step(1);
+                }
+                const auto checked = checker.take_result();
+                require(checked.executable && checked.proper && checked.zero_off_policy &&
+                    checked.cost_reconciled && checked.evaluation.converged &&
+                    checked.evaluation.cost_complete && near(checked.evaluation.success_probability, 1, 1e-12) &&
+                    near(checked.off_policy_probability, 0, 1e-12) &&
+                    near(checked.exact_cost, 13.5, 1e-8),
+                    "EVERY positive physical/control entry independently checks paid tail 13.5");
+                require(checked.publication_peak_owned_bytes <= scoped.max_solver_owned_bytes,
+                    "positive-entry checker shares native memory allowance");
+                std::printf("graph-only missing entry checked case=%u entry=%u state=%u "
+                    "success=%.17g cost=%.17g complete=%u off_policy=%.17g\n", scenario, entry_index,
+                    entry, checked.evaluation.success_probability, checked.exact_cost,
+                    checked.evaluation.cost_complete ? 1u : 0u, checked.off_policy_probability);
+                std::fflush(stdout);
+            }
+        }
+        require(!work.continue_initial_candidate() &&
+            work.publication_pipeline.complete_candidate_attempted_identity == slot_identity &&
+            work.action_vocabulary_identity() == scope && work.certified_global_lower_bound() == 0 &&
+            work.options.goal_proof_profile == GoalProofProfile::TargetNeutralZero &&
+            work.options.max_solver_owned_bytes == options.max_solver_owned_bytes && root_retained(),
+            "missing-entry checker slot, scope, lower, allowance and fallback remain fixed");
+        bounded();
+        std::printf("graph-only missing service native case=%u states=%u baseline=24 checked=%.17g "
+            "positive_entries_checked=2 complete_paid_policy=1 immediate_service=0 "
+            "checkpoint_resumed=0 explicit_native_service=1 explicit_native_assembly=1 owned=%llu\n",
+            scenario, calc.state_count(), work.output_incumbent->evaluated_policy_cost,
+            static_cast<unsigned long long>(work.fast_estimated_owned_bytes() + evidence_bytes));
         std::fflush(stdout);
     }
 }
