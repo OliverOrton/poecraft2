@@ -9,6 +9,7 @@ Research lane `recomb` · 2026-10-05 · documentation proposal only
 3. **Use complete expected continuation cost to choose feeders, fillers, duplicates, and recycling.** A filler can increase requested counts and still reduce clean-target success. A multi-mod feeder can improve structural retention enough to justify its price, but one-attempt success alone cannot establish the economic ranking.
 4. **Preserve the two-input/one-output Builder and restricted native export/check bridge.** It is already released. Expand that bridge only after the native full-item laws and paid resource identities are checked. Advanced v3 export/Apply, general authored inventory evaluation, and automatic Current/Finder admission remain held.
 5. **No new execution is authorized or needed by this report.** The first falsification work is a finite native oracle extension after a separately selected implementation programme. No new timed runs, Solver, Simulator, build, test, dependency installation, price/data refresh, deployment, or main merge occurred here.
+6. **Treat 3.29 coverage as an explicit evidence and admission gap.** Official notes introduce Ducats; the newer nontransferable-filler discussion is an unqualified lead. Neither establishes a replacement count law or proves the existing bounded kernel wrong. New canonical families require the dispositions and future evidence gates in §3.2–3.3; a desired output base never chooses the physical carrier.
 
 The strongest new planning contribution is the finite oracle set in §5 and the economic comparisons in §6. They distinguish non-transitive group conflicts, sequential weighted selection, clean-target penalties, overlapping multi-mod feeders, and asymmetric paid recycling. All numerical examples there are derived mathematics of the adopted model, not new native measurements or game odds.
 
@@ -109,6 +110,8 @@ Bench availability, exclusivity, selection weight, and output crafted-flag/remov
 
 ## 3. Public mechanics evidence and uncertainty
 
+### 3.1 Historical evidence retained within its scope
+
 The official 3.26 addition states qualitatively that unpredictable recombination retains fewer modifiers on average when many input modifiers cannot normally roll, including veiled/Essence examples. It does not publish an exclusive-collapse formula, revised count coefficients, side-order probability, or special-weight map. The same official notes distinguish unpredictable random recombination from selectable recombination; only the random mode is relevant here. [GGG 3.26 notes, Recombinator Changes](https://www.pathofexile.com/forum/view-thread/3787013).
 
 Butsicles' first-hand June 2025 report describes roughly 70 tests, including four exclusive occurrences becoming zero, as evidence for one count contribution per side. Its unequal-pool account says 17 tests but narrates one suffix-craft result and 15 prefix-craft results. Retained modifier outcomes combine count, order, selection weights, and conflicts; they do not directly reveal which side selected first. This supports retaining a leading hypothesis and uncertainty, not estimating q from the reported survival ratio. [Original tester report](https://www.reddit.com/r/pathofexile/comments/1ldc3lz/326_recomb_psas_a_few_useful_tipsconfirmations/).
@@ -130,6 +133,53 @@ This session re-opened those primary reports and the official notes. The Codeber
 | Dust/gold | Native quantities unknown; explicit all-in scenario quote where admitted | No inferred game price or preparation discount. |
 
 For provenance of the earlier diary and model discussions, see [Mechanics evidence and pending-blocking proposal](https://github.com/OliverOrton/poecraft2/blob/7252027c80856628ed16734583bfc9d6e166458b/docs/active/2026-10-03-recombination-solver/README.md#mechanics-evidence-and-disposition). Do not reopen broad historical research without a new premise.
+
+### 3.2 Dated current-version delta and modifier-family disposition
+
+**Primary evidence, accessed 2026-10-05.** GGG's 3.29.0 notes have a July 17, 2026 footer. They introduce Ducats without specifying their recombination taxonomy or selection law. The following concise official changes are provenance, not permission to refresh frozen data. [GGG 3.29.0 notes](https://www.pathofexile.com/forum/view-thread/3985332).
+
+| Evidence date/version | Official change | Disposition under the pinned native contract; derived from source |
+| --- | --- | --- |
+| 2026-07-17 / 3.29.0 | Ducats alter items. | No broad Ducat origin/admission exists. Inspect actual canonical generation/domain/flags/type/groups/reach metadata. An unknown ID, unresolved origin, unrepresented output treatment, or absent weight authority refuses. The patch text does not prove any Ducat modifier is exclusive or nontransferable. |
+| Same | New rare-item bench options reroll one or three modifiers. | Not an Annul/Scour/crafted-removal child. General preparation remains held pending a complete native full-output law, paid resource identity and child checker correspondence. It is not a finished-feeder quotation shortcut. |
+| Same | Caster/staff affix tiers, values, weights and availability change, including special-source counterparts. | Ordinary `Natural` rows can retain existing admission only when the frozen canonical descriptor satisfies all current guards. Essence-only/unveiled/Delve/beast Aspect rows retain their specific positive-proxy boundaries. Crafted rows remain unresolved; influence rows remain refused by the pair despite inspector recognition. No new tier, recipe or weight is silently imported. |
+| Same | Talismans gain special enchantments and lose default corruption. | An enchantment is not a pooled explicit filler. Existing represented carrier enchantments are preserved, but new canonical/base support and acquisition law need separate evidence. Structural solver goals do not certify an enchantment target. Corrupted/Unique or unavailable-base variants still refuse. |
+| Same | Enshrouded Uniques transform into Uniques with Vestigial implicits. | Unique input/output semantics remain outside the ordinary random-pair contract. Implicits do not contribute prefix/suffix survivor counts. No ordinary-feeder classification follows from a similar stat. |
+| Same | New corruption implicits appear. | The input category guard continues to refuse corrupted items; implicit metadata does not create explicit-filler admission. |
+| Same | Pearlescent Amulet adds an elemental-resistance implicit. | A new base requires canonical frozen-data identity/support. If later admitted, it is an actual possible input carrier with its own properties; the solver's chosen goal base cannot substitute for it. Mixed-base optimization remains held. |
+| Same | Socket defaults and colour mechanics change. | Represented sockets remain carrier properties. This does not alter explicit selection counts or establish new socket-preparation laws or hard-budget costs. |
+
+The table's native decisions follow the [classifier and natural witness](https://github.com/OliverOrton/poecraft2/blob/7252027c80856628ed16734583bfc9d6e166458b/engine/src/recombination_constraints.cpp#L12-L31), [origin guards](https://github.com/OliverOrton/poecraft2/blob/7252027c80856628ed16734583bfc9d6e166458b/engine/src/recombination_constraints.cpp#L74-L110), [pair admission](https://github.com/OliverOrton/poecraft2/blob/7252027c80856628ed16734583bfc9d6e166458b/engine/src/recombination.cpp#L68-L95), and [carrier preparation](https://github.com/OliverOrton/poecraft2/blob/7252027c80856628ed16734583bfc9d6e166458b/engine/src/recombination.cpp#L235-L283). They are source-derived scope statements, not game observations or a refreshed catalogue.
+
+**Community lead, not a measured receipt.** The review supplied an indexed date of 2026-08-12 for *New Belt Recomb Tech Is Wild*. The directly read page says “1mo ago”; its exact publication date is unresolved. Comments claim new Pantheon and belt-augment Ducat modifiers are non-native natural fillers, mention attribute conversion, and assert count contribution without transfer. They also speculate about older crafted/Aspect treatment. The linked clip was not inspected. The discussion supplies neither a configuration-complete trial ledger nor canonical IDs/weights; its simplified odds include a disputed pool count. No quoted percentage, current price or universal nontransferability is admitted here. [Community lead and comments](https://www.reddit.com/r/pathofexile/comments/1vm0rxj/new_belt_recomb_tech_is_wild/).
+
+The community vocabulary must not overwrite native categories:
+
+| Candidate family from the lead | Native correspondence or refusal now | Unresolved obligation |
+| --- | --- | --- |
+| Pantheon/Ducat “aspect” | `BeastAspect` names exactly four canonical type keys: Bird, Cat, Crab and Spider. A display word “aspect” does not match those keys. Otherwise classify by actual metadata; unresolved rows refuse. | Establish canonical type, explicit side, origin, complete groups and output treatment. Prove whether it is ordinary, known exclusive, or another category before assigning count contribution. |
+| Belt-augment Ducat filler | No belt-name exception or family-wide registry. If actually `Natural`, it must satisfy `natural_on_source || guaranteed_natural_essence_source`; non-native source without that Essence witness refuses. | Separate source admission, count contribution, carrier selectability and selection weight. “Cannot transfer” is not evidence that a missing special proxy equals zero. |
+| Attribute-converted Ducat modifier | A same-class natural witness on another base can make the inspector classify `Natural`, while a zero source proxy and no guaranteed Essence origin still fail pair admission. | Record both actual input bases, first-match tag weights, canonical converted ID and paid acquisition provenance. Do not forge an Essence witness or replace the source base with the goal base. |
+| Claimed change to older crafted/Aspect modifiers | Current generic crafted origin remains unresolved; known beast Aspect retains exclusive classification and positive carrier-proxy requirement. | Contemporary matched evidence is needed to change these declared model assumptions. Community assertions alone establish neither a source defect nor broader supported scope. |
+
+There are four independent predicates: contributes to requested count, eligible for selection on carrier c, conflicts with other occurrences, and has an approved selection weight. Existing ordinary source-admitted occurrences may count before becoming ineligible on another actual carrier. Existing known-exclusive zero-proxy occurrences refuse, because missing weight authority is unresolved. A new purported universally nontransferable filler does not automatically inherit either case. Its counting law is itself an unresolved premise. A category may be visible in the inspector yet refused by pair validation or later output preparation.
+
+This closes the report's version-coverage omission without claiming a current-game-exact kernel. The official source confirms new crafting surface; it does not identify count coefficients, first-side ordering, exclusive collapse, or the lead's purported zero-selection law. O1–O6 remain conditional proofs of the adopted model. Their arithmetic is not invalidated by an unadmitted modifier family, and no implementation conclusion follows before native and empirical correspondence is established.
+
+### 3.3 Minimal current-version evidence gate; no execution here
+
+The first step is a small canonical evidence ledger, not a broad data refresh or a new run allowance. For each proposed family, obtain the exact versioned modifier ID and full descriptor, input/base/tag identities, obtainable origin, all groups, explicit side, slot/item flags, and represented output payload. Bind any game observation to a dated build, complete physical inputs before/after, both carrier outcomes, and a complete attempt denominator. A successful selected clip cannot estimate failure probabilities. Collecting such receipts or running fixtures belongs to a separately selected owner/window; none occurred here.
+
+| Proposed bounded case | Control/premise | Falsification or expected current refusal |
+| --- | --- | --- |
+| D0 — Two physical carriers | Two approved compatible ordinary inputs A/B, one carrying a base property the goal prefers | The adopted law keeps both carrier branches at 1/2. Success on one carrier only has mass `u/2`, not `u`. Swap A/B with carrier-specific order parameters and costs. Goal-base forcing, dropping failed-base outputs or cloning a preferred carrier falsifies correspondence. Planner mixed-base continuation still refuses. |
+| D1 — Pantheon versus known beast Aspect | Compare exact canonical descriptors; no display-name dispatch | Known type-key Aspect has its existing classification. A new unresolved Pantheon descriptor must refuse before sampling; an absent weight must not be replaced with 1000 or treated as proved zero. |
+| D2 — Alleged count-only filler | Source-admitted ordinary control with carrier-specific zero versus the new candidate; distinct physical slots and complete groups | First establish the candidate's counting category independently. Under the ordinary control law count precedes filtering. Under a known-exclusive zero proxy the result is unavailable. Competing physical-count and exclusive-collapse hypotheses stay separate named laws; no hidden recounting. |
+| D3 — Non-native attribute conversion | Natural witness on another compatible base, zero own-source proxy, no guaranteed Essence reach | Inspector recognition can succeed; current pair admission must refuse. Broadening origin proof is an implementation proposal requiring a paid obtainable source law and output authority. |
+| D4 — Duplication/conflicts/order | At most two candidate occurrences added to an approved tiny pair, with complete canonical groups and recorded rolls | Compare full support, actual survival, both named order scenarios and carrier outcomes. Canonical duplicates remain physical until selection; no group-component collapse, renormalization to desirable results, or omission of positive failures. Cross-side groups and bare-split scope remain held. |
+| D5 — Paid feeder preparation | One predeclared Ducat or new-bench action with full output/resource law, otherwise a labelled finished-feeder price scenario | Refuse executable checked-child export without that law. Include start item, action/station payments, every positive failure, cleanup, retries, disposal and retained inventory; all paid quantities are settled once. A scenario quote cannot certify the child or unknown costs. |
+
+No proposed case authorizes selected-mod recombination, base-specific recipes, weakened numerical gates, renewed resource experiments, or Current/Finder admission. Current/Finder, authored Builder and WASM applicability remains exactly as in §8: a new native family/law needs separate adapter and artifact qualification. The model configuration and frozen-data hash must remain explicit even if later public data proves different weights; user authorization of roll-weight proxies does not authorize misclassifying blockers.
 
 ## 4. Mathematical kernel specification and correspondence
 
@@ -378,7 +428,7 @@ This is a proposed next programme, not implementation authorization. Use the exi
 
 | Milestone | Concrete bounded deliverable | Gate and stop rule |
 | --- | --- | --- |
-| R0 — Reconcile the current contract | Correct stale present-tense unbuilt/ABI comments through coordinated canonical doc integration; retain historical sections | No model/source change; distinguish released bridge, held general evaluator and advanced Apply. |
+| R0 — Reconcile the current contract | Correct stale present-tense unbuilt/ABI comments and integrate dated §3.2–3.3 version evidence through coordinated canonical docs; retain historical sections | No model/source/data change; distinguish released bridge, unverified new families, held general evaluator and advanced Apply. |
 | R1 — Independent finite oracle | Add O2/O3/O5 expected rows to existing native test owners, plus independent small rational reference | Complete support/full payload comparison, unchanged numerical gates. Stop on any positive branch lost or invalid native fixture; no timed run substitute. |
 | R2 — Bounded preparation catalogue | Represent no filler, admitted ordinary filler, duplicate-overlap feeder, and finished-item alternative with complete quote/certificate provenance | Same goal/root/prices/model; no name/base dispatch; unknown weights/classes refuse. Compare full Q, not only success chance. |
 | R3 — One growing feeder law | Extend `check_recomb_feeder` with one existing complete native full-item law selected after source audit | All positive outputs, prices, paid start/setup/cleanup/retries, properness and immutable child identity; preserve 256-state/20m-default work bounds. If only a terminal projection exists, return unavailable. |
@@ -406,6 +456,7 @@ No canonical edits were made. Integrate the following through the parent coordin
 | `docs/product/strategies.md` — existing resource/feeder/recombination sections | Clarify quoted versus checked feeder provenance, cost settled once, actual output retention, typed A/B ownership and held failed-child/nested inventory semantics. | §§6,8 |
 | `docs/solver/current-status.md` — “Combined recombination/Builder product qualification” | Compact gap update only after accepted work: general growing-feeder laws, state-dependent dust, mixed-base optimization, robust cost and advanced Apply remain distinct held capabilities. | §§6,8,9 |
 | `docs/active/2026-10-03-recombination-solver/README.md` — living current disposition | Import this original once; mark earlier Pro joint-kernel/bridge milestones incorporated, identify new finite-oracle/feeder-law proposals and zero new runs. Preserve failures and historical source labels. | §§1,5,9 |
+| Same file — “Mechanics evidence and disposition”; `docs/engine/recombination-solver.md` — existing constraints/uncertainty sections | Add dated official 3.29 evidence and unqualified community lead; record family-by-family admission/refusal and D0–D5 evidence gates. Preserve physical carrier law, frozen data, and absent special-weight authority. No hidden assumption upgrade. | §§3.2–3.3 |
 | `docs/solver/research.md` — section4 intake disposition | Short disposition pointer; no duplicate theorem, programme database or evidence ledger. | §§1,10 |
 | `HANDOFF.md` — qualification gaps | One pointer and selected-next-step gate if Oliver later selects this programme; do not silently replace the causal solver work or grant LOCAL. | §9 |
 
@@ -421,6 +472,10 @@ Doc-ready scope paragraph:
 
 > Builder pair execution can retain mixed-base carrier sessions, while the bounded inventory planner pins one base and level and refuses continuations outside that scope. A future mixed-base planner needs session/base/level-bearing specifications, explicit base goals, and A/B-swap correspondence for scenario probabilities and resource costs. Random carrier selection is not replaced by a chosen target base.
 
+Doc-ready current-version evidence paragraph:
+
+> The dated 3.29 evidence does not qualify new Ducat/Pantheon modifier families for random recombination. Count contribution, carrier eligibility, conflicts and approved weights require separate canonical evidence. Generic crafted and unresolved origins remain refused; same-class natural recognition alone does not bypass the non-native source guard. A community filler lead is a hypothesis, not measured odds or proof of a kernel defect. Preserve both actual carrier branches and every positive failure. Any new preparation action needs its complete paid full-output law before checked feeder export or consumer qualification.
+
 ## 11. Delivery and remaining decisions
 
 The task-local full report is the sole proposed branch artifact. It contains repository/public-source links, math and planning; no private local paths, secrets, unrelated personal data, bulk traces, or archived contents belong in the publication. Main is read and verified, never written. The branch and Library identity are returned separately after confirmed publication and saving so successful writes are not duplicated.
@@ -428,6 +483,7 @@ The task-local full report is the sole proposed branch artifact. It contains rep
 The required substantive owner decisions are conditional, not a request to repeat prior approvals:
 
 - If zero-proxy special/bench modifiers are needed, select a reviewed canonical registry and explicit weight scenarios/output-flag treatment; approval of positive spawn proxies does not settle them.
+- If current-version Ducat/Pantheon support is selected, resolve the canonical evidence ledger and D0–D5 gates first; the community lead does not establish an executable family or current-game odds.
 - If advanced v3 random Apply/export is desired, select an explicit versioned point order law; sensitivity analysis is not a sampling distribution.
 - If broad feeder generation or mixed-base optimization is selected, authorize its bounded native correspondence programme and execution window separately.
 
