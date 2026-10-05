@@ -21,11 +21,36 @@ Library screenshots are saved across distinct 1536x864 and 1920x1080 captures,
 with a local metadata limitation in the receipts. Solver economics and
 mathematical authorities are unchanged by this presentation delta.
 
-## Selected next work: Pro causal planning; heavy work paused
+## Selected work: isolated solver causal and economic continuation
 
-Oliver requested a solver break and research. No new native builds, solver,
-Simulator or capability implementation is selected. LOCAL is released with no
-owned heavy process. Do not invent a new programme or repeat an experiment.
+Oliver resumed the coordinated work at 09:00 Vancouver on October 5. The
+[published solver record at `734f6722`](https://github.com/OliverOrton/poecraft2/blob/734f67228be0c6fa3262f656f41cb7d625cc57db/docs/active/2026-10-04-sol61-armour-recovery/README.md)
+owns the exact controls, physical-entry certificates and all retained failed
+builds/invocations. Its source changes remain outside main. The matched
+Conquest control costs 101311.35474896732, with success one, complete prices,
+zero off-policy mass, requested 120-second Finish and cap mask zero. P0 and its
+paid Ember/Exalt kernel occur in the real search; returned routing still chooses
+Chaos. The operator has 446 retained rows, zero selected consumptions, 34 upper
+seed requests with none started, and zero joint assembly attempts. Those
+counters do not reconstruct the historical refusing branches.
+
+CI separately built the finite Tests selector at `a9aadac6`; the solver then
+passed 416 checks at all 35 physical members: original root, P0 and 33 positive
+word exits. Paid Ember/Exalt plus checked Current tails costs
+101314.94475391766, losing 3.59000495013606 at P0. The separate full-identity
+fixture confirms `seed_root_only_incumbent_without_focused_fallback` while
+preserving the checked root artifact. This is finite economic and guard-role
+evidence, not a cheaper complete strategy, complete product-domain admission,
+positive lower, exact closure or public activation.
+
+Parent selected a proposal for the existing root-only seed/joint-service
+boundary: permit complete candidate checking while preserving the fallback,
+without promoting its root scalar to statewise values. It needs a bounded
+finite treatment and parent-controlled LOCAL before execution. Root slot 1/2
+is spent; slot 2 remains reserved. Preserve the unchanged checked artifact,
+native numerical/admission gates, work caps and TargetNeutralZero. Build,
+glob, cache and prior observer failures remain separate unresolved causes;
+neither a successful build nor the losing finite graft establishes recovery.
 
 Published research checkpoints, both absent from main:
 
@@ -45,11 +70,10 @@ admission. A positive native partial-held historical word establishes one local
 composition omission; private memory/observer stops do not establish the older
 regression cause. The failed historical plain-fill hypothesis stays failed.
 
-Next two actions are source-only Pro review of the pinned causal questions and
-selection of a bounded plan with matched controls. New execution needs that
-selection and the parent-controlled LOCAL slot. Preserve all per-run bounds,
-cleanup obligations, exact guards and numerical authorities. No fixed aggregate
-run limit is restored; the present pause still prohibits starting runs.
+The Pro questions and historical research remain inputs to the selected
+continuation. New execution needs a concrete selected premise and the
+parent-controlled LOCAL slot. Preserve per-run bounds, cleanup obligations,
+exact guards and numerical authorities; do not repeat a completed control.
 
 ## Qualification gaps and evidence owners
 
@@ -72,9 +96,14 @@ ports only scheduler-test ownership/diagnostics from fresh main. A forced main
 assertion demonstrates the post-summary thread hang; the candidate's 15-test
 suite and two forced-failure exits pass locally. A later 26-test real-artifact
 identity/service gate also passes with mocked computation and an explicitly
-historical executable. Original hosted five-second cause and full hosted/native
-integration remain open. LOCAL is
-released with no survivor; parent review gates publication and integration.
+historical executable. Exact-source `e1b64986` Windows run 37338568432 and
+solver-knowledge run 37338568439 pass; ingest reports 234 passed/5 skipped,
+all 18 native targets and the remaining full validation chain pass. The failed
+assertion cleanup fixes the demonstrated post-summary thread hang. The old
+hosted five-second completion cause remains unresolved, and the broad f532
+runner changes remain outside main. The reviewed test source alone is
+integrated over charcoal UI base `8d0752fe`; combined checks and guarded
+publication are recorded in the CI living record. LOCAL is released.
 
 Eight earlier integration screenshots are verified locally in the product record.
 Library delivery attempted zero uploads: the required multi-file helper lacks supported

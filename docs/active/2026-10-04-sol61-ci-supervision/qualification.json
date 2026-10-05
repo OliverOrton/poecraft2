@@ -174,5 +174,47 @@
     "log_sha256": "40b6aeab12ef45522ecad820c1da5047910ffd2acf7efcc2f8af61f47f740579",
     "survivor_check_sha256": "1479db878ef0878be9d009caaef14e794bb54ea28d6ec0bfe31bd3e2add292c0",
     "readiness_receipt_sha256": "45a85cff4abdfd97bf4582c5cd5333c6af62ff8617b03d7c12bcae184a1fd67a"
+  },
+  "published_hosted_acceptance": {
+    "source": "e1b64986cdef2700b77d398cf1732141d6893e49",
+    "windows_run": 37338568432,
+    "windows_job": 111859510712,
+    "solver_knowledge_run": 37338568439,
+    "windows_conclusion": "success",
+    "solver_knowledge_conclusion": "success",
+    "command": "./scripts/test.ps1 -SkipBuild -FetchPinnedData -InstallTestBrowser",
+    "python": "3.12.10",
+    "pytest": "9.1.1",
+    "ingest": {
+      "passed": 234,
+      "skipped": 5,
+      "wall_seconds": 124.04
+    },
+    "economy": {
+      "passed": 25,
+      "subtests_passed": 2
+    },
+    "bindings": {
+      "passed": 302,
+      "subtests_passed": 7
+    },
+    "native": {
+      "targets_passed": 18,
+      "targets_failed": 0,
+      "wall_seconds": 807.81
+    },
+    "all_scope_validation_completed": true,
+    "log_sha256": "760b9d3441f53761a31c258c70015f6a1728d4361f3d06924a44797f13b2d0e3",
+    "hosted_completion_cause": "unproved",
+    "economic_or_activation_authority_added": false
+  },
+  "integration_selection": {
+    "branch": "dot/sol61-ci-integration-20261005",
+    "base_main": "8d0752fe4c43b76d165e743a65f76f5d6379da2d",
+    "reviewed_test_blob": "a036068aa8953a7ac8f4c833943cb6ec8457024a",
+    "reviewed_test_sha256": "b0673f471beef0e94c969c1f4729d4a955adeb2aac56e03a89aada4e6eb4dc77",
+    "source_scope": "supervisor tests and qualification/status prose",
+    "worker_native_ui_frozen_input_changes": false,
+    "combined_head_checks": "required before guarded main fast-forward"
   }
 }

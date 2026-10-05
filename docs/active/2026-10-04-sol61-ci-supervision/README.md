@@ -8,6 +8,13 @@ retains earlier scheduling, worker, hosted and handle-identity negatives.
 Only its scheduler-test ownership slice is ported; the worker, production
 supervisor, catalog, workflow and native sources remain main's versions.
 
+Reviewed checkpoint `e1b64986cdef2700b77d398cf1732141d6893e49` now passes full
+hosted Windows and solver-knowledge acceptance. The integration branch
+`dot/sol61-ci-integration-20261005` applies the same test bytes over remotely
+verified charcoal UI main `8d0752fe4c43b76d165e743a65f76f5d6379da2d`.
+Only test ownership/diagnostics and qualification/status prose are imported.
+UI product, native, worker, protected and frozen-input paths are unchanged.
+
 ## Hosted negatives and causal scope
 
 Both complete decoded job logs were retrieved through the GitHub connector:
@@ -54,7 +61,7 @@ The unchanged `test_solver_lab_unattended_hardening.py` owns the eight changed
 identity-component refusals, restored-identity retry, atomic hashed publication
 and real-artifact workflows. Its real-artifact identity/service gate passes in
 the follow-up below. Full-ingest, current-source native and hosted qualification
-remain separate, unrun obligations. No production validation authority is removed.
+are recorded separately below. No production validation authority is removed.
 
 ## Parent-approved finite local batch
 
@@ -91,7 +98,8 @@ Complete hosted text is preserved outside the checkout under
 `e3d1045bc708906298b9eef284603afc3964bfe6699794e2ef9dc0a3200d4413` and
 `6824b7be6f0f4b4b46dc92765511b58df943e95cd0b6b5a1013bf47d6e55b881`.
 
-Source and focused local tests are qualified. Full hosted integration is unrun;
+At the local checkpoint, source and focused tests are qualified and full hosted
+integration is unrun;
 the original completion-failure cause stays open. No main merge,
 push, deployment, dev-server restart, WASM activation or economic claim follows.
 Parent coordinates branch publication and integration after patch review.
@@ -137,4 +145,26 @@ finds no owned process. LOCAL is released immediately. Complete evidence:
 prerequisite/source mismatch receipt:
 `out/ci-lifecycle-20261005/real-artifact-prerequisites-ready.json`.
 The qualification index pins their hashes. Full hosted/native/binding acceptance
-and any publication remain parent-coordinated, pending work.
+and any publication remain parent-coordinated, pending work at that checkpoint.
+
+## Published test-only hosted acceptance
+
+The reviewed `e1b64986` branch passes exact-source
+[Windows run 37338568432 / job 111859510712](https://github.com/OliverOrton/poecraft2/actions/runs/37338568432/job/111859510712)
+and [solver-knowledge run 37338568439](https://github.com/OliverOrton/poecraft2/actions/runs/37338568439).
+The full hosted `scripts/test.ps1 -SkipBuild -FetchPinnedData -InstallTestBrowser`
+chain completes normally on Python 3.12.10 / pytest 9.1.1: ingest 234 passed,
+5 skipped in 124.04 s; economy 25 passed and 2 subtests; bindings 302 passed
+and 7 subtests; all 18 native targets pass in 807.81 s; full web/WASM and
+TypeScript validation completes. This supplies hosted functional acceptance
+at that exact source, not a solver economic result or current causal-branch
+activation. The original five-second wait cause remains unproved.
+
+The complete normalized decoded job log remains outside the checkout at
+`../ci-evidence/job111859510712.log`, SHA256
+`760b9d3441f53761a31c258c70015f6a1728d4361f3d06924a44797f13b2d0e3`.
+The old two failed/six-hour-cancelled jobs and every forced-failure receipt stay
+retained. The broad f532 process-owner source is not imported by this patch.
+The qualification index records source, run/job identities and scope; the
+combined integration head still requires its own recorded branch checks and
+guarded, non-force publication over the expected main.

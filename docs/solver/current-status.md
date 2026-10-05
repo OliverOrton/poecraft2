@@ -1,6 +1,6 @@
 # Solver current status
 
-**Reviewed released source: `81d4f47106993d7c36af502595fcba24fa0b7e51`.**
+**Reviewed released engine/integration source: `81d4f47106993d7c36af502595fcba24fa0b7e51`.**
 Main contains the qualified UI/recombination integration over `29d9e666`.
 The exact-source isolated Windows [run 37206763122](https://github.com/OliverOrton/poecraft2/actions/runs/37206763122)
 passes Python, all 18 native targets, matching real WASM/web tests and TypeScript;
@@ -8,6 +8,13 @@ solver-knowledge run 37206763077 also passes. Main-specific Windows run
 37209887436 remains a separate result. The [product record](../active/2026-10-04-sol61-product-integration/README.md)
 owns current source/artifact and rendered evidence. This is functional acceptance,
 not a new representative-policy quality baseline.
+
+Main `8d0752fe4c43b76d165e743a65f76f5d6379da2d` also contains the approved
+[charcoal/ember presentation](../active/2026-10-05-charcoal-ember/README.md),
+qualified at packaged/rendered `7fd6a48e` and hosted checkpoint `c6e02edb`.
+Distinct 1536x864 and 1920x1080 Library screenshots and their metadata limitation
+remain in that record. This presentation change leaves solver economics,
+native mechanics, frozen inputs and mathematical authorities unchanged.
 
 Historical rows below retain their named source, target, law, activation and
 consumer identities. Full tests do not retroactively establish their economics,
@@ -17,7 +24,7 @@ Finder activation or browser latency. Reviewed prior snapshot `ae24e0bb` and
 historical evidence. A documentation-only follow-up does not change source
 qualification. [HANDOFF](../../HANDOFF.md) owns selected sequencing.
 
-## Solver research is published separately; capability changes paused
+## Isolated solver causal/economic continuation; no product activation
 
 [Solver checkpoint `040993ec`](https://github.com/OliverOrton/poecraft2/blob/040993ec9bb8109cc1970df91c8bc9ec7ef97744/docs/active/2026-10-04-sol61-armour-recovery/PRO-HANDOFF.md) and
 [independent review `4c9f078d`](https://github.com/OliverOrton/poecraft2/blob/4c9f078d95e2c0c837ab7a408c4846420bac94db/docs/active/2026-10-04-sol61-independent-review/causal-research-handoff.md)
@@ -36,7 +43,27 @@ open. Private observer/memory stops do not explain that released stop. Finder's
 inherited shared-work ownership negatives remain open. The deterministic
 missing-candidate gate, two quality smokes and nine-case cohort are unqualified;
 no real quality allowance is approved here. Preserved dirty Bow4 is not established
-as Oliver's separately improved request. New heavy work is paused for Pro planning.
+as Oliver's separately improved request. Oliver resumed the coordinated isolated
+programme at 09:00 Vancouver on October 5; new runs require parent-controlled LOCAL.
+
+The [published continuation at `734f6722`](https://github.com/OliverOrton/poecraft2/blob/734f67228be0c6fa3262f656f41cb7d625cc57db/docs/active/2026-10-04-sol61-armour-recovery/README.md)
+retains the matched Current control at 101311.35474896732, success one, complete
+cost, zero off-policy mass and requested bounded Finish/cap mask zero. P0's paid
+kernel is admitted in the real search, but retained-row/seed/joint counters do
+not prove the historical refusal branches or a complete cheaper policy.
+
+Its source `a9aadac6` was separately built; the finite selector passes 416 checks
+and certifies original root/P0/all 33 positive physical word exits. Paid
+Ember/Exalt plus checked Current exit tails costs 101314.94475391766 and loses
+3.59000495013606 at P0. A separate full-identity fixture demonstrates the
+existing root-only seed refusal and preserves the checked fallback; it is not
+the product's 28-candidate owner. Seed/joint-service treatment remains selected
+but unfinished; old build/glob/cache causes remain unproved. No complete product
+coarse-domain authority, new positive lower, retained improved controller,
+WASM/Finder activation or economic recovery follows. Root slot 1/2 is spent;
+slot 2 is reserved for a justified complete treatment. These source changes
+remain outside main, and the historical 85970.67 graph still needs product
+envelope admission.
 
 The [isolated Finder Essence follow-up](../active/2026-10-02-finder-essence/README.md)
 qualifies bounded native satisfying-tier acquisition, semantic goal roles,
@@ -361,9 +388,14 @@ Live CI and local process status must be read
 at the next task, not inferred from this snapshot.
 The [October 5 CI lifecycle receipt](../active/2026-10-04-sol61-ci-supervision/README.md)
 qualifies synthetic supervisor tests, failure-path exit and a 26-test real-artifact
-identity/service gate with mocked computation and a historical executable. It
-does not close the hosted completion cause or supply current-native/WASM,
-activation, economics or full hosted qualification.
+identity/service gate with mocked computation and a historical executable.
+Exact-source `e1b64986` full Windows run 37338568432 and knowledge run
+37338568439 pass, including 234 ingest tests and all 18 native targets.
+The demonstrated assertion-failure thread hang is fixed; the original hosted
+five-second completion cause remains unresolved. Only the reviewed test source
+is integrated over the charcoal UI; the f532 runner and isolated solver source
+remain outside main. These checks add no economic, activation or mathematical
+authority.
 
 
 ## Combined current-batch identity checkpoint (2026-10-02)
