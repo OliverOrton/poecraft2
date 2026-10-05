@@ -1092,6 +1092,16 @@ double SolveWork::Impl::sparse_row_q_for_values(
 }
 
 bool SolveWork::Impl::maybe_install_incremental_anytime_incumbent() {
+    const bool checked_root_only_checkpoint =
+        !incremental_upper_policy_pass && output_incumbent &&
+        output_incumbent->compiled_root_entry_only &&
+        !output_incumbent->compiled_artifact.strategy_json.empty() &&
+        publication_pipeline.complete_candidate_attempted_identity == 0 &&
+        !publication_pipeline.initial_candidate_task &&
+        !finalization_task && focused_strict_transition_cache == nullptr &&
+        !requested_bounded_finish && !result.diagnostics.resource_cap_hit &&
+        !expansion_active && !incremental_refinement_active &&
+        !consumed && !finalized_result && transition_cache != nullptr;
     const bool bounded_row_checkpoint =
         incremental_alternative_rows.size() >=
         incremental_anytime_next_row_checkpoint;
@@ -1105,8 +1115,12 @@ bool SolveWork::Impl::maybe_install_incremental_anytime_incumbent() {
                     .material_upper_improvement_ratio);
     if (!options.high_impact_executable_uppers ||
         !incremental_action_generation || incremental_envelope_closed ||
-        incremental_upper_policy_pass == false ||
+        (!incremental_upper_policy_pass && !checked_root_only_checkpoint) ||
         (!bounded_row_checkpoint && !material_upper_improvement)) {
+        return false;
+    }
+    if (checked_root_only_checkpoint &&
+        certified_incumbent_invalid_reason(*output_incumbent) != nullptr) {
         return false;
     }
 
@@ -1139,6 +1153,15 @@ bool SolveWork::Impl::maybe_install_incremental_anytime_incumbent() {
         completed > std::numeric_limits<std::size_t>::max() / 2
             ? std::numeric_limits<std::size_t>::max()
             : std::max<std::size_t>(completed + 1, completed * 2);
+
+    // A root controller is an executable fallback, never a statewise seed.
+    // Retain it under the existing aggregate cap before capturing a complete
+    // native joint policy. Missing positive exits still fail in that builder.
+    if (checked_root_only_checkpoint && !retain_current_certified_incumbent()) {
+        incremental_anytime_policy_last_failure =
+            "root_only_joint_fallback_retention_cap";
+        return false;
+    }
 
     const double prior = output_incumbent.has_value()
         ? output_incumbent->certified_upper_bound
@@ -1646,6 +1669,23 @@ bool SolveWork::Impl::try_begin_renewal_candidate_publication(bool resume_discov
 
 bool SolveWork::Impl::continue_initial_candidate() {
     if (try_begin_renewal_candidate_publication()) return true;
+    if (output_incumbent && output_incumbent->compiled_root_entry_only) {
+        if (incremental_upper_policy_pass) return false;
+        if (!maybe_install_incremental_anytime_incumbent()) return false;
+        // The existing one-shot complete-candidate slot also owns this check.
+        // Discovery pauses with its current cursor and allowances intact.
+        publication_pipeline.complete_candidate_attempted_identity =
+            output_incumbent->portfolio_identity;
+        publication_pipeline.initial_candidate_resume_phase = phase;
+        record_progress_event("service_queued", "root_only_joint_candidate",
+            output_incumbent->portfolio_identity);
+        focus_optimizing = false;
+        focused_lower_mode = false;
+        publication_pipeline.initial_candidate_task.emplace(
+            certify_initial_candidate());
+        phase = SolvePhase::Expanding;
+        return true;
+    }
     if (!options.high_impact_executable_uppers ||
         !incremental_action_generation || incremental_envelope_closed ||
         output_incumbent.has_value() || requested_bounded_finish ||

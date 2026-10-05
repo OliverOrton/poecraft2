@@ -16885,6 +16885,8 @@ void run_solver_proof_handoff_tests() {
     run_proof_handoff_tests();
 }
 
+void run_solver_root_only_joint_service_tests();
+
 void run_solver_integrity_tests(const char* case_name) {
     const std::string name = case_name;
     if (name == "constructive") {
@@ -16907,6 +16909,7 @@ void run_solver_integrity_tests(const char* case_name) {
     else if (name == "fracture") run_primitive_destructive_renewal_upper_tests(false);
     else if (name == "joint-fracture") run_joint_product_fracture_publication_tests();
     else if (name == "completed-policy-boundary") run_completed_policy_boundary_tests();
+    else if (name == "root-only-joint-service") run_solver_root_only_joint_service_tests();
     else throw std::invalid_argument("unknown solver integrity subcase");
 }
 
@@ -16977,5 +16980,237 @@ void run_solver_setup_service_tests() {
     for (const auto quantum : {1u,2u,7u,64u,4096u}) {
         const auto replay=solve_stepped(calc,start,prices,quantum);
         PC_CHECK(identical_solve(reference,replay));
+    }
+}
+
+void run_solver_root_only_joint_service_tests() {
+    using Impl = SolveWorkTestAccess::Impl;
+    const auto started = std::chrono::steady_clock::now();
+    const auto require = [](bool condition, const char* reason) {
+        PC_CHECK(condition);
+        if (!condition) throw std::runtime_error(reason);
+    };
+    for (const unsigned scenario : {0u, 1u, 2u}) {
+        auto session = make_solve_session();
+        // Restrict this test-owned catalog, as in the native retention fixture.
+        // The engine supplies every operation, probability and physical exit.
+        auto& data = const_cast<DataImpl&>(*session->data);
+        for (std::uint32_t mod = 0; mod < session->mod_count; ++mod) {
+            if (mod == 0 || mod == 5) continue;
+            pc_bitset_clear(session->normal_random_roll_mask.data(), mod);
+            pc_bitset_clear(session->positive_spawn_weight_mask.data(), mod);
+            pc_bitset_clear(session->positive_base_weight_mask.data(), mod);
+            session->base_spawn_weight[mod] = session->base_roll_weight[mod] = 0;
+            data.spawn_weights[mod] = 0;
+        }
+        const auto registry = build_action_registry(*session);
+        const auto annul = registry.index_by_id.at("annul");
+        const auto exalt = registry.index_by_id.at("exalt");
+        const auto scour = registry.index_by_id.at("scour");
+        const auto alchemy = registry.index_by_id.at("alchemy");
+        GoalSpec goal;
+        goal.rarity = PC_RARITY_RARE;
+        GoalSlot slot; slot.family_id = 100; slot.min_tier = 1;
+        goal.slots.push_back(slot);
+        CalcContext calc(session, goal, registry, {annul, exalt, scour, alchemy},
+            false, true, false, std::nullopt, {}, true);
+        pc_item_state item; pc_item_clear(&item); item.rarity = PC_RARITY_RARE;
+        require(pc_item_add_mod(&item, PC_SIDE_PREFIX, 0,
+            session->primary_group[0], 0, nullptr) == PC_RESULT_OK, "fixture goal mod");
+        require(pc_item_add_mod(&item, PC_SIDE_SUFFIX, 5,
+            session->primary_group[5], 0, nullptr) == PC_RESULT_OK, "fixture junk mod");
+        SolveOptions options;
+        options.goal_progress_gated_reforges = true;
+        options.high_impact_executable_uppers = true;
+        options.allow_economic_restart = false;
+        options.state_certificate_control = false;
+        options.goal_proof_profile = GoalProofProfile::TargetNeutralZero;
+        options.max_discovered_states = 32;
+        options.max_solver_owned_bytes = 512ull * 1024 * 1024;
+        Impl work(calc, item,
+            {{"annul", 1}, {"exalt", 1}, {"scour", 10}, {"alchemy", 1}}, options);
+        work.transition_cache = std::make_shared<SolveTransitionCache>();
+        work.priced_rows.clear();
+        const auto bounded = [&] {
+            require(calc.state_count() <= 32, "fixture native state cap");
+            require(std::chrono::steady_clock::now() - started < std::chrono::seconds(60),
+                "fixture native deadline");
+            require(work.fast_estimated_owned_bytes() <= 512ull * 1024 * 1024,
+                "fixture shared byte cap");
+        };
+        const auto append = [&](std::uint32_t state, std::uint32_t action, double cost) {
+            const auto native = calc.outcomes(state, action, true);
+            bounded();
+            require(native.supported && native.applicable, "fixture native operation unavailable");
+            solve_detail::SparsePolicyRowInput row;
+            row.owner_state = state; row.operator_index = action; row.cost = cost;
+            double total = 0;
+            for (const auto& exit : native.entries) {
+                require(exit.probability > 0, "fixture positive native exit");
+                row.transitions.push_back({exit.state, exit.probability});
+                total += exit.probability;
+            }
+            require(near(total, 1, 1e-12), "fixture complete native support");
+            const auto index = work.transition_cache->rows.size();
+            solve_detail::append_sparse_policy_row(*work.transition_cache, work.priced_rows, row);
+            return index;
+        };
+        const auto root = work.result.start_state;
+        const auto root_row = append(root, annul, 1);
+        std::uint32_t loss = kNoId;
+        double success_mass = 0;
+        for (const auto& exit : calc.outcomes(root, annul, true).entries) {
+            if (calc.is_goal_state(calc.state(exit.state))) success_mass += exit.probability;
+            else {
+                require(loss == kNoId, "fixture single native loss port");
+                loss = exit.state;
+            }
+        }
+        require(near(success_mass, .5, 1e-12) && loss != kNoId,
+            "fixture Annul oracle prediction");
+        const auto loss_row = append(loss, scour, 10);
+        const auto scoured = calc.outcomes(loss, scour, true);
+        require(scoured.entries.size() == 1 && near(scoured.entries[0].probability, 1),
+            "fixture Scour native support");
+        const auto empty = scoured.entries[0].state;
+        const auto fill_row = append(empty, alchemy, 1);
+        const auto filled = calc.outcomes(empty, alchemy, true);
+        require(filled.entries.size() == 1 && filled.entries[0].state == root &&
+            near(filled.entries[0].probability, 1), "fixture Alchemy oracle prediction");
+        const auto n = calc.state_count();
+        work.transition_cache->state_rows.resize(n);
+        work.result.values.assign(n, 0);
+        work.result.goal_states.assign(n, 0);
+        work.result.expanded.assign(n, 1);
+        work.expanded = work.result.expanded; work.expanded_count = n;
+        for (std::uint32_t state = 0; state < n; ++state)
+            work.result.goal_states[state] = calc.is_goal_state(calc.state(state));
+        require(work.try_install_reachable_incumbent(false), "fixture baseline construction");
+        require(!work.output_incumbent->independently_evaluated &&
+            work.incumbent_portfolio.retained().empty(), "baseline has no earlier statewise certificate");
+        auto& baseline = *work.output_incumbent;
+        work.populate_incumbent_policy(baseline);
+        SolveResult proof;
+        proof.policy_available = true; proof.policy_status = SolvePolicyStatus::BoundedFeasible;
+        proof.start_state = root; proof.has_exact_start_item = true; proof.exact_start_item = item;
+        proof.values = baseline.values; proof.policy = baseline.policy;
+        proof.policy_reachable = baseline.policy_reachable;
+        proof.goal_states = work.result.goal_states; proof.expanded = work.result.expanded;
+        proof.upper_bound = proof.evaluated_policy_cost = baseline.certified_upper_bound;
+        PolicyCompilationTelemetry emitted;
+        baseline.compiled_artifact.strategy_json = compile_policy_strategy_json(calc, proof,
+            "native root-only fallback", &emitted, 1024 * 1024, nullptr,
+            512ull * 1024 * 1024, PolicyRouteDefaultMode::CertificationFailClosed);
+        baseline.compiled_artifact.nodes = emitted.nodes;
+        baseline.compiled_artifact.edges = emitted.edges;
+        baseline.compiled_artifact.policy_decision_bindings.clear();
+        baseline.compiled_root_entry_only = true;
+        baseline.policy_materialized = false;
+        baseline.policy.clear(); baseline.policy_rows.clear(); baseline.policy_row_costs.clear();
+        baseline.policy_reachable.clear(); baseline.frontier_operators.clear();
+        baseline.choice_sources.clear(); baseline.behavioral_representative_by_state.clear();
+        baseline.unveil_preferences.clear(); baseline.option_unveil_preferences.clear();
+        baseline.values.assign(n, solve_detail::kInfinity);
+        baseline.values[root] = proof.upper_bound;
+        baseline.compilation_provenance = "native_fixture_root_controller_pending_check";
+        proof = SolveResult{};
+        const auto check_queued = [&] {
+            for (unsigned unit = 0; work.publication_pipeline.initial_candidate_task; ++unit) {
+                bounded();
+                require(unit < 10000, "fixture cooperative checker work cap");
+                work.advance_initial_candidate_publication();
+            }
+        };
+        work.phase = SolvePhase::Expanding;
+        work.publication_pipeline.initial_candidate_resume_phase = work.phase;
+        work.publication_pipeline.initial_candidate_task.emplace(work.certify_initial_candidate());
+        check_queued();
+        require(work.output_incumbent->compiled_root_entry_only &&
+            !work.output_incumbent->has_statewise_upper_values() &&
+            work.certified_incumbent_invalid_reason(*work.output_incumbent) == nullptr,
+            "fixture independently checked root-only fallback");
+        const auto baseline_cost = work.output_incumbent->evaluated_policy_cost;
+        require(near(baseline_cost, 13, 1e-8), "native checked baseline cost prediction");
+        const auto old_graph = work.output_incumbent->compiled_artifact.strategy_json;
+        const auto old_identity = work.output_incumbent->portfolio_identity;
+        const auto old_scope = work.action_vocabulary_identity();
+        work.incremental_upper_policy_dirty = true;
+        require(!work.begin_incremental_upper_policy_pass() &&
+            work.incremental_upper_policy_last_failure ==
+                "seed_root_only_incumbent_without_focused_fallback",
+            "focused root-only seed still refuses");
+        require(work.incremental_upper_policy_passes_requested == 1 &&
+            work.incremental_upper_policy_passes_started == 0 &&
+            work.incremental_upper_policy_passes_rejected == 1,
+            "focused seed census unchanged");
+        require(work.publication_pipeline.complete_candidate_attempted_identity == 0,
+            "joint checker slot remains unused");
+        std::uint64_t alternative = root_row;
+        if (scenario != 1) {
+            alternative = append(loss, exalt, 1);
+            const auto recovered = calc.outcomes(loss, exalt, true);
+            require(recovered.entries.size() == 1 && recovered.entries[0].state == root &&
+                near(recovered.entries[0].probability, 1), "fixture Exalt oracle prediction");
+            work.transition_cache->rows[alternative].admitted = false;
+        } else {
+            work.transition_cache->rows[loss_row].admitted = false;
+            work.transition_cache->rows[fill_row].admitted = false;
+            work.result.expanded[loss] = work.expanded[loss] = 0;
+        }
+        Impl::IncrementalAlternativeRow completed;
+        completed.state = work.transition_cache->rows[alternative].owner_state;
+        completed.operator_index = work.priced_rows[alternative].operator_index;
+        completed.row_index = alternative;
+        work.incremental_alternative_rows.push_back(completed);
+        // Arrange an already-due checkpoint without changing its production profile.
+        work.incremental_anytime_next_row_checkpoint = 1;
+        if (scenario == 2) work.options.max_solver_owned_bytes = work.fast_estimated_owned_bytes() + 1;
+        const auto cap = work.options.max_solver_owned_bytes;
+        const bool queued = work.continue_initial_candidate();
+        require(work.options.max_solver_owned_bytes == cap &&
+            work.action_vocabulary_identity() == old_scope &&
+            work.options.goal_proof_profile == GoalProofProfile::TargetNeutralZero &&
+            work.certified_global_lower_bound() == 0 && calc.state_count() == n,
+            "joint service preserves authority and allowance");
+        if (scenario == 0) {
+            require(queued && work.publication_pipeline.initial_candidate_task &&
+                work.publication_pipeline.complete_candidate_attempted_identity != 0,
+                "complete native joint candidate queued once");
+            const auto slot_identity = work.publication_pipeline.complete_candidate_attempted_identity;
+            require(!work.output_incumbent->independently_evaluated &&
+                work.best_current_certified_fallback() &&
+                work.best_current_certified_fallback()->compiled_artifact.strategy_json == old_graph,
+                "old checked graph retained before candidate checking");
+            check_queued();
+            require(work.output_incumbent->independently_evaluated &&
+                work.certified_incumbent_invalid_reason(*work.output_incumbent) == nullptr &&
+                near(work.output_incumbent->evaluated_policy_cost, 3, 1e-8),
+                "native checker confirms cheaper complete joint policy");
+            require(!work.continue_initial_candidate() &&
+                work.publication_pipeline.complete_candidate_attempted_identity == slot_identity,
+                "existing complete checker slot never resets");
+        } else {
+            require(!queued && !work.publication_pipeline.initial_candidate_task &&
+                work.publication_pipeline.complete_candidate_attempted_identity == 0,
+                "negative control queues no incomplete candidate");
+            require(work.output_incumbent->portfolio_identity == old_identity &&
+                work.output_incumbent->compiled_artifact.strategy_json == old_graph &&
+                work.certified_incumbent_invalid_reason(*work.output_incumbent) == nullptr,
+                "negative control preserves checked root artifact");
+            if (scenario == 1) require(std::find(
+                work.incremental_anytime_missing_frontier_states.begin(),
+                work.incremental_anytime_missing_frontier_states.end(), loss) !=
+                work.incremental_anytime_missing_frontier_states.end(), "missing positive native port named");
+            else require(work.result.diagnostics.resource_cap_hit &&
+                work.incremental_anytime_policy_last_failure == "entry_scratch_exceeds_byte_cap",
+                "candidate ownership refused by shared cap");
+        }
+        bounded();
+        std::printf("root-only joint native case=%u states=%u baseline=%.17g selected=%.17g queued=%u attempts=%llu refusal=%s owned=%llu\n",
+            scenario, calc.state_count(), baseline_cost, work.output_incumbent->evaluated_policy_cost,
+            queued ? 1u : 0u, static_cast<unsigned long long>(work.incremental_anytime_policy_attempts),
+            work.incremental_anytime_policy_last_failure.c_str(),
+            static_cast<unsigned long long>(work.fast_estimated_owned_bytes()));
+        std::fflush(stdout);
     }
 }

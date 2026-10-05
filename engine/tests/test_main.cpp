@@ -90,6 +90,11 @@ int main(int argc, char** argv) {
         std::printf("solver growth tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
         return pctest::g_failures == 0 ? 0 : 1;
     }
+    if (argc > 1 && std::string(argv[1]) == "--solver-root-only-joint-service-only") {
+        run_solver_integrity_tests("root-only-joint-service");
+        std::printf("solver root only joint service tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     if (argc > 1 && std::string(argv[1]) == "--solver-blocker-growth-only") {
         run_solver_growth_tests(true);
         std::printf("solver blocker growth tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
