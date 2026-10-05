@@ -814,6 +814,27 @@ bool SolveWork::Impl::begin_focused_upper_solve() {
              !options.allow_economic_restart) ||
             (!from_incremental_incumbent &&
              (!std::isfinite(restart_cost) || restart_cost < 0.0))) {
+            if (incremental_upper_policy_pass) {
+                // Name the existing refusing guard without widening the
+                // seed's value authority or changing fallback selection.
+                if (!focused_fallback_policy && !from_incremental_incumbent) {
+                    incremental_upper_policy_last_failure =
+                        !output_incumbent.has_value()
+                            ? "seed_missing_incumbent_without_focused_fallback"
+                            : output_incumbent->compiled_root_entry_only
+                                ? "seed_root_only_incumbent_without_focused_fallback"
+                                : "seed_rejected_statewise_values_without_focused_fallback";
+                } else if (focused_strict_transition_cache != nullptr) {
+                    incremental_upper_policy_last_failure =
+                        "seed_focused_strict_transition_cache_active";
+                } else if (!options.allow_economic_restart) {
+                    incremental_upper_policy_last_failure =
+                        "seed_economic_restart_disabled";
+                } else {
+                    incremental_upper_policy_last_failure =
+                        "seed_restart_cost_invalid";
+                }
+            }
             return false;
         }
         const FocusedFallbackPolicy* fallback =

@@ -821,6 +821,7 @@ bool SolveWork::Impl::begin_incremental_upper_policy_pass() {
                 candidate.row_index);
         }
     }
+    incremental_upper_policy_last_failure.clear();
     if (!begin_focused_upper_solve()) {
         ++incremental_upper_policy_passes_rejected;
         retain_action_reason(

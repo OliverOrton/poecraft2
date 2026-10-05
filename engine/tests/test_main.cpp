@@ -1,6 +1,7 @@
 #include "tests.hpp"
 
 #include <string>
+#include <stdexcept>
 
 namespace pctest {
 int g_checks = 0;
@@ -76,6 +77,12 @@ int main(int argc, char** argv) {
     if (argc > 1 && std::string(argv[1]) == "--solver-partial-held-witness-only") {
         run_solver_partial_held_witness_tests(argc > 2 ? argv[2] : nullptr);
         std::printf("solver partial held witness tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
+    if (argc > 1 && std::string(argv[1]) == "--solver-partial-held-continuation-only") {
+        if (argc != 4) throw std::runtime_error("partial held continuation requires artifact and checked strategy paths");
+        run_solver_partial_held_witness_tests(argv[2], argv[3]);
+        std::printf("solver partial held continuation tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
         return pctest::g_failures == 0 ? 0 : 1;
     }
     if (argc > 1 && std::string(argv[1]) == "--solver-growth-only") {

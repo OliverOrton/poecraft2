@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <chrono>
 #include <cstdio>
 #include <fstream>
 #include <filesystem>
@@ -4316,7 +4317,7 @@ struct SolveWorkTestAccess {
 };
 }
 
-void run_solver_partial_held_witness_tests(const char* artifact_dir) {
+void run_solver_partial_held_witness_tests(const char* artifact_dir, const char* checked_strategy_path) {
     if (!artifact_dir) throw std::runtime_error("partial held witness requires frozen native artifact");
     const auto artifact = std::filesystem::absolute(artifact_dir);
     const auto repo = artifact.parent_path().parent_path().parent_path();
@@ -4407,7 +4408,9 @@ void run_solver_partial_held_witness_tests(const char* artifact_dir) {
         throw std::runtime_error("partial held carrier has an unpaid routing cycle");
     };
     const auto historical_json = read(qualification / "policies/conquest5-historical.strategy.json");
-    const auto current_json = read(qualification / "policies/conquest5-current.strategy.json");
+    const auto current_json = read(checked_strategy_path
+        ? std::filesystem::path(checked_strategy_path)
+        : qualification / "policies/conquest5-current.strategy.json");
     const auto historical = compile_strategy_json(session,historical_json.data(),historical_json.size());
     const auto current = compile_strategy_json(session,current_json.data(),current_json.size());
     PC_CHECK(exact_item_state_key(historical->start_item) == exact_item_state_key(root));
@@ -4452,6 +4455,133 @@ void run_solver_partial_held_witness_tests(const char* artifact_dir) {
     for (const auto word : exact_item_state_key(carrier))
         std::printf("%016llx,",static_cast<unsigned long long>(word));
     std::printf("\n");
+    if (!checked_strategy_path) return;
+
+    // One independently checked fixed graph, with the ordinary original
+    // root and every exact physical member of the paid word's finite exits.
+    // These singleton full-identity entries do not certify the corresponding
+    // product coarse state or create a parent statewise value table.
+    const auto& pinned = request.at("economy");
+    const auto economy_text = read(repo / pinned.at("snapshot_path").as_string());
+    const auto snapshot = json::Parser(economy_text.data(),economy_text.size()).parse();
+    PC_CHECK(snapshot.at("id").as_string() == pinned.at("id").as_string());
+    PC_CHECK(snapshot.at("metadata").at("content_sha256").as_string() ==
+        pinned.at("content_sha256").as_string());
+    PC_CHECK(snapshot.at("metadata").at("source_cutoff_at_utc").as_string() ==
+        pinned.at("source_cutoff_at_utc").as_string());
+    auto economy = std::make_shared<EconomyImpl>();
+    economy->id = pinned.at("id").as_string();
+    for (const auto& [key,value] : snapshot.at("prices").object)
+        economy->prices.emplace(key,value.as_number());
+    for (const auto& [key,value] : pinned.at("manual_overrides").object)
+        economy->prices[key] = value.as_number();
+    const auto root_state = calc.intern_item(root);
+    StrategyEvalOptions limits; limits.economy = economy;
+    limits.max_owned_bytes = 512ull * 1024 * 1024;
+    limits.continuation_entries.push_back({root_state,root_state,1,root,false});
+    limits.continuation_entries.push_back({carrier_state,carrier_state,1,carrier,false});
+    for (const auto& exit : attempt.entries) {
+        pc_item_state item;
+        if (!calc.materialize(exit.state,item))
+            throw std::runtime_error("partial held continuation lost physical exit");
+        limits.continuation_entries.push_back({exit.state,exit.state,1,item,false});
+    }
+    PC_CHECK(limits.continuation_entries.size() == attempt.entries.size()+2);
+    StrategyEvalWork checker(current,limits);
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(60);
+    while (checker.progress().phase != StrategyEvalPhase::Done) {
+        if (std::chrono::steady_clock::now() >= deadline)
+            throw std::runtime_error("partial held continuation native deadline");
+        checker.step(1);
+    }
+    auto checked = checker.take_result();
+    PC_CHECK(finder_evaluation_accepted(checked));
+    PC_CHECK(std::abs(checked.total_expected_cost-101311.35474896732) <= 1e-8);
+    PC_CHECK(checked.continuation_upper.requested_members == attempt.entries.size()+2);
+    PC_CHECK(checked.continuation_upper.certified_members == attempt.entries.size()+2);
+    PC_CHECK(checked.continuation_upper.refused_members == 0);
+    const auto member = [&](const std::uint32_t state) -> const StrategyContinuationMemberResult& {
+        const auto found = std::find_if(checked.continuation_upper.members.begin(),
+            checked.continuation_upper.members.end(),[&](const auto& entry) {
+                return entry.exact_member_identity == state;
+            });
+        if (found == checked.continuation_upper.members.end())
+            throw std::runtime_error("partial held continuation member absent");
+        return *found;
+    };
+    double paid_cost = 0;
+    for (const auto& [key,quantity] : attempt.expected_resources) {
+        const auto price = economy->prices.find(key);
+        PC_CHECK(price != economy->prices.end());
+        if (price == economy->prices.end())
+            throw std::runtime_error("partial held continuation missing paid price");
+        paid_cost += quantity * price->second;
+        std::printf("partial held paid resource: key=%s quantity=%.17g unit_price=%.17g\n",
+            key.c_str(),quantity,price->second);
+    }
+    double graft_q = paid_cost;
+    for (const auto& exit : attempt.entries) {
+        const auto& certificate = member(exit.state);
+        PC_CHECK(certificate.available());
+        pc_item_state item; PC_CHECK(calc.materialize(exit.state,item));
+        PC_CHECK(exact_item_state_key(certificate.item) == exact_item_state_key(item));
+        graft_q += exit.probability * certificate.exact_continuation_upper;
+        std::printf("partial held checked physical exit: state=%u probability=%.17g status=%s tail=%.17g residual=%.17g key=",
+            exit.state,exit.probability,strategy_continuation_entry_status_name(certificate.status),
+            certificate.exact_continuation_upper,certificate.bellman_residual);
+        for (const auto word : exact_item_state_key(item))
+            std::printf("%016llx,",static_cast<unsigned long long>(word));
+        std::printf("\n");
+    }
+    PC_CHECK(member(carrier_state).available());
+    PC_CHECK(member(root_state).available());
+    std::printf("partial held continuation economics: root=%.17g p0=%.17g paid_word=%.17g word_plus_checked_current_tails=%.17g improvement=%.17g members=%u checker_peak_bytes=%llu exact_physical_only\n",
+        checked.total_expected_cost,member(carrier_state).exact_continuation_upper,paid_cost,graft_q,
+        member(carrier_state).exact_continuation_upper-graft_q,checked.continuation_upper.certified_members,
+        static_cast<unsigned long long>(checker.peak_owned_bytes()));
+
+    // A separate full-identity role fixture exercises the generic seed guard.
+    // It is not the product's 28-candidate owner and cannot establish which
+    // branch refused the historical root's 34 unrecorded seed requests.
+    SolveOptions options; options.high_impact_executable_uppers = true;
+    options.goal_proof_profile = GoalProofProfile::TargetNeutralZero;
+    SolveWorkTestAccess::Impl owner(calc,root,economy->prices,options);
+    refinement::CompiledPolicyAssertion assertion;
+    assertion.strategy_json = current_json;
+    assertion.certification_strategy_json = current_json;
+    assertion.evaluation = std::move(checked);
+    SolveWorkTestAccess::Impl::BoundedPolicyIncumbent root_only;
+    const double checked_root = assertion.evaluation.total_expected_cost;
+    root_only.compiled_artifact = owner.retained_artifact_from_assertion(assertion);
+    root_only.compiled_root_entry_only = true;
+    root_only.strict_state_provenance = false;
+    root_only.values.assign(calc.state_count(),std::numeric_limits<double>::infinity());
+    root_only.values[root_state] = checked_root;
+    root_only.certified_upper_bound = root_only.evaluated_policy_cost = checked_root;
+    root_only.independently_certified = root_only.independently_evaluated = true;
+    root_only.proper = root_only.executable = true;
+    root_only.kind = "finite_checked_root_only";
+    PC_CHECK(!root_only.has_statewise_upper_values());
+    owner.output_incumbent = std::move(root_only);
+    owner.incremental_action_generation = true;
+    owner.incremental_envelope_closed = false;
+    owner.incremental_upper_policy_dirty = true;
+    PC_CHECK(!owner.focused_fallback_policy);
+    PC_CHECK(!owner.begin_incremental_upper_policy_pass());
+    PC_CHECK(owner.incremental_upper_policy_passes_requested == 1);
+    PC_CHECK(owner.incremental_upper_policy_passes_started == 0);
+    PC_CHECK(owner.incremental_upper_policy_passes_rejected == 1);
+    PC_CHECK(owner.incremental_upper_policy_last_failure ==
+        "seed_root_only_incumbent_without_focused_fallback");
+    PC_CHECK(!owner.incremental_upper_policy_pass);
+    PC_CHECK(owner.output_incumbent->compiled_artifact.strategy_json == current_json);
+    PC_CHECK(owner.output_incumbent->values[root_state] == checked_root);
+    PC_CHECK(!owner.output_incumbent->has_statewise_upper_values());
+    std::printf("partial held upper seed refusal: reason=%s requests=%llu started=%llu rejected=%llu checked_root_fallback_preserved\n",
+        owner.incremental_upper_policy_last_failure.c_str(),
+        static_cast<unsigned long long>(owner.incremental_upper_policy_passes_requested),
+        static_cast<unsigned long long>(owner.incremental_upper_policy_passes_started),
+        static_cast<unsigned long long>(owner.incremental_upper_policy_passes_rejected));
 }
 
 void run_solver_growth_tests(const bool blocker) {
