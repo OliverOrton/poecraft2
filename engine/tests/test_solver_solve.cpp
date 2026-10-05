@@ -17866,7 +17866,66 @@ void run_graph_only_missing_entry_service_counterparts(
         std::fflush(stdout);
 
         // Independently isolate assembly availability from the observed cadence.
-        require(work.try_install_reachable_incumbent(false) &&
+        // Regal completion is not closure of every legal competing native row.
+        // Capture the unchanged builder inputs/refusal before a failing assertion;
+        // these observations neither complete rows nor replace its acceptance gate.
+        std::printf("graph-only missing assembly inputs case=%u states=%u rows=%llu "
+            "statewise_authority=%u resumable_prefix=%u focused_lower_stage=%u phase=%u\n",
+            scenario, calc.state_count(),
+            static_cast<unsigned long long>(work.transition_cache->rows.size()),
+            work.output_incumbent->has_statewise_upper_values() ? 1u : 0u,
+            work.resumable_joint_policy_candidate.has_value() ? 1u : 0u,
+            static_cast<unsigned>(work.focused_lower_preparation_stage),
+            static_cast<unsigned>(work.phase));
+        for (std::uint32_t state = 0; state < calc.state_count(); ++state) {
+            const auto& abstract = calc.state(state);
+            const auto owner_rows = state < work.transition_cache->state_rows.size()
+                ? work.transition_cache->state_rows[state].count : 0;
+            std::printf("graph-only missing assembly state case=%u namespace=outer_calculator "
+                "state=%u rarity=%u prefixes=%u suffixes=%u goal_mask=%u goal=%u "
+                "retry=%u flags=%u expanded=%u owner_rows=%u working_value=%.17g\n",
+                scenario, state, static_cast<unsigned>(abstract.rarity),
+                static_cast<unsigned>(abstract.prefix_count),
+                static_cast<unsigned>(abstract.suffix_count),
+                work.satisfied_goal_mask_for_state(state),
+                calc.is_goal_state(abstract) ? 1u : 0u,
+                static_cast<unsigned>(abstract.goal_progress_retry_basin), abstract.flags,
+                state < work.expanded.size() && work.expanded[state] ? 1u : 0u,
+                owner_rows, state < work.result.values.size()
+                    ? work.result.values[state] : solve_detail::kInfinity);
+            if (state >= work.transition_cache->state_rows.size()) continue;
+            for (const auto row_id : poecraft::solver::state_row_indices(*work.transition_cache, state)) {
+                const auto& row = work.transition_cache->rows[row_id];
+                const auto& price = work.priced_rows[row_id];
+                std::printf("graph-only missing assembly row case=%u state=%u row=%llu "
+                    "operator=%u admitted=%u cost=%.17g transitions=%u choices=%u\n",
+                    scenario, state, static_cast<unsigned long long>(row_id),
+                    price.operator_index, row.admitted ? 1u : 0u, price.cost,
+                    row.transition_count, row.choice_count);
+                for (std::uint32_t exit = 0; exit < row.transition_count; ++exit) {
+                    const auto offset = row.transition_offset + exit;
+                    std::printf("graph-only missing assembly exit case=%u row=%llu "
+                        "successor=%u probability=%.17g\n", scenario,
+                        static_cast<unsigned long long>(row_id),
+                        work.transition_cache->successors[offset],
+                        work.transition_cache->probabilities[offset]);
+                }
+            }
+        }
+        std::fflush(stdout);
+        const bool assembled = work.try_install_reachable_incumbent(false);
+        std::printf("graph-only missing assembly outcome case=%u assembled=%u "
+            "missing=%llu cap=%u checker_queued=%u failure=%s\n", scenario,
+            assembled ? 1u : 0u,
+            static_cast<unsigned long long>(work.incremental_anytime_missing_frontier_states.size()),
+            work.result.diagnostics.resource_cap_hit ? 1u : 0u,
+            work.publication_pipeline.initial_candidate_task.has_value() ? 1u : 0u,
+            work.incremental_anytime_policy_last_failure.c_str());
+        for (const auto state : work.incremental_anytime_missing_frontier_states)
+            std::printf("graph-only missing assembly remaining case=%u namespace=outer_calculator state=%u\n",
+                scenario, state);
+        std::fflush(stdout);
+        require(assembled &&
             !work.output_incumbent->independently_evaluated && root_retained(),
             "existing complete native assembly consumes completed entry evidence");
         work.focus_optimizing = false; work.focused_lower_mode = false;
