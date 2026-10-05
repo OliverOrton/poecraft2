@@ -17029,6 +17029,81 @@ void run_solver_root_only_joint_service_tests() {
         options.max_solver_owned_bytes = 512ull * 1024 * 1024;
         Impl work(calc, item,
             {{"annul", 1}, {"exalt", 1}, {"scour", 10}, {"alchemy", 1}}, options);
+        const auto guard_snapshot = [&](const char* stage) {
+            const bool has_incumbent = work.output_incumbent.has_value();
+            const bool statewise = has_incumbent &&
+                work.output_incumbent->has_statewise_upper_values();
+            const bool from_incumbent = work.incremental_upper_policy_pass && statewise;
+            const double fallback_frontier = work.focused_fallback_policy
+                ? work.restart_cost + work.focused_fallback_policy->anchor_state_value
+                : solve_detail::kInfinity;
+            std::printf("root-only outer guards case=%u stage=%s consumed=%u finalized=%u "
+                "high_impact=%u generation=%u closed=%u dirty=%u pass_active=%u incumbent=%u "
+                "delayed=%llu requested=%llu started=%llu rejected=%llu reason=%s\n",
+                scenario, stage, work.consumed ? 1u : 0u, work.finalized_result ? 1u : 0u,
+                work.options.high_impact_executable_uppers ? 1u : 0u,
+                work.incremental_action_generation ? 1u : 0u,
+                work.incremental_envelope_closed ? 1u : 0u,
+                work.incremental_upper_policy_dirty ? 1u : 0u,
+                work.incremental_upper_policy_pass ? 1u : 0u, has_incumbent ? 1u : 0u,
+                static_cast<unsigned long long>(work.delayed_operator_indices.size()),
+                static_cast<unsigned long long>(work.incremental_upper_policy_passes_requested),
+                static_cast<unsigned long long>(work.incremental_upper_policy_passes_started),
+                static_cast<unsigned long long>(work.incremental_upper_policy_passes_rejected),
+                work.incremental_upper_policy_last_failure.c_str());
+            std::printf("root-only inner inputs case=%u stage=%s statewise=%u root_only=%u "
+                "from_incremental_incumbent=%u fallback=%u strict_cache=%u restart_allowed=%u "
+                "restart_cost=%.17g reject_missing_seed=%u reject_strict_cache=%u "
+                "reject_restart_disabled=%u reject_restart_cost=%u fallback_frontier=%.17g "
+                "fallback_frontier_valid=%u\n",
+                scenario, stage, statewise ? 1u : 0u,
+                has_incumbent && work.output_incumbent->compiled_root_entry_only ? 1u : 0u,
+                from_incumbent ? 1u : 0u, work.focused_fallback_policy ? 1u : 0u,
+                work.focused_strict_transition_cache ? 1u : 0u,
+                work.options.allow_economic_restart ? 1u : 0u, work.restart_cost,
+                !work.focused_fallback_policy && !from_incumbent ? 1u : 0u,
+                work.focused_strict_transition_cache ? 1u : 0u,
+                !from_incumbent && !work.options.allow_economic_restart ? 1u : 0u,
+                !from_incumbent && (!std::isfinite(work.restart_cost) || work.restart_cost < 0)
+                    ? 1u : 0u, fallback_frontier,
+                std::isfinite(fallback_frontier) && fallback_frontier < solve_detail::kValueCeiling
+                    ? 1u : 0u);
+            for (const auto index : work.static_operator_indices)
+                std::printf("root-only constructor anchor=%s delayed_family=%u\n",
+                    calc.operators().at(index).id.c_str(),
+                    work.incremental_alternative_type(index) ? 1u : 0u);
+            for (const auto index : work.delayed_operator_indices)
+                std::printf("root-only constructor delayed=%s\n",
+                    calc.operators().at(index).id.c_str());
+            std::printf("root-only checkpoint inputs case=%u stage=%s finish=%u resource_cap=%u "
+                "expanding=%u refining=%u checking=%u finalizing=%u cache=%u slot=%llu "
+                "completed=%llu next_checkpoint=%llu bound=%.17g evaluated=%.17g checked=%u "
+                "candidate_reason=%s cap=%llu owned=%llu\n",
+                scenario, stage, work.requested_bounded_finish ? 1u : 0u,
+                work.result.diagnostics.resource_cap_hit ? 1u : 0u,
+                work.expansion_active ? 1u : 0u, work.incremental_refinement_active ? 1u : 0u,
+                work.publication_pipeline.initial_candidate_task ? 1u : 0u,
+                work.finalization_task ? 1u : 0u, work.transition_cache ? 1u : 0u,
+                static_cast<unsigned long long>(work.publication_pipeline.complete_candidate_attempted_identity),
+                static_cast<unsigned long long>(work.incremental_alternative_rows.size()),
+                static_cast<unsigned long long>(work.incremental_anytime_next_row_checkpoint),
+                has_incumbent ? work.output_incumbent->certified_upper_bound : solve_detail::kInfinity,
+                has_incumbent ? work.output_incumbent->evaluated_policy_cost : solve_detail::kInfinity,
+                has_incumbent && work.output_incumbent->independently_evaluated ? 1u : 0u,
+                work.incremental_anytime_policy_last_failure.c_str(),
+                static_cast<unsigned long long>(work.options.max_solver_owned_bytes),
+                static_cast<unsigned long long>(work.fast_estimated_owned_bytes()));
+            std::printf("progress=%s\n", work.progress_trace_json(0).c_str());
+            std::fflush(stdout);
+        };
+        guard_snapshot("constructor");
+        require(work.delayed_operator_indices.empty() &&
+            !work.incremental_action_generation && work.incremental_envelope_closed &&
+            !work.begin_incremental_upper_policy_pass() &&
+            work.incremental_upper_policy_passes_requested == 0 &&
+            work.incremental_upper_policy_passes_started == 0 &&
+            work.incremental_upper_policy_passes_rejected == 0,
+            "normal four-action constructor cannot enter upper service");
         work.transition_cache = std::make_shared<SolveTransitionCache>();
         work.priced_rows.clear();
         const auto bounded = [&] {
@@ -17150,12 +17225,33 @@ void run_solver_root_only_joint_service_tests() {
             work.certified_incumbent_invalid_reason(*work.output_incumbent) == nullptr,
             "fixture independently checked root-only fallback");
         const auto baseline_cost = work.output_incumbent->evaluated_policy_cost;
+        std::printf("root-only independently checked baseline=%.17g\n", baseline_cost);
+        std::fflush(stdout);
         require(near(baseline_cost, 13, 1e-8), "native checked baseline cost prediction");
         const auto old_graph = work.output_incumbent->compiled_artifact.strategy_json;
         const auto old_identity = work.output_incumbent->portfolio_identity;
         const auto old_scope = work.action_vocabulary_identity();
         work.incremental_upper_policy_dirty = true;
-        require(!work.begin_incremental_upper_policy_pass() &&
+        guard_snapshot("normal_constructor_with_checked_baseline");
+        const bool normal_pass_started = work.begin_incremental_upper_policy_pass();
+        guard_snapshot("after_normal_outer_call");
+        require(!normal_pass_started && !work.incremental_action_generation &&
+            work.incremental_envelope_closed && work.delayed_operator_indices.empty() &&
+            work.incremental_upper_policy_passes_requested == 0 &&
+            work.incremental_upper_policy_passes_started == 0 &&
+            work.incremental_upper_policy_passes_rejected == 0 &&
+            work.incremental_upper_policy_last_failure.empty(),
+            "normal inactive envelope refuses before seed handling");
+        // Conditional internal service fixture: supply an active, open envelope
+        // for hand-built complete native rows. This is not constructor activation
+        // or evidence that normal product scheduling reaches this checkpoint.
+        work.incremental_action_generation = true;
+        work.incremental_envelope_closed = false;
+        std::printf("root-only conditional internal service case=%u; normal activation unproved\n", scenario);
+        guard_snapshot("before_outer_seed_call");
+        const bool seed_pass_started = work.begin_incremental_upper_policy_pass();
+        guard_snapshot("after_outer_seed_call");
+        require(!seed_pass_started &&
             work.incremental_upper_policy_last_failure ==
                 "seed_root_only_incumbent_without_focused_fallback",
             "focused root-only seed still refuses");
@@ -17165,6 +17261,10 @@ void run_solver_root_only_joint_service_tests() {
             "focused seed census unchanged");
         require(work.publication_pipeline.complete_candidate_attempted_identity == 0,
             "joint checker slot remains unused");
+        require(work.best_current_certified_fallback() &&
+            work.best_current_certified_fallback()->portfolio_identity == old_identity &&
+            work.best_current_certified_fallback()->compiled_artifact.strategy_json == old_graph,
+            "baseline checker already owns matching retained root artifact");
         std::uint64_t alternative = root_row;
         if (scenario != 1) {
             alternative = append(loss, exalt, 1);
@@ -17184,9 +17284,31 @@ void run_solver_root_only_joint_service_tests() {
         work.incremental_alternative_rows.push_back(completed);
         // Arrange an already-due checkpoint without changing its production profile.
         work.incremental_anytime_next_row_checkpoint = 1;
+        guard_snapshot("conditional_checkpoint_ready");
+        require(work.options.high_impact_executable_uppers && work.incremental_action_generation &&
+            !work.incremental_envelope_closed && !work.incremental_upper_policy_pass &&
+            !work.consumed && !work.finalized_result && !work.finalization_task &&
+            !work.requested_bounded_finish && !work.result.diagnostics.resource_cap_hit &&
+            !work.expansion_active && !work.incremental_refinement_active &&
+            !work.focused_strict_transition_cache && work.transition_cache &&
+            !work.publication_pipeline.initial_candidate_task &&
+            !work.publication_pipeline.paid_reset_pending_operator &&
+            work.publication_pipeline.complete_candidate_attempted_identity == 0 &&
+            work.phase == SolvePhase::Expanding &&
+            work.incremental_alternative_rows.size() >= work.incremental_anytime_next_row_checkpoint &&
+            alternative < work.priced_rows.size() && alternative < work.transition_cache->rows.size() &&
+            work.transition_cache->rows[alternative].owner_state == completed.state &&
+            work.priced_rows[alternative].operator_index == completed.operator_index &&
+            work.output_incumbent->compiled_root_entry_only &&
+            !work.output_incumbent->has_statewise_upper_values() &&
+            work.certified_incumbent_invalid_reason(*work.output_incumbent) == nullptr &&
+            work.action_vocabulary_identity() == old_scope &&
+            !work.options.allow_economic_restart && work.certified_global_lower_bound() == 0,
+            "conditional checkpoint satisfies existing scheduling-owner prerequisites");
         if (scenario == 2) work.options.max_solver_owned_bytes = work.fast_estimated_owned_bytes() + 1;
         const auto cap = work.options.max_solver_owned_bytes;
         const bool queued = work.continue_initial_candidate();
+        guard_snapshot("after_conditional_joint_service");
         require(work.options.max_solver_owned_bytes == cap &&
             work.action_vocabulary_identity() == old_scope &&
             work.options.goal_proof_profile == GoalProofProfile::TargetNeutralZero &&
@@ -17202,6 +17324,14 @@ void run_solver_root_only_joint_service_tests() {
                 work.best_current_certified_fallback()->compiled_artifact.strategy_json == old_graph,
                 "old checked graph retained before candidate checking");
             check_queued();
+            guard_snapshot("after_conditional_candidate_check");
+            std::printf("root-only conditional treatment case=%u baseline=%.17g evaluated=%.17g "
+                "checked=%u certificate_reason=%s\n", scenario, baseline_cost,
+                work.output_incumbent->evaluated_policy_cost,
+                work.output_incumbent->independently_evaluated ? 1u : 0u,
+                work.certified_incumbent_invalid_reason(*work.output_incumbent)
+                    ? work.certified_incumbent_invalid_reason(*work.output_incumbent) : "valid");
+            std::fflush(stdout);
             require(work.output_incumbent->independently_evaluated &&
                 work.certified_incumbent_invalid_reason(*work.output_incumbent) == nullptr &&
                 near(work.output_incumbent->evaluated_policy_cost, 3, 1e-8),
