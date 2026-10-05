@@ -73,6 +73,20 @@ artifact; historical product branches remain unproved. LOCAL releases at
 complementary tail before any economic treatment. See the programme's latest
 finite receipt; do not repeat the root or activate a private grammar.
 
+Parent next selects narrow root-only joint checkpoint/queue service at frozen
+native source 073bb92a22981dc75d2328b899aef4fcb08dbe64 (engine tree edade696d).
+The existing focused seed refusal remains; prior checked fallback, original
+shared cap and one complete-candidate slot are preserved. The three-case finite
+selector is source-only: predicted native toy cost 13-to-3 is unvalidated.
+The one granted direct-Ninja -j1 build cancels at the 15-second no-compiler
+startup guard in VerifyGlobs, wall 15.465 s. No compiler/linker or native run;
+old Tests bytes remain. LOCAL releases at 17:21:30 UTC, empty census. Parent
+acknowledges release and transfers all further builds to the CI owner. Keep
+native source frozen; after CI's verified binary and a parent LOCAL grant,
+solver owns only the bounded selector. The living programme's exact CI handoff
+contains wrapper argv, process-local environment override and pinned adapter.
+No source expansion, new root, activation, merge or deployment is authorized.
+
 Published research checkpoints, both absent from main:
 
 - [Solver `040993ec`: Pro handoff](https://github.com/OliverOrton/poecraft2/blob/040993ec9bb8109cc1970df91c8bc9ec7ef97744/docs/active/2026-10-04-sol61-armour-recovery/PRO-HANDOFF.md)

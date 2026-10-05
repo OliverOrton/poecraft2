@@ -937,6 +937,28 @@ Sharing a required-field preparation step under the separate
 [dependency contract](representations.md#strict-preparation-sharing) does not
 transfer any selected action, value or executable upper between bindings.
 
+<a id="root-only-joint-service-prediction"></a>
+### Root-only fallback beside a proposed complete native joint policy
+
+A checked original-root controller supplies a feasible fallback at that root.
+It supplies no value for another parent state. A separate joint policy may
+nevertheless be constructed from complete native rows on every selected
+positive successor, then independently checked as a complete controller while
+the old graph remains owned under the same cap. Missing support or refused
+ownership cannot be filled by assigning the old root cost to the missing port.
+
+For the prepared two-modifier test, predicted native Annul success mass is
+one half. If its loss pays Scour 10 and Alchemy 1 to return to the start, then
+V = 1 + (11 + V)/2 gives V = 13. If a complete native Exalt cost 1 instead
+returns that loss to the start, V = 1 + (1 + V)/2 gives V = 3. This algebra
+is conditional on the native support and properness assertions. The source
+fixture at 073bb92a is unbuilt and unrun after a startup-guard cancellation;
+neither cost is a measured native result. The existing focused seed refusal
+is retained and the old P0 word/Current-tail economic negative is unchanged.
+The [selected source and receipt](../../active/2026-10-04-sol61-armour-recovery/README.md#selected-root-only-joint-service-source-prepared-build-canceled)
+own subsequent build and finite validation status. No matched Current root,
+product coarse-domain authority or release saving follows from this toy.
+
 <a id="cost-only-entry-service"></a>
 ### A cost-only proposal at an actual verified entry
 

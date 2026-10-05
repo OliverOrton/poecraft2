@@ -1,0 +1,5 @@
+ninja explain: output C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/build/engine/CMakeFiles/VerifyGlobs.cmake_force of phony edge with no inputs doesn't exist
+ninja explain: C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/build/engine/CMakeFiles/VerifyGlobs.cmake_force is dirty
+ninja explain: C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/build/engine/CMakeFiles/cmake.verify_globs is dirty
+ninja: Entering directory `C:\Users\Oliver\Documents\Codex\2026-10-04\task-3\poecraft2-solver-causal\build\engine'
+[0/2] "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -P C:\Users\Oliver\Documents\Codex\2026-10-04\task-3\poecraft2-solver-causal\build\engine\CMakeFiles\VerifyGlobs.cmake

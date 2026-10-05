@@ -396,3 +396,43 @@ unexpected descendant or cleanup error; the elevated compiler/native census
 is empty in the [survivor check](checks/finite-continuation-certified-20261005/survivor-check.json).
 Original-root allowance remains 1/2 spent. No further heavy execution is granted
 by this completed finite check.
+
+### Selected root-only joint service: source prepared, build canceled
+
+Parent selects the narrow existing-owner treatment at source
+073bb92a22981dc75d2328b899aef4fcb08dbe64, engine tree
+edade696d33378970b93dfb364e0f6ec50e77437. An eligible geometric joint checkpoint
+may capture complete native rows beside a compatible independently checked
+root-only controller. The prior graph is retained under the existing shared
+cap before capture; the existing one-shot complete-candidate slot owns the
+cooperative independent check. The focused statewise-seed refusal is unchanged.
+No scalar is broadcast to other states, no allowance resets, and no action or
+strategy grammar is widened. This source remains frozen for the CI build owner.
+
+The prepared selector --solver-root-only-joint-service-only contains three
+bounded native cases: complete support, a missing positive continuation, and
+candidate ownership refusal under the shared cap. The two-modifier native
+fixture predicts baseline Annul/Scour/Alchemy cost 13 and joint Annul/Exalt
+cost 3. Those numbers are predictions only; none of the three cases has run.
+Its already-due checkpoint setup does not alter the production cadence.
+
+The one granted direct-Ninja -j1 build, process-only CCACHE_DISABLE=1 and
+unchanged f532376a owner, reaches VerifyGlobs.cmake but no observed compiler
+or linker. The 15-second startup guard cancels it; wall time is 15.465 s,
+exit 1, clean owned-job drain, no survivor/descendant/cleanup error. This is
+a build orchestration negative, not a native service refusal or economics.
+The old Tests binary remains SHA-256
+848f94ab1f5c943e47d1f46aaad916eed8bfced50c71c0f378c71b287e3735d5.
+No source/object/link/selector provenance qualifies the new treatment.
+
+LOCAL releases at 17:21:30 UTC with an empty elevated census. The parent
+acknowledges release and transfers subsequent builds to CI; this solver owner
+holds further build attempts and will run only the bounded selector after CI
+supplies verified binary provenance and parent LOCAL. The
+[build receipt](checks/root-only-joint-service-20261005/build-receipt.json),
+[survivor check](checks/root-only-joint-service-20261005/survivor-check.json) and
+[exact CI handoff](checks/root-only-joint-service-20261005/ci-handoff.json)
+preserve the full source, invocation, adapter and consumer identities. Only
+the process-local cache override was recorded at launch; any inherited
+environment comparison is explicitly a later observation. Build cause is
+unproved. Slot 2 remains unused, with no new root, activation or release claim.

@@ -1,0 +1,16 @@
+{
+  "source_commit": "073bb92a22981dc75d2328b899aef4fcb08dbe64",
+  "engine_tree": "edade696d33378970b93dfb364e0f6ec50e77437",
+  "source_prepared": true,
+  "built": false,
+  "tested": false,
+  "activated": false,
+  "economics_measured": false,
+  "build_wall_ms": 15465.137100080028,
+  "build_stopped_before_compiler_or_linker": true,
+  "native_runs": 0,
+  "local_released": true,
+  "release_utc": "2026-10-05T17:21:30.4813286Z",
+  "ci_handoff_sha256": "eac041660535765e592740b8e3b655844cd6935c4b01523f9117ef1477f93b5c",
+  "source_expansion_authorized": false
+}

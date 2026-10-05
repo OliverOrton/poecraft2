@@ -1,0 +1,962 @@
+{
+  "source_head": "073bb92a22981dc75d2328b899aef4fcb08dbe64",
+  "engine_tree": "edade696d33378970b93dfb364e0f6ec50e77437",
+  "sources_before": {
+    "engine/CMakeLists.txt": {
+      "sha256": "6e7e3ec5f80a7dbe4bdccd853ad7ef9261ad0bb3bdf7c2b5d0708151948adb96",
+      "bytes": 16617,
+      "mtime_ns": 1791170558026647500
+    },
+    "engine/CMakePresets.json": {
+      "sha256": "9020316cd14f0d1dd194f67ec62b20f58f4f892459afc9cd395f7114e8eeaac3",
+      "bytes": 1252,
+      "mtime_ns": 1791170558027646500
+    },
+    "engine/benchmarks/solver_benchmark.cpp": {
+      "sha256": "40e7edb9852a14427ff00a0ae9eca8ad970d9c12dbd963ff21f939275e1d2e73",
+      "bytes": 374490,
+      "mtime_ns": 1791173255213541300
+    },
+    "engine/benchmarks/solver_executable_fragment.cpp": {
+      "sha256": "94ea19ff24489022531ec6c930dff6c63abd2c02a51cff5e106f1d186d7a218c",
+      "bytes": 83707,
+      "mtime_ns": 1791170558029650500
+    },
+    "engine/benchmarks/solver_executable_fragment.hpp": {
+      "sha256": "1a77eb9f4d413e537fa92f5c22a00f4984a8f3a9715310e55bb02d95689dd9cb",
+      "bytes": 16837,
+      "mtime_ns": 1791170558031660400
+    },
+    "engine/benchmarks/solver_executable_fragment_engine.cpp": {
+      "sha256": "9f0b09ebda0fe8560278f3a4d9b664124cd00150daeae68505fcb44f595786c7",
+      "bytes": 34571,
+      "mtime_ns": 1791170558031660400
+    },
+    "engine/benchmarks/solver_executable_fragment_engine.hpp": {
+      "sha256": "835b61245e1c5efc1bba024adacaa08a517ab6855edbcdf44c5b2b0c52bd0f8b",
+      "bytes": 3821,
+      "mtime_ns": 1791170558032650000
+    },
+    "engine/benchmarks/solver_quotient_lower_probe.cpp": {
+      "sha256": "584100478a64a14c01452b5f4390c3b5872dda615fd48a7e7bd7c6d4fac7c5cc",
+      "bytes": 76536,
+      "mtime_ns": 1791170558032650000
+    },
+    "engine/include/poecraft/api.h": {
+      "sha256": "35af933a544f8f763a722c21a8d5b01c5700baa2519993b78d2b98aa7957157b",
+      "bytes": 5308,
+      "mtime_ns": 1791170558035651200
+    },
+    "engine/include/poecraft/bestiary.h": {
+      "sha256": "ed6332fb26df1a4eecd31baada3a2defb1c4185f4a12d3a42024aec303b1a7d0",
+      "bytes": 5699,
+      "mtime_ns": 1791170558035651200
+    },
+    "engine/include/poecraft/bitset.h": {
+      "sha256": "dd552973dfe02ccca7070b00c5f60f36f94c70593cfdbf21f9822bf000606d17",
+      "bytes": 2806,
+      "mtime_ns": 1791170558035651200
+    },
+    "engine/include/poecraft/hinekora.h": {
+      "sha256": "74eca3a79115382459f1e59e2fbaa0918e431a84600ff4d7c678a5eb681c21d3",
+      "bytes": 5952,
+      "mtime_ns": 1791170558036668300
+    },
+    "engine/include/poecraft/item_state.h": {
+      "sha256": "7675a08da36ad1752394d93cf218e14ae89a594f1a4383e977c429494f671483",
+      "bytes": 5115,
+      "mtime_ns": 1791170558036668300
+    },
+    "engine/include/poecraft/multi_item.h": {
+      "sha256": "bcecc03763469788e3122a0c3fc4bad87bbf87484b57aa7a06ecffa7de0a5c09",
+      "bytes": 1610,
+      "mtime_ns": 1791170558037667300
+    },
+    "engine/include/poecraft/recombination.h": {
+      "sha256": "2e8c92e031c8ba5fa7a7b3abca805cae6eefb6b048fe8ad744ae0c2725213306",
+      "bytes": 4737,
+      "mtime_ns": 1791170558037667300
+    },
+    "engine/include/poecraft/recombination_solver.h": {
+      "sha256": "75641b53fd0487e654742108047d87f318c070f13131417fb8e55911f5fc936c",
+      "bytes": 4353,
+      "mtime_ns": 1791170558038666800
+    },
+    "engine/include/poecraft/result.h": {
+      "sha256": "592cba908d47fc359403bde5d5e184c4b500b99be379037557b1f409bf6a2f0e",
+      "bytes": 621,
+      "mtime_ns": 1791170558038666800
+    },
+    "engine/include/poecraft/rng.h": {
+      "sha256": "cb3a79cbfb6aa83da09fb27c585baa01bd599fe930b522daa40b4aa8f9d5f0f9",
+      "bytes": 861,
+      "mtime_ns": 1791170558039667600
+    },
+    "engine/include/poecraft/session.h": {
+      "sha256": "99bf99f94df60f32e90ab89592924331d2d87e0d348abc0bfa82ad7d54333f98",
+      "bytes": 20676,
+      "mtime_ns": 1791170558039667600
+    },
+    "engine/include/poecraft/simulator.h": {
+      "sha256": "741851118d9245279caac8404796efeb41475f454eff15ba86dd72f0e6656822",
+      "bytes": 9578,
+      "mtime_ns": 1791170558040667800
+    },
+    "engine/include/poecraft/solver.h": {
+      "sha256": "aa77b3ef76c36fb7ff378532208a11fcd18569a5fe1699f91de3f9248f34f3d4",
+      "bytes": 35872,
+      "mtime_ns": 1791170558040667800
+    },
+    "engine/src/actions_basic.cpp": {
+      "sha256": "779b4b76976c10b8045498bfa0c5211ebd59cf4e42dd20d99fed853eb20b3ea0",
+      "bytes": 94855,
+      "mtime_ns": 1791170558042668000
+    },
+    "engine/src/actions_bestiary.cpp": {
+      "sha256": "93ff95fe7560233baafc6e930d95382cce7234ec8b8921d17fa122a80f5755f3",
+      "bytes": 3739,
+      "mtime_ns": 1791170558042668000
+    },
+    "engine/src/api.cpp": {
+      "sha256": "345d4d4950a194b71f6c0ce0fa63bd7101fbca07581b60ee015fcdb3fa7ff4c9",
+      "bytes": 96478,
+      "mtime_ns": 1791170558043669000
+    },
+    "engine/src/bestiary_api.cpp": {
+      "sha256": "72bed577953347a1c452d0e51b0675ca30a1e4b8a0a4e61bd6369f569194448e",
+      "bytes": 16590,
+      "mtime_ns": 1791170558043669000
+    },
+    "engine/src/bitset.cpp": {
+      "sha256": "173b5b86e6ec23cdbd3e6d08db21b071247042334cbca21d3a9db9307d61e425",
+      "bytes": 1416,
+      "mtime_ns": 1791170558044667800
+    },
+    "engine/src/calculator_currency.cpp": {
+      "sha256": "69c31691f392ee8d519adc02714eafcb25f88355aec21ae9e9bc035877c765b0",
+      "bytes": 33883,
+      "mtime_ns": 1791170558044667800
+    },
+    "engine/src/calculator_currency.hpp": {
+      "sha256": "a6c7e0e95c378bb98ca006b5c4cc11060e5ef94ff9906a9be3c904bdb278fd01",
+      "bytes": 2036,
+      "mtime_ns": 1791170558045667500
+    },
+    "engine/src/currency_outcomes.hpp": {
+      "sha256": "94a786703f2781a67e39d34b4d9a585a54f78ee9f9b1bff633d9645af4186145",
+      "bytes": 3180,
+      "mtime_ns": 1791170558045667500
+    },
+    "engine/src/data_loader.cpp": {
+      "sha256": "208b72c990d69ddaeab99aad2c95018c17478163d0c86a167fb17386d9d7d672",
+      "bytes": 38326,
+      "mtime_ns": 1791170558046717200
+    },
+    "engine/src/engine_internal.hpp": {
+      "sha256": "54473b8e37c206cee7853c796a34af32955efda50f90f07ffed2ebf4cad34c54",
+      "bytes": 47644,
+      "mtime_ns": 1791170558046717200
+    },
+    "engine/src/handles_internal.hpp": {
+      "sha256": "1bb80e43746f2d7a61a53c089179be67d9669163bd0c68b8cb22bd4c79b5dc04",
+      "bytes": 783,
+      "mtime_ns": 1791170558047717900
+    },
+    "engine/src/harvest_crafts.generated.hpp.in": {
+      "sha256": "9ed432e2ce83e79b77a249c5545556a0638ca775cca466168b9630bfb33585c7",
+      "bytes": 1003,
+      "mtime_ns": 1791170558047717900
+    },
+    "engine/src/hinekora.cpp": {
+      "sha256": "1652ad924835c71c093315c1ed46e7f2dcfb5f277758d26007d2b2057f826b01",
+      "bytes": 36655,
+      "mtime_ns": 1791170558048717100
+    },
+    "engine/src/hinekora_internal.hpp": {
+      "sha256": "777ff7a6beb364ffe373641ef2b7284bb367fa07b22c778e700cd09010e48b30",
+      "bytes": 1042,
+      "mtime_ns": 1791170558048717100
+    },
+    "engine/src/item_state.cpp": {
+      "sha256": "8ae696389cb863762237ad284c0248023d33f7386a618fcf8e34e1ecedba45ce",
+      "bytes": 6054,
+      "mtime_ns": 1791170558049717200
+    },
+    "engine/src/json.hpp": {
+      "sha256": "33713c356b1708d0ba5a9eff32f2812612e16b9d4c07e0f521f3f0ab6da868cd",
+      "bytes": 11091,
+      "mtime_ns": 1791170558049717200
+    },
+    "engine/src/memory_contract.cpp": {
+      "sha256": "3692141a8478d30f8ef008828a6642ecc42110f45b9be1a169d1d23d57e0778e",
+      "bytes": 2508,
+      "mtime_ns": 1791170558049717200
+    },
+    "engine/src/multi_item.cpp": {
+      "sha256": "0c54d284ed1810a427335ecf7016f53791b367fd2de06878160f0625b520f453",
+      "bytes": 11517,
+      "mtime_ns": 1791170558050717600
+    },
+    "engine/src/multi_item.hpp": {
+      "sha256": "1619bf5398a53d6571fc9e7ac0b3d1d10125a5f8e8421816fea4390df9404fe3",
+      "bytes": 1598,
+      "mtime_ns": 1791170558050717600
+    },
+    "engine/src/recombination.cpp": {
+      "sha256": "7b41919764ab75172e1adbe15e743b4cb53b759b0acc5069bbd946abd2e70381",
+      "bytes": 24706,
+      "mtime_ns": 1791170558051717900
+    },
+    "engine/src/recombination.hpp": {
+      "sha256": "57b58491a1ed5d179fa23e0d4113a4f6b1467ecdfb79dd5573cf440b2e109c39",
+      "bytes": 4571,
+      "mtime_ns": 1791170558052717200
+    },
+    "engine/src/recombination_api.cpp": {
+      "sha256": "c2a529937080e8adbe59d0e1bdf9caab949c63af63d6bb6157bf97cab84269c3",
+      "bytes": 17736,
+      "mtime_ns": 1791170558052717200
+    },
+    "engine/src/recombination_calculator.cpp": {
+      "sha256": "d610234e99353331486ddbc1965b57b7b8d946488cf2659bc06bfeeb08b91dbc",
+      "bytes": 15309,
+      "mtime_ns": 1791170558053717000
+    },
+    "engine/src/recombination_calculator.hpp": {
+      "sha256": "f5ba88b5ef3b55291a5a4503c049e961bee67a68014d83f2e37e024e40f68415",
+      "bytes": 235,
+      "mtime_ns": 1791170558053717000
+    },
+    "engine/src/recombination_constraints.cpp": {
+      "sha256": "46c59c322b51c5d1f7a15c2cbab484730398ab80794223ce798821e72117a236",
+      "bytes": 15363,
+      "mtime_ns": 1791170558054716900
+    },
+    "engine/src/recombination_constraints.hpp": {
+      "sha256": "fef1251c095f6bcd9212852f7c35dcbd41aac3178d2efdd763e5a313e34dbbae",
+      "bytes": 1598,
+      "mtime_ns": 1791170558054716900
+    },
+    "engine/src/recombination_solver.cpp": {
+      "sha256": "b94f1a0c8dc15792fb5b0f2967518edb43bd8209e8d8303039da51c96164446f",
+      "bytes": 54540,
+      "mtime_ns": 1791170558055717000
+    },
+    "engine/src/recombination_solver.hpp": {
+      "sha256": "98037dc4fe7828e4e59dddbe381cd435c2f8dff73c44ba26bfa0c76138235ecc",
+      "bytes": 5094,
+      "mtime_ns": 1791170558056748100
+    },
+    "engine/src/recombination_solver_api.cpp": {
+      "sha256": "c322c7bb3bf694120289104ed7e11bee3e234967200c9f16718526f5eaf29d11",
+      "bytes": 18947,
+      "mtime_ns": 1791170558057747600
+    },
+    "engine/src/reforge_count_law.hpp": {
+      "sha256": "26c83ffec92fb15215b040ad2b487ad4bc7bdc77f45cc82fd2c9a68253292f62",
+      "bytes": 2089,
+      "mtime_ns": 1791170558057747600
+    },
+    "engine/src/rng.cpp": {
+      "sha256": "00f82776a0b6c8d92dd30106c5e293c238d673d7af1c65ebb8a7bbac26c351cd",
+      "bytes": 2913,
+      "mtime_ns": 1791170558057747600
+    },
+    "engine/src/session_builder.cpp": {
+      "sha256": "d2ef35ff296eafc1b439f72026dff068ae0d21d0fad6dcd7dd5ddfe1e726e2ce",
+      "bytes": 77400,
+      "mtime_ns": 1791170558058747500
+    },
+    "engine/src/simulator.cpp": {
+      "sha256": "1ce2190af529b5be46df749eeee52f669d91066a3c5301870cd0f50314b64f46",
+      "bytes": 170801,
+      "mtime_ns": 1791170558059747400
+    },
+    "engine/src/solver_abstract.cpp": {
+      "sha256": "6a8cb708a44fd684c59a3b2f5df602eb22f6587b14b370ce39534be962a9c2fd",
+      "bytes": 52624,
+      "mtime_ns": 1791170558060747500
+    },
+    "engine/src/solver_action_coverage.hpp": {
+      "sha256": "18a97587e9a0e53b2a499df0d7f3a5faf6a23237e753c22b399f653d8f9349a6",
+      "bytes": 4695,
+      "mtime_ns": 1791170558060747500
+    },
+    "engine/src/solver_action_envelope_ledger.hpp": {
+      "sha256": "42ad32e9c163dce2a56044449dd6548998ab0f552e20087f2985cfcddf77ccb3",
+      "bytes": 13549,
+      "mtime_ns": 1791170558061746500
+    },
+    "engine/src/solver_action_family_contract.hpp": {
+      "sha256": "0b790ca848e52439eece5ea6de6149f046333f57539a3838a0b1f9f82df28f57",
+      "bytes": 50030,
+      "mtime_ns": 1791170558061746500
+    },
+    "engine/src/solver_anytime_scheduler.hpp": {
+      "sha256": "d32439cc72f132494cbdeba2fab112746c12e43db21aab14d41a74c87d11b9ec",
+      "bytes": 8327,
+      "mtime_ns": 1791170558062746700
+    },
+    "engine/src/solver_api.cpp": {
+      "sha256": "2e8b4a5d5ea7676eaf55f17455d1e1e9b5c863146360493f862c50648d415fc5",
+      "bytes": 149399,
+      "mtime_ns": 1791170558063746600
+    },
+    "engine/src/solver_calc.cpp": {
+      "sha256": "b2db77825881f9c685a613a306eb301e71874f98e3e0b14747e7dafbdf8b2a05",
+      "bytes": 159460,
+      "mtime_ns": 1791170558064746600
+    },
+    "engine/src/solver_calc_types.hpp": {
+      "sha256": "117d405395288397b57016b5c08e9faf116fcee66cbb1aa58024260336c8171b",
+      "bytes": 62479,
+      "mtime_ns": 1791170558064746600
+    },
+    "engine/src/solver_clusters.hpp": {
+      "sha256": "0247c5e70968c8979211d5d3c09644de99e7cd67406d66fd006a377f5c54b0ff",
+      "bytes": 4438,
+      "mtime_ns": 1791170558065746600
+    },
+    "engine/src/solver_compile.cpp": {
+      "sha256": "71f06a6386d3e358eb5f71736acec7d87158a902e69a6222e938cbf8eb35a3f5",
+      "bytes": 239327,
+      "mtime_ns": 1791170558066881400
+    },
+    "engine/src/solver_compile_conditions.hpp": {
+      "sha256": "280f10a5401c77b106b1f3acab6f3b831c9103aca2794ac944ff37926ed79dde",
+      "bytes": 40674,
+      "mtime_ns": 1791170558066881400
+    },
+    "engine/src/solver_compile_contracts.hpp": {
+      "sha256": "79475c264abdb96730cfa19cefbb1e491819e6457b03b98b4a84f073ebd879cc",
+      "bytes": 7837,
+      "mtime_ns": 1791170558067881500
+    },
+    "engine/src/solver_compile_serialization.hpp": {
+      "sha256": "8f454be0505fb57b5f410eb285b6fba132e04bfcb00620bb16e7b6070d8b2712",
+      "bytes": 14767,
+      "mtime_ns": 1791170558067881500
+    },
+    "engine/src/solver_condition_expr.hpp": {
+      "sha256": "f82edb081eb01598a878bc2ead1a03fe8c1335dd7ff0c7d1928c202e85871569",
+      "bytes": 8037,
+      "mtime_ns": 1791170558068881300
+    },
+    "engine/src/solver_cooperative_task.hpp": {
+      "sha256": "954212f3f97e79c2e39852f563b1f67e01bf92caf65caccc0a309fb640ae0995",
+      "bytes": 6663,
+      "mtime_ns": 1791170558068881300
+    },
+    "engine/src/solver_development_checkpoint.cpp": {
+      "sha256": "5bff9251fa17d2641b9bac7c87c2484373bdda435d4b46b45c0f0c3fce82f0c4",
+      "bytes": 45406,
+      "mtime_ns": 1791170558069881600
+    },
+    "engine/src/solver_diagnostic_options.hpp": {
+      "sha256": "24dfc81c8f6923e627676a7b4ee3745362f6fe2fe3599f2f7a58bb970cb45826",
+      "bytes": 6600,
+      "mtime_ns": 1791170558069881600
+    },
+    "engine/src/solver_dirty_guidance.hpp": {
+      "sha256": "b8c0104309b152aeafde2d9e356f7d8a9f699ad1c504fcf3e7882c72c347d34e",
+      "bytes": 2914,
+      "mtime_ns": 1791170558070881800
+    },
+    "engine/src/solver_dominance.hpp": {
+      "sha256": "c6769706a524977b61344708af36864a1c84f3ebd63bf5c1a327405f4c67962d",
+      "bytes": 4461,
+      "mtime_ns": 1791170558070881800
+    },
+    "engine/src/solver_eval.cpp": {
+      "sha256": "feb270f3c60a2544cdb317793e043a2515f19a9e6a5f95faf0333c1a12582559",
+      "bytes": 463969,
+      "mtime_ns": 1791170558073881300
+    },
+    "engine/src/solver_eval_helpers.hpp": {
+      "sha256": "57650bbbb51d8225c43d36afd5e729a01fae29d70d62ac3a60008c23be7de536",
+      "bytes": 83169,
+      "mtime_ns": 1791170558074881700
+    },
+    "engine/src/solver_eval_report.cpp": {
+      "sha256": "78c0529af9bb7d2b44bf3809e69dc642eb2e019d88e002904baa88bd8138b38e",
+      "bytes": 33097,
+      "mtime_ns": 1791170558074881700
+    },
+    "engine/src/solver_eval_resolve.cpp": {
+      "sha256": "cdc6b2831f9b70fee7852f4b36d7219bb0a301fce0004eeb1e5a6c1478d87a01",
+      "bytes": 18655,
+      "mtime_ns": 1791170558074881700
+    },
+    "engine/src/solver_eval_types.hpp": {
+      "sha256": "c011a407fbd643f81d2bc492ca7d1be49e013f7abe213e3c989b17fb0916e80c",
+      "bytes": 34954,
+      "mtime_ns": 1791170558076385400
+    },
+    "engine/src/solver_finder.cpp": {
+      "sha256": "d3526665f3cccf6025e3c0fcec603ed423f1e85d4f8bb68b473bdce2cbf2824b",
+      "bytes": 77341,
+      "mtime_ns": 1791170558076385400
+    },
+    "engine/src/solver_finder.hpp": {
+      "sha256": "b0a880ecefbaf7cfc328b9c7c66029d9406a3c3cdc8f51760751f92a5e5349cc",
+      "bytes": 8943,
+      "mtime_ns": 1791170558077389400
+    },
+    "engine/src/solver_internal.hpp": {
+      "sha256": "5b8404f73311dc8aea67a3a646102bef5ec1be35f876996360415a356852446b",
+      "bytes": 136,
+      "mtime_ns": 1791170558077389400
+    },
+    "engine/src/solver_joint_policy_continuation.hpp": {
+      "sha256": "37228aa06dd2d56f6496c9400bb3149cae8711b9fe9430f9e0ba68f44dff9968",
+      "bytes": 28538,
+      "mtime_ns": 1791170558077389400
+    },
+    "engine/src/solver_model.hpp": {
+      "sha256": "d49505afc3edc150daa9868f362389c9b21b686e081c2a383eb578fb5fe243a0",
+      "bytes": 58807,
+      "mtime_ns": 1791170558078392900
+    },
+    "engine/src/solver_options.cpp": {
+      "sha256": "f09a6ffb63b5cca4cb033b64f0bfbe4c7fd6072db8bba69e0b9f563b761005f8",
+      "bytes": 60631,
+      "mtime_ns": 1791170558079392400
+    },
+    "engine/src/solver_options_automatic.cpp": {
+      "sha256": "e1b26551e11472cfeb9f4136a5e001029566df5593951aa44ec11a2db09500e6",
+      "bytes": 130031,
+      "mtime_ns": 1791170558082400200
+    },
+    "engine/src/solver_options_build.cpp": {
+      "sha256": "265c8a7fda93b5867c49fa82be384f3bc9830e6a9e07a39d86a045a8929b9b7b",
+      "bytes": 30853,
+      "mtime_ns": 1791170558082400200
+    },
+    "engine/src/solver_options_helpers.hpp": {
+      "sha256": "77204d9e688ed158765d541f707ab704407ec479e42ed7fd0cbf5510492bda47",
+      "bytes": 126378,
+      "mtime_ns": 1791170558083392400
+    },
+    "engine/src/solver_options_import.cpp": {
+      "sha256": "95def5436017b9dec548ede166f6e3fb30536a84dde75787712bcd63e50cc435",
+      "bytes": 6628,
+      "mtime_ns": 1791170558083392400
+    },
+    "engine/src/solver_options_runtime_helpers.hpp": {
+      "sha256": "085fa066319695ea82ba78b380140e4b56762a830d60d5bdd6f6db9438f7a8ac",
+      "bytes": 18188,
+      "mtime_ns": 1791170558083392400
+    },
+    "engine/src/solver_options_semantics.cpp": {
+      "sha256": "f5f9c384b1026106407c18baa732513c6f0c62d17903dcdafa8dba431d9cb43b",
+      "bytes": 41087,
+      "mtime_ns": 1791170558084392000
+    },
+    "engine/src/solver_options_temporary.cpp": {
+      "sha256": "707f1963336d85dd0da3ded8cbd0efa2c89994e72e05e3abb04206cc57f43fbd",
+      "bytes": 24372,
+      "mtime_ns": 1791170558084392000
+    },
+    "engine/src/solver_phase_lower.cpp": {
+      "sha256": "3d72eece488716a96773dcd9c74031cfd3682100a8ea0318b8b0a6d1c02ed648",
+      "bytes": 32414,
+      "mtime_ns": 1791170558084392000
+    },
+    "engine/src/solver_phase_lower.hpp": {
+      "sha256": "ea67917b83a40d7b2cac282c3131308e5cbeeebac6fbd71dc683a992a6eee14a",
+      "bytes": 19872,
+      "mtime_ns": 1791170558085897200
+    },
+    "engine/src/solver_phase_probability.cpp": {
+      "sha256": "7803c91b01008ed77f28550984a62f10c3e43d1530d133b9cc17d7b70c095edd",
+      "bytes": 104488,
+      "mtime_ns": 1791170558085897200
+    },
+    "engine/src/solver_policy_assertion.cpp": {
+      "sha256": "a1863b2c7e08e177e11de41e93ffb46281d7a938a668250cd7f73f3abf191e1a",
+      "bytes": 22893,
+      "mtime_ns": 1791170558086902900
+    },
+    "engine/src/solver_policy_assertion_work.cpp": {
+      "sha256": "f7fd326a8517bc32207d3ce8668617229da48c2487b54745a04c5cdcf2090df5",
+      "bytes": 55938,
+      "mtime_ns": 1791170558086902900
+    },
+    "engine/src/solver_policy_oracle.hpp": {
+      "sha256": "f3728da87d38afbb39efb2ea7f3a4890d0fcf996534d432b86c9c66e9bc64bdb",
+      "bytes": 350,
+      "mtime_ns": 1791170558086902900
+    },
+    "engine/src/solver_policy_refinement.cpp": {
+      "sha256": "74bbbf4f18593aa0dc41cd3a7a4d6eb4e2f9773eed5ac630a8549b9ee341d162",
+      "bytes": 340968,
+      "mtime_ns": 1791170558093906200
+    },
+    "engine/src/solver_policy_refinement.hpp": {
+      "sha256": "c028668dc66c3bc0d8577012c43ca7bbb5a968124ab4d0f2f3c37c068bd535de",
+      "bytes": 46134,
+      "mtime_ns": 1791170558093906200
+    },
+    "engine/src/solver_policy_refinement_helpers.hpp": {
+      "sha256": "876423118b3af5bc1b2695c1e6fc04805078bf225bf32b7354c7d6f2e59385a9",
+      "bytes": 33872,
+      "mtime_ns": 1791170558093906200
+    },
+    "engine/src/solver_policy_route.hpp": {
+      "sha256": "42088dc16c5548348e202e3d26f46fb24257353b569fa26b4b5a962e9d73c6d1",
+      "bytes": 9213,
+      "mtime_ns": 1791170558095410000
+    },
+    "engine/src/solver_proof_pattern_manager.hpp": {
+      "sha256": "2c832c18091279a54362e97c6599d2fc6480cf4b01b706aacbaa66e3797637ed",
+      "bytes": 12966,
+      "mtime_ns": 1791170558095928200
+    },
+    "engine/src/solver_quotient_bellman.cpp": {
+      "sha256": "b10a52a7b90626624655753539954f74caef082d0de378085f2f0414a8b378ae",
+      "bytes": 70418,
+      "mtime_ns": 1791170558095928200
+    },
+    "engine/src/solver_quotient_bellman.hpp": {
+      "sha256": "578ec2d989efdfa961b29ffd672e32cb0bf825ca12df617c4a0cb56b72369da7",
+      "bytes": 10929,
+      "mtime_ns": 1791170558096932400
+    },
+    "engine/src/solver_quotient_lower.cpp": {
+      "sha256": "02b4715c7362cdbfb066cb62a485e3004d2157cc3ec66c259273933693c856c5",
+      "bytes": 40170,
+      "mtime_ns": 1791170558096932400
+    },
+    "engine/src/solver_quotient_lower.hpp": {
+      "sha256": "1c5de367a06d6d4b9fb8662b55b39436ffeb36a8d61cadf7fc3620f6994b0768",
+      "bytes": 6614,
+      "mtime_ns": 1791170558097935700
+    },
+    "engine/src/solver_quotient_partition.cpp": {
+      "sha256": "7462ad53a475d8e0abfa3383a8aa23c55eacffad9c4ebabd7980b21bc436d516",
+      "bytes": 35041,
+      "mtime_ns": 1791170558097935700
+    },
+    "engine/src/solver_quotient_partition.hpp": {
+      "sha256": "79be01527740f5b943dd79db4afa717ebf01e8e430e6656257dc7f3e2c1c921b",
+      "bytes": 6177,
+      "mtime_ns": 1791170558097935700
+    },
+    "engine/src/solver_quotient_proof.cpp": {
+      "sha256": "0d1cd89564ab1b7064355e1c0017c799098376651dc51683554e9967a7cd2157",
+      "bytes": 94600,
+      "mtime_ns": 1791170558098936100
+    },
+    "engine/src/solver_quotient_proof.hpp": {
+      "sha256": "8623743faf4c7d69f7f2ed83e773b2583bf7af7b11def0231f25f38052ee4aac",
+      "bytes": 28190,
+      "mtime_ns": 1791170558098936100
+    },
+    "engine/src/solver_refinement.cpp": {
+      "sha256": "ee7085db79fbe6043391494ec6e413f3fe37e0f9c9a7ca904f81f687b9373fe2",
+      "bytes": 12800,
+      "mtime_ns": 1791170558099936400
+    },
+    "engine/src/solver_refinement.hpp": {
+      "sha256": "f9fa41b59f02a20399317a0327b4bb976c93eaa17da3242ff3b4e496d776694a",
+      "bytes": 27432,
+      "mtime_ns": 1791170558099936400
+    },
+    "engine/src/solver_refinement_eval.cpp": {
+      "sha256": "41e882b54824487aaf7d7c0536470feca4533850fcc0b51437cbadc84ae3993c",
+      "bytes": 35791,
+      "mtime_ns": 1791170558100936800
+    },
+    "engine/src/solver_refinement_feature_helpers.hpp": {
+      "sha256": "0a27997f807f19c60a1a0633ebd45cf5d95c2642c1e53c39573b7271dd000852",
+      "bytes": 4561,
+      "mtime_ns": 1791170558100936800
+    },
+    "engine/src/solver_refinement_features.cpp": {
+      "sha256": "416ffd0ca85795ccff62a1338b7200b2d695d5c629d40c5c31617410e94e0089",
+      "bytes": 40806,
+      "mtime_ns": 1791170558100936800
+    },
+    "engine/src/solver_refinement_graph_core.hpp": {
+      "sha256": "13f395a74d96ca9aadf427e203ee007eaf383bc09a855303ff38ef0e5050b84e",
+      "bytes": 37524,
+      "mtime_ns": 1791170558101936400
+    },
+    "engine/src/solver_refinement_graph_discovery.hpp": {
+      "sha256": "c5d1701ff7d75075eaca6f8ea6f971894ec810bedf4571b10f7e3d1a4731be34",
+      "bytes": 36549,
+      "mtime_ns": 1791170558101936400
+    },
+    "engine/src/solver_refinement_graph_routing.hpp": {
+      "sha256": "e6fbe1fb1415188b42f2c28382b1d971dd99186a3b355dafa22a2c07a0f8451e",
+      "bytes": 51181,
+      "mtime_ns": 1791170558102936900
+    },
+    "engine/src/solver_refinement_observation.cpp": {
+      "sha256": "ac94f5239221601a0c3a310693514961b5994dced8af48f31cfc0ab5843b7abb",
+      "bytes": 20331,
+      "mtime_ns": 1791170558102936900
+    },
+    "engine/src/solver_refinement_observation_helpers.hpp": {
+      "sha256": "3f8d72fc40e9487a0044f5c4c60850f19fd7a8b0061c0ba9fec784e9a60d220f",
+      "bytes": 21114,
+      "mtime_ns": 1791170558103937000
+    },
+    "engine/src/solver_refinement_partition.cpp": {
+      "sha256": "0734e07d99a7ad154ecd6e54be695f7171feb059312a1478de29c81d0c1e3ce7",
+      "bytes": 53437,
+      "mtime_ns": 1791170558103937000
+    },
+    "engine/src/solver_refinement_partition_helpers.hpp": {
+      "sha256": "ee1cc8794dd33bec89dddfe5eda2014957843829e069481f73f3263f46d51b1e",
+      "bytes": 13095,
+      "mtime_ns": 1791170558103937000
+    },
+    "engine/src/solver_reforge.cpp": {
+      "sha256": "84b13f4a4420da71e6c240cef2aa4106caea2835ea57293b30701bcb558edc19",
+      "bytes": 174325,
+      "mtime_ns": 1791170558104937000
+    },
+    "engine/src/solver_registry.cpp": {
+      "sha256": "6fc71aed93e4db8a35a7234c2a6c70fc39ef8d02f3aa309153b13156c9e6528e",
+      "bytes": 121931,
+      "mtime_ns": 1791170558105936400
+    },
+    "engine/src/solver_segmented_vector.hpp": {
+      "sha256": "d6e3a803321d74f2b7135a9535ca7d5d4be97c348489869d9f98056c8be278c0",
+      "bytes": 4966,
+      "mtime_ns": 1791170558107120000
+    },
+    "engine/src/solver_selective_completion.cpp": {
+      "sha256": "1a7bcd91f824e01c2c384a21a647799c232fcc8472489cf5f24c1b6433cdb24e",
+      "bytes": 49637,
+      "mtime_ns": 1791170558107120000
+    },
+    "engine/src/solver_selective_completion.hpp": {
+      "sha256": "99805c9087e5f68bdc989614cda5c5fd0dbc7a59cd1f8db9c5e60ae4692e6df8",
+      "bytes": 5291,
+      "mtime_ns": 1791170558108121300
+    },
+    "engine/src/solver_setup_storage.hpp": {
+      "sha256": "600427d40d4ff91cd0e49d0dd7af014c63601724f21a11c7a5fad8c017372238",
+      "bytes": 2541,
+      "mtime_ns": 1791170558108121300
+    },
+    "engine/src/solver_solve.cpp": {
+      "sha256": "d452b8bf40f64535b1ec0fa8d2f376bfefccff7d963061bb0d99f5de249a9e0a",
+      "bytes": 40503,
+      "mtime_ns": 1791170558109120300
+    },
+    "engine/src/solver_solve_audit.cpp": {
+      "sha256": "9c3133ac57058fbee3c2d224bb3f4764da5319bad4a64ea4f593210ffe08911b",
+      "bytes": 87719,
+      "mtime_ns": 1791170558110120400
+    },
+    "engine/src/solver_solve_bellman.cpp": {
+      "sha256": "6e15e7da6d92caee9e71f3a2cbcc148fdc8e612ba27502fd3451461ba1ad49ee",
+      "bytes": 117156,
+      "mtime_ns": 1791170558111122600
+    },
+    "engine/src/solver_solve_bounds.cpp": {
+      "sha256": "4f403169ac06caaa5cad9e43d185e32b151c431dad19b5ce1f985db3605052ef",
+      "bytes": 161774,
+      "mtime_ns": 1791170558112121000
+    },
+    "engine/src/solver_solve_carrier_pattern.cpp": {
+      "sha256": "2aa7888659b7f40af9cf9c05742d368c6e309f9d638859c40e5ee8fd3aa9bdf8",
+      "bytes": 13461,
+      "mtime_ns": 1791170558112121000
+    },
+    "engine/src/solver_solve_constructive.cpp": {
+      "sha256": "ebc9c3119bb89f00ec2ff85e65ebfe2c1542373587955ca01eefbdf63c6147e7",
+      "bytes": 443657,
+      "mtime_ns": 1791170558114119800
+    },
+    "engine/src/solver_solve_contracts.hpp": {
+      "sha256": "6995d4f0447f0f58224c65687f666eeffc008460fdd10c10d69d9e292a06fed4",
+      "bytes": 86637,
+      "mtime_ns": 1791170558114119800
+    },
+    "engine/src/solver_solve_envelope_proof.cpp": {
+      "sha256": "e8bf77280ff7a13c106cc5d5a0e90221b7e13a103cb103ee3d9be48c60cc819e",
+      "bytes": 32338,
+      "mtime_ns": 1791170558115631800
+    },
+    "engine/src/solver_solve_expand.cpp": {
+      "sha256": "a535ab49e315d9794cc58a5af9f7f866418460c43058ac3e12d4f7fd10b1b2a4",
+      "bytes": 211090,
+      "mtime_ns": 1791170558116641300
+    },
+    "engine/src/solver_solve_finish.cpp": {
+      "sha256": "37303b34eaa98720af02a28c68418bde7d261a55dceb7d61aa496dd54b0c59fe",
+      "bytes": 345079,
+      "mtime_ns": 1791170558118639100
+    },
+    "engine/src/solver_solve_focused.cpp": {
+      "sha256": "52c8fe15acd7af9faeccb8505e88805c372c72460bfedc10401fabc9112f2df7",
+      "bytes": 77026,
+      "mtime_ns": 1791174912941135000
+    },
+    "engine/src/solver_solve_incremental.cpp": {
+      "sha256": "790f9a13eb0728054317d50bf617138232ab5c4c02de5070fd9dc3f656ea0ca4",
+      "bytes": 187984,
+      "mtime_ns": 1791220607233353200
+    },
+    "engine/src/solver_solve_operator_proof.cpp": {
+      "sha256": "5c17986dec65f1e1c9630aa6f6c73f9abf5924e1d7d977fd3dccf82cf4e31984",
+      "bytes": 110478,
+      "mtime_ns": 1791170558121647600
+    },
+    "engine/src/solver_solve_priority.cpp": {
+      "sha256": "af9ad647a71c27cf9f27a5e92c55102eec53335180419f28ee4d0bfa568467b8",
+      "bytes": 16889,
+      "mtime_ns": 1791170558122647300
+    },
+    "engine/src/solver_solve_quotient.cpp": {
+      "sha256": "d99092982b8a6b0d37f09d41ec5fe1a62dfbb613f497798bb4a5e4d4cf3f8c10",
+      "bytes": 51059,
+      "mtime_ns": 1791170558122647300
+    },
+    "engine/src/solver_solve_return_bridge.cpp": {
+      "sha256": "851cf05c702698a30216c103a98c3f51ab4c449386cd3aa6a1586c3107f762ed",
+      "bytes": 173562,
+      "mtime_ns": 1791170558123640700
+    },
+    "engine/src/solver_solve_selective_completion.cpp": {
+      "sha256": "97cf5cb80f13cc376351fa0dd2ebc41028d5e043bd86229de3b3df8d1f461865",
+      "bytes": 22416,
+      "mtime_ns": 1791170558124640100
+    },
+    "engine/src/solver_solve_strict_pattern.cpp": {
+      "sha256": "2287e49d622150788b5e6608e00e49af89f1b50fd24c93ea8d7f06773fbb5ae4",
+      "bytes": 36325,
+      "mtime_ns": 1791170558125639700
+    },
+    "engine/src/solver_solve_telemetry.cpp": {
+      "sha256": "a770dff3adda52877a36f977c3a0cd4afe020037b0ab149b2d5a17c275fa8180",
+      "bytes": 180668,
+      "mtime_ns": 1791170558125639700
+    },
+    "engine/src/solver_solve_telemetry_json.cpp": {
+      "sha256": "408d49752787543611ae25573c4dd8dd8b92082635ab5a79d6efdd64c4bcc96b",
+      "bytes": 209734,
+      "mtime_ns": 1791170558127745900
+    },
+    "engine/src/solver_solve_types.hpp": {
+      "sha256": "ed96ed660eac1e772b1bc41c8ca984913de15a17bb3b03ee79ba0e44a2237755",
+      "bytes": 149557,
+      "mtime_ns": 1791170558128745500
+    },
+    "engine/src/solver_sparse_policy.cpp": {
+      "sha256": "e555b7a236b8c30f5e70e930595368c03afc77d6a338a36f50226d974862cf0b",
+      "bytes": 46279,
+      "mtime_ns": 1791170558128745500
+    },
+    "engine/src/solver_sparse_policy.hpp": {
+      "sha256": "41fa963335b4bbd038d1bb0b1629a4373b82f9c39e3263a92e7aa20845501d5e",
+      "bytes": 8926,
+      "mtime_ns": 1791170558129745600
+    },
+    "engine/tests/header_smoke.cpp": {
+      "sha256": "c37c6198f1fd679c32c5d76fc17844ddf0fd116a551a2c4d7372db30bc21468d",
+      "bytes": 874,
+      "mtime_ns": 1791170558129745600
+    },
+    "engine/tests/test_actions.cpp": {
+      "sha256": "ba2ecb1440101489399e6506f6dcd1b52c835934a2d09bbfa20d9f98c80c96f0",
+      "bytes": 54383,
+      "mtime_ns": 1791170558130746300
+    },
+    "engine/tests/test_bestiary.cpp": {
+      "sha256": "5da980e4ca543e25999c4083f2de6e3e84948c67537fb818e401d5d0c63eab85",
+      "bytes": 11216,
+      "mtime_ns": 1791170558131746300
+    },
+    "engine/tests/test_bitset.cpp": {
+      "sha256": "669f971790f66b3f59bd3285a9897967684a2e9c7cb69041e1abdce9162fdfd6",
+      "bytes": 2428,
+      "mtime_ns": 1791170558131746300
+    },
+    "engine/tests/test_blocking.cpp": {
+      "sha256": "96fbd6c4c60394201c1ca95c3a9c4ac19d3959f5da0687b332d4f889a90cdbd0",
+      "bytes": 3628,
+      "mtime_ns": 1791170558131746300
+    },
+    "engine/tests/test_data_loader.cpp": {
+      "sha256": "3fc77fc22ffb912e738b5d622ca97474f20b18b0799b330e195186defebae245",
+      "bytes": 14201,
+      "mtime_ns": 1791170558132745800
+    },
+    "engine/tests/test_item_state.cpp": {
+      "sha256": "b2b9da923d442fec88119725845dc6bdadbb43d7dd0ef5c912c87d12a72469ee",
+      "bytes": 4368,
+      "mtime_ns": 1791170558132745800
+    },
+    "engine/tests/test_main.cpp": {
+      "sha256": "542dc26c5f0e984df4908e097f7dfddd44b7a9664bd5ab5a0b9d8643a5654325",
+      "bytes": 21866,
+      "mtime_ns": 1791220656804078800
+    },
+    "engine/tests/test_recombination.cpp": {
+      "sha256": "e351940fad2a449c3adf13beeeeb2b3a3fa941bd1d1f5aeb142fc8f5839ce862",
+      "bytes": 28043,
+      "mtime_ns": 1791170558133745200
+    },
+    "engine/tests/test_recombination_solver.cpp": {
+      "sha256": "ce1872aa77b53d23116bb588646d2a9d10bafe24bc86a56126116fbb5d8b3ab3",
+      "bytes": 36159,
+      "mtime_ns": 1791170558134745700
+    },
+    "engine/tests/test_rng.cpp": {
+      "sha256": "3325cb766afd2b7631775fa0014c661929a4fe6125dd8d3b1e92172691f46a55",
+      "bytes": 2245,
+      "mtime_ns": 1791170558134745700
+    },
+    "engine/tests/test_session_builder.cpp": {
+      "sha256": "3ce4d223a5237f50b4426799ec2d91befc3abebdfd35328bebc7dc64fcc30c1c",
+      "bytes": 59380,
+      "mtime_ns": 1791170558135746100
+    },
+    "engine/tests/test_simulator.cpp": {
+      "sha256": "cdf80d10ab7e4d37b243991b20dafc9bc1f393b843bc00f1548b45dd363d1a39",
+      "bytes": 50495,
+      "mtime_ns": 1791170558136250600
+    },
+    "engine/tests/test_solver_abstract.cpp": {
+      "sha256": "80405fff5f2d98e817e9402e7d46525b127adf32c29b56e59d9257e3cfa324ec",
+      "bytes": 79424,
+      "mtime_ns": 1791170558136250600
+    },
+    "engine/tests/test_solver_api.cpp": {
+      "sha256": "cca3dcb905aa2d6b24937f1612980b8438c79a3fd88e94f3739434d7c3d1bbe9",
+      "bytes": 172820,
+      "mtime_ns": 1791170558137251500
+    },
+    "engine/tests/test_solver_calc.cpp": {
+      "sha256": "d16146367ae09633c2657e442c72f7b03a3db42e1f27a0dc64054e16121d6fcf",
+      "bytes": 318379,
+      "mtime_ns": 1791170558139251900
+    },
+    "engine/tests/test_solver_compile.cpp": {
+      "sha256": "3407dd803b8995ddac910d191073ec349f53db9d60f803c5f0259f04b58bf59a",
+      "bytes": 334491,
+      "mtime_ns": 1791178385121675600
+    },
+    "engine/tests/test_solver_eval.cpp": {
+      "sha256": "493d144ffd8ff355187f593a41740877a149ed038538e7597bfee7af24946131",
+      "bytes": 218692,
+      "mtime_ns": 1791170558141251400
+    },
+    "engine/tests/test_solver_fragment.cpp": {
+      "sha256": "ea68734d5b2efbc76e4f2eceaaf0192d77ed743cc68b1ad1cce189029da522c3",
+      "bytes": 52665,
+      "mtime_ns": 1791170558142252100
+    },
+    "engine/tests/test_solver_metamod_recovery.cpp": {
+      "sha256": "b5bf1370eb891a58df1b841a6577357c962a174457bda55ea81021eafedf26fd",
+      "bytes": 52334,
+      "mtime_ns": 1791170558142252100
+    },
+    "engine/tests/test_solver_quotient_bellman.cpp": {
+      "sha256": "48dd5d8f7f40bc5b464407ae6c5d80e6a2bc4171c413f48c39cf551060fcc6be",
+      "bytes": 11912,
+      "mtime_ns": 1791170558143251500
+    },
+    "engine/tests/test_solver_quotient_lower.cpp": {
+      "sha256": "cb845d4b9657f0371a256da2542e57aec5847e5d1bc5ecc85ca94b3a8a9d1a27",
+      "bytes": 29986,
+      "mtime_ns": 1791170558143251500
+    },
+    "engine/tests/test_solver_quotient_partition.cpp": {
+      "sha256": "1c154247d0879e16562f90322775e7a0969d0fa8357a4bf96405b2c9465b8490",
+      "bytes": 28926,
+      "mtime_ns": 1791170558144259800
+    },
+    "engine/tests/test_solver_quotient_proof.cpp": {
+      "sha256": "2b90c18852950519d303588abebd6c1a62ecacb031195c81afffa1de681713a5",
+      "bytes": 49940,
+      "mtime_ns": 1791170558144259800
+    },
+    "engine/tests/test_solver_refinement.cpp": {
+      "sha256": "1d5bfa1af1c68ab2361a10f6e89c5ea180bf636e99e87602ab4f630bad19192f",
+      "bytes": 100759,
+      "mtime_ns": 1791170558144259800
+    },
+    "engine/tests/test_solver_s8_3.cpp": {
+      "sha256": "9bc1c33f95bc1327e6c1389a6a741a54e0c51ad2332e137e4423da4299a96f2e",
+      "bytes": 139880,
+      "mtime_ns": 1791170558145766200
+    },
+    "engine/tests/test_solver_solve.cpp": {
+      "sha256": "b21d23588b690381236510bdb0d3a55529a3fb734c733686a3ea808d78e9f5e7",
+      "bytes": 816848,
+      "mtime_ns": 1791220657374485700
+    },
+    "engine/tests/tests.hpp": {
+      "sha256": "91fa271aa08c952dfc5fba0c44d639d08202dfc3796b95bb748db4a2fe40d27f",
+      "bytes": 4106,
+      "mtime_ns": 1791220656427383000
+    }
+  },
+  "objects_before": {
+    "build/engine/CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_incremental.cpp.obj": {
+      "sha256": "252528b9d7d784021b318b1542ebea1a93955ccf96e7eebe981c1b1aaa96fe41",
+      "bytes": 320742,
+      "mtime_ns": 1791217410300471400
+    },
+    "build/engine/CMakeFiles/poecraft_engine_tests.dir/tests/test_main.cpp.obj": {
+      "sha256": "d49e210e0a7824d270224218aba9dc6cc4790d11d69e0b754dcd195189639481",
+      "bytes": 27170,
+      "mtime_ns": 1791217408538437800
+    },
+    "build/engine/CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_solve.cpp.obj": {
+      "sha256": "ff15ddb73cc25b7f275c58eab7abd933e724ca23cc47fc44ff2adce5f9976010",
+      "bytes": 2280586,
+      "mtime_ns": 1791217460519556600
+    }
+  },
+  "binary_before": {
+    "sha256": "848f94ab1f5c943e47d1f46aaad916eed8bfced50c71c0f378c71b287e3735d5",
+    "bytes": 20565059,
+    "mtime_ns": 1791218235389317400
+  },
+  "command": [
+    "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\Ninja\\ninja.exe",
+    "-C",
+    "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\poecraft2-solver-causal\\build\\engine",
+    "poecraft_header_smoke",
+    "poecraft_engine_tests",
+    "-j1",
+    "-d",
+    "explain",
+    "-v"
+  ],
+  "cwd": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\poecraft2-solver-causal",
+  "compiler_jobs": 1,
+  "CCACHE_DISABLE": "1",
+  "persistent_configuration_change": false,
+  "build_watchdog_seconds": 300,
+  "no_compiler_or_linker_start_cutoff_seconds": 15,
+  "worker_blob": "f532376adbde79d9f31da1bc2d97e1b24fe2f5d9",
+  "worker_identity": {
+    "sha256": "1f7978fa0cf43c331487ea57212286cbf92ff96141d379a901c4bd421d4aae92",
+    "bytes": 57022,
+    "mtime_ns": 1791176106929430500
+  },
+  "ninja_identity": {
+    "sha256": "5020138b3757035df9dca9a2243624d5810ffa6ae24444bd95f752cbd1b89123",
+    "bytes": 3466696,
+    "mtime_ns": 1731969285281621600
+  },
+  "passive_ci_observer_identity": {
+    "sha256": "7ee009c012f5e68e7593512e4b1b4758214861ba0aeacc367cc6471ed1c012ce",
+    "bytes": 10566,
+    "mtime_ns": 1791217377532407100
+  },
+  "original_current_root_runs": 0,
+  "native_selector_attempts": 1,
+  "native_deadline_seconds": 60,
+  "native_host_watchdog_seconds": 75,
+  "fixture_native_state_cap": 32,
+  "fixture_max_owned_bytes": 536870912
+}

@@ -1,0 +1,133 @@
+{
+  "source_commit": "073bb92a22981dc75d2328b899aef4fcb08dbe64",
+  "engine_tree": "edade696d33378970b93dfb364e0f6ec50e77437",
+  "source_status": "prepared; unbuilt and untested; native source frozen",
+  "all_engine_source_bytes_match_preflight": true,
+  "source_manifest_path": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\poecraft2-solver-causal\\docs\\active\\2026-10-04-sol61-armour-recovery\\checks\\root-only-joint-service-20261005\\build-preflight.json",
+  "source_manifest_sha256": "1a3589f845f20aa9c1ca6a189866b84243818cde8b5e79bb6058ec4276cb580b",
+  "changed_sources": {
+    "engine/src/solver_solve_incremental.cpp": {
+      "sha256": "790f9a13eb0728054317d50bf617138232ab5c4c02de5070fd9dc3f656ea0ca4",
+      "bytes": 187984,
+      "mtime_ns": 1791220607233353200
+    },
+    "engine/tests/test_main.cpp": {
+      "sha256": "542dc26c5f0e984df4908e097f7dfddd44b7a9664bd5ab5a0b9d8643a5654325",
+      "bytes": 21866,
+      "mtime_ns": 1791220656804078800
+    },
+    "engine/tests/test_solver_solve.cpp": {
+      "sha256": "b21d23588b690381236510bdb0d3a55529a3fb734c733686a3ea808d78e9f5e7",
+      "bytes": 816848,
+      "mtime_ns": 1791220657374485700
+    }
+  },
+  "wrapper_argv": [
+    "py",
+    "-3",
+    "root-only-joint-service-20261005.py",
+    "--run-parent-granted"
+  ],
+  "wrapper_cwd": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3",
+  "wrapper_shell": "PowerShell (default exec_command shell)",
+  "wrapper_exec_sandbox_permissions": "use_default",
+  "wrapper_path": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\root-only-joint-service-20261005.py",
+  "wrapper_sha256": "b678dac3ed25314b985390f6bb58b8c497995ad64427f559327962de0d42ff33",
+  "retained_wrapper": "docs\\active\\2026-10-04-sol61-armour-recovery\\checks\\root-only-joint-service-20261005\\consumer-wrapper.py",
+  "direct_build_argv": [
+    "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\Ninja\\ninja.exe",
+    "-C",
+    "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\poecraft2-solver-causal\\build\\engine",
+    "poecraft_header_smoke",
+    "poecraft_engine_tests",
+    "-j1",
+    "-d",
+    "explain",
+    "-v"
+  ],
+  "direct_build_cwd": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\poecraft2-solver-causal",
+  "launch_environment": {
+    "process_only_overrides": {
+      "CCACHE_DISABLE": "1"
+    },
+    "all_other_variables": "inherited unchanged; full launch environment not captured",
+    "override_restored_after_build": true,
+    "persistent_configuration_change": false
+  },
+  "post_attempt_environment": {
+    "observation_utc": "2026-10-05T17:27:55.679512+00:00",
+    "authority": "post-attempt observation only, not launch snapshot",
+    "python_executable": "C:\\Users\\Oliver\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "variables": {
+      "PATH": "C:\\Users\\Oliver\\.codex\\tmp\\arg0\\codex-arg0dSZVll;C:\\Users\\Oliver\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\libheif\\libheif\\bin;C:\\Users\\Oliver\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\jxrlib\\jxrlib\\bin;C:\\Users\\Oliver\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\poppler\\Library\\bin;C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\java8path;C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\javapath;C:\\Windows\\system32;C:\\Windows;C:\\Windows\\System32\\Wbem;C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\;C:\\Windows\\System32\\OpenSSH\\;C:\\WINDOWS\\system32;C:\\WINDOWS;C:\\WINDOWS\\System32\\Wbem;C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\;C:\\WINDOWS\\System32\\OpenSSH\\;C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\;C:\\Program Files (x86)\\NVIDIA Corporation\\PhysX\\Common;C:\\Program Files\\wooting-analog-sdk\\;C:\\Program Files\\NVIDIA Corporation\\NVIDIA App\\NvDLISR;C:\\Program Files\\Git\\cmd;C:\\Program Files\\dotnet\\;C:\\Program Files\\nodejs\\;C:\\Program Files\\Go\\bin;C:\\Users\\Oliver\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell;C:\\Users\\Oliver\\AppData\\Local\\Microsoft\\WindowsApps;C:\\Users\\Oliver\\AppData\\Local\\Programs\\Microsoft VS Code\\bin;C:\\msys64\\ucrt64\\bin;C:\\Users\\Oliver\\AppData\\Local\\Python\\bin;C:\\Users\\Oliver\\AppData\\Roaming\\npm;C:\\Users\\Oliver\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Task.Task_Microsoft.Winget.Source_8wekyb3d8bbwe;C:\\Users\\Oliver\\AppData\\Local\\Programs\\Go\\bin;C:\\Users\\Oliver\\go\\bin;C:\\Users\\Oliver\\AppData\\Local\\PowerToys\\DSCModules\\;C:\\Users\\Oliver\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\node\\bin;C:\\Users\\Oliver\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\git\\cmd",
+      "COMSPEC": "C:\\WINDOWS\\system32\\cmd.exe",
+      "TEMP": "C:\\Users\\Oliver\\AppData\\Local\\Temp",
+      "TMP": "C:\\Users\\Oliver\\AppData\\Local\\Temp",
+      "CMAKE_BUILD_PARALLEL_LEVEL": null,
+      "CCACHE_DISABLE": null
+    }
+  },
+  "worker_blob": "f532376adbde79d9f31da1bc2d97e1b24fe2f5d9",
+  "worker_identity": {
+    "sha256": "1f7978fa0cf43c331487ea57212286cbf92ff96141d379a901c4bd421d4aae92",
+    "bytes": 57022,
+    "mtime_ns": 1791176106929430500
+  },
+  "ninja_identity": {
+    "sha256": "5020138b3757035df9dca9a2243624d5810ffa6ae24444bd95f752cbd1b89123",
+    "bytes": 3466696,
+    "mtime_ns": 1731969285281621600
+  },
+  "passive_ci_observer_identity": {
+    "sha256": "7ee009c012f5e68e7593512e4b1b4758214861ba0aeacc367cc6471ed1c012ce",
+    "bytes": 10566,
+    "mtime_ns": 1791217377532407100
+  },
+  "build_watchdog_seconds": 300,
+  "startup_cutoff_seconds": 15,
+  "compiler_jobs": 1,
+  "existing_adapter_cleanup_drain_seconds": 5,
+  "comparison_with_successful_ci_recipe": {
+    "prior_preflight": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task\\ci-evidence\\tests-link-20261005\\preflight.json",
+    "prior_preflight_sha256": "35acf46a1b8bacebcea88640d967a35b38aa602aa4120427463220bc3ff98a0d",
+    "exact_direct_argv_matches": true,
+    "cwd_matches": true,
+    "cache_override_matches": true,
+    "compiler_jobs_match": true,
+    "previous_build_watchdog_seconds": 120,
+    "successful_ci_shell_sandbox_context": "not recorded in its preflight; do not infer"
+  },
+  "build_result": {
+    "exit_code": 1,
+    "wall_ms": 15465.137100080028,
+    "timed_out": false,
+    "canceled": true,
+    "process_id": 72548,
+    "process_identity_token": "72548:134356944255960288",
+    "survivor": false,
+    "descendants_after_parent_exit": false,
+    "cleanup_error": null,
+    "identity_after": "proved_absent",
+    "startup_cutoff": {
+      "requested": true,
+      "observer_error": null
+    }
+  },
+  "compiler_or_linker_starts": [],
+  "native_selector_runs": 0,
+  "old_tests_binary_sha256": "848f94ab1f5c943e47d1f46aaad916eed8bfced50c71c0f378c71b287e3735d5",
+  "new_treatment_built": false,
+  "new_treatment_tested": false,
+  "activated": false,
+  "economics_measured": false,
+  "toy_13_to_3": "conditional algebra/prediction only",
+  "local_release_utc": "2026-10-05T17:21:30.4813286Z",
+  "original_root_slots_spent": 1,
+  "original_root_slots_total": 2,
+  "next_owner": "CI owns subsequent builds; solver holds build attempts and owns only bounded finite selector after verified binary and parent LOCAL",
+  "limitations": [
+    "VerifyGlobs cause unproved",
+    "inherited launch environment absent",
+    "no new original Conquest root or source expansion"
+  ]
+}

@@ -83,6 +83,18 @@ retains every paid resource/positive physical exit and all prior negatives.
 LOCAL releases at 16:42:34 UTC with an empty census. Slot 2 stays unspent; a
 useful complete complementary tail remains required before root treatment.
 
+Parent selects root-only joint checkpoint/queue treatment at frozen native
+source 073bb92a22981dc75d2328b899aef4fcb08dbe64. It retains the checked fallback
+under the shared cap and uses the existing single complete-candidate checker
+slot; focused seed refusal and lower authority are unchanged. The three finite
+cases and predicted 13-to-3 toy comparison are prepared but untested. The granted
+direct-Ninja -j1 build cancels at its 15-second startup guard in VerifyGlobs,
+before any observed compiler/linker; the existing Tests binary is unchanged.
+LOCAL releases at 17:21:30 UTC with an empty census. CI now owns builds; solver
+holds execution until verified binary provenance and parent LOCAL. See the
+[exact handoff](../active/2026-10-04-sol61-armour-recovery/checks/root-only-joint-service-20261005/ci-handoff.json).
+No new root or activation; all preceding build and economic negatives remain.
+
 [Solver checkpoint `040993ec`](https://github.com/OliverOrton/poecraft2/blob/040993ec9bb8109cc1970df91c8bc9ec7ef97744/docs/active/2026-10-04-sol61-armour-recovery/PRO-HANDOFF.md) and
 [independent review `4c9f078d`](https://github.com/OliverOrton/poecraft2/blob/4c9f078d95e2c0c837ab7a408c4846420bac94db/docs/active/2026-10-04-sol61-independent-review/causal-research-handoff.md)
 are published research branches and are absent from main. The default-off private

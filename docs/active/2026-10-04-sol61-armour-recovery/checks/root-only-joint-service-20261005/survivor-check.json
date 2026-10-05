@@ -1,0 +1,13 @@
+{
+  "checked_utc": "2026-10-05T17:21:30.4813286Z",
+  "source_head": "073bb92a22981dc75d2328b899aef4fcb08dbe64",
+  "build_pid": 72548,
+  "build_token": "72548:134356944255960288",
+  "owner_survivor": false,
+  "descendants_after_parent_exit": false,
+  "cleanup_error": null,
+  "compiler_or_linker_starts": [],
+  "matching_processes": [],
+  "native_runs": 0,
+  "local_released": true
+}
