@@ -376,6 +376,17 @@ These negatives inform the multi-goal architecture: retain best checked artifact
 
 The current [published causal record at 23dcc5ae](https://github.com/OliverOrton/poecraft2/blob/23dcc5aea8828dc535466613479493bc379d4e7b/docs/active/2026-10-04-sol61-armour-recovery/README.md) is an earlier checkpoint; it does not attest the later local treatment receipt. The compact receipt facts above are retained in this new report so that the source/qualification distinction remains durable.
 
+
+### 9.3 Profitability acceptance and abstention
+
+**Final-review safeguard.** A best independently checked revenue/cost ratio below 1 is a search result, not a global impossibility certificate. Display **“No profitable checked policy found”** and retain the best checked candidate, its economic request identity and the still-open search scope. A checked ratio equal to 1 is break-even and likewise establishes no positive-profit checked candidate; a numerical interval crossing 1 leaves that candidate's profitability unresolved. Unknown/incomplete prices or unresolved mass cannot supply either conclusion.
+
+Only a certified **GLOBAL** ratio upper at or below 1, covering the entire declared permitted action/programme scope with matching valuation, acquisition, properness and numerical premises, supports **“No positive-profit policy in this scope.”** A restricted model upper applies only to that explicitly named model/scope. Failure to find a profitable policy, a bounded Finish, a resource cap, a single-policy check or an optimistic-looking search score does not supply this certificate.
+
+Abstention is a separate product decision outside the positive-investment ratio policy class. It has **no ratio value**: never encode it as 0/0, an epsilon-cost policy or an “exact” free-start crafting strategy. If no checked positive-profit policy is available, the interface can recommend abstention while distinguishing “search remains open” from “positive profit is globally ruled out.” Continue to expose conditional quote assumptions; this is a model-conditional profitability result, not a guarantee of realized market profit.
+
+**Minimal acceptance witnesses:** a checked candidate with ratio 4/5 and an unsearched permitted candidate at 6/5 must show only the checked-search message; a valid all-action ratio upper 1 supports the global scoped message; a break-even candidate is not positive profit; abstention keeps its ratio absent and cannot become the fallback's fake denominator. Add these to the existing finite falsification packet without weakening any native or arithmetic gate.
+
 ## 10. Synthetic decision witnesses and minimal falsification packet
 
 ### 10.1 A branching policy beats tab-wise blanket behavior
@@ -514,6 +525,7 @@ MG-P5 — Independent repeated cycles justify ratio of aggregate expected procee
 6. Keep feeders narrow until their existing native child contract is sufficient. General inventory and robust recombination remain held.
 7. Separate ROI from expected profit and profit/time. Time optimization needs declared player execution/acquisition/sale-duration laws, not solver CPU receipts.
 8. Stage-specific qualification belongs to each consumer. Main's full functional acceptance and the isolated causal fixture do not qualify this new objective.
+9. A sub-break-even checked candidate means no profitable checked policy was found; only a complete global upper at or below one rules out positive profit in scope. Abstention remains outside ratio division.
 
 **Remaining blockers before implementation:** new economic terminal/reward/ownership contract; sufficient continuation carrier for all selected goals; complete checker mapping; denominator/properness handling; any complete global ratio-proof authority; final-byte WASM/worker acceptance. These are concrete stage gates, not failures of this research delivery.
 
@@ -542,4 +554,4 @@ External primary literature, inspected online:
 
 Before publication, connected GitHub again resolved remote main to 7252027c80856628ed16734583bfc9d6e166458b. The selected causal local HEAD remained fb59476f54601f81dc18a8bf2457d8eb7d3eb36b. The unique branch name dot/research-20261005-multigoal was absent on the connected remote. Report source and examples were reviewed for private paths, credentials and unrelated personal data; no raw private machine path or large trace is included. The local report is the canonical UTF-8 text copied without line conversion to the isolated documentation worktree and uploaded as one new owned Library report.
 
-The exact resulting branch SHA, final remote-main check, UTF-8 byte/line/hash receipt and newly created Library ID are delivery metadata returned separately. Neither new identity can be embedded before its own creation without a circular commit or an unnecessary second Library version. No sharing operation is authorized or performed.
+The exact resulting branch SHA, final remote-main check, UTF-8 byte/line/hash receipt and Library ID are delivery metadata returned separately. Neither new identity can be embedded before its own creation without a circular commit. The coordinating parent's completed final review explicitly requested the section 9.3 acceptance safeguard; that narrow amendment updates this same report, research branch and owned Library identity while retaining history. No sharing operation is authorized or performed.
