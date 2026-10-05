@@ -360,9 +360,10 @@ Keep the reconciliation's checked sources and outstanding evidence explicit.
 Live CI and local process status must be read
 at the next task, not inferred from this snapshot.
 The [October 5 CI lifecycle receipt](../active/2026-10-04-sol61-ci-supervision/README.md)
-qualifies focused synthetic supervisor tests and failure-path exit only; it does
-not close the original hosted completion failure or supply real-artifact,
-native/WASM, activation or economic qualification.
+qualifies synthetic supervisor tests, failure-path exit and a 26-test real-artifact
+identity/service gate with mocked computation and a historical executable. It
+does not close the hosted completion cause or supply current-native/WASM,
+activation, economics or full hosted qualification.
 
 
 ## Combined current-batch identity checkpoint (2026-10-02)

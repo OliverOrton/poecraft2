@@ -52,7 +52,8 @@ unit boundary; it is not production integration qualification.
 
 The unchanged `test_solver_lab_unattended_hardening.py` owns the eight changed
 identity-component refusals, restored-identity retry, atomic hashed publication
-and real-artifact workflows. Real-artifact/full-ingest and hosted qualification
+and real-artifact workflows. Its real-artifact identity/service gate passes in
+the follow-up below. Full-ingest, current-source native and hosted qualification
 remain separate, unrun obligations. No production validation authority is removed.
 
 ## Parent-approved finite local batch
@@ -90,7 +91,50 @@ Complete hosted text is preserved outside the checkout under
 `e3d1045bc708906298b9eef284603afc3964bfe6699794e2ef9dc0a3200d4413` and
 `6824b7be6f0f4b4b46dc92765511b58df943e95cd0b6b5a1013bf47d6e55b881`.
 
-Source and focused local tests are qualified. Hosted/full-artifact integration
-is unrun; the original completion-failure cause stays open. No main merge,
+Source and focused local tests are qualified. Full hosted integration is unrun;
+the original completion-failure cause stays open. No main merge,
 push, deployment, dev-server restart, WASM activation or economic claim follows.
 Parent coordinates branch publication and integration after patch review.
+
+## Real-artifact identity/service follow-up
+
+Parent grants the unchanged unattended-hardening module with a 300-second
+watchdog, five-second cleanup and first-failure stop. On source `fc652ca6`,
+all **26 tests pass in 98.45 s**, outer 98.945 s, using qualified execution
+adapter blob `f532376adbde79d9f31da1bc2d97e1b24fe2f5d9` from the prior CI
+worktree. No build, native solve, fetch, ingest or data regeneration runs.
+
+The existing historical executable is an immutable identity fixture, not a
+current-source build: SHA256
+`97fb69b6b61070d601f8b8127634bd3d522ac0368e5d23402d8cef8243807900`,
+14,987,785 bytes, receipt source `29d9e666`, engine tree `b6085499`.
+Current `fc652ca6` has engine tree `4d11a36e`; the native source mismatch is
+explicit. The service contract binds source and executable hash separately;
+mocked `_run_case`/validation and `run_soak(run_real_native=False)` require
+stable identity, without requiring a freshly compiled native solver. This use
+adds no native execution or current-binary compatibility qualification.
+
+The fixture runtime is the existing immutable law-3 snapshot: manifest SHA256
+`82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d`
+and its declared 16,914,460-byte game-data and 6,740,473-byte strings payloads.
+The isolated checkout references the snapshot through its ignored
+`data/compiled/current` junction. No runtime file is copied or modified; only
+the historical executable is copied into the fresh ignored build directory.
+All executable/manifest/payload hashes match before and after the test.
+
+Coverage includes all eight dispatch identity components, restored-identity
+retry, local revision mutation, equal/unequal idempotency races, watchdog/resource
+contracts and synthetic-child termination, atomic hashed publication,
+preparation failure and replay, recovery/quarantine, artifact tampering,
+bounded evidence/CLI/matrix workflows and accelerated unattended lifecycle.
+Native computation remains mocked. This does not rerun the original scheduler
+pair with production payloads or determine its hosted five-second cause.
+
+No timeout, cancellation, unexpected descendant, survivor, pipe-drain or
+cleanup error occurs. Parent identity is proved absent, and CIM at 03:49:37 UTC
+finds no owned process. LOCAL is released immediately. Complete evidence:
+`out/ci-lifecycle-real-artifact-r1/{receipt.json,stage.log,survivor-check.json}`;
+prerequisite/source mismatch receipt:
+`out/ci-lifecycle-20261005/real-artifact-prerequisites-ready.json`.
+The qualification index pins their hashes. Full hosted/native/binding acceptance
+and any publication remain parent-coordinated, pending work.
