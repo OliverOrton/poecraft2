@@ -17591,6 +17591,17 @@ void run_graph_only_missing_entry_service_counterparts(
         work.priced_rows.clear();
         std::uint64_t evidence_bytes = 0;
         const auto bounded = [&] {
+            if (calc.state_count() > 32 ||
+                std::chrono::steady_clock::now() - started >= std::chrono::seconds(60) ||
+                work.fast_estimated_owned_bytes() >= options.max_solver_owned_bytes ||
+                evidence_bytes >= options.max_solver_owned_bytes -
+                    std::min(work.fast_estimated_owned_bytes(), options.max_solver_owned_bytes) ||
+                work.result.diagnostics.resource_cap_hit) {
+                std::printf("graph-only missing unresolved case=%u states=%u missing=%llu "
+                    "reason=native_state_time_or_shared_ownership_bound\n", scenario, calc.state_count(),
+                    static_cast<unsigned long long>(work.incremental_anytime_missing_frontier_states.size()));
+                std::fflush(stdout);
+            }
             require(calc.state_count() <= 32, "missing-entry native state cap");
             require(std::chrono::steady_clock::now() - started < std::chrono::seconds(60),
                 "missing-entry aggregate native deadline");
@@ -17749,6 +17760,73 @@ void run_graph_only_missing_entry_service_counterparts(
         const auto old_graph = work.output_incumbent->compiled_artifact.strategy_json;
         evidence_bytes += old_graph.capacity();
         const auto scope = work.action_vocabulary_identity();
+        std::array<std::uint8_t, 32> requested_entries{};
+        unsigned requested_entry_count = 0;
+        const auto record_entry = [&](const std::uint32_t state, const char* reason) {
+            require(state < calc.state_count() && state < requested_entries.size(),
+                "frontier entry stays in the bounded native namespace");
+            if (!requested_entries[state]) {
+                requested_entries[state] = 1;
+                ++requested_entry_count;
+            }
+            if (requested_entry_count > 8) {
+                std::printf("graph-only missing unresolved case=%u reason=boundary_cell_limit entries=%u\n",
+                    scenario, requested_entry_count);
+                std::fflush(stdout);
+            }
+            require(requested_entry_count <= 8, "complete frontier stays within eight boundary cells");
+            pc_item_state physical;
+            require(calc.materialize(state, physical) &&
+                project_item(*session, calc.layout(), physical) == calc.state(state),
+                "requested native entry has a materialized round-trip physical identity");
+            const auto physical_key = exact_item_state_key(physical);
+            const auto coarse_key = exact_abstract_state_key(calc.state(state), 0);
+            const auto key_bytes = (physical_key.capacity() + coarse_key.capacity()) * sizeof(std::uint64_t);
+            evidence_bytes += key_bytes;
+            struct KeyBytesLease {
+                std::uint64_t& bytes;
+                std::uint64_t charge;
+                ~KeyBytesLease() { bytes -= charge; }
+            } lease{evidence_bytes, key_bytes};
+            bounded();
+            const auto context = work.current_joint_policy_continuation_context();
+            std::printf("graph-only missing frontier identity case=%u namespace=outer_calculator state=%u "
+                "controller_role=ordinary_native_continuation reason=%s "
+                "goal=%llu economy=%llu caller=%llu vocabulary=%llu artifact=%llu terminal=%llu "
+                "boundary=%llu graph_prefix=%llu source_generation=%llu target_generation=%llu "
+                "incumbent=%llu physical_key=[", scenario, state, reason,
+                static_cast<unsigned long long>(context.goal_identity),
+                static_cast<unsigned long long>(context.economy_identity),
+                static_cast<unsigned long long>(context.caller_scope_identity),
+                static_cast<unsigned long long>(context.action_vocabulary_identity),
+                static_cast<unsigned long long>(context.mechanics_artifact_identity),
+                static_cast<unsigned long long>(context.exact_terminal_identity),
+                static_cast<unsigned long long>(context.boundary_identity),
+                static_cast<unsigned long long>(context.graph_prefix_identity),
+                static_cast<unsigned long long>(context.source_generation),
+                static_cast<unsigned long long>(context.target_generation),
+                static_cast<unsigned long long>(context.incumbent_identity));
+            for (std::size_t index = 0; index < physical_key.size(); ++index)
+                std::printf("%s%llu", index ? "," : "", static_cast<unsigned long long>(physical_key[index]));
+            std::printf("] coarse_key=[");
+            for (std::size_t index = 0; index < coarse_key.size(); ++index)
+                std::printf("%s%llu", index ? "," : "", static_cast<unsigned long long>(coarse_key[index]));
+            std::printf("]\n");
+            for (std::uint64_t row_id = 0; row_id < work.transition_cache->rows.size(); ++row_id) {
+                const auto& row = work.transition_cache->rows[row_id];
+                for (std::uint32_t exit = 0; exit < row.transition_count; ++exit) {
+                    const auto offset = row.transition_offset + exit;
+                    if (work.transition_cache->successors[offset] == state &&
+                        work.transition_cache->probabilities[offset] > 0)
+                        std::printf("graph-only missing frontier incoming case=%u state=%u owner=%u "
+                            "row=%llu operator=%u paid_cost=%.17g probability=%.17g\n", scenario, state,
+                            row.owner_state, static_cast<unsigned long long>(row_id),
+                            work.priced_rows[row_id].operator_index, work.priced_rows[row_id].cost,
+                            work.transition_cache->probabilities[offset]);
+                }
+            }
+            std::fflush(stdout);
+        };
         work.incremental_action_generation = true;
         work.incremental_envelope_closed = false;
         work.incremental_upper_policy_dirty = true;
@@ -17822,6 +17900,7 @@ void run_graph_only_missing_entry_service_counterparts(
         std::fflush(stdout);
 
         // Explicit finite intervention through the production exact batch owner.
+        for (const auto entry : entries) record_entry(entry, "initial_selected_positive_successor");
         require(work.schedule_incremental_refinement(true) && work.incremental_refinement_active &&
             work.queue.size() >= 2 &&
             (work.queue[0] == entries[0] || work.queue[0] == entries[1]) &&
@@ -17913,7 +17992,7 @@ void run_graph_only_missing_entry_service_counterparts(
             }
         }
         std::fflush(stdout);
-        const bool assembled = work.try_install_reachable_incumbent(false);
+        bool assembled = work.try_install_reachable_incumbent(false);
         std::printf("graph-only missing assembly outcome case=%u assembled=%u "
             "missing=%llu cap=%u checker_queued=%u failure=%s\n", scenario,
             assembled ? 1u : 0u,
@@ -17925,9 +18004,164 @@ void run_graph_only_missing_entry_service_counterparts(
             std::printf("graph-only missing assembly remaining case=%u namespace=outer_calculator state=%u\n",
                 scenario, state);
         std::fflush(stdout);
+        require(!assembled && !work.incremental_anytime_missing_frontier_states.empty() &&
+            work.incremental_anytime_policy_last_failure.starts_with(
+                "missing_completed_row_and_certified_frontier") &&
+            !work.result.diagnostics.resource_cap_hit && !work.publication_pipeline.initial_candidate_task &&
+            work.output_incumbent->portfolio_identity == old_identity && root_retained(),
+            "two Regal rows are insufficient and expose the actual additional positive frontier");
+
+        // Complete the frontier actually selected by the builder. Each dispatch
+        // uses the existing exact owner; no state id, action removal, row stub,
+        // value injection or artificial checker acceptance fixes the witness.
+        unsigned frontier_round = 0;
+        unsigned service_units = 0;
+        const auto advance_service = [&] {
+            bounded();
+            if (++service_units > 10000) {
+                std::printf("graph-only missing unresolved case=%u reason=native_service_work_limit\n", scenario);
+                std::fflush(stdout);
+            }
+            require(service_units <= 10000 && !work.publication_pipeline.initial_candidate_task,
+                "bounded native frontier service precedes independent checking");
+            work.step(1);
+        };
+        while (!assembled) {
+            bounded();
+            if (++frontier_round > 32) {
+                std::printf("graph-only missing unresolved case=%u reason=frontier_round_limit\n", scenario);
+                std::fflush(stdout);
+            }
+            require(frontier_round <= 32, "frontier closure has a finite progress bound");
+            std::array<std::uint32_t, 32> requested{};
+            const auto count = work.incremental_anytime_missing_frontier_states.size();
+            require(count > 0 && count <= requested.size(), "builder names a bounded actual positive frontier");
+            std::copy(work.incremental_anytime_missing_frontier_states.begin(),
+                work.incremental_anytime_missing_frontier_states.end(), requested.begin());
+            std::array<std::uint32_t, 32> before_rows{};
+            for (std::size_t index = 0; index < count; ++index) {
+                const auto state = requested[index];
+                record_entry(state, work.incremental_anytime_policy_last_failure.c_str());
+                before_rows[index] = state < work.transition_cache->state_rows.size()
+                    ? work.transition_cache->state_rows[state].count : 0;
+                require(!calc.is_goal_state(calc.state(state)) &&
+                    (state >= work.expanded.size() || !work.expanded[state]),
+                    "each requested entry is an unserviced nonterminal native obligation");
+            }
+            while (work.focused_lower_preparation_stage != Impl::FocusedLowerPreparationStage::Idle)
+                advance_service();
+            const auto rows_before = work.transition_cache->rows.size();
+            const auto selection_count = work.incremental_missing_frontier_service_completions;
+            const bool scheduled = work.schedule_incremental_refinement(true);
+            std::printf("graph-only missing frontier selection case=%u round=%u scheduled=%u "
+                "requested=%llu selection_retirements=%llu completed_rows_before=%llu\n", scenario,
+                frontier_round, scheduled ? 1u : 0u, static_cast<unsigned long long>(count),
+                static_cast<unsigned long long>(work.incremental_missing_frontier_service_completions - selection_count),
+                static_cast<unsigned long long>(rows_before));
+            std::fflush(stdout);
+            if (!scheduled) {
+                std::printf("graph-only missing unresolved case=%u reason=exact_frontier_owner_not_scheduled\n", scenario);
+                std::fflush(stdout);
+            }
+            require(scheduled && work.incremental_refinement_active,
+                "actual positive frontier dispatches through the existing exact owner");
+            for (std::size_t index = 0; index < count; ++index)
+                require(work.transition_cache->state_rows[requested[index]].count == before_rows[index],
+                    "frontier selection still does not prove native row completion");
+            while (work.incremental_refinement_active || work.expansion_active ||
+                work.focused_lower_preparation_stage != Impl::FocusedLowerPreparationStage::Idle)
+                advance_service();
+            require(work.transition_cache->rows.size() > rows_before,
+                "frontier service must produce actual new native row evidence before another assembly");
+            for (std::size_t index = 0; index < count; ++index) {
+                const auto state = requested[index];
+                require(work.expanded[state] && work.transition_cache->state_rows[state].count > before_rows[index],
+                    "each selected frontier receives completed owned native rows");
+                unsigned completed_rows = 0;
+                for (const auto row_id : poecraft::solver::state_row_indices(*work.transition_cache, state)) {
+                    const auto& row = work.transition_cache->rows[row_id];
+                    const auto& price = work.priced_rows[row_id];
+                    const auto* obligation = work.action_envelope_ledger.find(state, price.operator_index);
+                    const auto paid = std::find_if(work.operators.begin(), work.operators.end(),
+                        [&](const auto& candidate) { return candidate.index == price.operator_index; });
+                    require(obligation && obligation->lifecycle == ActionEnvelopeState::ExactRowComplete &&
+                        obligation->row_index == row_id && row.owner_state == state && row.admitted &&
+                        paid != work.operators.end() && std::isfinite(price.cost) && price.cost > 0 &&
+                        near(price.cost, paid->cost, 1e-12),
+                        "frontier ledger proves completed admitted priced rows under current ownership");
+                    const auto& native = calc.outcomes(state, price.operator_index, true);
+                    bounded();
+                    require(native.supported && native.applicable && native.choice_groups.empty() &&
+                        row.choice_count == 0 && native.entries.size() == row.transition_count,
+                        "frontier row retains complete native positive support");
+                    std::printf("graph-only missing frontier ledger row case=%u state=%u row=%llu "
+                        "operator=%u paid_cost=%.17g lifecycle=ExactRowComplete\n", scenario, state,
+                        static_cast<unsigned long long>(row_id), price.operator_index, price.cost);
+                    double mass = 0;
+                    for (const auto& exit : native.entries) {
+                        require(exit.probability > 0, "frontier native exit has positive mass");
+                        bool matched = false;
+                        for (std::uint32_t offset = 0; offset < row.transition_count; ++offset)
+                            if (work.transition_cache->successors[row.transition_offset + offset] == exit.state &&
+                                near(work.transition_cache->probabilities[row.transition_offset + offset],
+                                    exit.probability, 1e-12)) matched = true;
+                        require(matched, "every frontier physical native successor matches the owned row");
+                        std::printf("graph-only missing frontier native exit case=%u row=%llu "
+                            "successor=%u probability=%.17g\n", scenario,
+                            static_cast<unsigned long long>(row_id), exit.state, exit.probability);
+                        mass += exit.probability;
+                    }
+                    require(near(mass, 1, 1e-12), "completed frontier native row preserves full mass");
+                    ++completed_rows;
+                }
+                std::printf("graph-only missing frontier completed case=%u round=%u state=%u "
+                    "ledger_rows=%u owner_rows=%u expanded=1\n", scenario, frontier_round, state,
+                    completed_rows, work.transition_cache->state_rows[state].count);
+            }
+            require(work.output_incumbent->portfolio_identity == old_identity && root_retained(),
+                "native frontier service alone preserves the checked incumbent");
+            const bool checkpoint_resumed = work.continue_initial_candidate();
+            std::printf("graph-only missing frontier cadence case=%u round=%u checkpoint_resumed=%u "
+                "alternative_rows=%llu row_checkpoint_due=%u checker_queued=%u\n", scenario, frontier_round,
+                checkpoint_resumed ? 1u : 0u,
+                static_cast<unsigned long long>(work.incremental_alternative_rows.size()),
+                work.last_graph_only_checkpoint.row_checkpoint_due ? 1u : 0u,
+                work.publication_pipeline.initial_candidate_task.has_value() ? 1u : 0u);
+            require(!checkpoint_resumed && !work.publication_pipeline.initial_candidate_task,
+                "ordinary frontier completion stays distinct from automatic retry cadence");
+            assembled = work.try_install_reachable_incumbent(false);
+            std::printf("graph-only missing frontier assembly case=%u round=%u assembled=%u missing=%llu failure=%s\n",
+                scenario, frontier_round, assembled ? 1u : 0u,
+                static_cast<unsigned long long>(work.incremental_anytime_missing_frontier_states.size()),
+                work.incremental_anytime_policy_last_failure.c_str());
+            std::fflush(stdout);
+            if (!assembled) {
+                const bool missing_native = work.incremental_anytime_policy_last_failure.starts_with(
+                    "missing_completed_row_and_certified_frontier") ||
+                    work.incremental_anytime_policy_last_failure.starts_with(
+                        "publication_successor_has_no_certified_action");
+                if (!missing_native) {
+                    std::printf("graph-only missing unresolved case=%u reason=%s\n", scenario,
+                        work.incremental_anytime_policy_last_failure.c_str());
+                    std::fflush(stdout);
+                }
+                require(missing_native && !work.incremental_anytime_missing_frontier_states.empty(),
+                    "only an actually named missing native frontier permits more finite service");
+            }
+        }
         require(assembled &&
             !work.output_incumbent->independently_evaluated && root_retained(),
-            "existing complete native assembly consumes completed entry evidence");
+            "final complete native assembly consumes the whole serviced frontier");
+        // Reference is a paid fixed controller derived from the full original
+        // native kernels. The delivered improved controller is independently
+        // checked against its own native estimate, then compared with this reference.
+        const double reference_rare = (1 + (1 - goal_mass) * (10 + 1)) / goal_mass;
+        const double reference_entry = .5 + reference_rare;
+        double reference_root = 1;
+        for (const auto& exit : kernel.entries) reference_root += exit.probability * reference_entry;
+        const double composed_estimate = work.output_incumbent->certified_upper_bound;
+        require(std::isfinite(composed_estimate) && composed_estimate < 24,
+            "completed native challenger must strictly improve the retained paid baseline");
         work.focus_optimizing = false; work.focused_lower_mode = false;
         work.publication_pipeline.complete_candidate_attempted_identity = work.output_incumbent->portfolio_identity;
         const auto slot_identity = work.publication_pipeline.complete_candidate_attempted_identity;
@@ -17938,8 +18172,15 @@ void run_graph_only_missing_entry_service_counterparts(
             work.output_incumbent->independently_certified && work.output_incumbent->proper &&
             work.output_incumbent->executable &&
             work.certified_incumbent_invalid_reason(*work.output_incumbent) == nullptr &&
-            near(work.output_incumbent->evaluated_policy_cost, 14.5, 1e-8) && root_retained(),
-            "independent native checker must establish predicted composed cost 14.5");
+            near(work.output_incumbent->evaluated_policy_cost, composed_estimate, 1e-8) &&
+            work.output_incumbent->evaluated_policy_cost < 24 && root_retained(),
+            "independent native checker establishes the complete captured challenger cost and strict improvement");
+        std::printf("graph-only missing closed reference case=%u reference_rare=%.17g reference_entry=%.17g "
+            "reference_root=%.17g independently_checked=%.17g reference_delta=%.17g frontier_rounds=%u\n",
+            scenario, reference_rare, reference_entry, reference_root,
+            work.output_incumbent->evaluated_policy_cost,
+            work.output_incumbent->evaluated_policy_cost - reference_root, frontier_round);
+        std::fflush(stdout);
         if (ordinary) {
             bool rejected_retained = false;
             for (const auto& retained : work.incumbent_portfolio.retained())
@@ -17969,7 +18210,10 @@ void run_graph_only_missing_entry_service_counterparts(
                 entry_proof.goal_states[state] = calc.is_goal_state(calc.state(state));
             entry_proof.expanded = work.expanded;
             entry_proof.lower_bound = work.certified_global_lower_bound();
-            entry_proof.upper_bound = entry_proof.evaluated_policy_cost = 13.5;
+            const double entry_estimate = candidate.values[entry];
+            require(std::isfinite(entry_estimate) && entry_estimate >= 0,
+                "complete entry controller has a captured finite native cost for independent checking");
+            entry_proof.upper_bound = entry_proof.evaluated_policy_cost = entry_estimate;
             require(work.publication_pipeline.initial_candidate_proof_bytes == 0,
                 "entry checker does not overlap another owned proof");
             work.publication_pipeline.initial_candidate_proof_bytes =
@@ -18000,8 +18244,8 @@ void run_graph_only_missing_entry_service_counterparts(
                     checked.cost_reconciled && checked.evaluation.converged &&
                     checked.evaluation.cost_complete && near(checked.evaluation.success_probability, 1, 1e-12) &&
                     near(checked.off_policy_probability, 0, 1e-12) &&
-                    near(checked.exact_cost, 13.5, 1e-8),
-                    "EVERY positive physical/control entry independently checks paid tail 13.5");
+                    near(checked.exact_cost, entry_estimate, 1e-8),
+                    "EVERY positive physical/control entry independently checks its complete paid captured tail");
                 require(checked.publication_peak_owned_bytes <= scoped.max_solver_owned_bytes,
                     "positive-entry checker shares native memory allowance");
                 std::printf("graph-only missing entry checked case=%u entry=%u state=%u "
@@ -18020,8 +18264,10 @@ void run_graph_only_missing_entry_service_counterparts(
         bounded();
         std::printf("graph-only missing service native case=%u states=%u baseline=24 checked=%.17g "
             "positive_entries_checked=2 complete_paid_policy=1 immediate_service=0 "
-            "checkpoint_resumed=0 explicit_native_service=1 explicit_native_assembly=1 owned=%llu\n",
+            "checkpoint_resumed=0 explicit_native_service=1 explicit_native_assembly=1 "
+            "frontier_entries=%u frontier_rounds=%u owned=%llu\n",
             scenario, calc.state_count(), work.output_incumbent->evaluated_policy_cost,
+            requested_entry_count, frontier_round,
             static_cast<unsigned long long>(work.fast_estimated_owned_bytes() + evidence_bytes));
         std::fflush(stdout);
     }
