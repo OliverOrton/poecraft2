@@ -17802,10 +17802,14 @@ void run_graph_only_missing_entry_service_counterparts(
         };
         std::uint64_t emitted_event_sequence = 0;
         unsigned captured_candidates = 0, real_check_starts = 0, real_check_completions = 0;
+        unsigned real_check_refusals = 0, repeated_check_attempts = 0;
+        std::array<std::uint64_t, 6> owner_check_pre_ids{};
+        unsigned owner_check_pre_id_count = 0;
         const auto observe_events = [&] {
             const auto last = work.progress_event_sequence;
             require(last >= emitted_event_sequence && last - emitted_event_sequence <= work.progress_events.size(),
                 "real owner event census cannot silently omit overwritten ring entries");
+            if (last == emitted_event_sequence) return;
             for (auto sequence = emitted_event_sequence + 1; sequence <= last; ++sequence) {
                 const auto& event = work.progress_events[(sequence - 1) % work.progress_events.size()];
                 require(event.sequence == sequence, "real owner event census retains exact sequence identity");
@@ -17813,6 +17817,17 @@ void run_graph_only_missing_entry_service_counterparts(
                 captured_candidates += kind == "candidate_captured";
                 real_check_starts += kind == "check_start";
                 real_check_completions += kind == "check_completed";
+                real_check_refusals += kind == "check_refused";
+                if (kind == "check_start") {
+                    const auto end = owner_check_pre_ids.begin() + owner_check_pre_id_count;
+                    if (std::find(owner_check_pre_ids.begin(), end, event.candidate) != end)
+                        ++repeated_check_attempts;
+                    else {
+                        require(owner_check_pre_id_count < owner_check_pre_ids.size(),
+                            "owner admission census stays within six candidate attempts");
+                        owner_check_pre_ids[owner_check_pre_id_count++] = event.candidate;
+                    }
+                }
                 std::printf("graph-only missing publication event case=%u sequence=%llu kind=%s reason=%s "
                     "candidate=%llu state=%u generation=%u rows=%llu verified_upper=%.17g\n", scenario,
                     static_cast<unsigned long long>(sequence), event.kind.data(), event.reason.data(),
@@ -17820,8 +17835,13 @@ void run_graph_only_missing_entry_service_counterparts(
                     static_cast<unsigned long long>(event.rows), event.verified_upper);
             }
             emitted_event_sequence = last;
+            std::printf("graph-only missing owner attempt census case=%u starts=%u completed=%u "
+                "refused=%u repeated_attempts=%u spent_identity=%llu\n", scenario, real_check_starts,
+                real_check_completions, real_check_refusals, repeated_check_attempts,
+                static_cast<unsigned long long>(work.publication_pipeline.complete_candidate_attempted_identity));
             std::fflush(stdout);
             require(captured_candidates <= 6, "finite counterpart admits at most six actual candidate captures");
+            require(repeated_check_attempts == 0, "owner admission cannot repeat a spent candidate check");
         };
         unsigned authority_snapshots = 0;
         const auto observe_authority = [&](const char* stage) {
@@ -18447,15 +18467,26 @@ void run_graph_only_missing_entry_service_counterparts(
             : work.output_incumbent->certified_upper_bound;
         require(std::isfinite(composed_estimate) && composed_estimate < baseline_checked_cost,
             "completed native challenger must strictly improve the retained paid baseline");
-        const auto candidate_identity = work.output_incumbent->portfolio_identity;
+        const auto pre_check_identity = work.output_incumbent->portfolio_identity;
         const auto owner_slot = work.publication_pipeline.complete_candidate_attempted_identity;
-        if (native_checked == nullptr && !work.output_incumbent->independently_evaluated)
-            require(owner_slot == 0 || owner_slot == candidate_identity,
-                "unchecked complete candidate cannot overwrite another owner's spent checker slot");
+        const bool checker_already_owned = work.publication_pipeline.initial_candidate_task.has_value();
+        std::printf("graph-only missing owner admission case=%u pre_check_identity=%llu spent_identity=%llu "
+            "existing_task=%u unused_slot=%u refused=%u\n", scenario,
+            static_cast<unsigned long long>(pre_check_identity), static_cast<unsigned long long>(owner_slot),
+            checker_already_owned ? 1u : 0u, owner_slot == 0 ? 1u : 0u, real_check_refusals);
+        std::fflush(stdout);
         if (native_checked == nullptr && !work.output_incumbent->independently_evaluated &&
-            !work.publication_pipeline.initial_candidate_task) {
+            !checker_already_owned) {
+            if (owner_slot != 0) {
+                std::printf("graph-only missing unresolved case=%u reason=owner_admission_slot_spent_or_refused "
+                    "pre_check_identity=%llu spent_identity=%llu refused=%u\n", scenario,
+                    static_cast<unsigned long long>(pre_check_identity), static_cast<unsigned long long>(owner_slot),
+                    real_check_refusals);
+                std::fflush(stdout);
+            }
+            require(owner_slot == 0, "a completed refusal or spent owner slot cannot be retried");
             work.focus_optimizing = false; work.focused_lower_mode = false;
-            work.publication_pipeline.complete_candidate_attempted_identity = candidate_identity;
+            work.publication_pipeline.complete_candidate_attempted_identity = pre_check_identity;
             work.publication_pipeline.initial_candidate_resume_phase = work.phase;
             work.publication_pipeline.initial_candidate_task.emplace(work.certify_initial_candidate());
         }
@@ -18463,6 +18494,14 @@ void run_graph_only_missing_entry_service_counterparts(
         observe_authority("complete_candidate_checker_owned");
         check_queued(observe_events);
         observe_authority("after_complete_candidate_check");
+        std::printf("graph-only missing owner admission completed case=%u pre_check_identity=%llu "
+            "post_check_identity=%llu spent_identity=%llu refused=%u repeated_attempts=%u proof_bytes=%llu\n",
+            scenario, static_cast<unsigned long long>(pre_check_identity),
+            static_cast<unsigned long long>(work.output_incumbent ? work.output_incumbent->portfolio_identity : 0),
+            static_cast<unsigned long long>(work.publication_pipeline.complete_candidate_attempted_identity),
+            real_check_refusals, repeated_check_attempts,
+            static_cast<unsigned long long>(work.publication_pipeline.initial_candidate_proof_bytes));
+        std::fflush(stdout);
         native_checked = checked_native_improvement(); // Reacquire after every mutation.
         require(native_checked && near(native_checked->evaluated_policy_cost, composed_estimate, 1e-8) &&
             root_authority_preserved(),
