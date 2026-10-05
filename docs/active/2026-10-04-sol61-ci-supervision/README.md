@@ -165,6 +165,35 @@ The complete normalized decoded job log remains outside the checkout at
 `760b9d3441f53761a31c258c70015f6a1728d4361f3d06924a44797f13b2d0e3`.
 The old two failed/six-hour-cancelled jobs and every forced-failure receipt stay
 retained. The broad f532 process-owner source is not imported by this patch.
-The qualification index records source, run/job identities and scope; the
-combined integration head still requires its own recorded branch checks and
-guarded, non-force publication over the expected main.
+The qualification index records source, run/job identities and scope.
+
+## Combined acceptance and guarded publication
+
+Combined source `665ef46c42a146b533c1dca3abb050e0c958634a` passes
+[Windows run 37346276702 / job 111885516928](https://github.com/OliverOrton/poecraft2/actions/runs/37346276702/job/111885516928)
+and [solver-knowledge run 37346276663](https://github.com/OliverOrton/poecraft2/actions/runs/37346276663).
+The full All chain reports 234 ingest tests passed and 5 skipped in 139.81 s;
+25 economy tests and 2 subtests passed in 11.59 s; 302 binding tests and 7
+subtests passed in 279.72 s; all 18 native targets passed in 750.16 s; full
+web/WASM validation completed at 17:46:58 UTC. This is hosted functional
+acceptance of the test-only patch over charcoal UI main `8d0752fe`.
+
+Parent-authorized non-force publication fast-forwarded remote main from exact
+`8d0752fe4c43b76d165e743a65f76f5d6379da2d` to exact `665ef46c` at
+17:49:07 UTC. Remote main and integration branch were rechecked. The five-file
+scope, reviewed test blob and unchanged UI/native/runner/math/claim/charcoal
+identities were verified before publication. The normal checkout remains
+`7eb16ac3`; no deployment or server restart occurred. LOCAL and sole main
+writer ownership are released.
+
+Complete normalized job log `../ci-evidence/job111885516928.log` has SHA256
+`a079dc3144bfc36f0dadd4890a2c624d9e8c8c98721930cc23a7e865b26fa8a4`.
+The local integration receipt is
+`../ci-evidence/ci-integration-20261005/integration.json`, SHA256
+`6fed519144ed61080d4f70bf8632fc5c875ae971b508105a8530fb9857bce4a9`.
+At 17:50:25 UTC, earlier UI-only Windows run 37343654398 at `8d0752fe` and
+new main Windows run 37351269444 at `665ef46c` remained in progress; new main
+knowledge run 37351269505 passed. These are separate recorded results, with no
+pass inferred for either active Windows run. The original five-second cause,
+six-hour cancelled negatives and forced-failure receipts remain preserved.
+No economic, activation or mathematical authority is added.

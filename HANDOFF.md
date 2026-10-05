@@ -102,8 +102,11 @@ all 18 native targets and the remaining full validation chain pass. The failed
 assertion cleanup fixes the demonstrated post-summary thread hang. The old
 hosted five-second completion cause remains unresolved, and the broad f532
 runner changes remain outside main. The reviewed test source alone is
-integrated over charcoal UI base `8d0752fe`; combined checks and guarded
-publication are recorded in the CI living record. LOCAL is released.
+integrated over charcoal UI base `8d0752fe` at `665ef46c`. Exact-source Windows
+run 37346276702 and knowledge run 37346276663 pass; the parent-authorized
+non-force main fast-forward was confirmed at 17:49 UTC. The CI living record
+retains the full log and separate pending main-run snapshots. LOCAL and main
+writer ownership are released; the normal checkout remains `7eb16ac3`.
 
 Eight earlier integration screenshots are verified locally in the product record.
 Library delivery attempted zero uploads: the required multi-file helper lacks supported

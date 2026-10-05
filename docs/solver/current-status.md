@@ -393,8 +393,12 @@ Exact-source `e1b64986` full Windows run 37338568432 and knowledge run
 37338568439 pass, including 234 ingest tests and all 18 native targets.
 The demonstrated assertion-failure thread hang is fixed; the original hosted
 five-second completion cause remains unresolved. Only the reviewed test source
-is integrated over the charcoal UI; the f532 runner and isolated solver source
-remain outside main. These checks add no economic, activation or mathematical
+is integrated over the charcoal UI at `665ef46c`: exact-source combined Windows
+run 37346276702 and knowledge run 37346276663 pass, and the guarded non-force
+main fast-forward was confirmed on October 5 at 17:49 UTC. The f532 runner and
+isolated solver source remain outside main. Earlier UI-only and new main
+Windows runs are separate pending records at the closeout snapshot; they gain
+no inferred result. These checks add no economic, activation or mathematical
 authority.
 
 
