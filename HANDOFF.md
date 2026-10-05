@@ -1,24 +1,27 @@
-# Selected handoff - October 4, 2026
+# Selected handoff - October 5, 2026
 
 ## Released product
 
-Main is published at `81d4f47106993d7c36af502595fcba24fa0b7e51` with the
-qualified UI/recombination integration over 29d9e666. Exact-source isolated
-Windows run 37206763122 and solver-knowledge run 37206763077 pass. Main-specific
+The released UI/recombination integration at
+`81d4f47106993d7c36af502595fcba24fa0b7e51` is qualified over 29d9e666. Exact-source
+isolated Windows run 37206763122 and solver-knowledge run 37206763077 pass. Main-specific
 Windows run 37209887436 is a separate tracked result. The
 [product living record](docs/active/2026-10-04-sol61-product-integration/README.md)
 owns qualification, the exact b04 packaged/rendered identity, frozen inputs,
 WASM/source pins, retained failures and screenshot paths. No deployment,
 dev-server restart or normal-checkout bundle/data regeneration occurred.
 
-## Selected next work: Pro causal planning; heavy work paused
-
-The separately isolated [October 5 charcoal/ember UI](docs/active/2026-10-05-charcoal-ember/README.md)
+The approved [October 5 charcoal/ember UI](docs/active/2026-10-05-charcoal-ember/README.md)
 passes its bounded source-matched TypeScript/build/package/Chrome rendering gate
 at `7fd6a48e`, with inspected app screenshots and unchanged native/frozen inputs.
-It is not integrated or activated on main. LOCAL is released; four Library
-screenshots are saved, with a local metadata limitation in the receipt. Solver economics and
+Published checkpoint `c6e02edb` passes exact-source Windows run 37337922620 and
+solver-knowledge run 37337922605; the final reconciliation changes only prose.
+Oliver approved its UI-only integration over `7eb16ac3`. LOCAL is released; eight
+Library screenshots are saved across distinct 1536x864 and 1920x1080 captures,
+with a local metadata limitation in the receipts. Solver economics and
 mathematical authorities are unchanged by this presentation delta.
+
+## Selected next work: Pro causal planning; heavy work paused
 
 Oliver requested a solver break and research. No new native builds, solver,
 Simulator or capability implementation is selected. LOCAL is released with no
@@ -64,8 +67,8 @@ focused owned-handle qualification and prior failures; its broad gate and
 original scheduler timing cause remain unresolved. It is not merged into main.
 Keep the old six-hour cancelled CI negative and later failure receipts intact.
 
-Eight rendered screenshots are verified locally in the product record. Library
-delivery attempted zero uploads: the required multi-file helper lacks supported
+Eight earlier integration screenshots are verified locally in the product record.
+Library delivery attempted zero uploads: the required multi-file helper lacks supported
 Windows metadata writeback. Leave the verified files intact and avoid duplicate
 or uncertain sends. Screenshot delivery does not block product publication.
 

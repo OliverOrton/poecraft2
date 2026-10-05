@@ -1,4 +1,4 @@
-# Charcoal and ember UI — isolated qualification
+# Charcoal and ember UI - qualification and publication
 
 Source `7fd6a48e41b97c1aca5fa10775f668bb6fc9b028` on
 `dot/charcoal-ember-20261005` applies Oliver's selected first-column tokens:
@@ -13,8 +13,9 @@ all geometry remain under their existing owners. No mechanics changed.
 Fresh remote main was verified at `7eb16ac3d63834fd5d3256ab42483f47d264b764`
 before work and at closeout. Worktree:
 `C:/Users/Oliver/Documents/Codex/2026-10-04/task-2/charcoal-ember`.
-Protected `0` and frozen `data/prices` are excluded. No main integration,
-publication, deployment or dev-server action occurred.
+Protected `0` and frozen `data/prices` are excluded. During initial qualification,
+no main integration, publication, deployment or dev-server action occurred.
+The later approved publication is recorded separately below.
 
 ## Qualified artifact and rendered evidence
 
@@ -47,8 +48,8 @@ has build ID
 `2f68b13e5a1fd1620d58af91d3df50aab1ad3790d6537e6866ef6b3da370a04f`.
 The artifact stays bound to `7fd6a48e`; later documentation does not rebind it.
 Qualified unchanged WASM `50c98f55`, loader `8ec20cf7`, runtime `82fb60a2`
-and all eighteen prior input/native hashes match before/after. There are zero
-native/WASM builds or compiler jobs. No Current/Finder activation, new solver
+and all eighteen prior input/native hashes match before/after. The local UI gate
+used zero native/WASM builds or compiler jobs. No Current/Finder activation, new solver
 math, representative-policy qualification or measured economic benefit follows.
 
 LOCAL was granted and released for this one serial batch. Execution reuses the
@@ -120,3 +121,26 @@ metadata writeback was attempted within that call for every original file and
 retains the same Windows `os.setxattr` limitation; no already-created file was
 retried. The current 1080p evidence is under
 `out/charcoal-ember/render-1080p-r1/`; product activation remains unchanged.
+
+## Approved morning publication and main integration
+
+Oliver explicitly approved putting the UI update on main. At 16:02 UTC on
+October 5, remote main was still `7eb16ac3`; the isolated worktree was clean at
+`c6e02edbc7dd4b66ec7f0627f4beb2e7cecd17b8`. The seven-file comparison contains
+only presentation source, its focused UI assertions and qualification documents.
+No solver, CI runner, canonical data or frozen prices changed.
+
+The branch was published and its exact remote SHA verified. At that SHA,
+[solver knowledge run 37337922605](https://github.com/OliverOrton/poecraft2/actions/runs/37337922605)
+passes; [Windows run 37337922620](https://github.com/OliverOrton/poecraft2/actions/runs/37337922620)
+also passes its full inherited Build and Test steps. The latter completed at
+16:41:42 UTC. These hosted results are bound to exact `c6e02edb`, while the
+original locally packaged/rendered artifact remains bound to `7fd6a48e`.
+
+The final reconciliation changes only HANDOFF and this record. It preserves the
+earlier solver/CI negatives and authorizes no experimental solver or runner
+integration. The approved UI can fast-forward main over the verified `7eb16ac3`
+without a product conflict or new local execution. A main-triggered workflow is
+a separate result; earlier hosted acceptance is not silently relabelled for a
+new SHA. No normal-checkout update, deployment, dev-server restart, WASM rebuild,
+new solver activation or measured economic benefit is part of this publication.
