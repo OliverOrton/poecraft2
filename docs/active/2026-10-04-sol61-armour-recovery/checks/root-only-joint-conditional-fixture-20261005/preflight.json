@@ -1,0 +1,47 @@
+{
+  "source_commit": "5a74619339b5283a22074b79026ea3c0177cc0ca",
+  "engine_tree": "056f257007efd976d9fd48420d6d85d9dac797f8",
+  "parent_source": "c66c37213a0bb3efc707967cee098487a66fdd76",
+  "changed_engine_files": [
+    "engine/tests/test_solver_solve.cpp"
+  ],
+  "test_file_sha256": "2e5cc610c62d10237acf687e1f5b37601e192943001405ed457563dd4ddb791f",
+  "test_file_bytes": 827775,
+  "unchanged_production_treatment_sha256": "790f9a13eb0728054317d50bf617138232ab5c4c02de5070fd9dc3f656ea0ca4",
+  "unchanged_selector_source_sha256": "542dc26c5f0e984df4908e097f7dfddd44b7a9664bd5ab5a0b9d8643a5654325",
+  "source_prepared": true,
+  "built": false,
+  "tested": false,
+  "activated": false,
+  "economics_measured": false,
+  "qualification": "explicit internal open-envelope service fixture, not normal constructor/product activation",
+  "normal_constructor_inactive_assertion_preserved": true,
+  "independent_baseline_and_all_three_controls_preserved": true,
+  "conditional_setup_fields": [
+    "incremental_action_generation=true",
+    "incremental_envelope_closed=false"
+  ],
+  "lower_profile": "TargetNeutralZero",
+  "economic_restart": false,
+  "allowed_actions": [
+    "annul",
+    "exalt",
+    "scour",
+    "alchemy"
+  ],
+  "checker_slot": "existing one-shot complete_candidate_attempted_identity, initially zero",
+  "checkpoint_and_checker_prerequisites_source_reviewed": true,
+  "retained_matching_baseline_precondition": true,
+  "old_binary_sha256": "771ea27508440f148c3d509e15a576edcf3e5cbb3812e4f211f9774cb021d81f",
+  "old_binary_qualifies_source": false,
+  "build_owner": "CI",
+  "new_build_runs": 0,
+  "new_native_runs": 0,
+  "root_slot2_spent": false,
+  "bounds": {
+    "native_states": 32,
+    "owned_bytes": 536870912,
+    "native_seconds": 60,
+    "host_seconds": 75
+  }
+}

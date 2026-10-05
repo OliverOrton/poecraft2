@@ -484,3 +484,137 @@ failure reason versus uncaptured runtime payload, and unproved 13-to-3 predictio
 remain intact. The [static handoff](checks/root-only-joint-fixture-correction-20261005/preflight.json)
 pins exactly the changed file and unchanged production inputs. Root slot 2 stays
 unused; no activation, source expansion or checker weakening is introduced.
+
+### Corrected fixture: captured scope refusal and full baseline audit
+
+CI qualifies the fixture-only correction at fdf043ba, checkout 23dcc5ae,
+Tests SHA-256 a8d47954029dffe63ae8bfc501668b0cc26756605ce7ffcd1ee6699f0e7fd74e,
+20,595,037 bytes. The sole granted selector stops in 385.087 ms, 0/3 cases
+complete. Its existing progress output captures a caller-scope refusal for
+Restart at bounded_default_restart, with bounded-field truncation. LOCAL
+releases at 18:08:44 UTC, empty census and clean job drain. No build or root
+is run by the solver owner.
+
+The [full fixture contract audit](checks/root-only-joint-corrected-native-20261005/fixture-contract-audit.md)
+identifies omitted proof.options: the initial fresh SolveResult uses the default
+economic Restart permission during graph emission although the actual work
+disallows it. CertificationFailClosed changes router defaults, but the compiler
+still emits a Restart operation; all-node scope checking correctly rejects it.
+The native graph parses and passes original-start/goal-ingress/provenance guards
+before this refusal. Prices, properness and checked costs remain unvalidated.
+
+The exact unapplied test-only proposal copies work options into the proof and
+uses existing byte census helpers to give the initial compiler only the shared
+remaining allowance, releasing its emission telemetry before checking. It keeps
+the same permitted paid operations, native support, goal, independent checker,
+predictions and production treatment. No Restart activation, price padding,
+compiler/admission weakening or additional root is proposed. The audit preserves
+all first-pass premises and the prior failures; CI remains build owner.
+
+### Options-corrected baseline checks; constructor activation stops seed service
+
+The approved test-only options/shared-allowance correction is frozen at
+c66c37213a0bb3efc707967cee098487a66fdd76, engine tree 3a53576b2b. CI qualifies
+Tests 771ea27508440f148c3d509e15a576edcf3e5cbb3812e4f211f9774cb021d81f,
+20,596,061 bytes. The sole granted selector passes independent root-only
+baseline certification and its cost-13 assertion by execution order, then fails
+"focused root-only seed still refuses" in 406.246 ms; 0/3 cases complete. The
+exact baseline scalar and guard inputs are not printed. Treatment and both
+negative cases remain unreached. LOCAL releases 18:37:36 UTC with clean owned-job
+drain and empty census; no rebuild or original root occurs here.
+
+[The activation audit](checks/root-only-joint-options-native-20261005/activation-guard-audit.md)
+finds an earlier outer guard: the four paid primitives contain no delayed Essence,
+Fossil or HarvestReforge action. Constructor generation becomes false and the
+envelope closes; the seed call returns before setting a reason or counters.
+Source-derived census is 0/0/0, not the fixture's expected inner refusal census.
+The root-only joint checkpoint also requires an active open envelope. An unapplied
+diagnostic patch records every outer/inner input without changing these guards,
+scope or assertions. Explicit internal activation for a hand-built unit fixture
+would not demonstrate normal product activation and has not been selected here.
+The source stays frozen, original negative receipts stay intact, slot 2 is unused.
+
+
+Parent selects an explicit conditional internal service fixture. Source
+5a74619339b5283a22074b79026ea3c0177cc0ca changes only the existing test file:
+first preserve constructor-inactive/closed refusal and zero census, then label
+and initialize an active/open internal envelope for the hand-built native rows.
+Complete outer/inner/checkpoint diagnostics and actual checked cost/reason output
+are present; existing seed, positive, missing-successor and ownership gates stay.
+The source review checks safe checkpoint, matching retained root artifact and
+unused one-shot checker slot. This is unbuilt/unrun and supplies no normal
+product activation or new treatment economic claim. CI owns the changed object;
+old 771ea275 binary does not qualify it. Original root slot 2 remains reserved.
+
+### Conditional native acceptance and matched root-slot-2 readiness
+
+CI qualifies source/checkout 5a74619339b5283a22074b79026ea3c0177cc0ca, engine
+056f257007efd976d9fd48420d6d85d9dac797f8, Tests 0b414ccb8d4caace64625d0e3a9c9f8748ff983331d1f16722e1a9d1fbac66cc.
+The sole selector passes all 179 checks and three cases in 330.640 ms. Complete
+native support independently checks/adopts 13 to 3 and retains the old fallback;
+missing successor and shared ownership controls preserve checked cost 13 and
+queue no checker. The normal constructor remains inactive/closed with 0/0/0
+census. Only the explicit internal phase opens the envelope; its focused seed
+still refuses at 1 requested/0 started/1 rejected. This qualifies conditional
+service/checking/adoption and fallback preservation, not normal product activation
+or Conquest recovery. [Full receipt](checks/root-only-joint-conditional-native-20261005/summary.json)
+retains all 22 progress snapshots, original log and prior negatives. LOCAL releases
+19:03:05 UTC, no survivors. No root slot is spent by that test.
+
+Parent accepts this scope and selects preparation of root slot 2. The
+[exact readiness identity](checks/root-treatment-readiness-20261005/preflight.json)
+reuses the baseline corpus/case bytes and [full argv](checks/root-treatment-readiness-20261005/argv.json),
+changing only result/partial/strategy output destinations. Current, calculator_product_v1,
+TargetNeutralZero, law 3, recorded runtime/Allflame economy pins, paid base override,
+all work/memory/checker caps and 120-second Finish/150 native/165 host bounds match
+b02513b6. The entire benchmark directory and passive observer are byte-identical.
+Engine differences are the selected joint-service scheduling/retention/queue change,
+named seed diagnostics and native fixtures/selectors; no new template, imported
+seed, grammar, lower or law is introduced. Host capture deliberately uses the
+already-qualified f532 job owner in place of the baseline repository worker,
+with that supervision difference declared separately from native input identity.
+No frozen data/prices are inspected. Source stays frozen at 5a746193; current
+Benchmark c1036e19 is the old control binary and does not qualify treatment.
+CI must build/link and supply provenance before parent grants slot 2. No build
+or root run occurs during readiness preparation; no cheaper Conquest claim exists.
+
+### Matched original-root treatment: unchanged checked winner
+
+The later parent-granted slot 2 uses CI-qualified Benchmark 57ae44df5212fd2becfef122329e96b8de9524160178574af18008a260bbd0f7,
+15,149,130 bytes, source/checkout 5a746193 and engine 056f2570. The pinned
+case/corpus, Current product profile, TargetNeutralZero, law/economy and all
+120/150/165-second budgets remain matched; the declared qualified host-owner
+difference remains. Exit 0 in 122.216 s returns checked cost 101311.35474896732,
+exactly control, and the 26-node/39-edge, 6,557-byte strategy is byte-identical
+(SHA-256 d65787d11ad895d5925ce9dd4d0aefde483e53bc25df3a80a6a9dfe7a0d7e053).
+Independent evaluation matches with success 1, complete prices and zero
+off-policy mass/cost delta. Requested bounded Finish has cap mask 0.
+
+Upper service records 33 requests, zero starts and 33 rejections, with final
+reason seed_rejected_statewise_values_without_focused_fallback. Joint attempts,
+new joint candidate admissions and missing-frontier service completions are zero.
+No new joint positive-entry check or adoption is observed. The preserved fallback
+exports successfully. This is a matched economic negative for the selected
+treatment, not normal product activation of the conditional fixture, proof of
+the whole-search cause or evidence for an introducing commit. Both root slots
+are spent; no retry. LOCAL releases at 19:25:45.1425030 UTC after clean owned-job
+drain and empty survivor census. [Compact result](checks/root-treatment-20261005/summary.json),
+[returned strategy](checks/root-treatment-20261005/strategies/sol61-trace-conquest5-currentmodel-120.strategy.json)
+and original native/result receipts are retained. Parent selects only a source
+audit of incumbent representation/provenance; no code, build or new root.
+
+The completed [source/receipt lineage audit](checks/root-treatment-20261005/incumbent-lineage-audit.md)
+distinguishes the preferred independently evaluated primitive graph at
+627313592.5067186 from retained root-only graphs at 831786.9880757828 and the
+101311.35474896732 export winner. The primitive's copied estimate differs by
+14.414810538291931; reconciliation rejection is sticky while graph ownership
+and independent checking survive. The final refusal implies an ordinary
+incumbent with rejected statewise values, rather than the selected root-only
+format. Both new checkpoint/queue sites exclude it before current graph validation;
+selective root service retains its candidates without replacing output_incumbent.
+Per-refusal object identities/check flags/compatibility for all 33 calls were not
+captured and remain unproved. Source supports a conditional graph-only checkpoint
+for a compatible checked incumbent lacking statewise authority, preserving the
+existing builder's rejection of that table and every complete-support/checker/cap
+gate. This alternative is not applied or executed; improving a candidate against
+the costly primitive alone is not a win against the retained 101311 result.

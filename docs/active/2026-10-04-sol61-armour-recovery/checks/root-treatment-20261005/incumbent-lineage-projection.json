@@ -1,0 +1,202 @@
+{
+  "evidence_source": "existing matched slot-2 receipt; no new native execution",
+  "implementation_source": "5a74619339b5283a22074b79026ea3c0177cc0ca",
+  "engine_tree": "056f257007efd976d9fd48420d6d85d9dac797f8",
+  "publication_candidates": {
+    "samples": [
+      {
+        "kind": "current_run_return_trial",
+        "trial": "exalt",
+        "stage": "anchor_entries",
+        "disposition": "refused",
+        "reason": "exact anchor operation is not globally routable",
+        "old_cost": 627313592.5067186,
+        "one_cost": null,
+        "r": null,
+        "q": null,
+        "repeated_cost": null,
+        "bridge_rows": 12,
+        "bridge_transitions": 12,
+        "eval_states": 1028,
+        "eval_pairs": 10,
+        "eval_transitions": 8210,
+        "eval_peak_bytes": 2655974,
+        "eval_live_bytes": 2090808,
+        "eval_work": 379480,
+        "eval_complete": true,
+        "eval_cost": 627313592.5067186,
+        "eval_success": 1,
+        "eval_stop": 0,
+        "eval_subphase": "done",
+        "max_states": 800000,
+        "max_pairs": 1215000,
+        "max_transitions": 10000000,
+        "max_owned_bytes": 1058322713,
+        "wall_seconds": 0.035556
+      },
+      {
+        "identity": "9233180967849648666",
+        "kind": "selective_completion_root",
+        "stage": "publication",
+        "verification": "independently_evaluated",
+        "evaluated_cost": 101311.35474896732,
+        "estimate_cost": 101311.35474896732,
+        "reconciliation_absolute_delta": 0,
+        "reconciliation_relative_delta": 0,
+        "disposition": "selected_for_publication",
+        "selection_reason": "strict cheapest independently evaluated candidate"
+      },
+      {
+        "identity": "9082061597894067139",
+        "kind": "selective_completion_root",
+        "stage": "publication",
+        "verification": "independently_evaluated",
+        "evaluated_cost": 831786.9880757828,
+        "estimate_cost": 831786.9880757828,
+        "reconciliation_absolute_delta": 0,
+        "reconciliation_relative_delta": 0,
+        "disposition": "not_selected",
+        "selection_reason": "a cheaper independently evaluated candidate won publication"
+      },
+      {
+        "identity": "12026856962075642739",
+        "kind": "gated_primitive_destructive_renewal",
+        "stage": "publication",
+        "verification": "independently_evaluated",
+        "evaluated_cost": 627313592.5067186,
+        "estimate_cost": 627313592.5067186,
+        "reconciliation_absolute_delta": 14.414810538291931,
+        "reconciliation_relative_delta": 2.297863521410127e-08,
+        "disposition": "not_selected",
+        "selection_reason": "a cheaper independently evaluated candidate won publication"
+      }
+    ],
+    "retained": 4,
+    "omitted": 0,
+    "retained_bytes": 1847,
+    "limit": 64
+  },
+  "incumbent_portfolio": {
+    "candidate_estimate": {
+      "present": true,
+      "cost": 627313592.5067186,
+      "source": "gated_primitive_destructive_renewal",
+      "stage": "exact_evaluated_policy",
+      "verified": true,
+      "identity": {
+        "portfolio": "a6e7faaf9cf3cb73",
+        "goal": "8fbb13ddeb43becc",
+        "economy": "b80f73d65bde3138",
+        "action_vocabulary": "f4bd53579a332fea",
+        "caller_scope": "062dd0d38b3fa559",
+        "graph_prefix": "8071a443ac49f891",
+        "artifact": "b23623922926cd3c",
+        "source_generation": 1
+      }
+    },
+    "verified_executable_upper": {
+      "present": true,
+      "cost": 101311.35474896732,
+      "portfolio_identity": "8022d92bb793621a",
+      "identity": {
+        "portfolio": "8022d92bb793621a",
+        "goal": "8fbb13ddeb43becc",
+        "economy": "b80f73d65bde3138",
+        "action_vocabulary": "f4bd53579a332fea",
+        "caller_scope": "062dd0d38b3fa559",
+        "graph_prefix": "ee1b722892f036a9",
+        "artifact": "b23623922926cd3c",
+        "source_generation": 5
+      },
+      "observations": 4,
+      "strictly_cheaper_replacements": 2,
+      "monotone": true
+    },
+    "independent_global_lower": {
+      "value": 0,
+      "certified": true,
+      "provenance": "target_neutral_universal_zero"
+    },
+    "restricted_search_lower": {
+      "value": 0,
+      "envelope_global": false
+    },
+    "exact_closure": {
+      "proved": false,
+      "value": null
+    }
+  },
+  "upper_service": {
+    "requested": 33,
+    "started": 0,
+    "proper": 0,
+    "rejected": 33,
+    "fixed_policy_proofs": 0,
+    "last_failure": "seed_rejected_statewise_values_without_focused_fallback"
+  },
+  "joint_service": {
+    "attempts": 0,
+    "successes": 0,
+    "last_completed_rows": 0,
+    "best_upper": null,
+    "last_failure": ""
+  },
+  "bound_upper_changes": [
+    {
+      "elapsed_ms": 0.0031,
+      "phase_owner": "setup",
+      "incumbent_kind": "none",
+      "upper_bound": null,
+      "working_value": 0
+    },
+    {
+      "elapsed_ms": 43.9968,
+      "phase_owner": "primitive_rows",
+      "incumbent_kind": "other",
+      "upper_bound": null,
+      "working_value": 1000000000000
+    },
+    {
+      "elapsed_ms": 132.2647,
+      "phase_owner": "exact_evaluation",
+      "incumbent_kind": "other",
+      "upper_bound": 627313592.5067186,
+      "working_value": 1000000000000
+    },
+    {
+      "elapsed_ms": 26034.5542,
+      "phase_owner": "ladder_scheduling",
+      "incumbent_kind": "other",
+      "upper_bound": 831786.9880757828,
+      "working_value": 1000000000000
+    },
+    {
+      "elapsed_ms": 39902.3938,
+      "phase_owner": "ladder_scheduling",
+      "incumbent_kind": "other",
+      "upper_bound": 101311.35474896732,
+      "working_value": 1000000000000
+    }
+  ],
+  "bound_sample_count": 8160,
+  "value_role_evidence": {
+    "last_refusal_source_implies": [
+      "output_incumbent present",
+      "compiled_root_entry_only false",
+      "has_statewise_upper_values false",
+      "statewise_values_rejected true",
+      "focused_fallback_policy absent"
+    ],
+    "per_refusal_object_identity_and_compatibility": "not captured",
+    "per_refusal_independently_evaluated_flags": "not captured",
+    "active_preferred_primitive_lineage": "source reconstruction corroborated by early independently checked bound, preferred candidate telemetry and publication sample; not a per-refusal runtime identity receipt"
+  },
+  "source_sha256": {
+    "engine/src/solver_solve_types.hpp": "ed96ed660eac1e772b1bc41c8ca984913de15a17bb3b03ee79ba0e44a2237755",
+    "engine/src/solver_solve_incremental.cpp": "790f9a13eb0728054317d50bf617138232ab5c4c02de5070fd9dc3f656ea0ca4",
+    "engine/src/solver_solve_focused.cpp": "52c8fe15acd7af9faeccb8505e88805c372c72460bfedc10401fabc9112f2df7",
+    "engine/src/solver_solve_constructive.cpp": "ebc9c3119bb89f00ec2ff85e65ebfe2c1542373587955ca01eefbdf63c6147e7",
+    "engine/src/solver_solve_finish.cpp": "37303b34eaa98720af02a28c68418bde7d261a55dceb7d61aa496dd54b0c59fe",
+    "engine/src/solver_solve_selective_completion.cpp": "97cf5cb80f13cc376351fa0dd2ebc41028d5e043bd86229de3b3df8d1f461865"
+  }
+}

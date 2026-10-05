@@ -977,6 +977,70 @@ without granting any nonroot value or action authority. The supplied graph,
 independent checking requirement and conditional algebra are unchanged. This
 source correction is unbuilt/untested; the original 0/3 failure remains retained.
 
+CI later qualifies the placeholder correction; its sole selector passes the
+initial role guard but captures a scope refusal before exact evaluation. A
+bounded proof constructed with default options can emit a synthetic Restart
+node even when its actual work excludes Restart and its router defaults fail
+closed. Caller scope applies to every operation node, including unreachable
+defaults. The fixture must carry the actual work options to the existing
+compiler; deleting an unauthorized node or relaxing admission is not a scope
+proof. The [full contract audit](../../active/2026-10-04-sol61-armour-recovery/checks/root-only-joint-corrected-native-20261005/fixture-contract-audit.md)
+also bounds compiler overlap under the original shared cap. Both corrections
+remain proposals; 0/3 cases and unproved economic predictions stay retained.
+
+After the approved option/accounting correction, the qualified toy passes its
+independent baseline certificate and cost-13 assertion but still completes 0/3
+cases. Its four-action constructor has no delayed Essence/Fossil/HarvestReforge
+operator, so it closes the incremental envelope. The outer upper-pass guard
+returns before seed-role checking or census changes; the joint checkpoint also
+requires generation active and the envelope open. [Activation audit](../../active/2026-10-04-sol61-armour-recovery/checks/root-only-joint-options-native-20261005/activation-guard-audit.md)
+keeps source-derived predicates separate from uncaptured runtime fields. A manually
+opened internal test envelope would establish a conditional service test only,
+not normal product activation, treatment economics or whole-search cause.
+
+The explicitly initialized internal service fixture at qualified 5a746193 later
+passes all 179 checks: native complete Annul/Exalt checking adopts cost 3 from
+checked baseline 13 while retaining the old artifact. Missing positive successor
+and shared ownership refusal preserve 13 without queuing a checker. The same test
+first proves its actual four-action constructor inactive/closed; it opens the
+envelope only in the labeled conditional phase. [Retained receipt](../../active/2026-10-04-sol61-armour-recovery/checks/root-only-joint-conditional-native-20261005/summary.json)
+therefore establishes conditional service, full native checking and preservation,
+not normal product activation, Conquest economics, whole-search cause or a new
+lower authority. Prior losing P0 composition and rejected fixture evidence remain.
+
+The subsequent matched original Conquest treatment at the same native source
+does not activate this service economically: checked cost 101311.35474896732 and
+the exported strategy are byte-identical to control, with no cap. The 33 upper
+requests all reject, final reason
+seed_rejected_statewise_values_without_focused_fallback, and no joint attempt or
+new joint admission is observed. [Matched negative](../../active/2026-10-04-sol61-armour-recovery/checks/root-treatment-20261005/summary.json)
+therefore leaves the conditional theorem/example at its actual internal scope.
+An independently checked root graph and its copied statewise value table carry
+distinct authority: the sticky reconciliation veto must survive any proposed
+graph-only service. Exact active-object lineage and safe graph compatibility are
+the selected source audit; the negative is not proof of whole-search cause.
+
+That [source/receipt audit](../../active/2026-10-04-sol61-armour-recovery/checks/root-treatment-20261005/incumbent-lineage-audit.md)
+finds two unavailable-statewise roles: an explicitly root-only graph, and an
+ordinary independently checked graph whose copied table fails reconciliation.
+The primitive graph checks at 627313592.5067186 although its copied estimate
+differs by 14.414810538291931. Retained root-only service separately supplies the
+101311.35474896732 export winner without replacing the preferred output object.
+The final seed refusal identifies the second role; the selected checkpoint
+requires the first format. Individual object/compatibility payloads for all 33
+refusals were not captured, so a whole-run universal causal claim is unavailable.
+
+Graph-only scheduling may use either representation **only** after the existing
+current graph/payload, goal, economy, vocabulary, caller-scope, artifact and
+generation checks and independent proper/executable/cost-complete authority.
+It does not repair the rejected table or grant arbitrary-entry continuation
+values. The native complete-policy builder must keep its existing statewise
+frontier guard closed for that table and check every positive successor before
+adoption. Relabeling an ordinary graph as root-only would violate the latter's
+placeholder/binding contract. The smallest source-supported predicate/queue
+alternative is unapplied and untested; any claimed economic gain must beat the
+best compatible checked 101311 graph, not merely the much dearer preferred graph.
+
 <a id="cost-only-entry-service"></a>
 ### A cost-only proposal at an actual verified entry
 

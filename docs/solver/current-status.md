@@ -19,6 +19,35 @@ qualification. [HANDOFF](../../HANDOFF.md) owns selected sequencing.
 
 ## Solver research and isolated October 5 causal continuation
 
+**Latest matched result (19:25:45 UTC): both original-root slots are spent.**
+CI-qualified native source/checkout 5a746193, engine 056f2570, Benchmark
+57ae44df (15,149,130 bytes) completes the exact prepared treatment in 122.216 s
+under the unchanged 120/150/165-second protocol. Checked Current cost remains
+101311.35474896732, improvement zero; the exported strategy is byte-identical
+to control (SHA-256 d65787d1...d7e053). Independent evaluation matches with success
+1, complete cost, off-policy mass 0 and cap mask 0. Upper service reports 33
+requests, zero starts and 33 rejections; the final named refusal is
+seed_rejected_statewise_values_without_focused_fallback. Joint attempts and new
+joint candidate admissions are zero. No new joint positive-entry check/adoption
+is observed. [Matched negative receipt](../active/2026-10-04-sol61-armour-recovery/checks/root-treatment-20261005/summary.json)
+preserves control/fallback continuity and clean LOCAL release, with no survivors.
+The conditional 179-check internal fixture did not prove normal product joint
+activation or economic recovery. Whole-search cause and introducing commit stay
+open. Earlier slot reservations below are historical; no additional root is authorized.
+
+The selected source-only [lineage audit](../active/2026-10-04-sol61-armour-recovery/checks/root-treatment-20261005/incumbent-lineage-audit.md)
+finds a representation gap: a separately checked ordinary primitive graph retains
+its 627313592.5067186 executable cost while its copied table fails reconciliation
+by 14.414810538291931. Better root-only graphs are retained separately, not installed
+into output_incumbent. The final seed branch implies an ordinary rejected-table
+incumbent; the new checkpoint/queue predicate requires the root-only format and
+therefore never reaches its independent compatibility check for that role.
+All 33 per-call identities/flags/compatibility are unlogged. A graph-only capability
+predicate covering either unavailable-value representation is source-supported
+only when the existing certified-incumbent validator passes; the sticky veto,
+complete paid support, existing checker/caps and final cheapest-graph selection
+must remain. No implementation or execution of that alternative is selected here.
+
 Oliver selected the [four-report causal/economic continuation](../active/2026-10-04-sol61-armour-recovery/README.md)
 at 03:10 UTC on October 5, with a 12:00 UTC execution deadline. It starts from
 verified main 7eb16ac3 in a fresh isolated branch. Initial parent LOCAL grant
@@ -111,6 +140,27 @@ changes one test file, SHA-256 1cdcc8721baf3399da27bbdcbd4d17f99c00de539f303a3c7
 Production treatment, graph, expected economics and independent baseline gate
 are unchanged. The correction remains unbuilt/untested; CI owns the next changed
 object/link. Preserve the prior 0/3 receipt and source-inferred diagnostic limit.
+
+CI qualifies the correction binary a8d47954; the single granted selector again
+completes 0/3 cases, now capturing Restart at bounded_default_restart outside
+caller scope. LOCAL releases at 18:08:44 UTC with clean ownership and empty
+census. [Full baseline fixture audit](../active/2026-10-04-sol61-armour-recovery/checks/root-only-joint-corrected-native-20261005/fixture-contract-audit.md)
+finds the initial proof omits its work options, enabling the compiler's default
+Restart node despite fail-closed routes. A proposed test-only option copy and
+shared remaining-byte allowance fix the mismatched construction contract;
+neither is applied. No production change, economic result or root invocation.
+
+The subsequently approved options/shared-allowance correction is frozen at
+c66c3721 and CI-qualified as Tests 771ea275. One selector passes independent
+baseline checking and its cost-13 assertion by control flow, then fails the
+focused-seed conjunction, 0/3 cases. Exact guard values/cost are not logged.
+LOCAL releases 18:37:36 UTC, empty census. [Source activation audit](../active/2026-10-04-sol61-armour-recovery/checks/root-only-joint-options-native-20261005/activation-guard-audit.md)
+finds no delayed family among the four primitives: constructor generation false,
+envelope closed. The outer owner therefore returns before the inner seed reason
+or counters; source-derived census is 0/0/0. Joint service also needs an active
+open envelope. Unapplied diagnostics preserve all assertions; any future internal
+unit-test setup must remain distinct from normal product activation. No treatment
+cost, complete three-case acceptance, production activation or new root is proved.
 
 [Solver checkpoint `040993ec`](https://github.com/OliverOrton/poecraft2/blob/040993ec9bb8109cc1970df91c8bc9ec7ef97744/docs/active/2026-10-04-sol61-armour-recovery/PRO-HANDOFF.md) and
 [independent review `4c9f078d`](https://github.com/OliverOrton/poecraft2/blob/4c9f078d95e2c0c837ab7a408c4846420bac94db/docs/active/2026-10-04-sol61-independent-review/causal-research-handoff.md)
@@ -477,3 +527,27 @@ pins this delta; combined-feature functional acceptance and the scoped packaged
 render now pass in the product record. Oliver's visual review remains separate.
 No adaptive exact value or ordinary Calculator, Current,
 Finder, authored Simulator, pending Unveil or donor-preview admission is added.
+
+
+Parent selects an explicit conditional internal service fixture. Source
+5a74619339b5283a22074b79026ea3c0177cc0ca changes only the existing test file:
+first preserve constructor-inactive/closed refusal and zero census, then label
+and initialize an active/open internal envelope for the hand-built native rows.
+Complete outer/inner/checkpoint diagnostics and actual checked cost/reason output
+are present; existing seed, positive, missing-successor and ownership gates stay.
+The source review checks safe checkpoint, matching retained root artifact and
+unused one-shot checker slot. This is unbuilt/unrun and supplies no normal
+product activation or new treatment economic claim. CI owns the changed object;
+old 771ea275 binary does not qualify it. Original root slot 2 remains reserved.
+
+The conditional fixture at frozen 5a746193 is subsequently CI-qualified and
+passes 179/179 checks, all three cases: independently checked 13-to-3 adoption
+with retained fallback, and missing-support/byte-ownership refusals preserving 13
+without checking. Normal constructor inactivity is preserved; this is conditional
+internal service acceptance only. LOCAL releases 19:03:05 UTC, no survivors.
+Parent selects matched original-root slot-2 preparation. [Exact identity/argv](../active/2026-10-04-sol61-armour-recovery/checks/root-treatment-readiness-20261005/preflight.json)
+reuse baseline case/corpus, Current/TargetNeutralZero, law 3, price/runtime pins,
+work/memory limits and 120/150/165-second protocol. Passive benchmark observer
+is unchanged from b02513b6; f532 host-supervision replacement is declared. CI
+Benchmark qualification and a parent LOCAL grant remain required; no new root,
+normal product activation, Conquest economic recovery or whole-search cause is proved.

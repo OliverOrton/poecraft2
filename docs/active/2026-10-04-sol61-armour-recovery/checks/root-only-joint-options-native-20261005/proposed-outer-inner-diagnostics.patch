@@ -1,0 +1,72 @@
+--- a/engine/tests/test_solver_solve.cpp
++++ b/engine/tests/test_solver_solve.cpp
+@@ -17029,6 +17029,56 @@
+         options.max_solver_owned_bytes = 512ull * 1024 * 1024;
+         Impl work(calc, item,
+             {{"annul", 1}, {"exalt", 1}, {"scour", 10}, {"alchemy", 1}}, options);
++        const auto guard_snapshot = [&](const char* stage) {
++            const bool has_incumbent = work.output_incumbent.has_value();
++            const bool statewise = has_incumbent &&
++                work.output_incumbent->has_statewise_upper_values();
++            const bool from_incumbent = work.incremental_upper_policy_pass && statewise;
++            const double fallback_frontier = work.focused_fallback_policy
++                ? work.restart_cost + work.focused_fallback_policy->anchor_state_value
++                : solve_detail::kInfinity;
++            std::printf("root-only outer guards case=%u stage=%s consumed=%u finalized=%u "
++                "high_impact=%u generation=%u closed=%u dirty=%u pass_active=%u incumbent=%u "
++                "delayed=%llu requested=%llu started=%llu rejected=%llu reason=%s\n",
++                scenario, stage, work.consumed ? 1u : 0u, work.finalized_result ? 1u : 0u,
++                work.options.high_impact_executable_uppers ? 1u : 0u,
++                work.incremental_action_generation ? 1u : 0u,
++                work.incremental_envelope_closed ? 1u : 0u,
++                work.incremental_upper_policy_dirty ? 1u : 0u,
++                work.incremental_upper_policy_pass ? 1u : 0u, has_incumbent ? 1u : 0u,
++                static_cast<unsigned long long>(work.delayed_operator_indices.size()),
++                static_cast<unsigned long long>(work.incremental_upper_policy_passes_requested),
++                static_cast<unsigned long long>(work.incremental_upper_policy_passes_started),
++                static_cast<unsigned long long>(work.incremental_upper_policy_passes_rejected),
++                work.incremental_upper_policy_last_failure.c_str());
++            std::printf("root-only inner inputs case=%u stage=%s statewise=%u root_only=%u "
++                "from_incremental_incumbent=%u fallback=%u strict_cache=%u restart_allowed=%u "
++                "restart_cost=%.17g reject_missing_seed=%u reject_strict_cache=%u "
++                "reject_restart_disabled=%u reject_restart_cost=%u fallback_frontier=%.17g "
++                "fallback_frontier_valid=%u\n",
++                scenario, stage, statewise ? 1u : 0u,
++                has_incumbent && work.output_incumbent->compiled_root_entry_only ? 1u : 0u,
++                from_incumbent ? 1u : 0u, work.focused_fallback_policy ? 1u : 0u,
++                work.focused_strict_transition_cache ? 1u : 0u,
++                work.options.allow_economic_restart ? 1u : 0u, work.restart_cost,
++                !work.focused_fallback_policy && !from_incumbent ? 1u : 0u,
++                work.focused_strict_transition_cache ? 1u : 0u,
++                !from_incumbent && !work.options.allow_economic_restart ? 1u : 0u,
++                !from_incumbent && (!std::isfinite(work.restart_cost) || work.restart_cost < 0)
++                    ? 1u : 0u, fallback_frontier,
++                std::isfinite(fallback_frontier) && fallback_frontier < solve_detail::kValueCeiling
++                    ? 1u : 0u);
++            for (const auto index : work.static_operator_indices)
++                std::printf("root-only constructor anchor=%s delayed_family=%u\n",
++                    calc.operators().at(index).id.c_str(),
++                    work.incremental_alternative_type(index) ? 1u : 0u);
++            for (const auto index : work.delayed_operator_indices)
++                std::printf("root-only constructor delayed=%s\n",
++                    calc.operators().at(index).id.c_str());
++            std::printf("progress=%s\n", work.progress_trace_json(0).c_str());
++            std::fflush(stdout);
++        };
++        guard_snapshot("constructor");
+         work.transition_cache = std::make_shared<SolveTransitionCache>();
+         work.priced_rows.clear();
+         const auto bounded = [&] {
+@@ -17155,7 +17205,11 @@
+         const auto old_identity = work.output_incumbent->portfolio_identity;
+         const auto old_scope = work.action_vocabulary_identity();
+         work.incremental_upper_policy_dirty = true;
+-        require(!work.begin_incremental_upper_policy_pass() &&
++        std::printf("root-only independently checked baseline=%.17g\n", baseline_cost);
++        guard_snapshot("before_outer_seed_call");
++        const bool seed_pass_started = work.begin_incremental_upper_policy_pass();
++        guard_snapshot("after_outer_seed_call");
++        require(!seed_pass_started &&
+             work.incremental_upper_policy_last_failure ==
+                 "seed_root_only_incumbent_without_focused_fallback",
+             "focused root-only seed still refuses");

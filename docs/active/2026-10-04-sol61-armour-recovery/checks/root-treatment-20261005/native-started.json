@@ -1,0 +1,9 @@
+{
+  "pid": 70192,
+  "process_creation_identity_token": "70192:134357017770201362",
+  "utc": "2026-10-05T19:22:57.038746+00:00",
+  "root_slot": 2,
+  "root_slots_spent": 2,
+  "root_allowance": 2,
+  "no_retries": true
+}

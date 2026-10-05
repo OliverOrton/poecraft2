@@ -1,0 +1,201 @@
+{
+  "scope": "matched_original_Conquest_Current_slot2_negative",
+  "implementation_source": "5a74619339b5283a22074b79026ea3c0177cc0ca",
+  "engine_tree": "056f257007efd976d9fd48420d6d85d9dac797f8",
+  "benchmark_sha256": "57ae44df5212fd2becfef122329e96b8de9524160178574af18008a260bbd0f7",
+  "benchmark_bytes": 15149130,
+  "case_id": "sol61-trace-conquest5-currentmodel-120",
+  "baseline_cost": 101311.35474896732,
+  "treatment_cost": 101311.35474896732,
+  "economic_improvement": 0.0,
+  "strategy_bytes": 6557,
+  "strategy_sha256": "d65787d11ad895d5925ce9dd4d0aefde483e53bc25df3a80a6a9dfe7a0d7e053",
+  "strategy_byte_identical_to_control": true,
+  "independent_evaluation": {
+    "completed": true,
+    "time_limited": false,
+    "status": "matched",
+    "wall_ms": 790.0814,
+    "converged": true,
+    "cost_complete": true,
+    "zero_off_policy_mass": true,
+    "cost_reconciled": true,
+    "success_probability": 1,
+    "off_policy_mass": 0,
+    "total_expected_cost": 101311.35474896732,
+    "solver_cost_delta_absolute": 0,
+    "solver_cost_delta_relative": 0
+  },
+  "solve_summary": {
+    "converged": false,
+    "start_state": 0,
+    "start_value": 101311.35474896732,
+    "expanded_states": 4000,
+    "sweeps": 2,
+    "residual": 3.552713678800501e-15,
+    "skipped_action_count": 0,
+    "policy_available": true,
+    "policy_status": "bounded_feasible",
+    "termination": "requested_bounded_finish",
+    "stop_cause": "requested_bounded_finish",
+    "cap_hit_mask": 0,
+    "action_counts": {
+      "registry": 190,
+      "candidate": 28,
+      "evaluator_supported": 28,
+      "supported_priced": 288,
+      "skipped_missing_price": 0,
+      "skipped_unsupported": 0
+    },
+    "lower_bound": 0,
+    "upper_bound": 101311.35474896732,
+    "evaluated_policy_cost": 101311.35474896732,
+    "absolute_optimality_gap": 101311.35474896732,
+    "relative_optimality_gap": null,
+    "requested_absolute_optimality_gap": 0,
+    "requested_relative_optimality_gap": 0,
+    "target_met": false,
+    "target_fired": "none"
+  },
+  "upper_service": {
+    "requested": 33,
+    "started": 0,
+    "proper": 0,
+    "rejected": 33,
+    "fixed_policy_proofs": 0,
+    "last_failure": "seed_rejected_statewise_values_without_focused_fallback"
+  },
+  "joint_service": {
+    "attempts": 0,
+    "successes": 0,
+    "last_completed_rows": 0,
+    "best_upper": null,
+    "last_failure": ""
+  },
+  "missing_frontier": {
+    "discovered": 0,
+    "priority_offers": 0,
+    "service_completions": 0,
+    "max_open": 0,
+    "open": 0
+  },
+  "new_joint_candidate_admission": false,
+  "new_joint_positive_entry_results": "unobserved: no joint attempt or candidate queued",
+  "incumbent_portfolio": {
+    "candidate_estimate": {
+      "present": true,
+      "cost": 627313592.5067186,
+      "source": "gated_primitive_destructive_renewal",
+      "stage": "exact_evaluated_policy",
+      "verified": true,
+      "identity": {
+        "portfolio": "a6e7faaf9cf3cb73",
+        "goal": "8fbb13ddeb43becc",
+        "economy": "b80f73d65bde3138",
+        "action_vocabulary": "f4bd53579a332fea",
+        "caller_scope": "062dd0d38b3fa559",
+        "graph_prefix": "8071a443ac49f891",
+        "artifact": "b23623922926cd3c",
+        "source_generation": 1
+      }
+    },
+    "verified_executable_upper": {
+      "present": true,
+      "cost": 101311.35474896732,
+      "portfolio_identity": "8022d92bb793621a",
+      "identity": {
+        "portfolio": "8022d92bb793621a",
+        "goal": "8fbb13ddeb43becc",
+        "economy": "b80f73d65bde3138",
+        "action_vocabulary": "f4bd53579a332fea",
+        "caller_scope": "062dd0d38b3fa559",
+        "graph_prefix": "ee1b722892f036a9",
+        "artifact": "b23623922926cd3c",
+        "source_generation": 5
+      },
+      "observations": 4,
+      "strictly_cheaper_replacements": 2,
+      "monotone": true
+    },
+    "independent_global_lower": {
+      "value": 0,
+      "certified": true,
+      "provenance": "target_neutral_universal_zero"
+    },
+    "restricted_search_lower": {
+      "value": 0,
+      "envelope_global": false
+    },
+    "exact_closure": {
+      "proved": false,
+      "value": null
+    }
+  },
+  "publication": {
+    "status": "bounded_fallback_policy",
+    "candidate_kind": "selective_completion_root"
+  },
+  "native_receipt": {
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 70192,
+    "process_creation_flags": 524,
+    "process_identity_token": "70192:134357017770201362",
+    "survivor": false,
+    "parent_survivor": false,
+    "descendants_after_parent_exit": false,
+    "descendant_observations": [],
+    "member_identity_observations": [
+      {
+        "pid": 70192,
+        "handle_identity": 1,
+        "process_identity_token": "70192:134357017770201362",
+        "identity_query_error": null,
+        "exit_signal": "live",
+        "image": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\poecraft2-solver-causal\\build\\engine\\poecraft_solver_benchmark.exe",
+        "image_query_error": null,
+        "exit_wait_after_image_query": 258,
+        "owned_job_member": true,
+        "image_authority": "current_full_image_query",
+        "verified_image": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\poecraft2-solver-causal\\build\\engine\\poecraft_solver_benchmark.exe",
+        "image_observation_phase": "client_running",
+        "platform_console_host": false,
+        "phase": "client_running",
+        "observed_at_monotonic": 1777832.6345527
+      }
+    ],
+    "member_identity_observations_truncated": false,
+    "console_host_cleanup_performed": false,
+    "system_console_image": "C:\\WINDOWS\\system32\\conhost.exe",
+    "process_tree_owner": "windows_job",
+    "cleanup_drain_timed_out": false,
+    "cleanup_error": null,
+    "survivor_check": "owned_windows_job_drained",
+    "wall_ms": 122216.0040999297,
+    "log_path": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\poecraft2-solver-causal\\docs\\active\\2026-10-04-sol61-armour-recovery\\checks\\root-treatment-20261005\\native.log",
+    "identity_after": "proved_absent"
+  },
+  "release": {
+    "checked_utc": "2026-10-05T19:25:45.1425030Z",
+    "implementation_source": "5a74619339b5283a22074b79026ea3c0177cc0ca",
+    "checkout_head": "5a74619339b5283a22074b79026ea3c0177cc0ca",
+    "native_pid": 70192,
+    "native_token": "70192:134357017770201362",
+    "native_exit_code": 0,
+    "owner_survivor": false,
+    "descendants_after_parent_exit": false,
+    "cleanup_error": null,
+    "matching_processes": [],
+    "native_runs": 1,
+    "root_slots_spent": 2,
+    "root_allowance": 2,
+    "retries": 0,
+    "local_released": true
+  },
+  "root_slots_spent": 2,
+  "root_allowance": 2,
+  "conclusion": "No cheaper normal Conquest strategy or normal activation of selected joint checkpoint; no whole-search causal or introducing-commit proof. Conditional 179-check fixture scope remains finite/internal."
+}

@@ -1,0 +1,17 @@
+{
+  "checked_utc": "2026-10-05T19:25:45.1425030Z",
+  "implementation_source": "5a74619339b5283a22074b79026ea3c0177cc0ca",
+  "checkout_head": "5a74619339b5283a22074b79026ea3c0177cc0ca",
+  "native_pid": 70192,
+  "native_token": "70192:134357017770201362",
+  "native_exit_code": 0,
+  "owner_survivor": false,
+  "descendants_after_parent_exit": false,
+  "cleanup_error": null,
+  "matching_processes": [],
+  "native_runs": 1,
+  "root_slots_spent": 2,
+  "root_allowance": 2,
+  "retries": 0,
+  "local_released": true
+}

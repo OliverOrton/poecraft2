@@ -1,0 +1,38 @@
+{
+  "source_head": "5a74619339b5283a22074b79026ea3c0177cc0ca",
+  "checkout_head": "5a74619339b5283a22074b79026ea3c0177cc0ca",
+  "engine_tree": "056f257007efd976d9fd48420d6d85d9dac797f8",
+  "gates": {
+    "checkout_head_unchanged": true,
+    "implementation_engine_tree_unchanged": true,
+    "source_bytes_and_mtimes_unchanged": true,
+    "build_exit_clean": true,
+    "parent_identity_proved_absent": true,
+    "compiler_or_linker_started": true,
+    "test_link_command_observed": true,
+    "binary_changed": true,
+    "binary_newer_than_changed_inputs": true,
+    "corrected_fixture_object_differs_from_previous_qualified_object": true,
+    "corrected_fixture_object_newer_than_changed_input": true,
+    "new_selector_present": true,
+    "named_seed_guard_present": true,
+    "new_retention_guard_present": true
+  },
+  "all_passed": true,
+  "objects_after": {
+    "build/engine/CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_solve.cpp.obj": {
+      "sha256": "aae94b20ce62f739e199cc93586c3fab4a9a58e72ffa0071f7821f73e93c812e",
+      "bytes": 2322931,
+      "mtime_ns": 1791226806077120100
+    }
+  },
+  "binary_after": {
+    "sha256": "0b414ccb8d4caace64625d0e3a9c9f8748ff983331d1f16722e1a9d1fbac66cc",
+    "bytes": 20601262,
+    "mtime_ns": 1791226806818725400
+  },
+  "original_path": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task\\ci-evidence\\root-joint-conditional-build-20261005\\provenance.json",
+  "original_sha256": "8d680e7f48c60ee045f8c6458935f076cf99463d7a2cdd4306873c23187564b2",
+  "receipt_path": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task\\ci-evidence\\root-joint-conditional-build-20261005\\receipt.json",
+  "receipt_sha256": "72bc7247e2a31bdb21d72b04ea117952c228ab70f308add668c6233b96d0871c"
+}

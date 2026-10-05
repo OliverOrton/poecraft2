@@ -1,0 +1,18 @@
+{
+  "retention": "final original result retained losslessly once in Git; raw final/partial remain local",
+  "final_result": {
+    "raw_name": "result.json",
+    "raw_bytes": 27348800,
+    "raw_sha256": "17459ca7692b95187b4f1bd334464b776917d4f25d73351b2cbe02ea22d720fd",
+    "stored_name": "result.json.gz",
+    "stored_bytes": 703042,
+    "stored_sha256": "9f18d3d9b5245ae301d8c8d4f921227879f46488da365080f270274e9f06a9af",
+    "decompression_bytes_verified": true
+  },
+  "local_partial": {
+    "name": "partial.json",
+    "bytes": 27348827,
+    "sha256": "261b9232827e78a114d24868d6d772941089f829250971a934e5f2121aaf39a2"
+  },
+  "scope": "new matched treatment receipt; protected historical trace untouched"
+}

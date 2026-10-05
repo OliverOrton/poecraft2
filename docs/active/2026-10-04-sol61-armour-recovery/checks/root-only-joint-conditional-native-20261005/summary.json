@@ -1,0 +1,57 @@
+{
+  "source_commit": "5a74619339b5283a22074b79026ea3c0177cc0ca",
+  "engine_tree": "056f257007efd976d9fd48420d6d85d9dac797f8",
+  "tests_executable_sha256": "0b414ccb8d4caace64625d0e3a9c9f8748ff983331d1f16722e1a9d1fbac66cc",
+  "qualification": "conditional internal checkpoint service only",
+  "built": true,
+  "tested": true,
+  "checks": 179,
+  "failures": 0,
+  "completed_cases": 3,
+  "cases": [
+    {
+      "case": 0,
+      "states": 4,
+      "baseline": 13.0,
+      "selected": 3.0,
+      "queued": true,
+      "attempts": 1,
+      "refusal": "",
+      "owned_bytes": 179907
+    },
+    {
+      "case": 1,
+      "states": 4,
+      "baseline": 13.0,
+      "selected": 13.0,
+      "queued": false,
+      "attempts": 1,
+      "refusal": "missing_completed_row_and_certified_frontier:state=1:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=1:frontier_uses=0:renewal_boundaries=0/1",
+      "owned_bytes": 150314
+    },
+    {
+      "case": 2,
+      "states": 4,
+      "baseline": 13.0,
+      "selected": 13.0,
+      "queued": false,
+      "attempts": 1,
+      "refusal": "entry_scratch_exceeds_byte_cap",
+      "owned_bytes": 151062
+    }
+  ],
+  "normal_product_activation": false,
+  "normal_constructor_negative_preserved": true,
+  "lower_profile": "TargetNeutralZero",
+  "economic_restart": false,
+  "native_invocations": 1,
+  "new_root_runs": 0,
+  "root_slot2_spent": false,
+  "wall_ms": 330.64000005833805,
+  "local_release_utc": "2026-10-05T19:03:05.5896967Z",
+  "native_log_sha256": "fafb901799993820814d88cc7aa5a967c0c3dabf45b3d57454f6919e50abe574",
+  "native_log_bytes": 122559,
+  "progress_snapshots": 22,
+  "consumer_sha256": "ace1c7f196bc30ec5e9ea01ef59ca54c45c927fa08829be865a2590531ed1081",
+  "worker_sha256": "1f7978fa0cf43c331487ea57212286cbf92ff96141d379a901c4bd421d4aae92"
+}

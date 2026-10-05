@@ -1,0 +1,19 @@
+[
+  "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\poecraft2-solver-causal\\build\\engine\\poecraft_solver_benchmark.exe",
+  "--artifact",
+  "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+  "--corpus",
+  "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\poecraft2-solver-causal\\docs\\active\\2026-10-04-sol61-armour-recovery\\checks\\root-baseline-20261005\\manifest.json",
+  "--case",
+  "sol61-trace-conquest5-currentmodel-120",
+  "--solver-mode",
+  "current",
+  "--native-goal-proof",
+  "target-neutral-zero",
+  "--output",
+  "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\poecraft2-solver-causal\\docs\\active\\2026-10-04-sol61-armour-recovery\\checks\\root-treatment-20261005\\result.json",
+  "--partial-output",
+  "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\poecraft2-solver-causal\\docs\\active\\2026-10-04-sol61-armour-recovery\\checks\\root-treatment-20261005\\partial.json",
+  "--strategy-output",
+  "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\poecraft2-solver-causal\\docs\\active\\2026-10-04-sol61-armour-recovery\\checks\\root-treatment-20261005\\strategies"
+]

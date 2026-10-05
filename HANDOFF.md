@@ -107,6 +107,28 @@ predicted costs are unchanged. Source-only, no build/rerun: CI owns the changed
 test object and link, then solver awaits verified binary and a later parent LOCAL
 for the same bounded selector. Prior 0/3 evidence and root slot 2 stay preserved.
 
+The corrected fixture binary a8d47954 is later CI-qualified. Its sole selector
+stops at baseline again, 0/3 cases; progress now captures Restart at
+bounded_default_restart outside requested scope. LOCAL releases 18:08:44 UTC,
+empty census. Full source audit identifies omitted proof.options at initial
+emission: compiler default economic Restart permission differs from actual work
+options. Fail-closed routing does not suppress the otherwise emitted operation,
+and the all-node scope gate is correct. The living programme retains a complete
+fixture checklist and unapplied test-only option-copy/shared-byte-allowance patch.
+No permission widening, compiler weakening, build, new root or cost claim.
+
+Parent approves the exact fixture option-copy/shared-allowance correction;
+source c66c3721, engine 3a53576b, CI-qualified Tests 771ea275. The sole selector
+passes independent baseline certification/cost-13 assertion, then fails its seed
+conjunction, still 0/3; LOCAL releases 18:37:36 UTC with no survivors. Source audit
+finds constructor-delayed set empty: generation false/envelope closed makes the
+outer owner return before inner seed handling; source-derived counters 0/0/0.
+Joint service shares that activation requirement. The programme retains complete
+outer/inner diagnostic proposals, unapplied, without flag or scope changes.
+Decide explicitly whether a hand-built internal service fixture is intended;
+its activation would not establish normal product scheduling. CI owns builds,
+all prior negatives remain intact and original root slot 2 stays unused.
+
 Published research checkpoints, both absent from main:
 
 - [Solver `040993ec`: Pro handoff](https://github.com/OliverOrton/poecraft2/blob/040993ec9bb8109cc1970df91c8bc9ec7ef97744/docs/active/2026-10-04-sol61-armour-recovery/PRO-HANDOFF.md)
@@ -158,3 +180,52 @@ This replaces superseded operational sequencing. Earlier detailed handoffs remai
 in [pre-closeout Git history](https://github.com/OliverOrton/poecraft2/blob/81d4f47106993d7c36af502595fcba24fa0b7e51/HANDOFF.md)
 and their existing living programme records; no historical qualification is
 relabelled or erased.
+
+
+Parent selects an explicit conditional internal service fixture. Source
+5a74619339b5283a22074b79026ea3c0177cc0ca changes only the existing test file:
+first preserve constructor-inactive/closed refusal and zero census, then label
+and initialize an active/open internal envelope for the hand-built native rows.
+Complete outer/inner/checkpoint diagnostics and actual checked cost/reason output
+are present; existing seed, positive, missing-successor and ownership gates stay.
+The source review checks safe checkpoint, matching retained root artifact and
+unused one-shot checker slot. This is unbuilt/unrun and supplies no normal
+product activation or new treatment economic claim. CI owns the changed object;
+old 771ea275 binary does not qualify it. Original root slot 2 remains reserved.
+
+Conditional Tests at source/checkout 5a746193, engine 056f2570, binary 0b414ccb
+pass all 179 checks/three cases. Checked complete adoption is 13-to-3; both
+negative controls preserve 13 and queue no checker. Normal constructor negative
+stays; no normal activation claim. LOCAL releases 19:03:05 UTC, empty census.
+Parent accepts this finite scope and selects root-slot-2 preparation. The
+[frozen request/argv handoff](docs/active/2026-10-04-sol61-armour-recovery/checks/root-treatment-readiness-20261005/preflight.json)
+reuses exact baseline case/corpus and native profile/law/economy/budget/Finish
+identity, with only output paths changed. Benchmark/passive observer match b025;
+existing f532 host-supervision replacement is separately declared. Source unchanged,
+no build/run; CI owns current Benchmark link/provenance, then parent grants LOCAL.
+That readiness reservation is historical. Slot 2 subsequently completes at
+source/checkout 5a746193, engine 056f2570, CI Benchmark 57ae44df. The exact matched
+treatment returns byte-identical control strategy/cost 101311.35474896732,
+improvement zero, independent success 1/complete prices/off-policy mass 0/cap 0.
+Upper service has 33 requests/0 starts/33 rejections, final reason
+seed_rejected_statewise_values_without_focused_fallback; joint attempts and new
+joint admissions are zero. Both root slots are spent. LOCAL releases
+19:25:45 UTC, owned job drained and census empty. [Compact result](docs/active/2026-10-04-sol61-armour-recovery/checks/root-treatment-20261005/summary.json)
+does not establish normal joint activation, a cheaper Conquest policy or the
+whole-search cause. Parent selects source-only reconciliation of actual active
+incumbent value-role/graph provenance against retained fallback and final winner;
+no code, build or further root. Preserve sticky statewise rejection and all prior
+negative/conditional evidence. No merge, push, deployment or server restart.
+
+The [completed source-only lineage audit](docs/active/2026-10-04-sol61-armour-recovery/checks/root-treatment-20261005/incumbent-lineage-audit.md)
+finds ordinary independently checked primitive graph 627313592.5067186 with sticky
+rejected table (delta 14.414810538291931), while the 101311 root-only winner lives
+in the separate retained portfolio. Final seed refusal denotes the ordinary role;
+selected checkpoint/queue require root-only format. All 33 per-refusal flags and
+compatibility are unlogged. Smallest supported, unapplied alternative: allow a
+currently compatible independently checked graph with unavailable statewise values
+through the same safe checkpoint/queue; keep the table veto and complete native
+support/checker/fallback/cap requirements. This is recommended scope for parent
+decision, not authorization. Engine and checkout remain 5a746193/056f2570; only
+canonical docs and static receipt projections change. LOCAL remains released,
+both roots spent, no code/build/run or normal activation/economic recovery claim.

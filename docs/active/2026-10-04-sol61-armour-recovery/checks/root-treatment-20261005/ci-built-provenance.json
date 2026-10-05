@@ -1,0 +1,69 @@
+{
+  "source_head": "5a74619339b5283a22074b79026ea3c0177cc0ca",
+  "checkout_head": "5a74619339b5283a22074b79026ea3c0177cc0ca",
+  "checkout_head_after": "5a74619339b5283a22074b79026ea3c0177cc0ca",
+  "engine_tree": "056f257007efd976d9fd48420d6d85d9dac797f8",
+  "gates": {
+    "checkout_source_tree_matches_frozen_implementation": true,
+    "implementation_engine_tree_unchanged": true,
+    "source_bytes_and_mtimes_unchanged": true,
+    "build_exit_clean": true,
+    "parent_identity_proved_absent": true,
+    "compiler_or_linker_started": true,
+    "benchmark_link_command_observed": true,
+    "three_target_objects_and_current_library_in_link": true,
+    "binary_changed": true,
+    "binary_newer_than_changed_inputs": true,
+    "all_benchmark_target_objects_exist": true,
+    "qualified_engine_objects_and_library_unchanged": true,
+    "library_newer_than_changed_production_inputs": true,
+    "generated_configuration_and_stamps_unchanged": true,
+    "artifact_cli_guard_present": true,
+    "case_cli_guard_present": true,
+    "development_checkpoint_cli_guard_present": true
+  },
+  "all_passed": true,
+  "library_after": {
+    "sha256": "9344b00b4577039dadb088537867f08251a33f4f6739970cc7abed612bb548e8",
+    "bytes": 17633138,
+    "mtime_ns": 1791221744100873300
+  },
+  "core_objects_after": {
+    "build/engine/CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_focused.cpp.obj": {
+      "sha256": "1c4940e380bb6c3fde7606626f1d152a7e75895183ef3cb31357813d41ad6eeb",
+      "bytes": 120261,
+      "mtime_ns": 1791217407769065200
+    },
+    "build/engine/CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_incremental.cpp.obj": {
+      "sha256": "876d1ea7c9d581491ebbc2e265e2b6f618c092afa1c82068215c2bf3ece4dbf5",
+      "bytes": 321957,
+      "mtime_ns": 1791221743067699000
+    }
+  },
+  "objects_after": {
+    "build/engine/CMakeFiles/poecraft_solver_benchmark.dir/benchmarks/solver_executable_fragment.cpp.obj": {
+      "sha256": "2a8e5bc437e4fe5573dcb8032e7c074e38c8a1f9f977ed58abe29b6d92b06ac4",
+      "bytes": 403520,
+      "mtime_ns": 1791172309808658600
+    },
+    "build/engine/CMakeFiles/poecraft_solver_benchmark.dir/benchmarks/solver_executable_fragment_engine.cpp.obj": {
+      "sha256": "1bd8d8e27de899730f8d3d06eb828e24dada8b5f404de09c3548fa7e66706bcd",
+      "bytes": 235224,
+      "mtime_ns": 1791172309854210100
+    },
+    "build/engine/CMakeFiles/poecraft_solver_benchmark.dir/benchmarks/solver_benchmark.cpp.obj": {
+      "sha256": "ccef867bc5c4e03dc89efdfa36757efc5b4c4b2e12b4bf0b09f121aa9565cc44",
+      "bytes": 818186,
+      "mtime_ns": 1791173560501720900
+    }
+  },
+  "binary_after": {
+    "sha256": "57ae44df5212fd2becfef122329e96b8de9524160178574af18008a260bbd0f7",
+    "bytes": 15149130,
+    "mtime_ns": 1791227772386663800
+  },
+  "original_path": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task\\ci-evidence\\benchmark-build-20261005\\provenance.json",
+  "original_sha256": "5f127dcd832b1a025c65cf977d2a3c82145da0db9dd6cc2bafc510c13ef9464a",
+  "receipt_path": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task\\ci-evidence\\benchmark-build-20261005\\receipt.json",
+  "receipt_sha256": "785f93732b8e6f81ded6579cf270b935a13eb16027939e9a6cc6033494defa26"
+}

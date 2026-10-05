@@ -1,0 +1,16 @@
+{
+  "checked_utc": "2026-10-05T18:08:44.7012023Z",
+  "implementation_source": "fdf043ba96cd81881062a34eb8bb929b81006e62",
+  "checkout_head": "23dcc5aea8828dc535466613479493bc379d4e7b",
+  "native_pid": 24580,
+  "native_token": "24580:134356972834304017",
+  "native_exit_code": 3221226505,
+  "owner_survivor": false,
+  "descendants_after_parent_exit": false,
+  "cleanup_error": null,
+  "matching_processes": [],
+  "native_runs": 1,
+  "completed_cases": 0,
+  "original_Conquest_roots": 0,
+  "local_released": true
+}
