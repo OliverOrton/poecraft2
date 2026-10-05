@@ -609,6 +609,43 @@ introducing change. A generic extension must retain exact item/tier/blocker and
 capacity guards, every positive exit and paid setup/recovery. Modifier-family
 presence or a goal mask alone cannot establish that a desired tier is rollable.
 
+### A native word needs an economically complete complement
+
+The [four-report synthesis](../../active/2026-10-04-sol61-armour-recovery/README.md)
+separates a legal partial-held word from a useful complete controller. At the
+positive mask-9 Conquest carrier, paid Ember tier 1 then Eldritch Exalt preserves
+all four incoming affixes. The below-tier hybrid still excludes its desired
+same-family tier, and the released router still sends missing T1 suppression to
+Chaos. Returning all 33 native exits to that router therefore does not establish
+a saving. Native word legality, source-local admission, compatible exit tails,
+proper full-root evaluation and retained export are separate premises.
+
+An ordinary fill versus reroll comparison must use each action's complete exit
+law and complete compatible tails, including lost goals, mandatory cleanup and
+paid recovery. Primitive price, goal-mask gain or old-policy visit counts alone
+do not determine the new controller's cost. A bounded producer may select a few
+alternatives without claiming full action coverage; all unserved branches and
+failed hypotheses remain visible.
+
+<a id="inevitable-renewal"></a>
+### Deleting work before an inevitable renewal is conditional
+
+Let A be a mandatory paid Annul, followed by a mandatory Chaos C. If every
+positive post-A physical/control state has exactly the same native C exit
+kernel K, C resources and compatible continuation context as C at the original
+entry, then K_A K_C=K: the A probabilities sum to one, and all rows of K_C
+in that support equal K. Removing A leaves the complete exit law unchanged and
+removes its nonnegative paid cost and one primitive execution.
+
+This premise also requires no intermediate true goal, retained caller choice,
+checkpoint, observation-dependent route, or cleanup/recovery obligation.
+Fractures, locks, rarity changes, preserved modifiers, affix-dependent draw
+rules and changed control context can invalidate it. A generic Annul followed
+eventually by Chaos is not sufficient. The private full-junk finisher in the
+economics report is a candidate application; current-native kernel equality
+and complete full-root economics remain unestablished. This is a conditional
+application of CLM-0002/CLM-0004, not a new runtime issuer or activation.
+
 One constructive native domain is an ordinary Rare item with no fractured
 affix, locked side, unresolved offer/checkpoint or incompatible persistent
 context, together with an independently certified identical empty-Rare entry.

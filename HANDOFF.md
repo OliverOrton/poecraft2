@@ -1,4 +1,4 @@
-# Selected handoff - October 4, 2026
+# Selected handoff - October 5, 2026
 
 ## Released product
 
@@ -11,11 +11,30 @@ owns qualification, the exact b04 packaged/rendered identity, frozen inputs,
 WASM/source pins, retained failures and screenshot paths. No deployment,
 dev-server restart or normal-checkout bundle/data regeneration occurred.
 
-## Selected next work: Pro causal planning; heavy work paused
+## Selected work: isolated solver causal/economic continuation
 
-Oliver requested a solver break and research. No new native builds, solver,
-Simulator or capability implementation is selected. LOCAL is released with no
-owned heavy process. Do not invent a new programme or repeat an experiment.
+Oliver authorized the three coordinated Sol 6.1 tasks at 03:10 UTC October 5,
+through 12:00 UTC. The solver continuation owns C++ causal construction and
+economics; CI supervision and charcoal UI are separately owned. Fresh branch
+dot/sol61-solver-causal-20261005 starts at verified main
+7eb16ac3d63834fd5d3256ab42483f47d264b764. All four research reports and two
+companions were fully reviewed and retained once in the
+[living programme](docs/active/2026-10-04-sol61-armour-recovery/README.md).
+
+Parent granted the first LOCAL batch: serial Tests and Benchmark builds with
+two compiler jobs, historical partial-held P0 native witness, growth continuity
+and the existing product-scope action-coverage diagnostic through Current's
+state-expansion admission owner. No matched root invocation is granted yet.
+The later carrier is a diagnostic observation point; the native ordering
+witness separately establishes positive original-root reachability. Corrected
+native builds pass; P0 passes 293/293 and growth continuity passes 84/84.
+Corrected admission completes in 134 ms at the separate mask-9 carrier: exact
+paid Ember/Exalt operator admitted with a retained native kernel. This is later-
+carrier admission, not observed original-root service; no root invocation,
+checking or export has run. LOCAL released at 03:56:16 UTC with no survivors.
+The first original Conquest root slot is requested as a passive existing-telemetry
+baseline. Both failed receipts remain in the programme record; passing checks
+need no repeat.
 
 Published research checkpoints, both absent from main:
 
@@ -35,11 +54,13 @@ admission. A positive native partial-held historical word establishes one local
 composition omission; private memory/observer stops do not establish the older
 regression cause. The failed historical plain-fill hypothesis stays failed.
 
-Next two actions are source-only Pro review of the pinned causal questions and
-selection of a bounded plan with matched controls. New execution needs that
-selection and the parent-controlled LOCAL slot. Preserve all per-run bounds,
-cleanup obligations, exact guards and numerical authorities. No fixed aggregate
-run limit is restored; the present pause still prohibits starting runs.
+The first finite result determines the next causal boundary. A maximum of two
+matched original Conquest Current root invocations needs a later parent grant;
+original 1 GiB, 120-second Finish, 150-second native watchdog and 165-second host
+cleanup stay fixed, with identical passive instrumentation and TargetNeutralZero.
+No pushes, main merge, deployment or dev-server restart without parent
+coordination. Stop on an unexpected failure, release LOCAL immediately and
+check compiler/native survivors. Wind down by 12:00 UTC.
 
 ## Qualification gaps and evidence owners
 

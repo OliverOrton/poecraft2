@@ -1,0 +1,214 @@
+Using optional compiler cache: C:\msys64\ucrt64\bin\ccache.exe
+Preset CMake variables:
+
+  BUILD_TESTING="ON"
+  CMAKE_BUILD_TYPE="Release"
+  CMAKE_EXPORT_COMPILE_COMMANDS="ON"
+
+-- The C compiler identification is GNU 14.2.0
+-- The CXX compiler identification is GNU 14.2.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: C:/msys64/ucrt64/bin/gcc.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: C:/msys64/ucrt64/bin/g++.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done (2.9s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/build/engine
+[0/2] Re-checking globbed directories...
+[1/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/bitset.cpp.obj
+[2/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/data_loader.cpp.obj
+[3/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/item_state.cpp.obj
+[4/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/rng.cpp.obj
+[5/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/api.cpp.obj
+[6/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/actions_basic.cpp.obj
+[7/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/session_builder.cpp.obj
+[8/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/memory_contract.cpp.obj
+[9/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/hinekora.cpp.obj
+[10/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/multi_item.cpp.obj
+[11/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/recombination_constraints.cpp.obj
+[12/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/recombination.cpp.obj
+In file included from C:/msys64/ucrt64/include/c++/14.2.0/vector:65,
+                 from C:/msys64/ucrt64/include/c++/14.2.0/functional:64,
+                 from C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/src/engine_internal.hpp:5,
+                 from C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/src/multi_item.hpp:2,
+                 from C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/src/recombination.hpp:2,
+                 from C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/src/recombination.cpp:1:
+In function 'constexpr std::__enable_if_t<((bool)std::__is_bitwise_relocatable<_Tp>::value), _Tp*> std::__relocate_a_1(_Tp*, _Tp*, _Tp*, allocator<_T2>&) [with _Tp = unsigned int; _Up = unsigned int]',
+    inlined from 'constexpr _ForwardIterator std::__relocate_a(_InputIterator, _InputIterator, _ForwardIterator, _Allocator&) [with _InputIterator = unsigned int*; _ForwardIterator = unsigned int*; _Allocator = allocator<unsigned int>]' at C:/msys64/ucrt64/include/c++/14.2.0/bits/stl_uninitialized.h:1145:33,
+    inlined from 'static constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_S_relocate(pointer, pointer, pointer, _Tp_alloc_type&) [with _Tp = unsigned int; _Alloc = std::allocator<unsigned int>]' at C:/msys64/ucrt64/include/c++/14.2.0/bits/stl_vector.h:509:26,
+    inlined from 'constexpr void std::vector<_Tp, _Alloc>::_M_realloc_append(_Args&& ...) [with _Args = {const unsigned int&}; _Tp = unsigned int; _Alloc = std::allocator<unsigned int>]' at C:/msys64/ucrt64/include/c++/14.2.0/bits/vector.tcc:647:32,
+    inlined from 'constexpr void std::vector<_Tp, _Alloc>::push_back(const value_type&) [with _Tp = unsigned int; _Alloc = std::allocator<unsigned int>]' at C:/msys64/ucrt64/include/c++/14.2.0/bits/stl_vector.h:1294:21,
+    inlined from 'poecraft::enumerate_random_recomb_side(const std::vector<RecombOccurrence>&)::<lambda(std::vector<unsigned int>, double)>' at C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/src/recombination.cpp:172:51,
+    inlined from 'constexpr _Res std::__invoke_impl(__invoke_other, _Fn&&, _Args&& ...) [with _Res = void; _Fn = poecraft::enumerate_random_recomb_side(const std::vector<RecombOccurrence>&)::<lambda(vector<unsigned int>, double)>&; _Args = {vector<unsigned int, allocator<unsigned int> >, double}]' at C:/msys64/ucrt64/include/c++/14.2.0/bits/invoke.h:61:36,
+    inlined from 'constexpr std::enable_if_t<((bool)is_invocable_r_v<_Res, _Callable, _Args ...>), _Res> std::__invoke_r(_Callable&&, _Args&& ...) [with _Res = void; _Callable = poecraft::enumerate_random_recomb_side(const std::vector<RecombOccurrence>&)::<lambda(vector<unsigned int>, double)>&; _Args = {vector<unsigned int, allocator<unsigned int> >, double}]' at C:/msys64/ucrt64/include/c++/14.2.0/bits/invoke.h:111:28,
+    inlined from 'static _Res std::_Function_handler<_Res(_ArgTypes ...), _Functor>::_M_invoke(const std::_Any_data&, _ArgTypes&& ...) [with _Res = void; _Functor = poecraft::enumerate_random_recomb_side(const std::vector<RecombOccurrence>&)::<lambda(std::vector<unsigned int>, double)>; _ArgTypes = {std::vector<unsigned int, std::allocator<unsigned int> >, double}]' at C:/msys64/ucrt64/include/c++/14.2.0/bits/std_function.h:290:30:
+C:/msys64/ucrt64/include/c++/14.2.0/bits/stl_uninitialized.h:1129:27: warning: 'void* __builtin_memcpy(void*, const void*, long long unsigned int)' writing between 5 and 9223372036854775804 bytes into a region of size 4 overflows the destination [-Wstringop-overflow=]
+ 1129 |           __builtin_memcpy(__result, __first, __count * sizeof(_Tp));
+      |           ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from C:/msys64/ucrt64/include/c++/14.2.0/x86_64-w64-mingw32/bits/c++allocator.h:33,
+                 from C:/msys64/ucrt64/include/c++/14.2.0/bits/allocator.h:46,
+                 from C:/msys64/ucrt64/include/c++/14.2.0/bits/alloc_traits.h:39,
+                 from C:/msys64/ucrt64/include/c++/14.2.0/ext/alloc_traits.h:34,
+                 from C:/msys64/ucrt64/include/c++/14.2.0/bits/hashtable_policy.h:39,
+                 from C:/msys64/ucrt64/include/c++/14.2.0/bits/hashtable.h:35,
+                 from C:/msys64/ucrt64/include/c++/14.2.0/bits/unordered_map.h:33,
+                 from C:/msys64/ucrt64/include/c++/14.2.0/unordered_map:41,
+                 from C:/msys64/ucrt64/include/c++/14.2.0/functional:63:
+In member function '_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = unsigned int]',
+    inlined from 'constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = unsigned int]' at C:/msys64/ucrt64/include/c++/14.2.0/bits/allocator.h:196:40,
+    inlined from 'static constexpr _Tp* std::allocator_traits<std::allocator<_Up> >::allocate(allocator_type&, size_type) [with _Tp = unsigned int]' at C:/msys64/ucrt64/include/c++/14.2.0/bits/alloc_traits.h:478:28,
+    inlined from 'constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = unsigned int; _Alloc = std::allocator<unsigned int>]' at C:/msys64/ucrt64/include/c++/14.2.0/bits/stl_vector.h:380:33,
+    inlined from 'constexpr void std::vector<_Tp, _Alloc>::_M_realloc_append(_Args&& ...) [with _Args = {const unsigned int&}; _Tp = unsigned int; _Alloc = std::allocator<unsigned int>]' at C:/msys64/ucrt64/include/c++/14.2.0/bits/vector.tcc:596:44,
+    inlined from 'constexpr void std::vector<_Tp, _Alloc>::push_back(const value_type&) [with _Tp = unsigned int; _Alloc = std::allocator<unsigned int>]' at C:/msys64/ucrt64/include/c++/14.2.0/bits/stl_vector.h:1294:21,
+    inlined from 'poecraft::enumerate_random_recomb_side(const std::vector<RecombOccurrence>&)::<lambda(std::vector<unsigned int>, double)>' at C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/src/recombination.cpp:172:51,
+    inlined from 'constexpr _Res std::__invoke_impl(__invoke_other, _Fn&&, _Args&& ...) [with _Res = void; _Fn = poecraft::enumerate_random_recomb_side(const std::vector<RecombOccurrence>&)::<lambda(vector<unsigned int>, double)>&; _Args = {vector<unsigned int, allocator<unsigned int> >, double}]' at C:/msys64/ucrt64/include/c++/14.2.0/bits/invoke.h:61:36,
+    inlined from 'constexpr std::enable_if_t<((bool)is_invocable_r_v<_Res, _Callable, _Args ...>), _Res> std::__invoke_r(_Callable&&, _Args&& ...) [with _Res = void; _Callable = poecraft::enumerate_random_recomb_side(const std::vector<RecombOccurrence>&)::<lambda(vector<unsigned int>, double)>&; _Args = {vector<unsigned int, allocator<unsigned int> >, double}]' at C:/msys64/ucrt64/include/c++/14.2.0/bits/invoke.h:111:28,
+    inlined from 'static _Res std::_Function_handler<_Res(_ArgTypes ...), _Functor>::_M_invoke(const std::_Any_data&, _ArgTypes&& ...) [with _Res = void; _Functor = poecraft::enumerate_random_recomb_side(const std::vector<RecombOccurrence>&)::<lambda(std::vector<unsigned int>, double)>; _ArgTypes = {std::vector<unsigned int, std::allocator<unsigned int> >, double}]' at C:/msys64/ucrt64/include/c++/14.2.0/bits/std_function.h:290:30:
+C:/msys64/ucrt64/include/c++/14.2.0/bits/new_allocator.h:151:55: note: destination object of size 4 allocated by 'operator new'
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+[13/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/recombination_api.cpp.obj
+[14/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/recombination_calculator.cpp.obj
+[15/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/recombination_solver_api.cpp.obj
+[16/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/actions_bestiary.cpp.obj
+[17/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/recombination_solver.cpp.obj
+[18/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/bestiary_api.cpp.obj
+[19/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_registry.cpp.obj
+[20/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/simulator.cpp.obj
+[21/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_abstract.cpp.obj
+[22/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_calc.cpp.obj
+[23/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_reforge.cpp.obj
+[24/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_options.cpp.obj
+[25/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_options_build.cpp.obj
+[26/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_options_import.cpp.obj
+[27/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_options_automatic.cpp.obj
+[28/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_options_temporary.cpp.obj
+[29/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_options_semantics.cpp.obj
+[30/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_development_checkpoint.cpp.obj
+[31/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_solve.cpp.obj
+[32/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_expand.cpp.obj
+[33/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_incremental.cpp.obj
+[34/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_sparse_policy.cpp.obj
+[35/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_audit.cpp.obj
+[36/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_bellman.cpp.obj
+[37/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_focused.cpp.obj
+[38/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_bounds.cpp.obj
+[39/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_carrier_pattern.cpp.obj
+[40/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_envelope_proof.cpp.obj
+[41/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_constructive.cpp.obj
+[42/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_strict_pattern.cpp.obj
+[43/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_operator_proof.cpp.obj
+[44/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_priority.cpp.obj
+[45/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_quotient.cpp.obj
+[46/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_quotient_proof.cpp.obj
+[47/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_quotient_partition.cpp.obj
+[48/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_quotient_bellman.cpp.obj
+[49/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_quotient_lower.cpp.obj
+[50/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_phase_lower.cpp.obj
+[51/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_phase_probability.cpp.obj
+[52/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_finish.cpp.obj
+[53/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_telemetry.cpp.obj
+[54/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_return_bridge.cpp.obj
+[55/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_refinement.cpp.obj
+[56/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_telemetry_json.cpp.obj
+[57/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_refinement_eval.cpp.obj
+[58/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_refinement_features.cpp.obj
+[59/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_refinement_observation.cpp.obj
+[60/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_refinement_partition.cpp.obj
+[61/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_policy_assertion.cpp.obj
+[62/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_policy_assertion_work.cpp.obj
+[63/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_compile.cpp.obj
+[64/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_policy_refinement.cpp.obj
+[65/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_finder.cpp.obj
+[66/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_selective_completion.cpp.obj
+[67/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_selective_completion.cpp.obj
+[68/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_eval_report.cpp.obj
+[69/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_eval_resolve.cpp.obj
+[70/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_api.cpp.obj
+[71/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/calculator_currency.cpp.obj
+[72/105] Building CXX object CMakeFiles/poecraft_header_smoke.dir/tests/header_smoke.cpp.obj
+[73/105] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_main.cpp.obj
+[74/105] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_bitset.cpp.obj
+[75/105] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_rng.cpp.obj
+[76/105] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_item_state.cpp.obj
+[77/105] Building CXX object CMakeFiles/poecraft_engine_objects.dir/src/solver_eval.cpp.obj
+[78/105] Linking CXX static library libpoecraft_engine.a
+[79/105] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_blocking.cpp.obj
+[80/105] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_data_loader.cpp.obj
+[81/105] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_session_builder.cpp.obj
+[82/105] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_actions.cpp.obj
+[83/105] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_recombination.cpp.obj
+[84/105] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_recombination_solver.cpp.obj
+C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_recombination_solver.cpp: In function 'void {anonymous}::run_checked_bridge_witnesses(const poecraft::RecombSolverRequest&, const poecraft::RecombSolverResult&)':
+C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_recombination_solver.cpp:141:105: warning: comparison of floating-point type 'double' with enumeration type 'pc_item_lifecycle' is deprecated [-Wdeprecated-enum-float-conversion]
+  141 |         unsigned live=0;for(const auto& r:resources.array)live+=r.at("item").at("lifecycle").as_number()==PC_ITEM_LIVE;PC_CHECK(live==1);
+      |                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~
+[85/105] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_bestiary.cpp.obj
+[86/105] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_simulator.cpp.obj
+In file included from C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_simulator.cpp:1:
+C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_simulator.cpp: In lambda function:
+C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_simulator.cpp:816:66: warning: comparison of floating-point type 'const double' with enumeration type 'pc_rarity' is deprecated [-Wdeprecated-enum-float-conversion]
+  816 |                 PC_CHECK(resource.at("item").at("rarity").number == (actions >= 2 ? PC_RARITY_MAGIC : PC_RARITY_NORMAL));
+      |                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/tests.hpp:30:41: note: in definition of macro 'PC_CHECK'
+   30 | #define PC_CHECK(cond) ::pctest::check((cond), __FILE__, __LINE__, #cond)
+      |                                         ^~~~
+C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_simulator.cpp: In lambda function:
+C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_simulator.cpp:963:67: warning: comparison of floating-point type 'const double' with enumeration type 'pc_item_lifecycle' is deprecated [-Wdeprecated-enum-float-conversion]
+  963 |             PC_CHECK(resources.array.at(0).at("lifecycle").number == PC_ITEM_CONSUMED);
+      |                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~
+C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/tests.hpp:30:41: note: in definition of macro 'PC_CHECK'
+   30 | #define PC_CHECK(cond) ::pctest::check((cond), __FILE__, __LINE__, #cond)
+      |                                         ^~~~
+C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_simulator.cpp:965:52: warning: comparison of floating-point type 'const double' with enumeration type 'pc_item_lifecycle' is deprecated [-Wdeprecated-enum-float-conversion]
+  965 |             PC_CHECK(output.at("lifecycle").number == PC_ITEM_LIVE);
+      |                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~
+C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/tests.hpp:30:41: note: in definition of macro 'PC_CHECK'
+   30 | #define PC_CHECK(cond) ::pctest::check((cond), __FILE__, __LINE__, #cond)
+      |                                         ^~~~
+C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_simulator.cpp:968:60: warning: comparison of floating-point type 'const double' with enumeration type 'pc_rarity' is deprecated [-Wdeprecated-enum-float-conversion]
+  968 |             PC_CHECK(output.at("item").at("rarity").number == PC_RARITY_RARE);
+      |                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~
+C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/tests.hpp:30:41: note: in definition of macro 'PC_CHECK'
+   30 | #define PC_CHECK(cond) ::pctest::check((cond), __FILE__, __LINE__, #cond)
+      |                                         ^~~~
+[87/105] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_abstract.cpp.obj
+[88/105] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_metamod_recovery.cpp.obj
+[89/105] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_calc.cpp.obj
+[90/105] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_compile.cpp.obj
+FAILED: CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_compile.cpp.obj 
+C:\msys64\ucrt64\bin\ccache.exe C:\msys64\ucrt64\bin\g++.exe  -IC:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/include -O3 -DNDEBUG -std=gnu++20 -MD -MT CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_compile.cpp.obj -MF CMakeFiles\poecraft_engine_tests.dir\tests\test_solver_compile.cpp.obj.d -o CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_compile.cpp.obj -c C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_solver_compile.cpp
+In file included from C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_solver_compile.cpp:1:
+C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_solver_compile.cpp: In function 'void run_solver_partial_held_witness_tests(const char*)':
+C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_solver_compile.cpp:4391:14: error: 'satisfied_goal_mask' was not declared in this scope
+ 4391 |     PC_CHECK(satisfied_goal_mask(calc.state(carrier_state)) == ((1u << 0) | (1u << 3)));
+      |              ^~~~~~~~~~~~~~~~~~~
+C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/tests.hpp:30:41: note: in definition of macro 'PC_CHECK'
+   30 | #define PC_CHECK(cond) ::pctest::check((cond), __FILE__, __LINE__, #cond)
+      |                                         ^~~~
+C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_solver_compile.cpp:4425:26: error: 'execute_attempt' was not declared in this scope
+ 4425 |     const auto attempt = execute_attempt(calc,{ember,exalt},carrier_state);
+      |                          ^~~~~~~~~~~~~~~
+C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_solver_compile.cpp:4428:39: error: 'aggregate_resources' was not declared in this scope
+ 4428 |         attempt.expected_resources == aggregate_resources(registry,{ember,exalt}));
+      |                                       ^~~~~~~~~~~~~~~~~~~
+C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/tests.hpp:30:41: note: in definition of macro 'PC_CHECK'
+   30 | #define PC_CHECK(cond) ::pctest::check((cond), __FILE__, __LINE__, #cond)
+      |                                         ^~~~
+[91/105] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_solve.cpp.obj
+ninja: build stopped: subcommand failed.
+C:\Program Files\Microsoft Visual 
+Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe failed with exit code 1.
+At C:\Users\Oliver\Documents\Codex\2026-10-04\task-3\poecraft2-solver-causal\scripts\dev-engine.ps1:45 char:9
++         throw "$Command failed with exit code $LASTEXITCODE."
++         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : OperationStopped: (C:\Program File...th exit code 1.:String) [], RuntimeException
+    + FullyQualifiedErrorId : C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Mic 
+   rosoft\CMake\CMake\bin\cmake.exe failed with exit code 1.
+ 

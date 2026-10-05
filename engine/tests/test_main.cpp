@@ -73,6 +73,11 @@ int main(int argc, char** argv) {
         std::printf("solver protected fill tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
         return pctest::g_failures == 0 ? 0 : 1;
     }
+    if (argc > 1 && std::string(argv[1]) == "--solver-partial-held-witness-only") {
+        run_solver_partial_held_witness_tests(argc > 2 ? argv[2] : nullptr);
+        std::printf("solver partial held witness tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     if (argc > 1 && std::string(argv[1]) == "--solver-growth-only") {
         run_solver_growth_tests();
         std::printf("solver growth tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);

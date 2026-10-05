@@ -1,0 +1,41 @@
+{
+  "kind": "research_arithmetic_only_not_native_evaluation",
+  "source_url": "https://github.com/OliverOrton/poecraft2/blob/040993ec9bb8109cc1970df91c8bc9ec7ef97744/docs/active/2026-10-04-sol61-armour-recovery/economic-decomposition.json",
+  "main_start_and_delivery": "7eb16ac3d63834fd5d3256ab42483f47d264b764",
+  "costs": {
+    "private": "210090.72616079813",
+    "released": "101311.35474896732",
+    "historical": "85970.67347138176"
+  },
+  "private_minus_released": "108779.37141183081",
+  "released_minus_historical": "15340.68127758556",
+  "disjoint_private_stage_spends": {
+    "singleton_suffix_anchor": "91683.27313039424",
+    "complete_two_suffixes": "184.61844712649122",
+    "complete_three_prefixes_original_frame": "211.1603175261432",
+    "complete_three_prefixes_growth_frame": "117967.01791593793",
+    "whole_item_chaos": "44.65634981329255"
+  },
+  "stage_sum": "210090.72616079809697",
+  "stage_sum_minus_recorded_private": "-3.303E-11",
+  "eldritch_chaos_by_stage": {
+    "singleton_suffix_anchor": "63876.44730472771",
+    "complete_two_suffixes": "115.25605556752055",
+    "complete_three_prefixes_original_frame": "182.51603882572954",
+    "complete_three_prefixes_growth_frame": "101875.6131398553"
+  },
+  "eldritch_chaos_stage_sum": "166049.83253897626009",
+  "private_minus_released_resource_differences": {
+    "chaos": "-19822.797414055785",
+    "eldritch_chaos": "123238.59874916455",
+    "eldritch_annul": "8273.02888380173",
+    "eldritch_exalt": "-3266.0132641429973",
+    "exalt": "356.1111200267245",
+    "ember": "-0.000271907281488154",
+    "ichor_1": "0.00014583630586820578",
+    "ichor_2": "0.4434631075398193"
+  },
+  "difference_sum": "108779.37141183078639935178",
+  "difference_sum_minus_total_gap": "-2.360064822E-11",
+  "warning": "Marginal spend and frozen-occupancy subtraction are not counterfactual savings. No native solver, tests or benchmarks executed."
+}

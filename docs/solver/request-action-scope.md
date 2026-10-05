@@ -68,6 +68,22 @@ An auxiliary lower model may deliberately permit extra optimistic recovery. That
 
 ## Authority And Failure
 
+The October 5 [causal continuation](../active/2026-10-04-sol61-armour-recovery/README.md)
+uses the real priced product constructor and Current state-expansion admission
+owner to observe one native reachable partial-held carrier. Broad native
+partial-held synthesis and a narrower complete-held graph producer coexist;
+their domains must not be conflated. Registry membership or a legal paid word
+does not establish normal admission, whole-search service or historical graph
+admission to today's priced scope. A forced automatic-family mask is a changed
+request. Scheduling comparisons retain TargetNeutralZero in both arms.
+
+The finite actual-product observation completes normal admission of the exact
+paid Ember tier-1/Exalt operator at the mask-9 carrier. It reads an already
+retained supported native kernel; its three normal-layout exits are distinct
+from the separate full-identity witness's 33 physical exits. This proves one
+source-local admission application, with no original-root reach/service,
+complete-policy checking, retention or export observation.
+
 The ledger distinguishes discovered, admitted, deferred, missing-price, disabled, unsupported, resource-interrupted, and completed work. A restricted or open envelope can still yield an independently executable upper. Its restricted Bellman value does not become an unrestricted lower or exactness result.
 
 A cap stops computation, not the semantic task. Unsupported behavior is not exact inapplicability. Unknown or interrupted coverage remains open unless a separate complete proof closes it.

@@ -113,6 +113,24 @@ owns profiles and observations.
 
 ## Cooperative Work
 
+The October 5 [four-report synthesis](../active/2026-10-04-sol61-armour-recovery/README.md)
+keeps construction, root checking and every-positive-programme-entry validation
+as distinct gates. A converged root evaluator may still leave required native
+entry admission incomplete; a late validation failure must not retain an
+executable flag, eligible status or selectable candidate. The previous complete
+checked incumbent remains owned through refusal, cancellation and Finish.
+The immutable entry census is borrowed from its actual checker owner, which
+must outlive the validator; a second copied census cannot substitute for that
+lifetime contract. Any ledger optimization must still charge simultaneous
+compiler, parser, checker, validation and retained-winner storage.
+
+The reported private observer change from 141.1568795 s to 0.7868034 s used the
+same graph/cost/resources and is a component improvement. It neither identifies
+released Current's stop nor establishes a cheaper product policy. The deferred
+3.1-GiB/210k root experiment and source-only 36-assertion private gate retain
+their original qualification limits. This continuation's first finite gate
+does not import or execute that private benchmark path.
+
 Solve work, automatic admission, broad exact reforge rows, strict refinement, compilation assertion, and evaluation retain explicit continuation state. A public step advances bounded logical work, but cancellation is observed only when the relevant cooperative boundary returns control.
 
 The assertion owner returns after compilation/parser/evaluator admission before

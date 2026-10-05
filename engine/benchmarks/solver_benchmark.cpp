@@ -9,6 +9,7 @@
 #include "reforge_count_law.hpp"
 #include "solver_policy_refinement_helpers.hpp"
 #include "solver_diagnostic_options.hpp"
+#include "solver_condition_expr.hpp"
 #include "solver_calc_types.hpp"
 #include "solver_options_helpers.hpp"
 #include "solver_executable_fragment_engine.hpp"
@@ -216,6 +217,7 @@ struct CaseResult {
     bool has_solve_summary = false;
     pc_solve_summary solve_summary{};
     std::string telemetry_json;
+    std::string carrier_pipeline_observation = "null";
     std::size_t strategy_json_bytes = 0;
     std::string strategy_output_path;
     std::uint64_t compiled_nodes = 0;
@@ -3364,6 +3366,218 @@ int run_fixed_graph_check_pair(pc_data_handle data, const Value& specification,
 
 // Native-only attribution through the real request constructor. This never
 // changes the caller handle's candidate set or transplants a layout namespace.
+// Finite native causal diagnostic. The original root, resolver, prices and
+// programme scope are unchanged. A separate carrier is only an observation
+// point, never a new solve root or a policy seed.
+pc_item_state build_probe_carrier(const poecraft::solver::CalcContext& calc,
+    pc_session_handle session, const Value& carrier_spec) {
+    using namespace poecraft::solver;
+    auto empty_spec=carrier_spec;
+    for (auto& [key,value] : empty_spec.object) if (key=="mods") value.array.clear();
+    auto carrier = build_start_item(session,empty_spec);
+    for (const auto& requested : required(carrier_spec,"mods",Type::Array).array) {
+        auto mod=find_mod(session,required_string(requested,"key")).session_mod_id;
+        if (const auto* tier=optional(requested,"family_tier_index",Type::Number)) {
+            const auto family=calc.session().family_id.at(mod); mod=kNoId;
+            for (std::uint32_t id=0;id<calc.session().mod_count;++id)
+                if (calc.session().family_id[id]==family &&
+                    calc.session().family_tier_index[id]==tier->number &&
+                    calc.session().base_spawn_weight[id]>0) { mod=id; break; }
+            if (mod==kNoId) throw std::runtime_error("carrier probe tier has no native eligible member");
+        }
+        if (pc_item_add_mod(&carrier,calc.session().gen_type[mod],mod,
+            calc.session().primary_group[mod],0,nullptr)!=PC_RESULT_OK)
+            throw std::runtime_error("carrier probe modifier placement refused");
+    }
+    return carrier;
+}
+
+void append_carrier_admission_probe(std::ostream& out, poecraft::solver::CalcContext& calc,
+    const pc_item_state& start, pc_session_handle session,
+    const Value& specification, const std::unordered_map<std::string,double>& prices) {
+    using namespace poecraft::solver;
+    const auto* probe = optional(specification,"carrier_admission_probe_v1",Type::Object);
+    if (!probe) return;
+    const auto carrier=build_probe_carrier(calc,session,required(*probe,"carrier",Type::Object));
+    const auto state = calc.intern_item(carrier);
+    std::vector<std::uint32_t> word;
+    for (const auto& id : required(*probe,"primitive_program",Type::Array).array) {
+        if (id.type != Type::String) throw std::runtime_error("carrier probe action must be a string");
+        word.push_back(calc.registry().index_by_id.at(id.string));
+    }
+    if (word.empty() || word.size()>8) throw std::runtime_error("carrier probe requires 1-8 primitives");
+    const auto synthesis = synthesize_automatic_options(calc,state,carrier,&prices);
+    const auto& caps = required(specification,"caps",Type::Object);
+    SolveOptions options;
+    apply_solve_profile_defaults(options,SolveProfile::CalculatorProductV1);
+    options.max_solver_owned_bytes=optional_u64(caps,"max_solver_owned_bytes",1073741824);
+    options.max_reforge_work=optional_u64(caps,"max_reforge_work",50000000);
+    options.max_state_action_rows=optional_u64(caps,"max_state_action_rows",1215000);
+    options.max_transitions=optional_u64(caps,"max_transitions",10000000);
+    options.consider_imprint_programs=optional_bool(caps,"consider_imprint_programs",options.consider_imprint_programs);
+    // Invoke Current's existing state-expansion admission owner, not a copied
+    // candidate resolver. No search step, complete controller check or export.
+    SolveWorkTestAccess::Impl owner(calc,start,prices,options);
+    const auto began=Clock::now();
+    const auto deadline=began+std::chrono::seconds(60);
+    bool complete=false; std::string status="censored_time",reason;
+    try {
+        while (Clock::now()<deadline && !complete)
+            complete=owner.prepare_state_expansion(state,true);
+        if (complete) status="complete";
+    } catch (const std::exception& ex) { status="refused"; reason=ex.what(); }
+    out << ",\"carrier_admission\":{\"status\":" << escape_json(status)
+        << ",\"reason\":" << escape_json(reason) << ",\"wall_ms\":" << milliseconds(began,Clock::now())
+        << ",\"root_search_executed\":false,\"checker_executed\":false,\"policy_exported\":false"
+        << ",\"goal_proof_profile\":" << escape_json(goal_proof_profile_name(owner.options.goal_proof_profile))
+        << ",\"goal_mask\":" << satisfied_goal_mask(calc.state(state))
+        << ",\"synthesized_specs\":[";
+    bool first=true;
+    for (const auto& spec : synthesis.specs) {
+        if (!first) out << ','; first=false;
+        out << "{\"kind\":" << unsigned(spec.kind) << ",\"automatic_kind\":" << unsigned(spec.automatic_kind)
+            << ",\"action\":" << escape_json(spec.action_id) << ",\"side\":" << int(spec.side)
+            << ",\"relevant_goal_mask\":" << spec.relevant_goal_mask << ",\"setup\":[";
+        bool inner=true;
+        for (const auto& id : spec.setup_action_ids) { if (!inner) out << ','; inner=false; out << escape_json(id); }
+        out << "]}";
+    }
+    out << "],\"normal_expansion_matching_operators\":[";
+    first=true; unsigned matching=0;
+    if (complete) for (const auto index : owner.expansion_operator_indices) {
+        const auto& planner=calc.operators().at(index);
+        if (planner.kind!=PlannerOperatorKind::FixedOption) continue;
+        const auto semantics=planner_operator_runtime_semantics(planner,calc.registry());
+        std::vector<std::uint32_t> program;
+        for (const auto& step : semantics.ordered_program) program.push_back(step.action);
+        if (program!=word) continue;
+        ++matching;
+        const auto* kernel=calc.cached_option_kernel(state,index);
+        if (!first) out << ','; first=false;
+        out << "{\"id\":" << escape_json(planner.id) << ",\"index\":" << index
+            << ",\"cached_native_kernel\":" << (kernel?"true":"false");
+        if (kernel) out << ",\"legal\":" << (kernel->legal?"true":"false")
+            << ",\"supported\":" << (kernel->supported?"true":"false")
+            << ",\"almost_sure\":" << (kernel->terminates_almost_surely?"true":"false")
+            << ",\"exits\":" << kernel->exits.size()
+            << ",\"expected_primitive_actions\":" << kernel->expected_primitive_actions
+            << ",\"reason\":" << escape_json(kernel->automatic.reason);
+        out << '}';
+    }
+    out << "],\"matching_operator_count\":" << matching
+        << ",\"normal_expansion_operator_count\":" << owner.expansion_operator_indices.size()
+        << ",\"logical_reforge_work\":" << calc.telemetry().reforge_logical_work_v1
+        << ",\"automatic_admission_logical_work\":" << calc.telemetry().automatic_admission_reforge_logical_work_v1
+        << ",\"solver_owned_bytes\":" << calc.estimated_owned_bytes() << '}';
+}
+
+// Read-only post-Finish observation. Projecting an item does not intern it;
+// membership and cache queries do not synthesize or evaluate any native row.
+std::string observe_carrier_pipeline(const poecraft::solver::CalcContext& calc,
+    NativeHandles& handles,const Value& specification) {
+    using namespace poecraft;
+    using namespace poecraft::solver;
+    const auto* probe=optional(specification,"carrier_admission_probe_v1",Type::Object);
+    if (!probe || !handles.solver) return "null";
+    const auto began=Clock::now();
+    const auto prior_states=calc.state_count();
+    const auto prior_work=calc.telemetry().reforge_logical_work_v1;
+    const auto prior_automatic_work=calc.telemetry().automatic_admission_reforge_logical_work_v1;
+    const auto carrier=build_probe_carrier(calc,handles.session,required(*probe,"carrier",Type::Object));
+    const auto expected=project_item(calc.session(),calc.layout(),carrier);
+    std::vector<std::uint32_t> word;
+    for (const auto& id:required(*probe,"primitive_program",Type::Array).array)
+        word.push_back(calc.registry().index_by_id.at(id.as_string()));
+    if (word.empty() || word.size()>8) throw std::runtime_error("passive carrier programme outside bounded diagnostic");
+    std::array<std::uint32_t,4> matching_operators{};
+    unsigned matching_operator_count=0,retained_operators=0;
+    const auto deadline=began+std::chrono::seconds(1);
+    bool operator_scan_complete=true;
+    for (std::uint32_t index=0;index<calc.operators().size();++index) {
+        if ((index%256)==0 && Clock::now()>=deadline) { operator_scan_complete=false; break; }
+        const auto& planner=calc.operators()[index];
+        if (planner.kind!=PlannerOperatorKind::FixedOption) continue;
+        const auto semantics=planner_operator_runtime_semantics(planner,calc.registry());
+        std::vector<std::uint32_t> program;
+        for (const auto& step:semantics.ordered_program) program.push_back(step.action);
+        if (program==word) {
+            ++matching_operator_count;
+            if (retained_operators<matching_operators.size()) matching_operators[retained_operators++]=index;
+        }
+    }
+    std::ostringstream out; out<<std::setprecision(17)
+        << "{\"kind\":\"passive_current_carrier_pipeline_v1\",\"phase\":\"post_finish\""
+        << ",\"snapshot_proves_root_reachability\":false,\"states_interned\":0"
+        << ",\"rows_generated\":0,\"cache_mutation\":false,\"solve_performance_includes_snapshot\":false"
+        << ",\"parent_state_count\":" << calc.state_count()
+        << ",\"operator_scan_complete\":" << (operator_scan_complete?"true":"false")
+        << ",\"matching_operator_count\":" << matching_operator_count
+        << ",\"operator_samples_omitted\":" << matching_operator_count-retained_operators
+        << ",\"matching_parent_projections\":[";
+    unsigned matches=0,retained=0; bool first=true;
+    std::uint32_t scanned_states=0;
+    for (std::uint32_t state=0;state<calc.state_count();++state) {
+        if ((state%256)==0 && Clock::now()>=deadline) break;
+        ++scanned_states;
+        const auto& observed=calc.state(state);
+        if (!(observed==expected)) continue;
+        ++matches;
+        if (retained==8) continue;
+        ++retained;
+        if (!first) out<<','; first=false;
+        out << "{\"state\":" << state << ",\"retry_basin\":" << unsigned(observed.goal_progress_retry_basin)
+            << ",\"word_operators\":[";
+        bool inner=true;
+        for (unsigned i=0;i<retained_operators;++i) {
+            const auto index=matching_operators[i];
+            if (!inner) out<<','; inner=false;
+            out << "{\"operator\":" << index
+                << ",\"currently_admitted\":" << (calc.is_candidate_operator_admitted_for_state(state,index)?"true":"false")
+                << ",\"retained_kernel\":" << (calc.cached_option_kernel(state,index)?"true":"false") << '}';
+        }
+        out << "]}";
+    }
+    out << "],\"matching_parent_projection_count\":" << matches
+        << ",\"scanned_parent_states\":" << scanned_states
+        << ",\"state_scan_complete\":" << (scanned_states==calc.state_count()?"true":"false")
+        << ",\"projection_samples_omitted\":" << matches-retained
+        << ",\"ordinary_carrier_service\":\"unobserved\""
+        << ",\"complete_tail_construction\":\"unobserved\""
+        << ",\"carrier_positive_entry_check\":\"unobserved\""
+        << ",\"earlier_admission_history\":\"unobserved\""
+        << ",\"private_service_carrier_states\":\"unobserved\""
+        << ",\"returned_graph_first_paid\":";
+    if (!handles.strategy) out<<"null";
+    else {
+        const auto& strategy=*handles.strategy->impl;
+        auto node=strategy.start_node; bool found=false;
+        for (std::size_t step=0;step<std::min<std::size_t>(strategy.nodes.size()+1,256);++step) {
+            if ((step%16)==0 && Clock::now()>=deadline) break;
+            const auto& current=strategy.nodes.at(node);
+            if (current.kind==StrategyNodeKind::Operation) {
+                out << "{\"node\":" << escape_json(current.id)
+                    << ",\"action_type\":" << int(current.action.type)
+                    << ",\"routing_only_not_entry_certification\":true}";
+                found=true; break;
+            }
+            if (current.kind==StrategyNodeKind::Terminal) break;
+            const auto edge=std::find_if(current.edges.begin(),current.edges.end(),
+                [&](const auto& candidate) { return candidate.is_default ||
+                    evaluate_compiled_condition(candidate.condition,calc.session(),carrier); });
+            if (edge==current.edges.end()) break;
+            node=edge->target;
+        }
+        if (!found) out<<"null";
+    }
+    out << ",\"diagnostic_wall_ms\":" << milliseconds(began,Clock::now()) << '}';
+    if (calc.state_count()!=prior_states || calc.telemetry().reforge_logical_work_v1!=prior_work ||
+        calc.telemetry().automatic_admission_reforge_logical_work_v1!=prior_automatic_work)
+        throw std::logic_error("passive carrier snapshot changed native states or work");
+    auto result=out.str();
+    if (result.size()>8192) throw std::length_error("passive carrier snapshot exceeds 8KiB output");
+    return result;
+}
+
 std::string run_action_coverage_probe(pc_data_handle data, const Value& specification) {
     using namespace poecraft::solver;
     using poecraft::ActionType;
@@ -3378,7 +3592,9 @@ std::string run_action_coverage_probe(pc_data_handle data, const Value& specific
     std::ostringstream out;
     out << std::setprecision(17) << "{\"kind\":\"native_action_coverage_v1\",\"case\":"
         << escape_json(required(specification,"id",Type::String).string)
-        << ",\"kernel_evaluations\":0,\"forcing_masks_are_not_kernel_equivalence\":true,\"actions\":[";
+        << ",\"kernel_evaluations\":"
+        << (optional(specification,"carrier_admission_probe_v1",Type::Object)?"null":"0")
+        << ",\"forcing_masks_are_not_kernel_equivalence\":true,\"actions\":[";
     bool first = true;
     for (std::uint32_t i=0;i<calc.registry().actions.size();++i) {
         const auto& action=calc.registry().actions[i];
@@ -3435,7 +3651,9 @@ std::string run_action_coverage_probe(pc_data_handle data, const Value& specific
         for (const auto& id:spec.setup_action_ids) { if (!first_setup) out << ','; first_setup=false; out << escape_json(id); }
         out << "],\"row_support\":\"not_evaluated\"}";
     }
-    out << "]}\n";
+    out << ']';
+    append_carrier_admission_probe(out,calc,start,handles.session,specification,native_prices);
+    out << "}\n";
     return out.str();
 }
 
@@ -3916,6 +4134,9 @@ CaseResult run_case(
 
     FinderGraphCaptureOutput finder_capture_output;
     NativeHandles handles;
+    // Borrow only while the handle is idle. calc remains handle-owned through
+    // this single begin/Finish/compile lifecycle and outlives the snapshot.
+    const poecraft::solver::CalcContext* passive_carrier_calc=nullptr;
     try {
         report.actual_status = "running";
         pc_item_state start_item{};
@@ -3935,6 +4156,8 @@ CaseResult run_case(
             data, specification, handles, start_item,
             &report.product_action_ids, publish_setup_phase,
             native_goal_terminal);
+        if (solver_mode=="current" && optional(specification,"carrier_admission_probe_v1",Type::Object))
+            passive_carrier_calc=&poecraft::solver::solver_lower_diagnostic_calculator(handles.solver);
         if (report.has_mechanic_family_control) {
             /* Validation pins every declared control action into goal.actions.
              * Successful solver construction proves that the exact registry
@@ -5307,6 +5530,14 @@ CaseResult run_case(
     evaluate_cap_checks(specification, report);
     report.expectation_met = evaluate_expectation(
         specification, report, skip_verification, solver_mode);
+    if (passive_carrier_calc && report.has_solve_summary) {
+        try { report.carrier_pipeline_observation=observe_carrier_pipeline(*passive_carrier_calc,handles,specification); }
+        catch (const std::exception& ex) {
+            report.carrier_pipeline_observation="{\"status\":\"diagnostic_refused\",\"reason\":"+escape_json(ex.what())+"}";
+        }
+    } else if (passive_carrier_calc) {
+        report.carrier_pipeline_observation="{\"status\":\"unobserved_no_finish\"}";
+    }
     capture_process_memory(report);
     report.total_ms = milliseconds(total_begin, Clock::now());
     if (checkpoint) checkpoint(report);
@@ -5497,6 +5728,11 @@ void append_case_report(
         if (!first_input) out << ',';
         first_input = false;
         out << escape_json(key) << ':' << json_of(*value);
+    }
+    if (const auto* probe=optional(specification,"carrier_admission_probe_v1",Type::Object)) {
+        if (!first_input) out << ',';
+        first_input=false;
+        out << "\"carrier_admission_probe_v1\":" << json_of(*probe);
     }
     if (result.max_discovered_states_override != 0) {
         if (!first_input) out << ',';
@@ -6115,6 +6351,7 @@ void append_case_report(
     out << ",\n  \"solver_telemetry\":"
         << (result.telemetry_json.empty() ? "null" : result.telemetry_json)
         << ",\n";
+    out << "  \"carrier_pipeline_observation\":" << result.carrier_pipeline_observation << ",\n";
     out << "  \"compiled_graph\":";
     if (!result.has_compiled_graph) {
         out << "null";

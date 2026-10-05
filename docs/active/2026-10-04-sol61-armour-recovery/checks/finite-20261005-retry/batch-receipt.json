@@ -1,0 +1,117 @@
+[
+  {
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 6280,
+    "process_identity_token": "6280:134356458689695547",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 40066.269899951294,
+    "name": "build-tests",
+    "command": [
+      "powershell.exe",
+      "-NoProfile",
+      "-ExecutionPolicy",
+      "Bypass",
+      "-File",
+      "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\poecraft2-solver-causal\\scripts\\dev-engine.ps1",
+      "-Task",
+      "Tests",
+      "-Jobs",
+      "2"
+    ],
+    "watchdog_seconds": 600
+  },
+  {
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 25136,
+    "process_identity_token": "25136:134356459090377302",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 14716.096500167623,
+    "name": "build-benchmark",
+    "command": [
+      "powershell.exe",
+      "-NoProfile",
+      "-ExecutionPolicy",
+      "Bypass",
+      "-File",
+      "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\poecraft2-solver-causal\\scripts\\dev-engine.ps1",
+      "-Task",
+      "Benchmark",
+      "-Jobs",
+      "2"
+    ],
+    "watchdog_seconds": 600
+  },
+  {
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 77764,
+    "process_identity_token": "77764:134356459240649669",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 625.8296000305563,
+    "name": "partial-held-witness",
+    "command": [
+      "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\poecraft2-solver-causal\\build\\engine\\poecraft_engine_tests.exe",
+      "--solver-partial-held-witness-only",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current"
+    ],
+    "watchdog_seconds": 75
+  },
+  {
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 31460,
+    "process_identity_token": "31460:134356459243801666",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 52.544600097462535,
+    "name": "growth-continuity",
+    "command": [
+      "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\poecraft2-solver-causal\\build\\engine\\poecraft_engine_tests.exe",
+      "--solver-growth-only"
+    ],
+    "watchdog_seconds": 75
+  },
+  {
+    "exit_code": 1,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 61396,
+    "process_identity_token": "61396:134356459246553121",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 250.98599982447922,
+    "name": "product-carrier-admission",
+    "command": [
+      "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\poecraft2-solver-causal\\build\\engine\\poecraft_solver_benchmark.exe",
+      "--artifact",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+      "--corpus",
+      "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\poecraft2-solver-causal\\docs\\active\\2026-10-04-sol61-armour-recovery\\checks\\finite-20261005-retry\\cases",
+      "--case",
+      "sol61-trace-conquest5-currentmodel-120",
+      "--action-coverage-diagnostic",
+      "--output",
+      "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\poecraft2-solver-causal\\docs\\active\\2026-10-04-sol61-armour-recovery\\checks\\finite-20261005-retry\\product-carrier-admission.json"
+    ],
+    "watchdog_seconds": 75
+  }
+]

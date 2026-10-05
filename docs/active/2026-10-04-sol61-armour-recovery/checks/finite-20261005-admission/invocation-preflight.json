@@ -1,0 +1,21 @@
+{
+  "command": [
+    "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\poecraft2-solver-causal\\build\\engine\\poecraft_solver_benchmark.exe",
+    "--artifact",
+    "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+    "--corpus",
+    "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\poecraft2-solver-causal\\docs\\active\\2026-10-04-sol61-armour-recovery\\checks\\finite-20261005-admission\\manifest.json",
+    "--case",
+    "sol61-trace-conquest5-currentmodel-120",
+    "--action-coverage-diagnostic",
+    "--output",
+    "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\poecraft2-solver-causal\\docs\\active\\2026-10-04-sol61-armour-recovery\\checks\\finite-20261005-admission\\product-carrier-admission.json"
+  ],
+  "corpus_is_file": true,
+  "case_is_file": true,
+  "root_unchanged": true,
+  "product_scope_unchanged": true,
+  "finite_native_seconds": 60,
+  "host_watchdog_seconds": 75,
+  "executable_sha256": "8a2848f52a51d9c80560e39e9622d1b5457c2c439a682a3dddefb856332f3184"
+}

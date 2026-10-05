@@ -1,0 +1,23 @@
+{
+  "baseline_head": "7eb16ac3d63834fd5d3256ab42483f47d264b764",
+  "branch": "dot/sol61-solver-causal-20261005",
+  "source_status": "uncommitted isolated source, corrected finite batch",
+  "source_files": [
+    {
+      "path": "engine/tests/test_solver_compile.cpp",
+      "sha256": "4b9f030be2f448160b78ee4ddd2c60c2bfb1266cc87a59f0f081deb4ce5e795c"
+    },
+    {
+      "path": "engine/tests/test_main.cpp",
+      "sha256": "48cd45450c10a5934048c0115cd99925672e159908da578c386998e7a3cb3ff0"
+    },
+    {
+      "path": "engine/tests/tests.hpp",
+      "sha256": "119c4c53a861e563f09a505a4d52174fac62184aff437fe6b0c2bf174908e7a5"
+    },
+    {
+      "path": "engine/benchmarks/solver_benchmark.cpp",
+      "sha256": "447b76e89913c16c6bf99e6fcc9b2cfe92f8cedf1881e817fb9d822a9447d0f3"
+    }
+  ]
+}

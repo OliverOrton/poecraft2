@@ -141,8 +141,15 @@ plain-fill hypothesis. The private 210090.73 numerical result has only
 The [solver handoff](https://github.com/OliverOrton/poecraft2/blob/040993ec9bb8109cc1970df91c8bc9ec7ef97744/docs/active/2026-10-04-sol61-armour-recovery/PRO-HANDOFF.md) and
 [independent causal account](https://github.com/OliverOrton/poecraft2/blob/4c9f078d95e2c0c837ab7a408c4846420bac94db/docs/active/2026-10-04-sol61-independent-review/causal-research-handoff.md)
 are published on separate research branches. New heavy work and activation are
-paused for Pro planning; the query branch's finite evidence is not a product
-WASM/quality qualification. [Acceptance contract](mathematics/numerical-closure.md#bounded-quality).
+paused for Pro planning at that checkpoint; the query branch's finite evidence
+is not a product WASM/quality qualification. Oliver's October 5
+[four-report continuation](../active/2026-10-04-sol61-armour-recovery/README.md)
+selects the first demonstrated enumeration/admission/service/check/retention/
+export boundary on verified current main. Economics selects complete tails;
+bounded construction and fail-closed validation constrain acceptance. The
+larger-memory private experiment remains deferred, and no report import changes
+an existing claim status or runtime issuer.
+[Acceptance contract](mathematics/numerical-closure.md#bounded-quality).
 
 The [September 22 capability programme](../active/2026-09-22-ordinary-capability/README.md)
 measures the current ordinary gap with matched base/goal/action/pricing scope:

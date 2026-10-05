@@ -295,6 +295,16 @@ and reporting requirements; the missing-candidate witness, timed quality smokes
 and nine-case cohort remain unqualified at this closeout. [Search-stage distinction](search-and-resumption.md#capability-pipeline).
 
 <a id="reference"></a>
+
+The October 5 [causal/economic programme](../../active/2026-10-04-sol61-armour-recovery/README.md)
+keeps historical law-3 85970.67347138176 versus released 101311.35474896732
+as a fixed-graph comparison. Historical dirty 240-second and current 120-second
+search exposures are unmatched, and historical priced-scope admission remains
+unresolved. The released cap-mask-zero result cannot be explained by the
+separate private observer/memory refusals. A finite native admitted word alone
+is not a capability-quality control until its complete original-root controller
+is permitted, proper, checked and eligible for retention/export.
+
 ## 7. Independent references check particular layers
 
 A small independent rational solver can check a finite model's result. Storm or another model checker can provide a second algorithm and explicit property semantics. Neither independently verifies a native export if both consume the same erroneous exported model.

@@ -17,7 +17,24 @@ Finder activation or browser latency. Reviewed prior snapshot `ae24e0bb` and
 historical evidence. A documentation-only follow-up does not change source
 qualification. [HANDOFF](../../HANDOFF.md) owns selected sequencing.
 
-## Solver research is published separately; capability changes paused
+## Solver research and isolated October 5 causal continuation
+
+Oliver selected the [four-report causal/economic continuation](../active/2026-10-04-sol61-armour-recovery/README.md)
+at 03:10 UTC on October 5, with a 12:00 UTC execution deadline. It starts from
+verified main 7eb16ac3 in a fresh isolated branch. Initial parent LOCAL grant
+covers two-job native builds, the existing historical P0 word witness, growth
+continuity and a finite actual product-scope admission observation only.
+Matched original-root control/treatment, complete checking and any economic
+repair are subsequent evidence-gated work. Private proposal activation and the
+unchanged 3.1-GiB/210k experiment remain deferred.
+
+The corrected finite native build passes the 293-check P0 witness and 84-check
+growth continuity selector. Actual normal product admission at the later
+mask-9 carrier completes in 134 ms and retains the exact paid Ember/Exalt word
+under TargetNeutralZero. This establishes neither original-root search exposure
+nor a useful complete tail: no root search/check/export was executed. The
+complete-held producer remains narrower. Both initial build and corpus-directory
+invocation failures are retained; no assertions were weakened.
 
 [Solver checkpoint `040993ec`](https://github.com/OliverOrton/poecraft2/blob/040993ec9bb8109cc1970df91c8bc9ec7ef97744/docs/active/2026-10-04-sol61-armour-recovery/PRO-HANDOFF.md) and
 [independent review `4c9f078d`](https://github.com/OliverOrton/poecraft2/blob/4c9f078d95e2c0c837ab7a408c4846420bac94db/docs/active/2026-10-04-sol61-independent-review/causal-research-handoff.md)
@@ -36,7 +53,8 @@ open. Private observer/memory stops do not explain that released stop. Finder's
 inherited shared-work ownership negatives remain open. The deterministic
 missing-candidate gate, two quality smokes and nine-case cohort are unqualified;
 no real quality allowance is approved here. Preserved dirty Bow4 is not established
-as Oliver's separately improved request. New heavy work is paused for Pro planning.
+as Oliver's separately improved request. The earlier Pro-planning pause is
+superseded only by the authorized isolated continuation and parent LOCAL gates.
 
 The [isolated Finder Essence follow-up](../active/2026-10-02-finder-essence/README.md)
 qualifies bounded native satisfying-tier acquisition, semantic goal roles,

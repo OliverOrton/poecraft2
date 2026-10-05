@@ -1,0 +1,15 @@
+[0/2] Re-checking globbed directories...
+[1/15] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_s8_3.cpp.obj
+[2/15] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_compile.cpp.obj
+[3/15] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_eval.cpp.obj
+[4/15] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_api.cpp.obj
+[5/15] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_refinement.cpp.obj
+[6/15] Building CXX object CMakeFiles/poecraft_engine_tests.dir/benchmarks/solver_executable_fragment_engine.cpp.obj
+[7/15] Building CXX object CMakeFiles/poecraft_engine_tests.dir/benchmarks/solver_executable_fragment.cpp.obj
+[8/15] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_quotient_proof.cpp.obj
+[9/15] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_fragment.cpp.obj
+[10/15] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_quotient_partition.cpp.obj
+[11/15] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_quotient_bellman.cpp.obj
+[12/15] Linking CXX executable poecraft_header_smoke.exe
+[13/15] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_quotient_lower.cpp.obj
+[14/15] Linking CXX executable poecraft_engine_tests.exe

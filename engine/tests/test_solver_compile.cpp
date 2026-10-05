@@ -10,6 +10,7 @@
 #include "../src/solver_finder.hpp"
 #include "../src/solver_selective_completion.hpp"
 #include "../src/solver_diagnostic_options.hpp"
+#include "../src/solver_options_helpers.hpp"
 #include "../src/json.hpp"
 #include "../src/solver_dirty_guidance.hpp"
 #include "poecraft/bitset.h"
@@ -19,6 +20,7 @@
 #include <cmath>
 #include <cstdio>
 #include <fstream>
+#include <filesystem>
 #include <memory>
 #include <map>
 #include <set>
@@ -4312,6 +4314,144 @@ struct SolveWorkTestAccess {
     using Impl = SolveWork::Impl;
     static Impl& get(SolveWork& work) { return *work.impl_; }
 };
+}
+
+void run_solver_partial_held_witness_tests(const char* artifact_dir) {
+    if (!artifact_dir) throw std::runtime_error("partial held witness requires frozen native artifact");
+    const auto artifact = std::filesystem::absolute(artifact_dir);
+    const auto repo = artifact.parent_path().parent_path().parent_path();
+    const auto read = [](const std::filesystem::path& path) {
+        std::ifstream input(path, std::ios::binary);
+        if (!input) throw std::runtime_error("missing partial held witness input: " + path.string());
+        std::ostringstream text; text << input.rdbuf(); return text.str();
+    };
+    const auto data = load_data_impl(read(artifact / "manifest.json"),
+        read(artifact / "strings.json"), read(artifact / "game-data.json"));
+    const auto qualification = repo / "docs/active/2026-10-03-sol61-recovery/qualification/law3";
+    const auto case_text = read(qualification / "cases/conquest5-product.json");
+    const auto request = json::Parser(case_text.data(),case_text.size()).parse();
+    PC_CHECK(request.at("id").as_string() == "sol61-trace-conquest5-currentmodel-120");
+    PC_CHECK(request.at("start").at("mods").as_array().empty());
+    auto session = std::make_shared<SessionImpl>(); session->data = data;
+    session->base_index = data->base_by_path.at(request.at("session").at("base_metadata_path").as_string());
+    session->item_level = request.at("session").at("item_level").as_int();
+    build_session(*session);
+    const auto mod = [&](const std::string& key) {
+        const auto global = data->mod_pos_by_key.at(key);
+        return session->session_id_by_global_id.at(data->mod_global_ids.at(global));
+    };
+    const auto below = [&](const std::uint32_t target) {
+        for (std::uint32_t id = 0; id < session->mod_count; ++id)
+            if (session->family_id[id] == session->family_id[target] &&
+                session->family_tier_index[id] == 2 && session->base_spawn_weight[id] > 0)
+                return id;
+        throw std::runtime_error("partial held witness has no native tier-two family member");
+    };
+    GoalSpec goal; goal.rarity = PC_RARITY_RARE;
+    for (const auto& slot : request.at("goal").at("slots").as_array()) {
+        const auto id = mod(slot.at("family_mod_key").as_string());
+        GoalSlot wanted; wanted.family_id = session->family_id[id];
+        wanted.min_tier = slot.at("min_tier").as_int(); goal.slots.push_back(wanted);
+    }
+    PC_CHECK(goal.slots.size() == 5);
+    const std::vector<std::uint32_t> picks{
+        mod("LocalBaseArmourAndEvasionRating8"),
+        below(mod("LocalIncreasedArmourAndEvasionAndStunRecovery6")),
+        mod("AdditionalPhysicalDamageReduction5_"),
+        below(mod("ChanceToSuppressSpellsHigh5___"))};
+    // A single positive native Chaos pick ordering is enough for reachability.
+    // Use the owner's draw law and the actual weighted pool after every pick;
+    // this mass is one ordering, not the complete carrier probability.
+    pc_item_state root; pc_item_clear(&root); root.rarity = PC_RARITY_RARE;
+    auto carrier = root;
+    const auto count_law = rare_reforge_count_law(RareReforgeCountKind::Equipment);
+    double ordering_mass = 0;
+    for (const auto& draw : count_law.draws)
+        if (draw.count == 4) ordering_mass += double(draw.weight) / count_law.denominator;
+    for (const auto id : picks) {
+        ActionContextImpl context(0); context.session = session;
+        const auto& pool = get_weighted_pool(context,&carrier,PoolBuildRequest{});
+        const auto selected = std::find_if(pool.entries.begin(),pool.entries.end(),
+            [&](const auto& candidate) { return candidate.session_mod_id == id; });
+        PC_CHECK(selected != pool.entries.end() && pool.total_weight > 0);
+        if (selected == pool.entries.end() || pool.total_weight == 0) return;
+        PC_CHECK(selected->final_weight > 0);
+        ordering_mass *= double(selected->final_weight) / pool.total_weight;
+        PC_CHECK(pc_item_add_mod(&carrier,session->gen_type[id],id,
+            session->primary_group[id],0,nullptr) == PC_RESULT_OK);
+    }
+    PC_CHECK(ordering_mass > 0 && std::isfinite(ordering_mass));
+    PC_CHECK(carrier.prefix_count == 2 && carrier.suffix_count == 2 &&
+        carrier.searing_exarch_tier == 0 && carrier.eater_of_worlds_tier == 0);
+    ActionRegistryBuildOptions build; build.exhaustive_fossils = false;
+    const auto registry = build_action_registry(*session,build);
+    CalcContext calc(session,goal,registry,{registry.index_by_id.at("chaos")},
+        false,false,false,std::nullopt,{},false,{},true);
+    calc.set_solve_resource_caps(10000,1000000,false,1073741824ull);
+    const auto carrier_state = calc.intern_item(carrier);
+    PC_CHECK(satisfied_goal_mask(calc.state(carrier_state)) == ((1u << 0) | (1u << 3)));
+    PC_CHECK(!calc.is_goal_state(calc.state(carrier_state)));
+    const auto first_paid = [&](const StrategyImpl& strategy) {
+        auto node = strategy.start_node;
+        for (std::size_t step = 0; step <= strategy.nodes.size(); ++step) {
+            const auto& current = strategy.nodes.at(node);
+            if (current.kind == StrategyNodeKind::Operation) return node;
+            if (current.kind == StrategyNodeKind::Terminal)
+                throw std::runtime_error("partial held carrier routed to terminal");
+            const auto edge = std::find_if(current.edges.begin(),current.edges.end(),
+                [&](const auto& candidate) { return candidate.is_default ||
+                    evaluate_compiled_condition(candidate.condition,*session,carrier); });
+            if (edge == current.edges.end()) throw std::runtime_error("partial held carrier has no native route");
+            node = edge->target;
+        }
+        throw std::runtime_error("partial held carrier has an unpaid routing cycle");
+    };
+    const auto historical_json = read(qualification / "policies/conquest5-historical.strategy.json");
+    const auto current_json = read(qualification / "policies/conquest5-current.strategy.json");
+    const auto historical = compile_strategy_json(session,historical_json.data(),historical_json.size());
+    const auto current = compile_strategy_json(session,current_json.data(),current_json.size());
+    PC_CHECK(exact_item_state_key(historical->start_item) == exact_item_state_key(root));
+    PC_CHECK(exact_item_state_key(current->start_item) == exact_item_state_key(root));
+    const auto old_route = first_paid(*historical), new_route = first_paid(*current);
+    PC_CHECK(historical->nodes[old_route].id == "s3" &&
+        historical->nodes[old_route].action.type == ActionType::EldritchEmber);
+    PC_CHECK(current->nodes[new_route].id == "c5" &&
+        current->nodes[new_route].action.type == ActionType::Chaos);
+    const auto& next = historical->nodes[old_route].edges;
+    PC_CHECK(next.size() == 1 && next.front().is_default);
+    if (next.size() == 1) PC_CHECK(historical->nodes[next.front().target].action.type == ActionType::EldritchExalt);
+    const auto ember = registry.index_by_id.at("eldritch_ember:1");
+    const auto exalt = registry.index_by_id.at("eldritch_exalt");
+    PC_CHECK(registry.actions[ember].params.tier == 1);
+    const auto attempt = execute_attempt(calc,{ember,exalt},carrier_state);
+    PC_CHECK(attempt.supported && attempt.fully_legal && attempt.choice_groups.empty());
+    PC_CHECK(attempt.expected_primitive_actions == 2 &&
+        attempt.expected_resources == aggregate_resources(registry,{ember,exalt}));
+    double native_mass = 0;
+    for (const auto& exit : attempt.entries) {
+        PC_CHECK(exit.probability > 0);
+        pc_item_state item; PC_CHECK(calc.materialize(exit.state,item));
+        PC_CHECK(item.prefix_count == 3 && item.suffix_count == 2 && item.searing_exarch_tier == 1);
+        const auto contains = [&](const auto id) {
+            const auto* mods = session->gen_type[id] == PC_SIDE_PREFIX ? item.prefixes : item.suffixes;
+            const auto count = session->gen_type[id] == PC_SIDE_PREFIX ? item.prefix_count : item.suffix_count;
+            for (unsigned i=0; i<count; ++i) if (mods[i].mod_id == id) return true;
+            return false;
+        };
+        for (const auto id : picks) PC_CHECK(contains(id));
+        PC_CHECK(!contains(mod("LocalIncreasedArmourAndEvasionAndStunRecovery6")));
+        native_mass += exit.probability;
+    }
+    PC_CHECK(std::abs(native_mass-1.0) <= 1e-12);
+    std::printf("partial held native word: steps=2 exits=%zu mass=%.17g all_four_original_affixes_preserved\n",
+        attempt.entries.size(),native_mass);
+    std::printf("partial held native witness: law=%llu ordering_mass=%.17g goal_mask=%u historical=%s current=%s key=",
+        static_cast<unsigned long long>(kRareReforgeCountLawVersion),ordering_mass,
+        satisfied_goal_mask(calc.state(carrier_state)),historical->nodes[old_route].id.c_str(),
+        current->nodes[new_route].id.c_str());
+    for (const auto word : exact_item_state_key(carrier))
+        std::printf("%016llx,",static_cast<unsigned long long>(word));
+    std::printf("\n");
 }
 
 void run_solver_growth_tests(const bool blocker) {

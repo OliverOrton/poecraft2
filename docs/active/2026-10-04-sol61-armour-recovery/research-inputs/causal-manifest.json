@@ -1,0 +1,11 @@
+{
+  "artifact": "conquest_regression_causal_research.md",
+  "sha256": "885819341427e1db1db1c6e5b263e42437817d1617ea7b264605baeb2cad6889",
+  "bytes": 101055,
+  "word_count_approx": 12722,
+  "start_main": "7eb16ac3d63834fd5d3256ab42483f47d264b764",
+  "delivery_main": "7eb16ac3d63834fd5d3256ab42483f47d264b764",
+  "repository_writes": false,
+  "solver_executions": 0,
+  "source_reference_count": 50
+}

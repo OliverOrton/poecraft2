@@ -1,0 +1,28 @@
+[
+  {
+    "exit_code": 1,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 21328,
+    "process_identity_token": "21328:134356452438366036",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 224126.71159999445,
+    "name": "build-tests",
+    "command": [
+      "powershell.exe",
+      "-NoProfile",
+      "-ExecutionPolicy",
+      "Bypass",
+      "-File",
+      "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\poecraft2-solver-causal\\scripts\\dev-engine.ps1",
+      "-Task",
+      "Tests",
+      "-Jobs",
+      "2"
+    ],
+    "watchdog_seconds": 600
+  }
+]
