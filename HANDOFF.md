@@ -62,6 +62,17 @@ These build/supervision negatives are separate from the unrun finite native
 checker and solver economics. Further execution needs a new concrete premise
 and parent LOCAL grant; the accepted root control remains the only root run.
 
+Oliver resumes at 09:00 Vancouver. CI qualifies the Tests binary at a9aadac6
+with actual compile/link and object/source pins; parent grants the single
+finite checker with no rebuild/root. It passes 416 checks, certifying original
+root/P0/all 33 physical exits. Paid word plus checked Current tails loses
+3.59000495013606 at P0. Separate full-identity seed-role fixture names
+seed_root_only_incumbent_without_focused_fallback and preserves the checked
+artifact; historical product branches remain unproved. LOCAL releases at
+16:42:34 UTC, empty census. Slot 2 remains reserved; select a complete
+complementary tail before any economic treatment. See the programme's latest
+finite receipt; do not repeat the root or activate a private grammar.
+
 Published research checkpoints, both absent from main:
 
 - [Solver `040993ec`: Pro handoff](https://github.com/OliverOrton/poecraft2/blob/040993ec9bb8109cc1970df91c8bc9ec7ef97744/docs/active/2026-10-04-sol61-armour-recovery/PRO-HANDOFF.md)

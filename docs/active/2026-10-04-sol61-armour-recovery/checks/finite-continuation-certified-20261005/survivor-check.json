@@ -1,0 +1,10 @@
+{
+  "checked_utc": "2026-10-05T16:42:34.7456597Z",
+  "native_pid": 11196,
+  "native_identity_token": "11196:134356920914497859",
+  "owned_job_survivor": false,
+  "unexpected_descendant": false,
+  "cleanup_error": null,
+  "processes": [],
+  "local_released": true
+}

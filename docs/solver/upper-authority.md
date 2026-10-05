@@ -122,8 +122,13 @@ native option and aggregate completed rows do not change that value role.
 The existing focused upper owner requires statewise values or a separate
 focused fallback; 34 requests start none in the control. The exact historical
 refusing branch and P0-specific continuation service remain unobserved.
-The added named guard diagnostic and physical-entry witness are source only,
-unbuilt/unrun after the recorded build/invocation negatives. A checked physical
+The added named guard diagnostic and physical-entry witness are built at
+a9aadac6 and pass the single finite checker after separately qualified CI
+compile/link provenance. All 35 physical entries certify, but the one-use word
+with Current tails costs 3.59000495013606 more at P0. The separate full-identity
+role fixture names seed_root_only_incumbent_without_focused_fallback and
+preserves the checked artifact after refusal. This neither reconstructs the
+historical product owner nor issues a new retained upper. A checked physical
 entry remains entry-scoped evidence until the required complete class/domain,
 native operation and graph bindings pass; it never silently fills a state table.
 

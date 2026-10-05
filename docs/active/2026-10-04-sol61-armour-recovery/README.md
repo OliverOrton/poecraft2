@@ -306,7 +306,8 @@ patch or speculative launch occurs in the solver branch.
 
 Local evidence commit 9265ddf9 retains the matched control and all execution
 negatives. Separate source commit 2482d742 prepares the finite tail checker and
-names the existing refusing guard; it is explicitly unbuilt/unrun.
+names the existing refusing guard; it was explicitly unbuilt/unrun at that
+checkpoint. The resumed finite qualification below supersedes that build status.
 
 The normal joint checkpoint in solver_solve_focused.cpp follows a completed
 upper pass. continue_initial_candidate in solver_solve_incremental.cpp excludes
@@ -343,3 +344,55 @@ and control law at every positive exit, with no intermediate goal or choice.
 It cannot reuse a root scalar as a persistent-implicit tail certificate. This
 remains a conditional economic candidate; no native elision or saving is built,
 tested, retained or activated here.
+
+### Resumed finite closed tails and seed-role witness
+
+Oliver resumes approved work at 09:00 Vancouver. CI separately produces the
+Tests binary at source a9aadac6c5d2905ee3cd832290dd4fef53c5e893, SHA-256
+848f94ab1f5c943e47d1f46aaad916eed8bfced50c71c0f378c71b287e3735d5,
+20,565,059 bytes. Actual compile/link, four changed objects, unchanged source
+pins and both selector/guard strings pass; the [compact build provenance](checks/finite-continuation-certified-20261005/ci-built-provenance.json)
+retains the CI owner's original receipt location/hash. Direct Ninja -j1 with
+process-only cache disable passes in 9.669 s. This qualifies the built source;
+it does not establish that the old glob/cache cause is fixed. All earlier
+build/invocation negatives remain retained.
+
+Parent grants exactly one existing finite selector through unchanged qualified
+f532376a owned-job/file-backed supervision, 512 MiB, native 60 s/host 75 s,
+no rebuild and no Current root. Hash/source/object checks precede invocation.
+The [native receipt](checks/finite-continuation-certified-20261005/native-receipt.json)
+completes in 2.117 s, exit 0, 416 checks/zero failures. All 35 physical members
+(original root, P0, 33 paid-word exits) certify; every exit, exact key, positive
+probability, native paid resource and residual remains in the
+[finite result](checks/finite-continuation-certified-20261005/summary.json).
+Peak checker ownership is 82,435,449 bytes under the declared 512-MiB cap.
+
+| Complete finite comparison | Expected Chaos cost |
+| --- | ---: |
+| Checked original root | 101311.35474896737 |
+| Checked Current continuation at P0 | 101311.35474896753 |
+| Paid Ember1/Exalt word | 3.7463 |
+| Word plus checked Current exit tails | 101314.94475391766 |
+| Improvement at P0 | -3.59000495013606 |
+
+The bare historical word followed by Current is strictly more expensive.
+Every checked exit tail is 101311.19845391765; persistent Ember context is
+retained rather than equated to the original-root scalar. No saving is inferred
+from word admission or goal-mask progress. The next economic hypothesis must
+supply a complete useful complementary tail before slot 2 can be justified.
+No new complete controller, all-positive programme admission, retained export,
+Finder/WASM activation or product saving is produced by this diagnostic.
+
+The separate full-identity role fixture records
+seed_root_only_incumbent_without_focused_fallback: one upper request, zero
+started, one rejected, checked artifact/root fallback preserved and no root
+scalar promoted to statewise authority. This is a demonstrated existing guard
+role. It is not the product's 28-candidate owner and does not reconstruct the
+control's 34 historical refusing branches, P0-specific service or introducing
+commit. A legal word with losing unchanged tails does not justify broad grammar.
+
+LOCAL releases at 16:42:34 UTC. Qualified cleanup proves no surviving job member,
+unexpected descendant or cleanup error; the elevated compiler/native census
+is empty in the [survivor check](checks/finite-continuation-certified-20261005/survivor-check.json).
+Original-root allowance remains 1/2 spent. No further heavy execution is granted
+by this completed finite check.

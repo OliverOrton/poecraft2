@@ -68,6 +68,21 @@ standalone glob, generated console pool and live owned conhost narrow a
 supervision/console hypothesis without proving its cause. This execution gate
 remains separate from solver admission, economics and pytest thread ownership.
 
+Oliver resumes the programme at 09:00 Vancouver. CI separately qualifies the
+Tests binary at a9aadac6 through actual compile/link, changed objects/source
+pins and selector/guard identity; this does not prove the old glob/cache cause
+fixed. Parent grants one finite native checker, no rebuild or Current root.
+It passes 416/416 checks in 2.117 s: all 35 exact physical members certify,
+with peak checker ownership 82,435,449 bytes under 512 MiB. The paid word plus
+Current tails costs 101314.94475391766 versus checked P0 101311.35474896753,
+a loss of 3.59000495013606. The separate full-identity seed-role fixture refuses
+with seed_root_only_incumbent_without_focused_fallback and preserves the checked
+artifact; it is not the product's 28-candidate owner or its historical branch
+record. [Finite receipt](../active/2026-10-04-sol61-armour-recovery/checks/finite-continuation-certified-20261005/summary.json)
+retains every paid resource/positive physical exit and all prior negatives.
+LOCAL releases at 16:42:34 UTC with an empty census. Slot 2 stays unspent; a
+useful complete complementary tail remains required before root treatment.
+
 [Solver checkpoint `040993ec`](https://github.com/OliverOrton/poecraft2/blob/040993ec9bb8109cc1970df91c8bc9ec7ef97744/docs/active/2026-10-04-sol61-armour-recovery/PRO-HANDOFF.md) and
 [independent review `4c9f078d`](https://github.com/OliverOrton/poecraft2/blob/4c9f078d95e2c0c837ab7a408c4846420bac94db/docs/active/2026-10-04-sol61-independent-review/causal-research-handoff.md)
 are published research branches and are absent from main. The default-off private

@@ -1,0 +1,77 @@
+{
+  "source_head": "a9aadac6c5d2905ee3cd832290dd4fef53c5e893",
+  "all_passed": true,
+  "gates": {
+    "source_head_unchanged": true,
+    "source_bytes_and_mtimes_unchanged": true,
+    "build_exit_clean": true,
+    "parent_identity_proved_absent": true,
+    "compiler_or_linker_started": true,
+    "test_link_command_observed": true,
+    "binary_changed": true,
+    "binary_newer_than_changed_inputs": true,
+    "all_four_changed_objects_differ_from_original_stale_build": true,
+    "all_four_changed_objects_newer_than_changed_inputs": true,
+    "new_selector_present": true,
+    "named_seed_guard_present": true
+  },
+  "sources": {
+    "engine/src/solver_solve_focused.cpp": {
+      "sha256": "52c8fe15acd7af9faeccb8505e88805c372c72460bfedc10401fabc9112f2df7",
+      "bytes": 77026,
+      "mtime_ns": 1791174912941135000
+    },
+    "engine/src/solver_solve_incremental.cpp": {
+      "sha256": "affc32a2db24ad1ee1130fd03d4f33c54973bb07e9b76d482adbea5adeea8441",
+      "bytes": 185802,
+      "mtime_ns": 1791174913317860400
+    },
+    "engine/tests/test_main.cpp": {
+      "sha256": "27f5f30644f1b5013fbaaa000380e6cd5981270222cbc001242b57b227fc3a5b",
+      "bytes": 21537,
+      "mtime_ns": 1791174992665930600
+    },
+    "engine/tests/test_solver_compile.cpp": {
+      "sha256": "3407dd803b8995ddac910d191073ec349f53db9d60f803c5f0259f04b58bf59a",
+      "bytes": 334491,
+      "mtime_ns": 1791178385121675600
+    },
+    "engine/tests/tests.hpp": {
+      "sha256": "91fa271aa08c952dfc5fba0c44d639d08202dfc3796b95bb748db4a2fe40d27f",
+      "bytes": 4106,
+      "mtime_ns": 1791174913621846600
+    }
+  },
+  "objects": {
+    "build/engine/CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_focused.cpp.obj": {
+      "sha256": "1c4940e380bb6c3fde7606626f1d152a7e75895183ef3cb31357813d41ad6eeb",
+      "bytes": 120261,
+      "mtime_ns": 1791217407769065200
+    },
+    "build/engine/CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_incremental.cpp.obj": {
+      "sha256": "252528b9d7d784021b318b1542ebea1a93955ccf96e7eebe981c1b1aaa96fe41",
+      "bytes": 320742,
+      "mtime_ns": 1791217410300471400
+    },
+    "build/engine/CMakeFiles/poecraft_engine_tests.dir/tests/test_main.cpp.obj": {
+      "sha256": "d49e210e0a7824d270224218aba9dc6cc4790d11d69e0b754dcd195189639481",
+      "bytes": 27170,
+      "mtime_ns": 1791217408538437800
+    },
+    "build/engine/CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_compile.cpp.obj": {
+      "sha256": "270cdef0ff6ff1b4ed716f28bf4ac3713804c1ff225dc98f9caaac8e1a15e664",
+      "bytes": 1335001,
+      "mtime_ns": 1791217456560768700
+    }
+  },
+  "binary": {
+    "sha256": "848f94ab1f5c943e47d1f46aaad916eed8bfced50c71c0f378c71b287e3735d5",
+    "bytes": 20565059,
+    "mtime_ns": 1791218235389317400
+  },
+  "source_provenance_sha256": "c4fccbd2e6fcb073c09333f2fa947792b57b396ab12212595b7771a1c97750bb",
+  "source_provenance_location": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task\\ci-evidence\\tests-link-20261005\\provenance.json",
+  "build_owner": "CI owner",
+  "build_scope": "direct Ninja -j1, process-only cache disable, Tests target",
+  "old_glob_or_cache_failure_cause_proved_fixed": false
+}

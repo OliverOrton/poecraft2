@@ -634,9 +634,21 @@ policy/value certificate. In the matched control, 34 aggregate upper-seed
 requests start none, and the joint-assembly counter is zero. Source requires
 statewise values or a separate focused fallback for that seed; its exact
 historical refusing branches and P0-specific row service were not observed.
-The prepared complete physical-entry check remains unrun behind the retained
-build negatives. No graft saving, recurring policy value, complete coarse-domain
-authority or whole-search cause follows from these observations.
+The source-a9aadac6 finite checker now certifies the original root, P0 and all
+33 exact physical exits with complete priced Current tails. Paid word cost
+3.7463 plus those tails is 101314.94475391766, versus P0's checked Current
+continuation 101311.35474896753: a loss of 3.59000495013606. All exits retain
+the persistent Ember context and have checked tail 101311.19845391765; the
+root scalar was not substituted for those ports. This preserves the negative
+one-word graft hypothesis and requires a useful complete complementary tail
+before an economic treatment. It is not a recurring policy value or complete
+product coarse-domain certificate.
+
+A separate full-identity role fixture names the existing refusal
+seed_root_only_incumbent_without_focused_fallback: one request, no started pass,
+one rejection, checked fallback preserved. It does not reconstruct the product
+control's 34 unrecorded refusing branches or prove whole-search cause. The
+earlier build negatives remain in the evidence history.
 
 An ordinary fill versus reroll comparison must use each action's complete exit
 law and complete compatible tails, including lost goals, mandatory cleanup and
