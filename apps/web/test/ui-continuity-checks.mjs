@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { checkWorkbenchPresentation, checkItemPresentationSemantics, checkBuilderPresentation, captureUiCheckpoint } from './ui-presentation-checks.mjs';
+import { checkWorkbenchPresentation, checkItemPresentationSemantics, checkBuilderPresentation, checkModifierTypography, captureUiCheckpoint } from './ui-presentation-checks.mjs';
 import { checkEmulatorHistory, checkStrategyHistory } from './edit-history-checks.mjs';
 import { checkCalculatorLayout, checkEmulatorLayout } from './calculator-layout-checks.mjs';
 import { checkCraftChoices, checkCalculatorChoices } from './craft-choices-checks.mjs';
@@ -31,9 +31,12 @@ export async function checkUiContinuity(page, {builderConnectorContract = 'legac
     await captureUiCheckpoint(page, "calculator-input");
     await page.locator('pc-calculator [data-calc-context="goal"]').click();
     await page.locator('pc-calculator .pc-mod-family-header').first().click();
+    const poolTypography = await checkModifierTypography(page, ['pc-calculator .pc-mod-family-name:visible', 'pc-calculator .pc-mod-tier-copy:visible']);
     await page.locator('pc-calculator .pc-mod-tier-btn').first().click();
     await page.locator('[data-context-card="goal"] .pc-mod-slot.is-filled').first().waitFor();
     await page.waitForFunction(() => !document.querySelector('pc-calculator')?.busy);
+    const goalTypography = await checkModifierTypography(page, ['[data-context-card="goal"] .pc-mod-slot.is-filled .pc-mod-slot-line']);
+    console.log(JSON.stringify({checkpoint: 'modifier-pool-typography', poolTypography, goalTypography}));
     await captureUiCheckpoint(page, "calculator-goal");
     await page.locator('pc-calculator [data-calc-tool="odds"]').click();
     await page.locator('pc-calculator [data-select-action="chaos"]:not(:disabled)').click();
@@ -90,9 +93,17 @@ export async function checkUiContinuity(page, {builderConnectorContract = 'legac
     const builderPresentation = await checkBuilderPresentation(page, {connectorContract: builderConnectorContract});
     console.log(JSON.stringify({checkpoint: "builder-presentation", builderPresentation}));
     await page.getByRole('button', {name: 'Choose modifiers', exact: true}).click();
+    const pickerTypography = await checkModifierTypography(page, ['.pc-modifier-family:visible .pc-mod-family-name']);
+    const firstPickerKey = await page.locator('.pc-modifier-family').first().getAttribute('data-modifier-key');
     await captureUiCheckpoint(page, "builder");
+    await page.getByRole('button', {name: 'Choose modifiers', exact: true}).click();
+    await page.locator('.pc-modifier-picker-popover').waitFor({state: 'hidden'});
+    await page.getByRole('button', {name: 'Choose modifiers', exact: true}).click();
+    assert.equal(await page.locator('.pc-modifier-family').first().getAttribute('data-modifier-key'), firstPickerKey);
     await page.getByRole('searchbox', {name: 'Search modifiers'}).fill('maximum life');
     await page.locator('.pc-modifier-family').first().click();
+    const selectedTypography = await checkModifierTypography(page, ['.pc-cond-selected-modifier-copy strong:visible']);
+    console.log(JSON.stringify({checkpoint: 'builder-modifier-typography', pickerTypography, selectedTypography, interruptedPickerReopened: true}));
     await page.locator('[data-action="modifier-tier"]').selectOption('2');
     assert.equal(await page.locator('.pc-cond-tier-badge').innerText(), 'T2');
     await page.getByText('Advanced JSON', {exact: true}).click();

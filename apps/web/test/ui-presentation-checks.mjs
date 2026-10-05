@@ -15,6 +15,17 @@ function contrast(a, b) {
     return (Math.max(x, y) + .05) / (Math.min(x, y) + .05);
 }
 
+export async function checkModifierTypography(page, selectors) {
+    const counts = {};
+    for (const selector of selectors) {
+        const weights = await page.locator(selector).evaluateAll(elements => elements.map(element => getComputedStyle(element).fontWeight));
+        assert.ok(weights.length > 0, `Rendered modifier copy exists: ${selector}`);
+        assert.ok(weights.every(weight => weight === '400'), `Modifier body text remains normal weight: ${selector}`);
+        counts[selector] = weights.length;
+    }
+    return counts;
+}
+
 /** The installed dock owns layout; its rendered surfaces share the C2 tokens. */
 export async function checkDockTheme(page) {
     await page.evaluate(() => document.fonts.ready);
@@ -77,6 +88,7 @@ export async function checkWorkbenchPresentation(page) {
         return result;
     });
     const dockTheme = await checkDockTheme(page);
+    const modifierTypography = await checkModifierTypography(page, ['pc-emulator .pc-mod-slot.is-filled .pc-mod-slot-line']);
     assert.equal(styles.radius, '4px');
     assert.ok(contrast(styles.text, styles.fill) >= 4.5, 'Execution text contrast');
     for (const surface of [styles.page, styles.panel, styles.card]) {
@@ -85,8 +97,24 @@ export async function checkWorkbenchPresentation(page) {
         assert.ok(contrast(styles.focus, surface) >= 3);
     }
     assert.ok(contrast(styles.boundary, styles.field) >= 3);
+    const secondary = await page.locator('pc-emulator [data-cmd="undo"]:not(:disabled)').evaluate(element => {
+        const style = getComputedStyle(element);
+        return {text: style.color, fill: style.backgroundColor};
+    });
+    assert.notEqual(secondary.fill, styles.fill, 'Secondary controls remain distinct from execution buttons');
+    assert.ok(contrast(secondary.text, secondary.fill) >= 4.5);
+    await page.locator('pc-emulator [data-craft-panel="fossil"]').click();
+    const disabled = await page.locator('pc-emulator [data-config-action="fossil"]:disabled').evaluate(element => {
+        const style = getComputedStyle(element);
+        return {text: style.color, fill: style.backgroundColor, cursor: style.cursor};
+    });
+    assert.notEqual(disabled.fill, styles.fill, 'Unavailable primary actions have a distinct state');
+    assert.equal(disabled.cursor, 'not-allowed');
+    assert.ok(contrast(disabled.text, disabled.fill) >= 4.5);
+    await page.locator('pc-emulator [data-craft-panel="essence"]').click();
     await primary.hover();
     const hover = await primary.evaluate(element => ({text: getComputedStyle(element).color, fill: getComputedStyle(element).backgroundColor}));
+    assert.notEqual(hover.fill, styles.fill, 'Primary hover is visible');
     assert.ok(contrast(hover.text, hover.fill) >= 4.5);
     await primary.focus();
     await page.keyboard.press('Tab');
@@ -100,7 +128,8 @@ export async function checkWorkbenchPresentation(page) {
     return {primaryContrast: contrast(styles.text, styles.fill), hoverContrast: contrast(hover.text, hover.fill),
         mutedCardContrast: contrast(styles.muted, styles.card), focusCardContrast: contrast(styles.focus, styles.card),
         fieldBoundaryContrast: contrast(styles.boundary, styles.field), keyboardFocus: true, stableSquareSlots: true,
-        dockTheme};
+        dockTheme, modifierTypography, secondaryContrast: contrast(secondary.text, secondary.fill),
+        disabledContrast: contrast(disabled.text, disabled.fill)};
 }
 
 /** Optional evidence capture during the existing smoke run, in its fresh profile. */

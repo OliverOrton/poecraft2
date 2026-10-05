@@ -10,21 +10,21 @@
 
 :root {
     color-scheme: dark;
-    --pc-surface-page: #10151b;
-    --pc-surface-panel: #18212a;
-    --pc-surface-card: #24313d;
-    --pc-surface-field: #0b1015;
-    --pc-surface-hover: #304151;
-    --pc-border: #465866;
-    --pc-border-control: #708596;
-    --pc-text-body: #dce2e7;
-    --pc-text-muted: #a5b2bf;
-    --pc-text-strong: #f0f3f6;
-    --pc-accent: #cda37d;
-    --pc-action-primary: #e0ab83;
-    --pc-action-primary-hover: #edb994;
-    --pc-action-primary-text: #10151b;
-    --pc-focus: #edb994;
+    --pc-surface-page: #181818;
+    --pc-surface-panel: #232323;
+    --pc-surface-card: #303030;
+    --pc-surface-field: #121212;
+    --pc-surface-hover: #3a3a3a;
+    --pc-border: #555555;
+    --pc-border-control: #888888;
+    --pc-text-body: #e0e0e0;
+    --pc-text-muted: #b4b4b4;
+    --pc-text-strong: #f3f3f3;
+    --pc-accent: #e6a078;
+    --pc-action-primary: #e6a078;
+    --pc-action-primary-hover: #f0b48e;
+    --pc-action-primary-text: #181818;
+    --pc-focus: #f0b48e;
     --pc-status-success: #a4d6ad;
     --pc-status-warning: #edc07d;
     --pc-status-danger: #f09a90;
@@ -1014,6 +1014,13 @@ select {
     gap: 3px;
 }
 
+/* Modifier rows are buttons for interaction, but their copy is body text. */
+.pc-mod-family-header,
+.pc-mod-tier-btn,
+.pc-modifier-family {
+    font-weight: 400;
+}
+
 .pc-mod-family-name {
     color: var(--pc-text-strong);
 }
@@ -1416,6 +1423,7 @@ select {
 .pc-mod-slot-lines {
     color: var(--pc-text-strong);
     font-size: var(--pc-type-body);
+    font-weight: 400;
     line-height: 1.4;
 }
 
@@ -2354,6 +2362,7 @@ pc-stash {
     overflow: hidden;
     color: var(--pc-text-strong);
     font-size: var(--pc-type-meta);
+    font-weight: 400;
     text-overflow: ellipsis;
     white-space: normal;
     line-height: 1.4;
