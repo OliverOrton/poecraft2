@@ -1,0 +1,252 @@
+{
+  "state": "ISOLATED_UI_QUALIFIED_NOT_ACTIVATED",
+  "deployment": false,
+  "economics": "Unchanged; no solver quality or economic claim.",
+  "inputs_unchanged": true,
+  "screenshots": [
+    {
+      "local_path": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-2\\charcoal-ember\\out\\charcoal-ember\\gate-r1\\screens\\chromium-builder.png",
+      "bytes": 162694,
+      "sha256": "3a014057cf1b6e7182c4d23b74e258933d5dda70fb17ba236e505dcc818309c1",
+      "filename": "chromium-builder.png"
+    },
+    {
+      "local_path": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-2\\charcoal-ember\\out\\charcoal-ember\\gate-r1\\screens\\chromium-calculator-goal.png",
+      "bytes": 246659,
+      "sha256": "da7d3e3416131ca8194a187f556ce5f67b051cc4bf160b185d7f03c35aa8d763",
+      "filename": "chromium-calculator-goal.png"
+    },
+    {
+      "local_path": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-2\\charcoal-ember\\out\\charcoal-ember\\gate-r1\\screens\\chromium-calculator-input.png",
+      "bytes": 243733,
+      "sha256": "aa18c57fc23824c6ea24fe1da19949763d9f5b659679ccaf496acc553db498a9",
+      "filename": "chromium-calculator-input.png"
+    },
+    {
+      "local_path": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-2\\charcoal-ember\\out\\charcoal-ember\\gate-r1\\screens\\chromium-emulator.png",
+      "bytes": 231139,
+      "sha256": "eaf4bfe1898614211573f69012e8428af6da008a2fef3ea2bbb056244d8074da",
+      "filename": "chromium-emulator.png"
+    },
+    {
+      "local_path": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-2\\charcoal-ember\\out\\charcoal-ember\\gate-r1\\screens\\chromium-font-fallback.png",
+      "bytes": 158436,
+      "sha256": "4c86c3bd6105cfd886742ff1d4e192e35f6c404ef82be61af062b079ab2a6910",
+      "filename": "chromium-font-fallback.png"
+    },
+    {
+      "local_path": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-2\\charcoal-ember\\out\\charcoal-ember\\gate-r1\\screens\\chromium-stash.png",
+      "bytes": 44061,
+      "sha256": "5484c76325d9df830a3c90f1d30ba5c2b3b5ec8a0518326005b7060b0d578314",
+      "filename": "chromium-stash.png"
+    }
+  ],
+  "branch": "dot/charcoal-ember-20261005",
+  "worktree": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-2\\charcoal-ember",
+  "public_activation": false,
+  "build_id": "2f68b13e5a1fd1620d58af91d3df50aab1ad3790d6537e6866ef6b3da370a04f",
+  "cim_survivors": 0,
+  "native_wasm_builds": 0,
+  "source_tree_sha256": "da881f8c708e5fe55ef08a2ef156de20ca9da9aa965c41cec46634a8d1c5cb38",
+  "approved_reference": "libfile_b84281af96f88191907b919bfe7a3517",
+  "compiler_jobs": 0,
+  "adapter_commit": "d485ff111fc6b3aafa1679bca97b9ff9bd70d2a8",
+  "actual_pixels_inspected": true,
+  "library_delivery": {
+    "state": "FOUR_LIBRARY_CREATES_CONFIRMED_LOCAL_METADATA_FAILED",
+    "files": [
+      {
+        "filename": "poecraft2-charcoal-ember-7fd6a48e-emulator.png",
+        "confirmed": true,
+        "library_file_id": "libfile_63ccfbc0e85081919f4b21eb51490416",
+        "file_id": "file_000000005138823099238ee92b417cee",
+        "library_path": "/poecraft2-charcoal-ember-7fd6a48e-emulator.png",
+        "current_version_number": 0,
+        "metadata_exit": 1,
+        "metadata_error": "Windows Python lacks os.setxattr; Library create succeeded, local identity writeback failed."
+      },
+      {
+        "filename": "poecraft2-charcoal-ember-7fd6a48e-calculator-goal.png",
+        "confirmed": true,
+        "library_file_id": "libfile_b8a5c68bbe58819181da524a5dda41f5",
+        "file_id": "file_00000000d30c8230b05d6cf4d97907f0",
+        "library_path": "/poecraft2-charcoal-ember-7fd6a48e-calculator-goal.png",
+        "current_version_number": 0,
+        "metadata_exit": 1,
+        "metadata_error": "Windows Python lacks os.setxattr; Library create succeeded, local identity writeback failed."
+      },
+      {
+        "filename": "poecraft2-charcoal-ember-7fd6a48e-builder.png",
+        "confirmed": true,
+        "library_file_id": "libfile_2e1a9e550ccc8191bb34beee10abceba",
+        "file_id": "file_00000000d7dc81fdae34293e7049034b",
+        "library_path": "/poecraft2-charcoal-ember-7fd6a48e-builder.png",
+        "current_version_number": 0,
+        "metadata_exit": 1,
+        "metadata_error": "Windows Python lacks os.setxattr; Library create succeeded, local identity writeback failed."
+      },
+      {
+        "filename": "poecraft2-charcoal-ember-7fd6a48e-stash.png",
+        "confirmed": true,
+        "library_file_id": "libfile_460c396d371c81919f2060de4ccf23ba",
+        "file_id": "file_00000000f9ec8230a549ecf910c2d907",
+        "library_path": "/poecraft2-charcoal-ember-7fd6a48e-stash.png",
+        "current_version_number": 0,
+        "metadata_exit": 1,
+        "metadata_error": "Windows Python lacks os.setxattr; Library create succeeded, local identity writeback failed."
+      }
+    ],
+    "confirmed_uploads": 4,
+    "route": "One ordered direct create batch after parent confirmed prepared helper unavailable before mutation.",
+    "prepared_helper_negative": "Library prepare_uploads is not available; zero prepared writes.",
+    "local_metadata": "Required current helper attempted within direct-create call for each file; all fail because Windows Python lacks os.setxattr. No helper patch or duplicate upload."
+  },
+  "simulator_trials": 0,
+  "rendered": {
+    "browser": "chromium",
+    "version": "152.0.7977.83",
+    "channel": "chrome",
+    "base": "/",
+    "build_id": "2f68b13e5a1fd1620d58af91d3df50aab1ad3790d6537e6866ef6b3da370a04f",
+    "result": "passed",
+    "scope": "full",
+    "builderConnectorContract": "resource-v1",
+    "requests": 392,
+    "ui": {
+      "presentation": {
+        "primaryContrast": 8.171377504642573,
+        "hoverContrast": 9.828646410999786,
+        "mutedCardContrast": 6.365399362090964,
+        "focusCardContrast": 7.305566617105347,
+        "fieldBoundaryContrast": 5.284701049655088,
+        "keyboardFocus": true,
+        "stableSquareSlots": true,
+        "dockTheme": {
+          "page": "rgb(24, 24, 24)",
+          "panel": "rgb(35, 35, 35)",
+          "groups": 1,
+          "tabs": 1,
+          "stripHeight": 35,
+          "squareJoinedTabs": true,
+          "fontSize": 14,
+          "minimumTextContrast": 16.002103933696826
+        },
+        "modifierTypography": {
+          "pc-emulator .pc-mod-slot.is-filled .pc-mod-slot-line": 5
+        },
+        "secondaryContrast": 11.894255975129129,
+        "disabledContrast": 7.580166373448933
+      },
+      "itemPresentation": {
+        "nativeActualInfluence": true,
+        "requiredExactAnyDistinct": true,
+        "readOnly": true,
+        "keyboardFractureIdentity": true
+      },
+      "builderPresentation": {
+        "connectorContract": "resource-v1",
+        "connectorGeometry": {
+          "scope": "resource-v1-connectors",
+          "nodes": 3,
+          "coverage": {
+            "sourceOnly": 0,
+            "recombination": 0,
+            "terminal": 0,
+            "ordinary": 3
+          },
+          "fullVocabularyRequired": false,
+          "nodeWidth": 210,
+          "portSize": 14,
+          "inputA": {
+            "center": 36,
+            "top": 29
+          },
+          "inputB": {
+            "center": 78,
+            "top": 71
+          },
+          "ordinary": {
+            "center": 54,
+            "top": 47
+          },
+          "sourceInputs": 0,
+          "terminalOutputs": 0
+        },
+        "nodeWidth": 210,
+        "portDiameter": 14,
+        "keyboardFocus": true,
+        "edgeRowsFit": true
+      },
+      "crafts": true,
+      "handoffs": true,
+      "coverageGoal": true,
+      "draftRecovery": true,
+      "restart": true,
+      "namespacedAction": true,
+      "nestedConditions": true,
+      "tierAndAnyTier": true,
+      "tabLifecycle": true,
+      "artwork": true,
+      "stashRoundTrip": true,
+      "stashNativeFacts": true,
+      "dirtyClose": true,
+      "emulatorHistory": true,
+      "strategyHistory": true,
+      "edgeReconnection": true,
+      "craftChoices": true,
+      "craftTooltips": true,
+      "stableModSlots": true,
+      "calculatorComparison": true,
+      "harvestMaterials": true,
+      "historySpend": true,
+      "artworkFallback": true
+    },
+    "integratedBuilder": null
+  },
+  "solver_searches": 0,
+  "bulk_receipts": "out/charcoal-ember/gate-r1/",
+  "approved_reference_pixels_inspected": false,
+  "stages": [
+    {
+      "name": "metadata",
+      "status": "passed",
+      "original_identity": "proved_absent",
+      "exit_code": 0,
+      "wall_ms": 2243.428999790922
+    },
+    {
+      "name": "typescript",
+      "status": "passed",
+      "original_identity": "proved_absent",
+      "exit_code": 0,
+      "wall_ms": 3608.9782998897135
+    },
+    {
+      "name": "vite",
+      "status": "passed",
+      "original_identity": "proved_absent",
+      "exit_code": 0,
+      "wall_ms": 3734.125299844891
+    },
+    {
+      "name": "package",
+      "status": "passed",
+      "original_identity": "proved_absent",
+      "exit_code": 0,
+      "wall_ms": 1877.5889999233186
+    },
+    {
+      "name": "render",
+      "status": "passed",
+      "original_identity": "proved_absent",
+      "exit_code": 0,
+      "wall_ms": 15736.387899843976
+    }
+  ],
+  "archive": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-2\\charcoal-ember\\dist\\public-artifacts\\web\\46358c48550a2ebce49c1e0ca339fc7fc971c1a6739957604fd8e262c83f2254",
+  "worker_blob": "f532376adbde79d9f31da1bc2d97e1b24fe2f5d9",
+  "verified_remote_main": "7eb16ac3d63834fd5d3256ab42483f47d264b764",
+  "source": "7fd6a48e41b97c1aca5fa10775f668bb6fc9b028",
+  "dev_server_restart": false,
+  "reference_disposition": "Implemented supplied exact tokens with explicit parent waiver after Windows metadata failure and Library image read returned text only."
+}

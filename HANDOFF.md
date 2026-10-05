@@ -13,6 +13,13 @@ dev-server restart or normal-checkout bundle/data regeneration occurred.
 
 ## Selected next work: Pro causal planning; heavy work paused
 
+The separately isolated [October 5 charcoal/ember UI](docs/active/2026-10-05-charcoal-ember/README.md)
+passes its bounded source-matched TypeScript/build/package/Chrome rendering gate
+at `7fd6a48e`, with inspected app screenshots and unchanged native/frozen inputs.
+It is not integrated or activated on main. LOCAL is released; four Library
+screenshots are saved, with a local metadata limitation in the receipt. Solver economics and
+mathematical authorities are unchanged by this presentation delta.
+
 Oliver requested a solver break and research. No new native builds, solver,
 Simulator or capability implementation is selected. LOCAL is released with no
 owned heavy process. Do not invent a new programme or repeat an experiment.
