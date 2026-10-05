@@ -17106,8 +17106,10 @@ void run_solver_root_only_joint_service_tests() {
         baseline.compiled_artifact.policy_decision_bindings.clear();
         baseline.compiled_root_entry_only = true;
         baseline.policy_materialized = false;
-        baseline.policy.clear(); baseline.policy_rows.clear(); baseline.policy_row_costs.clear();
-        baseline.policy_reachable.clear(); baseline.frontier_operators.clear();
+        baseline.policy.assign(n, PolicyOperatorRef{});
+        baseline.policy_rows.assign(n, std::numeric_limits<std::uint64_t>::max());
+        baseline.policy_reachable.assign(n, 0);
+        baseline.policy_row_costs.clear(); baseline.frontier_operators.clear();
         baseline.choice_sources.clear(); baseline.behavioral_representative_by_state.clear();
         baseline.unveil_preferences.clear(); baseline.option_unveil_preferences.clear();
         baseline.values.assign(n, solve_detail::kInfinity);
@@ -17125,6 +17127,15 @@ void run_solver_root_only_joint_service_tests() {
         work.publication_pipeline.initial_candidate_resume_phase = work.phase;
         work.publication_pipeline.initial_candidate_task.emplace(work.certify_initial_candidate());
         check_queued();
+        const char* baseline_failure =
+            work.certified_incumbent_invalid_reason(*work.output_incumbent);
+        if (!work.output_incumbent->compiled_root_entry_only ||
+            work.output_incumbent->has_statewise_upper_values() || baseline_failure) {
+            std::printf("root-only baseline failure: %s\nprogress=%s\n",
+                baseline_failure ? baseline_failure : "root-only value role changed",
+                work.progress_trace_json(0).c_str());
+            std::fflush(stdout);
+        }
         require(work.output_incumbent->compiled_root_entry_only &&
             !work.output_incumbent->has_statewise_upper_values() &&
             work.certified_incumbent_invalid_reason(*work.output_incumbent) == nullptr,
