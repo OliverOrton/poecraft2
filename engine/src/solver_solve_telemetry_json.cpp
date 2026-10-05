@@ -3620,6 +3620,76 @@ std::string serialize_solver_telemetry(
         append_telemetry_json_string(
             json,
             diagnostics->incremental_anytime_policy_last_failure);
+        const auto append_checkpoint_observation = [&](const GraphOnlyCheckpointObservation& value) {
+            json += "{\"observed\":" + std::string(bool_json(value.observed));
+            const auto flag = [&](const char* name, bool enabled) {
+                json += ",\"" + std::string(name) + "\":" + bool_json(enabled);
+            };
+            flag("high_impact", value.high_impact);
+            flag("generation", value.generation);
+            flag("envelope_open", value.envelope_open);
+            flag("upper_pass_inactive", value.upper_pass_inactive);
+            flag("incumbent_present", value.incumbent_present);
+            flag("statewise_unavailable", value.statewise_unavailable);
+            flag("root_only", value.root_only);
+            flag("table_rejected", value.table_rejected);
+            flag("from_incremental_incumbent", value.from_incremental_incumbent);
+            flag("focused_fallback_present", value.focused_fallback_present);
+            flag("economic_restart_allowed", value.economic_restart_allowed);
+            flag("restart_cost_valid", value.restart_cost_valid);
+            flag("compiled_payload", value.compiled_payload);
+            flag("checker_slot_unused", value.checker_slot_unused);
+            flag("checker_inactive", value.checker_inactive);
+            flag("finalization_inactive", value.finalization_inactive);
+            flag("strict_cache_inactive", value.strict_cache_inactive);
+            flag("finish_not_requested", value.finish_not_requested);
+            flag("cap_not_hit", value.cap_not_hit);
+            flag("expansion_inactive", value.expansion_inactive);
+            flag("refinement_inactive", value.refinement_inactive);
+            flag("not_consumed", value.not_consumed);
+            flag("not_finalized", value.not_finalized);
+            flag("cache_present", value.cache_present);
+            flag("row_checkpoint_due", value.row_checkpoint_due);
+            flag("material_upper_improvement", value.material_upper_improvement);
+            flag("independently_certified", value.independently_certified);
+            flag("independently_evaluated", value.independently_evaluated);
+            flag("proper", value.proper);
+            flag("executable", value.executable);
+            flag("safe_checkpoint", value.safe_checkpoint);
+            flag("compatibility_checked", value.compatibility_checked);
+            flag("compatible", value.compatible);
+            flag("eligible", value.eligible);
+            const auto identity = [&](const char* name, std::uint64_t id) {
+                json += ",\"" + std::string(name) + "\":\"" + std::to_string(id) + "\"";
+            };
+            identity("active_identity", value.active_identity);
+            identity("best_verified_identity", value.best_verified_identity);
+            identity("checker_slot_identity", value.checker_slot_identity);
+            json += ",\"active_checked_cost\":" + telemetry_finite_json(value.active_checked_cost);
+            json += ",\"best_verified_cost\":" + telemetry_finite_json(value.best_verified_cost);
+            json += ",\"restart_cost\":" + telemetry_finite_json(value.restart_cost);
+            json += ",\"active_kind\":";
+            append_telemetry_json_string(json, value.active_kind.data());
+            json += ",\"active_compilation_provenance\":";
+            append_telemetry_json_string(json, value.active_compilation_provenance.data());
+            json += ",\"completed_rows\":" + std::to_string(value.completed_rows);
+            json += ",\"next_checkpoint\":" + std::to_string(value.next_checkpoint);
+            json += ",\"retained_count\":" + std::to_string(value.retained_count);
+            json += ",\"retained_identities_omitted\":" + std::to_string(value.retained_identities_omitted);
+            json += ",\"retained_identities\":[";
+            const auto count = std::min<std::uint64_t>(value.retained_count, value.retained_identities.size());
+            for (std::uint64_t index = 0; index < count; ++index) {
+                if (index) json += ',';
+                json += "\"" + std::to_string(value.retained_identities[index]) + "\"";
+            }
+            json += "],\"compatibility_reason\":";
+            append_telemetry_json_string(json, value.compatibility_reason.data());
+            json += '}';
+        };
+        json += ",\"last_graph_only_checkpoint\":";
+        append_checkpoint_observation(diagnostics->last_graph_only_checkpoint);
+        json += ",\"last_upper_seed_refusal\":";
+        append_checkpoint_observation(diagnostics->last_upper_seed_refusal);
         json += "}";
         json += ",\"missing_frontier\":{\"discovered\":" +
                 std::to_string(

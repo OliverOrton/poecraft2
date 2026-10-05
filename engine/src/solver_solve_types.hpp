@@ -962,6 +962,9 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     double incremental_anytime_policy_best_upper = kInfinity;
     double incremental_anytime_checkpoint_upper = kInfinity;
     std::string incremental_anytime_policy_last_failure;
+    GraphOnlyCheckpointObservation last_graph_only_checkpoint;
+    GraphOnlyCheckpointObservation last_upper_seed_refusal;
+    GraphOnlyCheckpointObservation graph_only_checkpoint_observation() const;
     /* A joint upper proof can expose a stochastic successor whose incumbent
      * continuation is not valid for that carrier shape. Feed that concrete
      * state back into ordinary exact expansion before retrying composition. */

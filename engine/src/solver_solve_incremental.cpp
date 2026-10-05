@@ -826,6 +826,11 @@ bool SolveWork::Impl::begin_incremental_upper_policy_pass() {
         ++incremental_upper_policy_passes_rejected;
         retain_action_reason(
             "rejected:high_impact_executable_uppers:policy_pass_seed");
+        last_upper_seed_refusal = graph_only_checkpoint_observation();
+        std::copy_n(incremental_upper_policy_last_failure.data(),
+            std::min(incremental_upper_policy_last_failure.size(),
+                last_upper_seed_refusal.compatibility_reason.size() - 1),
+            last_upper_seed_refusal.compatibility_reason.data());
         incremental_upper_policy_pass = false;
         incremental_upper_fixed_policy_proved = false;
         for (const std::uint64_t row :
@@ -1091,21 +1096,40 @@ double SolveWork::Impl::sparse_row_q_for_values(
         &context);
 }
 
-bool SolveWork::Impl::maybe_install_incremental_anytime_incumbent() {
-    const bool checked_root_only_checkpoint =
-        !incremental_upper_policy_pass && output_incumbent &&
-        output_incumbent->compiled_root_entry_only &&
-        !output_incumbent->compiled_artifact.strategy_json.empty() &&
-        publication_pipeline.complete_candidate_attempted_identity == 0 &&
-        !publication_pipeline.initial_candidate_task &&
-        !finalization_task && focused_strict_transition_cache == nullptr &&
-        !requested_bounded_finish && !result.diagnostics.resource_cap_hit &&
-        !expansion_active && !incremental_refinement_active &&
-        !consumed && !finalized_result && transition_cache != nullptr;
-    const bool bounded_row_checkpoint =
-        incremental_alternative_rows.size() >=
+GraphOnlyCheckpointObservation SolveWork::Impl::graph_only_checkpoint_observation() const {
+    GraphOnlyCheckpointObservation observation;
+    observation.observed = true;
+    observation.high_impact = options.high_impact_executable_uppers;
+    observation.generation = incremental_action_generation;
+    observation.envelope_open = !incremental_envelope_closed;
+    observation.upper_pass_inactive = !incremental_upper_policy_pass;
+    observation.incumbent_present = output_incumbent.has_value();
+    observation.statewise_unavailable = output_incumbent &&
+        !output_incumbent->has_statewise_upper_values();
+    observation.root_only = output_incumbent && output_incumbent->compiled_root_entry_only;
+    observation.table_rejected = output_incumbent && output_incumbent->statewise_values_rejected;
+    observation.from_incremental_incumbent = incremental_upper_policy_pass &&
+        output_incumbent && output_incumbent->has_statewise_upper_values();
+    observation.focused_fallback_present = focused_fallback_policy != nullptr;
+    observation.economic_restart_allowed = options.allow_economic_restart;
+    observation.restart_cost_valid = std::isfinite(restart_cost) && restart_cost >= 0.0;
+    observation.restart_cost = restart_cost;
+    observation.compiled_payload = output_incumbent &&
+        !output_incumbent->compiled_artifact.strategy_json.empty();
+    observation.checker_slot_unused = publication_pipeline.complete_candidate_attempted_identity == 0;
+    observation.checker_inactive = !publication_pipeline.initial_candidate_task;
+    observation.finalization_inactive = !finalization_task;
+    observation.strict_cache_inactive = focused_strict_transition_cache == nullptr;
+    observation.finish_not_requested = !requested_bounded_finish;
+    observation.cap_not_hit = !result.diagnostics.resource_cap_hit;
+    observation.expansion_inactive = !expansion_active;
+    observation.refinement_inactive = !incremental_refinement_active;
+    observation.not_consumed = !consumed;
+    observation.not_finalized = !finalized_result;
+    observation.cache_present = transition_cache != nullptr;
+    observation.row_checkpoint_due = incremental_alternative_rows.size() >=
         incremental_anytime_next_row_checkpoint;
-    const bool material_upper_improvement =
+    observation.material_upper_improvement =
         cooperative_high_progress_ordering_enabled() &&
         output_incumbent.has_value() &&
         std::isfinite(incremental_anytime_checkpoint_upper) &&
@@ -1113,15 +1137,71 @@ bool SolveWork::Impl::maybe_install_incremental_anytime_incumbent() {
             incremental_anytime_checkpoint_upper *
                 (1.0 - anytime_scheduler.profile()
                     .material_upper_improvement_ratio);
+    observation.independently_certified = output_incumbent && output_incumbent->independently_certified;
+    observation.independently_evaluated = output_incumbent && output_incumbent->independently_evaluated;
+    observation.proper = output_incumbent && output_incumbent->proper;
+    observation.executable = output_incumbent && output_incumbent->executable;
+    observation.safe_checkpoint = observation.upper_pass_inactive &&
+        observation.incumbent_present && observation.statewise_unavailable &&
+        observation.compiled_payload && observation.checker_slot_unused &&
+        observation.checker_inactive && observation.finalization_inactive &&
+        observation.strict_cache_inactive && observation.finish_not_requested &&
+        observation.cap_not_hit && observation.expansion_inactive &&
+        observation.refinement_inactive && observation.not_consumed &&
+        observation.not_finalized && observation.cache_present;
+    observation.active_identity = output_incumbent ? output_incumbent->portfolio_identity : 0;
+    if (output_incumbent) {
+        std::copy_n(output_incumbent->kind.data(),
+            std::min(output_incumbent->kind.size(), observation.active_kind.size() - 1),
+            observation.active_kind.data());
+        std::copy_n(output_incumbent->compilation_provenance.data(),
+            std::min(output_incumbent->compilation_provenance.size(),
+                observation.active_compilation_provenance.size() - 1),
+            observation.active_compilation_provenance.data());
+    }
+    observation.active_checked_cost = output_incumbent && output_incumbent->independently_evaluated
+        ? output_incumbent->evaluated_policy_cost : kInfinity;
+    observation.best_verified_identity = incumbent_portfolio.best_verified_identity;
+    observation.best_verified_cost = incumbent_portfolio.verified_executable_upper();
+    observation.checker_slot_identity = publication_pipeline.complete_candidate_attempted_identity;
+    observation.completed_rows = incremental_alternative_rows.size();
+    observation.next_checkpoint = incremental_anytime_next_row_checkpoint;
+    const auto& retained = incumbent_portfolio.retained();
+    observation.retained_count = retained.size();
+    std::size_t index = 0;
+    for (const auto& candidate : retained) {
+        if (index < observation.retained_identities.size())
+            observation.retained_identities[index] = candidate.portfolio_identity;
+        else ++observation.retained_identities_omitted;
+        ++index;
+    }
+    return observation;
+}
+
+bool SolveWork::Impl::maybe_install_incremental_anytime_incumbent() {
+    auto observation = graph_only_checkpoint_observation();
+    const bool checked_graph_only_checkpoint = observation.safe_checkpoint;
+    const bool bounded_row_checkpoint = observation.row_checkpoint_due;
+    const bool material_upper_improvement = observation.material_upper_improvement;
     if (!options.high_impact_executable_uppers ||
         !incremental_action_generation || incremental_envelope_closed ||
-        (!incremental_upper_policy_pass && !checked_root_only_checkpoint) ||
+        (!incremental_upper_policy_pass && !checked_graph_only_checkpoint) ||
         (!bounded_row_checkpoint && !material_upper_improvement)) {
+        last_graph_only_checkpoint = observation;
         return false;
     }
-    if (checked_root_only_checkpoint &&
-        certified_incumbent_invalid_reason(*output_incumbent) != nullptr) {
-        return false;
+    if (checked_graph_only_checkpoint) {
+        observation.compatibility_checked = true;
+        const char* reason = certified_incumbent_invalid_reason(*output_incumbent);
+        observation.compatible = reason == nullptr;
+        const std::string_view text(reason ? reason : "compatible_checked_graph");
+        std::copy_n(text.data(), std::min(text.size(), observation.compatibility_reason.size() - 1),
+            observation.compatibility_reason.data());
+        observation.eligible = observation.compatible;
+        last_graph_only_checkpoint = observation;
+        if (!observation.compatible) return false;
+    } else {
+        last_graph_only_checkpoint = observation;
     }
 
     const std::size_t completed = incremental_alternative_rows.size();
@@ -1154,12 +1234,12 @@ bool SolveWork::Impl::maybe_install_incremental_anytime_incumbent() {
             ? std::numeric_limits<std::size_t>::max()
             : std::max<std::size_t>(completed + 1, completed * 2);
 
-    // A root controller is an executable fallback, never a statewise seed.
+    // A checked graph with unavailable values is a fallback, never a statewise seed.
     // Retain it under the existing aggregate cap before capturing a complete
     // native joint policy. Missing positive exits still fail in that builder.
-    if (checked_root_only_checkpoint && !retain_current_certified_incumbent()) {
+    if (checked_graph_only_checkpoint && !retain_current_certified_incumbent()) {
         incremental_anytime_policy_last_failure =
-            "root_only_joint_fallback_retention_cap";
+            "graph_only_joint_fallback_retention_cap";
         return false;
     }
 
@@ -1669,7 +1749,7 @@ bool SolveWork::Impl::try_begin_renewal_candidate_publication(bool resume_discov
 
 bool SolveWork::Impl::continue_initial_candidate() {
     if (try_begin_renewal_candidate_publication()) return true;
-    if (output_incumbent && output_incumbent->compiled_root_entry_only) {
+    if (output_incumbent && !output_incumbent->has_statewise_upper_values()) {
         if (incremental_upper_policy_pass) return false;
         if (!maybe_install_incremental_anytime_incumbent()) return false;
         // The existing one-shot complete-candidate slot also owns this check.
@@ -1677,7 +1757,7 @@ bool SolveWork::Impl::continue_initial_candidate() {
         publication_pipeline.complete_candidate_attempted_identity =
             output_incumbent->portfolio_identity;
         publication_pipeline.initial_candidate_resume_phase = phase;
-        record_progress_event("service_queued", "root_only_joint_candidate",
+        record_progress_event("service_queued", "graph_only_joint_candidate",
             output_incumbent->portfolio_identity);
         focus_optimizing = false;
         focused_lower_mode = false;
@@ -3628,6 +3708,8 @@ void SolveWork::Impl::finalize_incremental_diagnostics() {
         incremental_anytime_policy_best_upper;
     diagnostics.incremental_anytime_policy_last_failure =
         incremental_anytime_policy_last_failure;
+    diagnostics.last_graph_only_checkpoint = last_graph_only_checkpoint;
+    diagnostics.last_upper_seed_refusal = last_upper_seed_refusal;
     diagnostics.incremental_missing_frontier_discovered =
         incremental_missing_frontier_discovered;
     diagnostics.incremental_missing_frontier_priority_offers =

@@ -16990,7 +16990,9 @@ void run_solver_root_only_joint_service_tests() {
         PC_CHECK(condition);
         if (!condition) throw std::runtime_error(reason);
     };
-    for (const unsigned scenario : {0u, 1u, 2u}) {
+    for (const unsigned scenario : {0u, 1u, 2u, 3u, 4u, 5u}) {
+        const bool ordinary_format = scenario >= 3;
+        const unsigned control = scenario % 3;
         auto session = make_solve_session();
         // Restrict this test-owned catalog, as in the native retention fixture.
         // The engine supplies every operation, probability and physical exit.
@@ -17094,6 +17096,36 @@ void run_solver_root_only_joint_service_tests() {
                 static_cast<unsigned long long>(work.options.max_solver_owned_bytes),
                 static_cast<unsigned long long>(work.fast_estimated_owned_bytes()));
             std::printf("progress=%s\n", work.progress_trace_json(0).c_str());
+            const auto role = work.graph_only_checkpoint_observation();
+            std::printf("graph-only role case=%u stage=%s active=%llu best_verified=%llu "
+                "root_only=%u table_rejected=%u statewise_unavailable=%u payload=%u "
+                "certified=%u evaluated=%u proper=%u executable=%u safe=%u row_due=%u "
+                "material_improvement=%u active_checked_cost=%.17g best_verified_cost=%.17g "
+                "retained=%llu omitted=%llu\n", scenario, stage,
+                static_cast<unsigned long long>(role.active_identity),
+                static_cast<unsigned long long>(role.best_verified_identity),
+                role.root_only ? 1u : 0u, role.table_rejected ? 1u : 0u,
+                role.statewise_unavailable ? 1u : 0u, role.compiled_payload ? 1u : 0u,
+                role.independently_certified ? 1u : 0u, role.independently_evaluated ? 1u : 0u,
+                role.proper ? 1u : 0u, role.executable ? 1u : 0u, role.safe_checkpoint ? 1u : 0u,
+                role.row_checkpoint_due ? 1u : 0u, role.material_upper_improvement ? 1u : 0u,
+                role.active_checked_cost, role.best_verified_cost,
+                static_cast<unsigned long long>(role.retained_count),
+                static_cast<unsigned long long>(role.retained_identities_omitted));
+            for (const auto& retained : work.incumbent_portfolio.retained())
+                std::printf("graph-only retained case=%u stage=%s identity=%llu root_only=%u "
+                    "table_rejected=%u checked=%u cost=%.17g\n", scenario, stage,
+                    static_cast<unsigned long long>(retained.portfolio_identity),
+                    retained.compiled_root_entry_only ? 1u : 0u,
+                    retained.statewise_values_rejected ? 1u : 0u,
+                    retained.independently_evaluated ? 1u : 0u, retained.evaluated_policy_cost);
+            const auto& eligibility = work.last_graph_only_checkpoint;
+            std::printf("graph-only eligibility case=%u stage=%s observed=%u active=%llu "
+                "compatibility_checked=%u compatible=%u eligible=%u reason=%s\n", scenario, stage,
+                eligibility.observed ? 1u : 0u,
+                static_cast<unsigned long long>(eligibility.active_identity),
+                eligibility.compatibility_checked ? 1u : 0u, eligibility.compatible ? 1u : 0u,
+                eligibility.eligible ? 1u : 0u, eligibility.compatibility_reason.data());
             std::fflush(stdout);
         };
         guard_snapshot("constructor");
@@ -17199,6 +17231,13 @@ void run_solver_root_only_joint_service_tests() {
         baseline.values.assign(n, solve_detail::kInfinity);
         baseline.values[root] = proof.upper_bound;
         baseline.compilation_provenance = "native_fixture_root_controller_pending_check";
+        // Bind the converted root graph to its actual immutable payload/scope,
+        // as the production selective root owner does. Reusing the earlier
+        // ordinary-policy identity would alias a later independently checked
+        // ordinary capture with different graph/binding/value provenance.
+        baseline.portfolio_identity = 1469598103934665603ULL;
+        Impl::identity_mix_string(baseline.portfolio_identity, baseline.compiled_artifact.strategy_json);
+        Impl::identity_mix(baseline.portfolio_identity, baseline.caller_scope_identity);
         proof = SolveResult{};
         const auto check_queued = [&] {
             for (unsigned unit = 0; work.publication_pipeline.initial_candidate_task; ++unit) {
@@ -17228,6 +17267,47 @@ void run_solver_root_only_joint_service_tests() {
         std::printf("root-only independently checked baseline=%.17g\n", baseline_cost);
         std::fflush(stdout);
         require(near(baseline_cost, 13, 1e-8), "native checked baseline cost prediction");
+        const auto retained_root_identity = work.output_incumbent->portfolio_identity;
+        const auto retained_root_graph = work.output_incumbent->compiled_artifact.strategy_json;
+        const auto retained_root_present = [&] {
+            for (const auto& retained : work.incumbent_portfolio.retained())
+                if (retained.portfolio_identity == retained_root_identity &&
+                    retained.compiled_root_entry_only &&
+                    retained.compiled_artifact.strategy_json == retained_root_graph &&
+                    work.certified_incumbent_invalid_reason(retained) == nullptr)
+                    return true;
+            return false;
+        };
+        if (ordinary_format) {
+            // Preserve the checked root-only graph in its existing owner, then
+            // build the ordinary policy from the same complete paid native rows.
+            // Only the unverified estimate is perturbed: the real checker must
+            // establish graph cost 13 and reject the copied table's cost 14.
+            require(retained_root_present(), "separate root fallback checked before ordinary capture");
+            work.output_incumbent.reset();
+            require(work.try_install_reachable_incumbent(false) &&
+                !work.output_incumbent->compiled_root_entry_only &&
+                !work.output_incumbent->independently_evaluated,
+                "ordinary native baseline is independently unchecked at capture");
+            work.output_incumbent->certified_upper_bound = 14;
+            work.output_incumbent->evaluated_policy_cost = 14;
+            work.output_incumbent->values[root] = 14;
+            work.publication_pipeline.initial_candidate_resume_phase = work.phase;
+            work.publication_pipeline.initial_candidate_task.emplace(work.certify_initial_candidate());
+            check_queued();
+            guard_snapshot("ordinary_baseline_independently_checked");
+            require(!work.output_incumbent->compiled_root_entry_only &&
+                work.output_incumbent->statewise_values_rejected &&
+                !work.output_incumbent->has_statewise_upper_values() &&
+                work.output_incumbent->independently_evaluated &&
+                work.certified_incumbent_invalid_reason(*work.output_incumbent) == nullptr &&
+                near(work.output_incumbent->evaluated_policy_cost, 13, 1e-8) &&
+                near(work.output_incumbent->values[root], 14, 1e-8) &&
+                near(work.output_incumbent->reconciliation_absolute_delta, 1, 1e-8) &&
+                work.output_incumbent->portfolio_identity != retained_root_identity &&
+                retained_root_present(),
+                "ordinary graph checks while copied statewise provenance is rejected");
+        }
         const auto old_graph = work.output_incumbent->compiled_artifact.strategy_json;
         const auto old_identity = work.output_incumbent->portfolio_identity;
         const auto old_scope = work.action_vocabulary_identity();
@@ -17253,20 +17333,31 @@ void run_solver_root_only_joint_service_tests() {
         guard_snapshot("after_outer_seed_call");
         require(!seed_pass_started &&
             work.incremental_upper_policy_last_failure ==
-                "seed_root_only_incumbent_without_focused_fallback",
-            "focused root-only seed still refuses");
+                (ordinary_format ? "seed_rejected_statewise_values_without_focused_fallback"
+                                 : "seed_root_only_incumbent_without_focused_fallback"),
+            "focused unavailable-statewise seed still refuses");
         require(work.incremental_upper_policy_passes_requested == 1 &&
             work.incremental_upper_policy_passes_started == 0 &&
             work.incremental_upper_policy_passes_rejected == 1,
             "focused seed census unchanged");
+        require(work.last_upper_seed_refusal.active_identity == old_identity &&
+            work.last_upper_seed_refusal.root_only == !ordinary_format &&
+            work.last_upper_seed_refusal.table_rejected == ordinary_format &&
+            work.last_upper_seed_refusal.independently_evaluated &&
+            !work.last_upper_seed_refusal.from_incremental_incumbent &&
+            !work.last_upper_seed_refusal.focused_fallback_present &&
+            work.last_upper_seed_refusal.compatibility_reason.data() ==
+                work.incremental_upper_policy_last_failure,
+            "seed refusal captures actual value role and checked active identity");
         require(work.publication_pipeline.complete_candidate_attempted_identity == 0,
             "joint checker slot remains unused");
-        require(work.best_current_certified_fallback() &&
-            work.best_current_certified_fallback()->portfolio_identity == old_identity &&
-            work.best_current_certified_fallback()->compiled_artifact.strategy_json == old_graph,
-            "baseline checker already owns matching retained root artifact");
+        require(retained_root_present(), "baseline checker retains the separately checked root artifact");
+        if (!ordinary_format) require(work.best_current_certified_fallback() &&
+                work.best_current_certified_fallback()->portfolio_identity == old_identity &&
+                work.best_current_certified_fallback()->compiled_artifact.strategy_json == old_graph,
+                "root-only baseline retains its original best-fallback gate");
         std::uint64_t alternative = root_row;
-        if (scenario != 1) {
+        if (control != 1) {
             alternative = append(loss, exalt, 1);
             const auto recovered = calc.outcomes(loss, exalt, true);
             require(recovered.entries.size() == 1 && recovered.entries[0].state == root &&
@@ -17299,30 +17390,88 @@ void run_solver_root_only_joint_service_tests() {
             alternative < work.priced_rows.size() && alternative < work.transition_cache->rows.size() &&
             work.transition_cache->rows[alternative].owner_state == completed.state &&
             work.priced_rows[alternative].operator_index == completed.operator_index &&
-            work.output_incumbent->compiled_root_entry_only &&
+            work.output_incumbent->compiled_root_entry_only == !ordinary_format &&
             !work.output_incumbent->has_statewise_upper_values() &&
             work.certified_incumbent_invalid_reason(*work.output_incumbent) == nullptr &&
             work.action_vocabulary_identity() == old_scope &&
             !work.options.allow_economic_restart && work.certified_global_lower_bound() == 0,
             "conditional checkpoint satisfies existing scheduling-owner prerequisites");
-        if (scenario == 2) work.options.max_solver_owned_bytes = work.fast_estimated_owned_bytes() + 1;
+        if (ordinary_format && control == 0) {
+            const auto refused_guard = [&](const char* stage) {
+                const auto attempts = work.incremental_anytime_policy_attempts;
+                const char* invalid = work.certified_incumbent_invalid_reason(*work.output_incumbent);
+                require(invalid != nullptr, "negative graph guard has a real invalid prerequisite");
+                const std::string expected(invalid);
+                require(!work.continue_initial_candidate() &&
+                    work.incremental_anytime_policy_attempts == attempts &&
+                    !work.publication_pipeline.initial_candidate_task &&
+                    work.publication_pipeline.complete_candidate_attempted_identity == 0 &&
+                    work.last_graph_only_checkpoint.compatibility_checked &&
+                    !work.last_graph_only_checkpoint.compatible &&
+                    expected == work.last_graph_only_checkpoint.compatibility_reason.data() &&
+                    work.output_incumbent->portfolio_identity == old_identity &&
+                    work.output_incumbent->compiled_artifact.strategy_json == old_graph &&
+                    work.output_incumbent->statewise_values_rejected && retained_root_present(),
+                    "unchecked incompatible or stale graph cannot enter joint service");
+                guard_snapshot(stage);
+            };
+            work.output_incumbent->independently_evaluated = false;
+            refused_guard("unchecked_graph_refused");
+            work.output_incumbent->independently_evaluated = true;
+            work.output_incumbent->independently_certified = false;
+            refused_guard("uncertified_graph_refused");
+            work.output_incumbent->independently_certified = true;
+            work.output_incumbent->goal_identity ^= 1;
+            refused_guard("incompatible_goal_refused");
+            work.output_incumbent->goal_identity ^= 1;
+            work.output_incumbent->artifact_identity ^= 1;
+            refused_guard("incompatible_artifact_refused");
+            work.output_incumbent->artifact_identity ^= 1;
+            work.output_incumbent->graph_prefix_identity ^= 1;
+            refused_guard("stale_graph_prefix_refused");
+            work.output_incumbent->graph_prefix_identity ^= 1;
+            const auto source_generation = work.output_incumbent->source_generation;
+            work.output_incumbent->source_generation = work.transition_cache->rows.size() + 1;
+            refused_guard("stale_graph_generation_refused");
+            work.output_incumbent->source_generation = source_generation;
+            require(work.certified_incumbent_invalid_reason(*work.output_incumbent) == nullptr &&
+                work.output_incumbent->statewise_values_rejected,
+                "restoring fixture identities never clears statewise rejection");
+        }
+        if (control == 2) work.options.max_solver_owned_bytes = work.fast_estimated_owned_bytes() + 1;
         const auto cap = work.options.max_solver_owned_bytes;
         const bool queued = work.continue_initial_candidate();
         guard_snapshot("after_conditional_joint_service");
+        {
+            const auto snapshot = work.telemetry_snapshot(false);
+            require(work.last_graph_only_checkpoint.compatibility_checked &&
+                work.last_graph_only_checkpoint.compatible &&
+                work.last_graph_only_checkpoint.eligible &&
+                work.last_graph_only_checkpoint.active_identity == old_identity &&
+                work.last_graph_only_checkpoint.root_only == !ordinary_format &&
+                work.last_graph_only_checkpoint.table_rejected == ordinary_format &&
+                snapshot.diagnostics.last_graph_only_checkpoint.active_identity == old_identity &&
+                snapshot.diagnostics.last_upper_seed_refusal.active_identity == old_identity &&
+                std::find(work.last_graph_only_checkpoint.retained_identities.begin(),
+                    work.last_graph_only_checkpoint.retained_identities.end(), retained_root_identity) !=
+                    work.last_graph_only_checkpoint.retained_identities.end(),
+                "checkpoint and exported snapshot capture active versus retained ownership");
+        }
         require(work.options.max_solver_owned_bytes == cap &&
             work.action_vocabulary_identity() == old_scope &&
             work.options.goal_proof_profile == GoalProofProfile::TargetNeutralZero &&
             work.certified_global_lower_bound() == 0 && calc.state_count() == n,
             "joint service preserves authority and allowance");
-        if (scenario == 0) {
+        if (control == 0) {
             require(queued && work.publication_pipeline.initial_candidate_task &&
                 work.publication_pipeline.complete_candidate_attempted_identity != 0,
                 "complete native joint candidate queued once");
             const auto slot_identity = work.publication_pipeline.complete_candidate_attempted_identity;
-            require(!work.output_incumbent->independently_evaluated &&
-                work.best_current_certified_fallback() &&
+            require(!work.output_incumbent->independently_evaluated && retained_root_present(),
+                "separate root graph retained before candidate checking");
+            if (!ordinary_format) require(work.best_current_certified_fallback() &&
                 work.best_current_certified_fallback()->compiled_artifact.strategy_json == old_graph,
-                "old checked graph retained before candidate checking");
+                "root-only old checked graph retains its original pre-check gate");
             check_queued();
             guard_snapshot("after_conditional_candidate_check");
             std::printf("root-only conditional treatment case=%u baseline=%.17g evaluated=%.17g "
@@ -17336,6 +17485,17 @@ void run_solver_root_only_joint_service_tests() {
                 work.certified_incumbent_invalid_reason(*work.output_incumbent) == nullptr &&
                 near(work.output_incumbent->evaluated_policy_cost, 3, 1e-8),
                 "native checker confirms cheaper complete joint policy");
+            require(retained_root_present(), "separate checked root artifact survives complete adoption");
+            if (ordinary_format) {
+                bool rejected_graph_retained = false;
+                for (const auto& retained : work.incumbent_portfolio.retained())
+                    if (retained.portfolio_identity == old_identity &&
+                        retained.compiled_artifact.strategy_json == old_graph &&
+                        retained.statewise_values_rejected && !retained.has_statewise_upper_values() &&
+                        near(retained.values[root], 14, 1e-8)) rejected_graph_retained = true;
+                require(rejected_graph_retained,
+                    "ordinary rejected table remains vetoed in its retained graph owner");
+            }
             require(!work.continue_initial_candidate() &&
                 work.publication_pipeline.complete_candidate_attempted_identity == slot_identity,
                 "existing complete checker slot never resets");
@@ -17347,7 +17507,12 @@ void run_solver_root_only_joint_service_tests() {
                 work.output_incumbent->compiled_artifact.strategy_json == old_graph &&
                 work.certified_incumbent_invalid_reason(*work.output_incumbent) == nullptr,
                 "negative control preserves checked root artifact");
-            if (scenario == 1) require(std::find(
+            require(retained_root_present(), "negative control preserves separate checked root artifact");
+            if (ordinary_format) require(work.output_incumbent->statewise_values_rejected &&
+                !work.output_incumbent->has_statewise_upper_values() &&
+                near(work.output_incumbent->values[root], 14, 1e-8),
+                "refused ordinary service never repairs or overwrites the rejected table");
+            if (control == 1) require(std::find(
                 work.incremental_anytime_missing_frontier_states.begin(),
                 work.incremental_anytime_missing_frontier_states.end(), loss) !=
                 work.incremental_anytime_missing_frontier_states.end(), "missing positive native port named");

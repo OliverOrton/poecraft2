@@ -853,6 +853,36 @@ struct PolicyRefinementTelemetry {
     std::uint64_t refusal_cause_samples_omitted = 0;
 };
 
+// Fixed observational storage; it carries no continuation/value authority.
+// sizeof(SolveDiagnostics) / sizeof(Impl) charge both retained copies.
+struct GraphOnlyCheckpointObservation {
+    bool observed = false;
+    bool high_impact = false, generation = false, envelope_open = false;
+    bool upper_pass_inactive = false, incumbent_present = false;
+    bool statewise_unavailable = false, root_only = false, table_rejected = false;
+    bool from_incremental_incumbent = false, focused_fallback_present = false;
+    bool economic_restart_allowed = false, restart_cost_valid = false;
+    bool compiled_payload = false, checker_slot_unused = false;
+    bool checker_inactive = false, finalization_inactive = false;
+    bool strict_cache_inactive = false, finish_not_requested = false;
+    bool cap_not_hit = false, expansion_inactive = false, refinement_inactive = false;
+    bool not_consumed = false, not_finalized = false, cache_present = false;
+    bool row_checkpoint_due = false, material_upper_improvement = false;
+    bool independently_certified = false, independently_evaluated = false;
+    bool proper = false, executable = false, safe_checkpoint = false;
+    bool compatibility_checked = false, compatible = false, eligible = false;
+    std::uint64_t active_identity = 0, best_verified_identity = 0;
+    std::uint64_t checker_slot_identity = 0, completed_rows = 0, next_checkpoint = 0;
+    double active_checked_cost = std::numeric_limits<double>::infinity();
+    double best_verified_cost = std::numeric_limits<double>::infinity();
+    double restart_cost = std::numeric_limits<double>::infinity();
+    std::uint64_t retained_count = 0, retained_identities_omitted = 0;
+    std::array<std::uint64_t, 8> retained_identities{};
+    std::array<char, 128> compatibility_reason{};
+    std::array<char, 64> active_kind{};
+    std::array<char, 96> active_compilation_provenance{};
+};
+
 struct SolveDiagnostics {
     /* Actions the solve planned without, and why. */
     std::vector<std::string> skipped_missing_price;
@@ -1078,6 +1108,8 @@ struct SolveDiagnostics {
     double incremental_anytime_policy_best_upper =
         std::numeric_limits<double>::infinity();
     std::string incremental_anytime_policy_last_failure;
+    GraphOnlyCheckpointObservation last_graph_only_checkpoint;
+    GraphOnlyCheckpointObservation last_upper_seed_refusal;
     std::uint64_t incremental_missing_frontier_discovered = 0;
     std::uint64_t incremental_missing_frontier_priority_offers = 0;
     std::uint64_t incremental_missing_frontier_service_completions = 0;
