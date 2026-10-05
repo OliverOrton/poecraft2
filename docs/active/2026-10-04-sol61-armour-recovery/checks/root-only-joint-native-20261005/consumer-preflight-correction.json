@@ -1,0 +1,8 @@
+{
+  "native_runs_before_correction": 0,
+  "failure": "FileNotFoundError for consumer dependency identity path before output creation or launch",
+  "corrected_reference": "tools/ingest/poecraft_ingest/solver_lab_contracts.py",
+  "authority": "qualified worker imports poecraft_ingest.solver_lab_contracts; manifest hash verified",
+  "native_source_changed": false,
+  "qualified_adapter_changed": false
+}

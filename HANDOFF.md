@@ -87,6 +87,17 @@ solver owns only the bounded selector. The living programme's exact CI handoff
 contains wrapper argv, process-local environment override and pinned adapter.
 No source expansion, new root, activation, merge or deployment is authorized.
 
+CI subsequently links and qualifies the frozen 073bb92a treatment binary
+43f9ec25c820ef3e31bf5564f73e29eeb2465d3af678a4cb3c311a9728d01e8c.
+The sole granted selector stops in 423.883 ms at baseline root-only certificate
+assertion, 0/3 cases complete. LOCAL releases at 17:46:30 UTC, empty census.
+The fixture's cleared role vectors violate OriginalRootController's explicit
+same-length placeholder contract before graph checking. The precise source
+guard yields CompilationFailure; raw runtime status was not serialized. The
+programme diagnosis proposes only correctly sized invalid/zero placeholders
+plus existing progress-ring failure output; neither is applied. Source remains
+frozen, no rerun granted, CI owns builds and root slot 2 remains unused.
+
 Published research checkpoints, both absent from main:
 
 - [Solver `040993ec`: Pro handoff](https://github.com/OliverOrton/poecraft2/blob/040993ec9bb8109cc1970df91c8bc9ec7ef97744/docs/active/2026-10-04-sol61-armour-recovery/PRO-HANDOFF.md)

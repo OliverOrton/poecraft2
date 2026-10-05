@@ -1,0 +1,48 @@
+{
+  "source_head": "073bb92a22981dc75d2328b899aef4fcb08dbe64",
+  "checkout_head": "6a089cdc6fb25892a8fbbb3bd5cd9cae4e513539",
+  "engine_tree": "edade696d33378970b93dfb364e0f6ec50e77437",
+  "gates": {
+    "checkout_head_unchanged": true,
+    "implementation_engine_tree_unchanged": true,
+    "source_bytes_and_mtimes_unchanged": true,
+    "build_exit_clean": true,
+    "parent_identity_proved_absent": true,
+    "compiler_or_linker_started": true,
+    "test_link_command_observed": true,
+    "binary_changed": true,
+    "binary_newer_than_changed_inputs": true,
+    "all_three_changed_objects_differ_from_failed_build_input_objects": true,
+    "all_three_changed_objects_newer_than_changed_inputs": true,
+    "new_selector_present": true,
+    "named_seed_guard_present": true,
+    "new_retention_guard_present": true
+  },
+  "all_passed": true,
+  "objects_after": {
+    "build/engine/CMakeFiles/poecraft_engine_objects.dir/src/solver_solve_incremental.cpp.obj": {
+      "sha256": "876d1ea7c9d581491ebbc2e265e2b6f618c092afa1c82068215c2bf3ece4dbf5",
+      "bytes": 321957,
+      "mtime_ns": 1791221743067699000
+    },
+    "build/engine/CMakeFiles/poecraft_engine_tests.dir/tests/test_main.cpp.obj": {
+      "sha256": "86b38f706b9bd0d0e89a3b06dc5245b1fe3a740e2b59a2bc770a427c91516cbf",
+      "bytes": 27504,
+      "mtime_ns": 1791221744796780800
+    },
+    "build/engine/CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_solve.cpp.obj": {
+      "sha256": "2a65ee287e4a8dfa47cfaaefee0a193b330dfc8ad2b2c7ddbe43f729d218a8d2",
+      "bytes": 2314365,
+      "mtime_ns": 1791221821188596700
+    }
+  },
+  "binary_after": {
+    "sha256": "43f9ec25c820ef3e31bf5564f73e29eeb2465d3af678a4cb3c311a9728d01e8c",
+    "bytes": 20595019,
+    "mtime_ns": 1791222035061620900
+  },
+  "original_path": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task\\ci-evidence\\root-joint-link-20261005\\provenance.json",
+  "original_sha256": "7b15989d566f0c58ec1f4cfb84c9e2a5d92ef0d88fb87170efa92ece82294854",
+  "receipt_path": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task\\ci-evidence\\root-joint-link-20261005\\receipt.json",
+  "receipt_sha256": "5ae5dc7360abf96856d2d9700522d9722db1833b1e8dfc248029887c3c744bf2"
+}

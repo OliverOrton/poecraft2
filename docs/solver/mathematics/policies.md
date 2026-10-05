@@ -959,6 +959,18 @@ The [selected source and receipt](../../active/2026-10-04-sol61-armour-recovery/
 own subsequent build and finite validation status. No matched Current root,
 product coarse-domain authority or release saving follows from this toy.
 
+CI later builds the pinned fixture, but its sole finite selector stops before
+the baseline graph is independently evaluated. OriginalRootController requires
+length-n policy/reachability tables with invalid/zero placeholders; the fixture
+instead clears them while retaining n values. That role-contract violation
+is a source-determined CompilationFailure, separate from whether the native
+recovery graph is proper or economical. Zero of three cases completes and no
+cost-13/cost-3 requirement is reached. The
+[failure diagnosis](../../active/2026-10-04-sol61-armour-recovery/checks/root-only-joint-native-20261005/diagnosis.md)
+proposes correcting placeholder shape while preserving the independent checker,
+root-only value role and all previous negatives. No corrected fixture is built
+or tested here; the conditional algebra remains a prediction.
+
 <a id="cost-only-entry-service"></a>
 ### A cost-only proposal at an actual verified entry
 

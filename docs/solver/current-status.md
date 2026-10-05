@@ -95,6 +95,16 @@ holds execution until verified binary provenance and parent LOCAL. See the
 [exact handoff](../active/2026-10-04-sol61-armour-recovery/checks/root-only-joint-service-20261005/ci-handoff.json).
 No new root or activation; all preceding build and economic negatives remain.
 
+CI later qualifies the frozen treatment binary SHA-256 43f9ec25c820ef3e31bf5564f73e29eeb2465d3af678a4cb3c311a9728d01e8c.
+The one granted finite selector stops in 423.883 ms at its baseline root-only
+certificate assertion: 0/3 cases complete. LOCAL releases at 17:46:30 UTC,
+empty census. The fixture clears role vectors that the OriginalRootController
+checker requires to be sized invalid/zero placeholders; source therefore names
+CompilationFailure before graph evaluation. The raw returned assertion was
+not logged. [Diagnosis and proposed fixture-only correction](../active/2026-10-04-sol61-armour-recovery/checks/root-only-joint-native-20261005/diagnosis.md)
+preserve this evidence limit. No correction or rerun; costs 13 and 3 remain
+unproved, CI retains build ownership, and root slot 2 remains unused.
+
 [Solver checkpoint `040993ec`](https://github.com/OliverOrton/poecraft2/blob/040993ec9bb8109cc1970df91c8bc9ec7ef97744/docs/active/2026-10-04-sol61-armour-recovery/PRO-HANDOFF.md) and
 [independent review `4c9f078d`](https://github.com/OliverOrton/poecraft2/blob/4c9f078d95e2c0c837ab7a408c4846420bac94db/docs/active/2026-10-04-sol61-independent-review/causal-research-handoff.md)
 are published research branches and are absent from main. The default-off private

@@ -1,0 +1,36 @@
+{
+  "source_head": "073bb92a22981dc75d2328b899aef4fcb08dbe64",
+  "checkout_head": "6a089cdc6fb25892a8fbbb3bd5cd9cae4e513539",
+  "engine_tree": "edade696d33378970b93dfb364e0f6ec50e77437",
+  "tests_executable_sha256": "43f9ec25c820ef3e31bf5564f73e29eeb2465d3af678a4cb3c311a9728d01e8c",
+  "tests_executable_bytes": 20595019,
+  "python_executable": "C:\\Users\\Oliver\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+  "consumer_sha256": "609465a7ce281af0648947ac59fab0d8d3baee24f9953bebc51ac2be25c5742d",
+  "command": [
+    "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\poecraft2-solver-causal\\build\\engine\\poecraft_engine_tests.exe",
+    "--solver-root-only-joint-service-only"
+  ],
+  "cwd": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\poecraft2-solver-causal",
+  "worker_blob": "f532376adbde79d9f31da1bc2d97e1b24fe2f5d9",
+  "worker_sha256": "1f7978fa0cf43c331487ea57212286cbf92ff96141d379a901c4bd421d4aae92",
+  "source_hashes": {
+    "engine/src/solver_solve_incremental.cpp": "790f9a13eb0728054317d50bf617138232ab5c4c02de5070fd9dc3f656ea0ca4",
+    "engine/tests/test_main.cpp": "542dc26c5f0e984df4908e097f7dfddd44b7a9664bd5ab5a0b9d8643a5654325",
+    "engine/tests/test_solver_solve.cpp": "b21d23588b690381236510bdb0d3a55529a3fb734c733686a3ea808d78e9f5e7"
+  },
+  "CI_provenance_sha256": "7b15989d566f0c58ec1f4cfb84c9e2a5d92ef0d88fb87170efa92ece82294854",
+  "native_state_cap": 32,
+  "native_owned_byte_cap": 536870912,
+  "native_deadline_seconds": 60,
+  "host_watchdog_seconds": 75,
+  "selected_cases": [
+    "complete_native_support",
+    "missing_positive_native_continuation",
+    "shared_cap_ownership_refusal"
+  ],
+  "selector_attempts": 1,
+  "build_runs": 0,
+  "original_Conquest_root_runs": 0,
+  "toy_13_to_3_before_run": "unproved prediction",
+  "source_expansion": false
+}

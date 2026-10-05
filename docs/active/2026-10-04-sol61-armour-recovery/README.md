@@ -436,3 +436,32 @@ preserve the full source, invocation, adapter and consumer identities. Only
 the process-local cache override was recorded at launch; any inherited
 environment comparison is explicitly a later observation. Build cause is
 unproved. Slot 2 remains unused, with no new root, activation or release claim.
+
+### CI-qualified treatment: zero completed cases and fixture role mismatch
+
+CI subsequently qualifies source 073bb92a in checkout 6a089cdc, engine tree
+edade696d, with actual link and all three changed object/source pins. Tests
+SHA-256 is 43f9ec25c820ef3e31bf5564f73e29eeb2465d3af678a4cb3c311a9728d01e8c,
+20,595,019 bytes. Parent grants one finite selector with no build or root.
+The [native receipt](checks/root-only-joint-native-20261005/native-receipt.json)
+exits 3221226505 in 423.883 ms at the root-only baseline certificate requirement;
+zero of three cases complete. LOCAL releases at 17:46:30 UTC, clean job drain
+and empty census. A consumer dependency-path typo is corrected before the sole
+native launch and retained separately; source and qualified adapter are unchanged.
+
+Source diagnosis finds that the fixture clears policy/reachability vectors but
+keeps a nonempty value table. The first OriginalRootController provenance guard
+requires equally sized invalid/zero placeholders and deterministically returns
+CompilationFailure before graph parsing/evaluation. The retained-root contract
+also rejects those empty vectors. The aborted log did not capture the returned
+assertion payload; [the full diagnosis](checks/root-only-joint-native-20261005/diagnosis.md)
+distinguishes this source-determined reason from captured runtime evidence.
+Earlier native Annul/Scour/Alchemy support requirements pass by control flow;
+neither independent cost 13 nor Exalt/treatment cost 3 is reached. Graph validity,
+scope, full recovery and prices remain unvalidated by this aborted check.
+
+The minimal proposed fixture correction uses length-n invalid policy/row and
+zero reachability placeholders, preserving root-only authority and independent
+checking; failure diagnostics can emit the existing progress ring. No correction
+is applied. Source stays frozen, CI owns later builds, slot 2 is unused and all
+preceding economic/orchestration negatives remain retained.
