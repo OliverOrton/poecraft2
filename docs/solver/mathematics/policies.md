@@ -620,6 +620,24 @@ Chaos. Returning all 33 native exits to that router therefore does not establish
 a saving. Native word legality, source-local admission, compatible exit tails,
 proper full-root evaluation and retained export are separate premises.
 
+The matched October 5 Current control finds that exact carrier's parent
+projection and its admitted cached native word, while the checked returned
+graph still routes it to Chaos. Thus native enumeration/admission and useful
+composition are distinct observed boundaries. The one-use value is
+\(g+\sum_i p_i V_\pi(s_i)\) only when every \(V_\pi(s_i)\) certifies the
+actual item/control entry after the paid word. The checked root scalar
+\(J_\pi(r)\) cannot fill those ports. Persistent implicit context can survive
+Chaos; reaching the same first paid operation does not prove equal tails.
+
+Current's root-only selective graph deliberately supplies no parent statewise
+policy/value certificate. In the matched control, 34 aggregate upper-seed
+requests start none, and the joint-assembly counter is zero. Source requires
+statewise values or a separate focused fallback for that seed; its exact
+historical refusing branches and P0-specific row service were not observed.
+The prepared complete physical-entry check remains unrun behind the retained
+build negatives. No graft saving, recurring policy value, complete coarse-domain
+authority or whole-search cause follows from these observations.
+
 An ordinary fill versus reroll comparison must use each action's complete exit
 law and complete compatible tails, including lost goals, mandatory cleanup and
 paid recovery. Primitive price, goal-mask gain or old-policy visit counts alone

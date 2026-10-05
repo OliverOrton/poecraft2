@@ -36,6 +36,38 @@ nor a useful complete tail: no root search/check/export was executed. The
 complete-held producer remains narrower. Both initial build and corpus-directory
 invocation failures are retained; no assertions were weakened.
 
+The matched original Current control at isolated b02513b6 returns a checked
+101311.35474896732, success 1, complete cost and off-policy mass 0, requested
+120-second bounded Finish and cap mask 0. Its passive snapshot finds exact P0
+at parent state 160 with the normal paid Ember/Exalt kernel admitted; returned
+graph still routes it to Chaos. Aggregate operator evidence reports 446 retained
+rows and zero selected consumptions. Upper seed passes report 34 requested,
+zero started and 34 rejected, with zero joint assembly attempts. Source stores
+the selective graph as root-only while the focused upper owner needs statewise
+values or a separate focused fallback. Historical refusal branches and P0's
+per-carrier service remain unobserved. This narrows the programme to continuation
+and value-role ownership; it does not prove whole-search cause or recovery.
+One of two original-root slots is spent; the second remains treatment-gated.
+
+The next finite complete-tail/seed-guard batch stops at a 600-second Tests
+build watchdog with only glob-recheck output. Main's supervisor then needs
+targeted CMake/Ninja descendant cleanup to drain; the native selector never
+runs. Its source delta remains unbuilt/unrun, all negative evidence is retained,
+and LOCAL releases at 04:50:09 UTC with no survivors. This is a build/supervision
+negative, not a continuation refusal or economic result.
+The unchanged direct glob later passes in 86 ms under qualified owned-job,
+file-backed supervision. A qualified PowerShell wrapper then returns exit 0
+without rebuilding; the thin consumer misses that provenance gate and launches
+the old unrecognized selector, which aborts on its invalid artifact path.
+Those separate negatives are preserved; LOCAL releases at 04:59:47 UTC, census
+empty. Complete-tail/guard source is still unbuilt and no new root runs.
+Direct canonical CMake tests-only reproduces glob-only orchestration with no
+compiler child at the observed phase, then is cancelled through the qualified
+owner in 101 s with clean job drain. LOCAL releases at 05:06:45 UTC. The fast
+standalone glob, generated console pool and live owned conhost narrow a
+supervision/console hypothesis without proving its cause. This execution gate
+remains separate from solver admission, economics and pytest thread ownership.
+
 [Solver checkpoint `040993ec`](https://github.com/OliverOrton/poecraft2/blob/040993ec9bb8109cc1970df91c8bc9ec7ef97744/docs/active/2026-10-04-sol61-armour-recovery/PRO-HANDOFF.md) and
 [independent review `4c9f078d`](https://github.com/OliverOrton/poecraft2/blob/4c9f078d95e2c0c837ab7a408c4846420bac94db/docs/active/2026-10-04-sol61-independent-review/causal-research-handoff.md)
 are published research branches and are absent from main. The default-off private

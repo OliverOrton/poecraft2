@@ -1,0 +1,13 @@
+{
+  "utc": "2026-10-05T05:04:18.3644390Z",
+  "phase": "direct_tests_build",
+  "processes": [
+    {
+      "ProcessId": 66452,
+      "ParentProcessId": 53352,
+      "Name": "ninja.exe",
+      "created_utc": "2026-10-05T05:03:17.5519530Z"
+    }
+  ],
+  "compiler_count": 0
+}

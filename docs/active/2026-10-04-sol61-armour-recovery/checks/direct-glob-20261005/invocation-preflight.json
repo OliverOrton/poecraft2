@@ -1,0 +1,22 @@
+{
+  "qualified_commit": "d485ff111fc6b3aafa1679bca97b9ff9bd70d2a8",
+  "worker_blob": "f532376adbde79d9f31da1bc2d97e1b24fe2f5d9",
+  "worker_sha256": "1f7978fa0cf43c331487ea57212286cbf92ff96141d379a901c4bd421d4aae92",
+  "bytes": 57022,
+  "dependency_sha256": "579fd125e888618ff2832a71e8b0319046ce3257d2f0c37056f3272e440f0728",
+  "worker_unchanged": true,
+  "repository_worker_modified": false,
+  "command": [
+    "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\bin\\cmake.exe",
+    "-P",
+    "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\poecraft2-solver-causal\\build\\engine\\CMakeFiles\\VerifyGlobs.cmake"
+  ],
+  "host_watchdog_seconds": 20,
+  "build_target": null,
+  "compiler_jobs": 0,
+  "new_current_root_invocations": 0,
+  "question": "Does unchanged generated 72-file glob complete outside Ninja?",
+  "cwd": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\poecraft2-solver-causal",
+  "generated_glob_sha256": "e52544c5b5197bf05663fcf588328e980e58b761c8f52cc4d4adb382c089ddf4",
+  "generated_glob_modified_utc": "2026-10-05T03:40:47.2142461Z"
+}

@@ -112,6 +112,21 @@ entry certificates keep their separate authority. The absence of a rejection bit
 not a newly issued statewise certificate, and no reset rule is introduced for
 an old rejected vector.
 
+The released product's original-root continuation route is distinct from the
+older separately configured default-off selective service described above.
+The [matched October 5 Current control](../active/2026-10-04-sol61-armour-recovery/checks/root-baseline-20261005/summary.json)
+performs three selective checks and retains selective_completion_root at
+101311.35474896732. Its independently checked original-root graph has parent
+bindings cleared and no parent reachable-policy/value domain. P0's admitted
+native option and aggregate completed rows do not change that value role.
+The existing focused upper owner requires statewise values or a separate
+focused fallback; 34 requests start none in the control. The exact historical
+refusing branch and P0-specific continuation service remain unobserved.
+The added named guard diagnostic and physical-entry witness are source only,
+unbuilt/unrun after the recorded build/invocation negatives. A checked physical
+entry remains entry-scoped evidence until the required complete class/domain,
+native operation and graph bindings pass; it never silently fills a state table.
+
 ## Entry-scoped and class-scoped evidence
 
 Compiler-authored graph-local declarations identify genuine native decisions in

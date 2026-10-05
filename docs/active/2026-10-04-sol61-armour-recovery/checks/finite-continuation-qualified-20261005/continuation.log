@@ -1,0 +1,40 @@
+data load failed (2): cannot open file: --solver-partial-held-continuation-only/manifest.json
+FAIL C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_data_loader.cpp:41: rc == PC_RESULT_OK
+session suite: data load failed: cannot open file: --solver-partial-held-continuation-only/manifest.json
+FAIL C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_session_builder.cpp:476: false
+FAIL C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_actions.cpp:1152: pc_data_load_file(manifest.c_str(), &data, &error) == PC_RESULT_OK
+FAIL C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_actions.cpp:1156: pc_session_create(data, &opts, &native, &error) == PC_RESULT_OK
+FAIL C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_actions.cpp:1160: pc_solver_create(native, goal.c_str(), goal.size(), &solver, &error) == PC_RESULT_OK
+FAIL C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_actions.cpp:688: false
+FAIL C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_recombination.cpp:213: pc_data_load_file(manifest.c_str(), &data, &error) == PC_RESULT_OK
+FAIL C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_recombination_solver.cpp:355: pc_data_load_file(manifest.c_str(), &data, &error) == PC_RESULT_OK
+FAIL C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_simulator.cpp:772: pc_data_load_file(manifest.c_str(), &data, &error) == PC_RESULT_OK
+FAIL C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_simulator.cpp:928: pc_data_load_file(manifest.c_str(), &data, &error) == PC_RESULT_OK
+FAIL C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_simulator.cpp:246: pc_data_load_file(manifest.c_str(), &data, &error) == PC_RESULT_OK
+solver artifact suite skipped (unreadable artifact)
+count frequencies action=4: 7953/3038/1009 of 12000
+count frequencies action=5: 7992/2996/1012 of 12000
+count frequencies action=9: 8057/2958/985 of 12000
+count frequencies action=10: 8074/2930/996 of 12000
+count frequencies action=15: 7990/3020/990 of 12000
+count frequencies action=21: 8070/2918/1012 of 12000
+retained occupancy held=2 forced=0 pool=0: total3=0 total4=0.666666666667 total5=0.25 total6=0.0833333333333; suffix-full old=0.44126984127 new=0.164285714286
+retained occupancy held=2 forced=0 pool=1: total3=0 total4=1 total5=0 total6=0; suffix-full old=0 new=0
+retained occupancy held=2 forced=0 pool=2: total3=1 total4=0 total5=0 total6=0; suffix-full old=0 new=0
+retained occupancy held=2 forced=1 pool=0: total3=0 total4=0.666666666667 total5=0.25 total6=0.0833333333333; suffix-full old=0.488888888889 new=0.2
+retained occupancy held=2 forced=1 pool=1: total3=0 total4=1 total5=0 total6=0; suffix-full old=0 new=0
+retained occupancy held=2 forced=1 pool=2: total3=1 total4=0 total5=0 total6=0; suffix-full old=0 new=0
+retained occupancy held=3 forced=0 pool=0: total3=0 total4=0.666666666667 total5=0.25 total6=0.0833333333333; suffix-full old=0.333333333333 new=0.0833333333333
+retained occupancy held=3 forced=0 pool=1: total3=0 total4=0.666666666667 total5=0.333333333333 total6=0; suffix-full old=0 new=0
+retained occupancy held=3 forced=0 pool=2: total3=0 total4=1 total5=0 total6=0; suffix-full old=0 new=0
+retained occupancy held=3 forced=1 pool=0: total3=0 total4=0.666666666667 total5=0.25 total6=0.0833333333333; suffix-full old=0.333333333333 new=0.0833333333333
+retained occupancy held=3 forced=1 pool=1: total3=0 total4=0.666666666667 total5=0.333333333333 total6=0; suffix-full old=0 new=0
+retained occupancy held=3 forced=1 pool=2: total3=0 total4=1 total5=0 total6=0; suffix-full old=0 new=0
+finite cross-goal terminal projection: scenario=0 cases=126 materialized=450 Annul-rows=450 V3-commits=69; complete native laws checked
+finite cross-goal terminal projection: scenario=1 cases=126 materialized=5679 Annul-rows=5679 V3-commits=104; complete native laws checked
+finite cross-goal terminal projection: scenario=2 cases=126 materialized=5679 Annul-rows=5679 V3-commits=104; complete native laws checked
+FAIL C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_solver_calc.cpp:4480: read_text_file(dir + "/manifest.json", manifest)
+FAIL C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_solver_calc.cpp:4481: read_text_file(dir + "/strings.json", strings)
+FAIL C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_solver_calc.cpp:4482: read_text_file(dir + "/game-data.json", game)
+terminate called after throwing an instance of 'std::runtime_error'
+  what():  JSON parse error at offset 0: unexpected end of input

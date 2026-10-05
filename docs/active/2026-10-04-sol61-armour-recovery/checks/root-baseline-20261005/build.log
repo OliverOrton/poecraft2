@@ -1,0 +1,3 @@
+[0/2] Re-checking globbed directories...
+[1/3] Building CXX object CMakeFiles/poecraft_solver_benchmark.dir/benchmarks/solver_benchmark.cpp.obj
+[2/3] Linking CXX executable poecraft_solver_benchmark.exe

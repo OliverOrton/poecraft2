@@ -1,0 +1,176 @@
+{
+  "source_head": "b02513b696595239c89f36afd4648e2dd06ddeab",
+  "scope": "matched original Current control, product scope, TargetNeutralZero",
+  "actual_status": "bounded_feasible",
+  "solve_summary": {
+    "converged": false,
+    "start_state": 0,
+    "start_value": 101311.35474896732,
+    "expanded_states": 4045,
+    "sweeps": 2,
+    "residual": 3.552713678800501e-15,
+    "skipped_action_count": 0,
+    "policy_available": true,
+    "policy_status": "bounded_feasible",
+    "termination": "requested_bounded_finish",
+    "stop_cause": "requested_bounded_finish",
+    "cap_hit_mask": 0,
+    "action_counts": {
+      "registry": 190,
+      "candidate": 28,
+      "evaluator_supported": 28,
+      "supported_priced": 288,
+      "skipped_missing_price": 0,
+      "skipped_unsupported": 0
+    },
+    "lower_bound": 0,
+    "upper_bound": 101311.35474896732,
+    "evaluated_policy_cost": 101311.35474896732,
+    "absolute_optimality_gap": 101311.35474896732,
+    "relative_optimality_gap": null,
+    "requested_absolute_optimality_gap": 0,
+    "requested_relative_optimality_gap": 0,
+    "target_met": false,
+    "target_fired": "none"
+  },
+  "phase_wall_ms": {
+    "registry_layout": 51.1009,
+    "solve": 120379.1802,
+    "compile": 0.4666,
+    "verification": null,
+    "total": 121389.2362
+  },
+  "exact_strategy_evaluation": {
+    "status": "matched",
+    "completed": true,
+    "time_limited": false,
+    "converged": true,
+    "cost_complete": true,
+    "zero_off_policy_mass": true,
+    "cost_reconciled": true,
+    "success_probability": 1,
+    "off_policy_mass": 0,
+    "total_expected_cost": 101311.35474896732,
+    "solver_cost_delta_absolute": 0,
+    "solver_cost_delta_relative": 0,
+    "wall_ms": 701.2242
+  },
+  "carrier_pipeline_observation": {
+    "kind": "passive_current_carrier_pipeline_v1",
+    "phase": "post_finish",
+    "snapshot_proves_root_reachability": false,
+    "states_interned": 0,
+    "rows_generated": 0,
+    "cache_mutation": false,
+    "solve_performance_includes_snapshot": false,
+    "parent_state_count": 11652,
+    "operator_scan_complete": true,
+    "matching_operator_count": 1,
+    "operator_samples_omitted": 0,
+    "matching_parent_projections": [
+      {
+        "state": 160,
+        "retry_basin": 0,
+        "word_operators": [
+          {
+            "operator": 220,
+            "currently_admitted": true,
+            "retained_kernel": true
+          }
+        ]
+      }
+    ],
+    "matching_parent_projection_count": 1,
+    "scanned_parent_states": 11652,
+    "state_scan_complete": true,
+    "projection_samples_omitted": 0,
+    "ordinary_carrier_service": "unobserved",
+    "complete_tail_construction": "unobserved",
+    "carrier_positive_entry_check": "unobserved",
+    "earlier_admission_history": "unobserved",
+    "private_service_carrier_states": "unobserved",
+    "returned_graph_first_paid": {
+      "node": "c5",
+      "action_type": 5,
+      "routing_only_not_entry_certification": true
+    },
+    "diagnostic_wall_ms": 1.7679
+  },
+  "selective_service": {
+    "status": "retained",
+    "checks": 3,
+    "checked_cost": 101311.35474896732,
+    "failure_snapshot": null
+  },
+  "publication": {
+    "status": "bounded_fallback_policy",
+    "candidate_kind": "selective_completion_root"
+  },
+  "upper_policy_passes": {
+    "requested": 34,
+    "started": 0,
+    "proper": 0,
+    "rejected": 34,
+    "fixed_policy_proofs": 0,
+    "last_failure": ""
+  },
+  "joint_anytime_policy": {
+    "attempts": 0,
+    "successes": 0,
+    "last_completed_rows": 0,
+    "best_upper": null,
+    "last_failure": ""
+  },
+  "normal_word_operator_aggregate": [
+    {
+      "operator_index": 220,
+      "planner_id": "option:eldritch_side_intent:prefix:eldritch_exalt:eldritch_ember:1",
+      "planner_kind": "fixed_option",
+      "fixed_option_kind": "eldritch_side_intent",
+      "automatic_kind": "eldritch_side",
+      "semantic_fnv1a64": "60ecb11dfa38dc45",
+      "priced_supported": true,
+      "state_local_automatic": true,
+      "dependencies": [
+        "eldritch_ember:1",
+        "eldritch_exalt"
+      ],
+      "families": [
+        "eldritch"
+      ],
+      "lifecycle": {
+        "scheduled": 447,
+        "begun": 447,
+        "completed": 1,
+        "interrupted": 0,
+        "retained_rows": 446,
+        "retained_bytes": 0,
+        "selected_policy_consumptions": 0
+      }
+    }
+  ],
+  "typed_ledger_states": {
+    "queued": 0,
+    "exact_row_complete": 20426,
+    "exact_inapplicability_proved": 32148,
+    "incumbent_dominated": 0,
+    "rolled_back_after_named_cap": 0,
+    "omitted_explicit_caller_scope": 3,
+    "unresolved_named_stop": 109268
+  },
+  "typed_ledger_stop_owners": {
+    "none": 52577,
+    "resource_cap": 0,
+    "successor_frontier": 16187,
+    "missing_verified_upper": 79680,
+    "requested_bounded_finish": 13401
+  },
+  "limitations": [
+    "state presence is not checked root occupancy",
+    "operator lifecycle counts are aggregate, not P0-specific",
+    "P0 ordinary service and complete tail construction unobserved",
+    "root-only selective graph does not certify parent statewise values",
+    "source seed guard interpretation does not recover the unrecorded exact historical refusal branches",
+    "no product economic improvement, Finder or WASM activation"
+  ]
+}

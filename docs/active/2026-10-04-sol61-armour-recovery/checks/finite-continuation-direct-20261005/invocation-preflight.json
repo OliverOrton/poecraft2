@@ -1,0 +1,53 @@
+{
+  "source_head": "b02513b696595239c89f36afd4648e2dd06ddeab",
+  "source_sha256": {
+    "engine/src/solver_solve_focused.cpp": "52c8fe15acd7af9faeccb8505e88805c372c72460bfedc10401fabc9112f2df7",
+    "engine/src/solver_solve_incremental.cpp": "affc32a2db24ad1ee1130fd03d4f33c54973bb07e9b76d482adbea5adeea8441",
+    "engine/tests/test_main.cpp": "27f5f30644f1b5013fbaaa000380e6cd5981270222cbc001242b57b227fc3a5b",
+    "engine/tests/test_solver_compile.cpp": "0ef6cbc55e4328a24df0dd1065fc8bd1335b23de1bd60e56e6ddc60c92f43787",
+    "engine/tests/tests.hpp": "91fa271aa08c952dfc5fba0c44d639d08202dfc3796b95bb748db4a2fe40d27f"
+  },
+  "strategy_sha256": "d65787d11ad895d5925ce9dd4d0aefde483e53bc25df3a80a6a9dfe7a0d7e053",
+  "candidate_count": 1,
+  "checker_attempts": 1,
+  "physical_word_exits": 33,
+  "additional_exact_physical_members": 34,
+  "original_root_also_checked": true,
+  "complete_product_coarse_domain_claimed": false,
+  "checker_owned_byte_cap": 536870912,
+  "native_deadline_seconds": 60,
+  "host_watchdog_seconds": 75,
+  "new_current_root_invocations": 0,
+  "compiler_jobs": 2,
+  "qualified_adapter": {
+    "qualified_commit": "d485ff111fc6b3aafa1679bca97b9ff9bd70d2a8",
+    "worker_blob": "f532376adbde79d9f31da1bc2d97e1b24fe2f5d9",
+    "worker_sha256": "1f7978fa0cf43c331487ea57212286cbf92ff96141d379a901c4bd421d4aae92",
+    "bytes": 57022,
+    "dependency_sha256": "579fd125e888618ff2832a71e8b0319046ce3257d2f0c37056f3272e440f0728",
+    "worker_unchanged": true,
+    "repository_worker_modified": false
+  },
+  "cwd": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\poecraft2-solver-causal\\engine",
+  "build_command": [
+    "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\bin\\cmake.exe",
+    "--build",
+    "--preset",
+    "tests-only",
+    "--parallel",
+    "2"
+  ],
+  "build_watchdog_seconds": 600,
+  "binary_before": {
+    "sha256": "62db8c38d44ed78ffafb7c4ce659d1713140e8ee016f7ab7623a47723a19dbe9",
+    "mtime_ns": 1791172308992275600
+  },
+  "source_mtime_ns": {
+    "engine/src/solver_solve_focused.cpp": 1791174912941135000,
+    "engine/src/solver_solve_incremental.cpp": 1791174913317860400,
+    "engine/tests/test_main.cpp": 1791174992665930600,
+    "engine/tests/test_solver_compile.cpp": 1791174914344069400,
+    "engine/tests/tests.hpp": 1791174913621846600
+  },
+  "changed_premise": "exact canonical CMake leaf avoids observed empty PowerShell wrapper; source unchanged"
+}

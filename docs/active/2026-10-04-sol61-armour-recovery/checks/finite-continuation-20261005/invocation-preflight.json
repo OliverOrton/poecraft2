@@ -1,0 +1,22 @@
+{
+  "source_head": "b02513b696595239c89f36afd4648e2dd06ddeab",
+  "source_sha256": {
+    "engine/src/solver_solve_focused.cpp": "52c8fe15acd7af9faeccb8505e88805c372c72460bfedc10401fabc9112f2df7",
+    "engine/src/solver_solve_incremental.cpp": "affc32a2db24ad1ee1130fd03d4f33c54973bb07e9b76d482adbea5adeea8441",
+    "engine/tests/test_main.cpp": "27f5f30644f1b5013fbaaa000380e6cd5981270222cbc001242b57b227fc3a5b",
+    "engine/tests/test_solver_compile.cpp": "0ef6cbc55e4328a24df0dd1065fc8bd1335b23de1bd60e56e6ddc60c92f43787",
+    "engine/tests/tests.hpp": "91fa271aa08c952dfc5fba0c44d639d08202dfc3796b95bb748db4a2fe40d27f"
+  },
+  "strategy_sha256": "d65787d11ad895d5925ce9dd4d0aefde483e53bc25df3a80a6a9dfe7a0d7e053",
+  "candidate_count": 1,
+  "checker_attempts": 1,
+  "physical_word_exits": 33,
+  "additional_exact_physical_members": 34,
+  "original_root_also_checked": true,
+  "complete_product_coarse_domain_claimed": false,
+  "checker_owned_byte_cap": 536870912,
+  "native_deadline_seconds": 60,
+  "host_watchdog_seconds": 75,
+  "new_current_root_invocations": 0,
+  "compiler_jobs": 2
+}

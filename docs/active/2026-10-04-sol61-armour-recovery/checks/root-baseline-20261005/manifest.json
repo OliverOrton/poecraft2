@@ -1,0 +1,21 @@
+{
+  "artifact": {
+    "artifact_schema_version": 4,
+    "engine_abi_version": 3,
+    "game_data_sha256": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e",
+    "manifest_relative_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\runtime-snapshots\\82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d\\manifest.json",
+    "source_data_hash": "d511e23d1289674c4ac869d20ccd62a979af65f58d4aac83a01ac9bbb02c853e",
+    "source_version": "repoe-b458174874efbe64",
+    "strings_sha256": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6"
+  },
+  "cases": [
+    "conquest5-product-passive.json"
+  ],
+  "corpus_id": "sol61-causal-original-root-passive-baseline-v1",
+  "execution_activation": "owner-approved currentlaw controls; serial via existing corpus runner; preflight required",
+  "schema_version": "solver_benchmark_corpus_v1",
+  "source_checkpoint": {
+    "baseline": "72448deaacca2797058de0559378685ba71a983f",
+    "candidate": "isolated Sol6.1 recovery; product profile default budget qualification"
+  }
+}

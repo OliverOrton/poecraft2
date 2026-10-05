@@ -1,0 +1,23 @@
+{
+  "observed_utc": "2026-10-05T04:49:41.1400212Z",
+  "adapter": "main tools/ingest/poecraft_ingest/solver_worker.py run_isolated_process",
+  "survivors": [
+    {
+      "process_id": 41160,
+      "parent_process_id": 42468,
+      "name": "ninja.exe",
+      "created_utc": "2026-10-05T04:36:34.2989290Z",
+      "command": "\"C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja/ninja.exe\" -j 2 poecraft_header_smoke poecraft_engine_tests",
+      "verified_owned_by_finite_tests_batch": true
+    },
+    {
+      "process_id": 42468,
+      "parent_process_id": 55688,
+      "name": "cmake.exe",
+      "created_utc": "2026-10-05T04:36:34.2769130Z",
+      "command": "\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\bin\\cmake.exe\" --build --preset tests-only --parallel 2",
+      "verified_owned_by_finite_tests_batch": true
+    }
+  ],
+  "cleanup": "verified child then parent Stop-Process"
+}

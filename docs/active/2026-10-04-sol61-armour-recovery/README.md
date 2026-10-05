@@ -164,5 +164,121 @@ earlier admission history, per-carrier ordinary service, private service states,
 complete tails and positive entry checking are marked unobserved. Returned-graph
 routing is not arbitrary-entry certification. Its own wall time is reported
 after Finish and excluded from solve-performance claims. The same observer
-must be retained in treatment. New benchmark build and baseline await UI LOCAL
-release; original-root invocation allowance remains 0/2 spent.
+must be retained in treatment.
+
+### Matched original Current control, root slot 1
+
+Source b02513b696595239c89f36afd4648e2dd06ddeab builds the Benchmark target
+in 13.954 s with two compiler jobs. The original Conquest request, priced
+product action scope and TargetNeutralZero are unchanged except for the passive
+observation. Native control completes in 122.142 s, requested bounded Finish,
+cap mask 0. The returned 26-node/39-edge policy independently reconciles at
+101311.35474896732, success 1, off-policy mass 0 and complete prices. This is
+a checked native Current control, not an improvement or Finder/WASM activation.
+
+The [compact receipt](checks/root-baseline-20261005/summary.json) observes the
+exact P0 projection at parent state 160, retry basin 0, among 11,652 states.
+Its normal operator 220, paid Ember tier 1 then Eldritch Exalt, is admitted with
+a retained kernel. Returned-graph routing still sends P0 to c5/Chaos; routing
+alone supplies no arbitrary-entry certificate. The complete snapshot takes
+1.768 ms and changes no state, row, cache or work counter. P0-specific ordinary
+service, complete-tail construction and positive-entry checking remain
+unobserved. Native positive ordering and parent presence have different roles;
+the snapshot does not establish root occupancy.
+
+Aggregate lifecycle evidence for this operator reports 447 scheduled/begun
+carriers, 446 retained rows and zero selected-policy consumptions. It is not a
+P0-specific row census. Upper-policy passes report 34 requested, zero started,
+34 rejected; joint-anytime assembly attempts are zero. Source independently
+shows selective_completion_root stores a checked root-only graph with no
+parent policy bindings, while the focused upper seed requires statewise values
+or a separate focused fallback. The exact refusing branches of those historical
+34 requests were not recorded. This is a concrete value-role/seed boundary
+consistent with the control, not proof of whole-search causality or the
+introducing commit. No root scalar is promoted to a statewise upper.
+
+Full native result and partial receipts are retained compressed with byte and
+SHA-256 checks in [receipt manifest](checks/root-baseline-20261005/receipt-manifest.json).
+The compact projection excludes large exact-evaluator accounting arrays;
+the protected historical trace was not read. LOCAL released at 04:15:15 UTC,
+with all recorded processes gone and an empty elevated compiler/native census.
+Root allowance is 1/2 spent; slot 2 remains reserved for a justified treatment.
+
+Parent next approves one finite existing-checker attempt, Tests target only at
+two jobs: original root plus P0 and all 33 exact physical paid-word exits, a
+512-MiB checker limit, 60-second native and 75-second host deadlines. The
+one-use word plus checked Current tails is compared against checked Current
+P0 continuation with every native paid resource and exit identity retained.
+These singleton physical-entry certificates do not cover the product coarse
+domain or authorize parent statewise values. The finite seed-refusal witness
+and named existing-guard diagnostic preserve scope and fallback. No additional
+Current root is authorized by this finite batch.
+
+The finite continuation batch stops at its Tests build watchdog. Its only
+output is `[0/2] Re-checking globbed directories...`; no compiler/link output
+or new Ninja completion entry is observed. The 600-second parent watchdog then
+blocks draining output until verified owned CMake/Ninja descendants are
+terminated, for 787.499 s total supervised wall. This does not establish whether
+the entire pre-timeout interval was internally waiting or included unobserved
+compiler activity. No successful built source delta or native selector run is
+demonstrated; the new seed diagnostic and complete-tail selector are unbuilt.
+
+The actual adapter is the unchanged main worker blob
+3a387c04645f54a0cc0abbabce3c709902b0b479, not the separately qualified CI
+d485ff11/f532376a bounded-drain adapter. No runner is patched here. The
+[negative build receipt](checks/finite-continuation-20261005/build-receipt.json),
+log, creation identity/ancestry/commands and cleanup census are retained. Only
+same-created owned Ninja 41160 then CMake 42468 are terminated; Python 74632
+and parent 55688 are also gone. LOCAL released at 04:50:09 UTC, elevated census
+empty. No continuation cost, exact refusal witness or additional Current root
+is claimed. No automatic unchanged retry occurs; slot 2 stays unspent.
+
+A separately granted direct generated-glob diagnostic through unchanged
+qualified f532376a with file-backed output passes in 86.352 ms, empty log,
+exit 0, owned Windows job drained and empty elevated census. Its exact argv,
+cwd and unchanged generated-source hash are retained in
+[direct-glob evidence](checks/direct-glob-20261005/invocation-preflight.json).
+There is no source inventory growth or junction: the finite engine/src glob
+contains exactly 72 tracked/direct translation units. This does not reconstruct
+the old build's unobserved internal activity or identify a shared cause with
+the independently fixed pytest thread hang.
+
+The next parent-granted qualified file-backed continuation returns from its
+PowerShell build wrapper with exit 0 in 234 ms and an empty log, but the test
+executable remains the old 03:51:48 artifact. The consumer wrongly used exit 0
+as a successful rebuild gate and launched it. The old executable does not
+recognize the new selector, falls through to general tests, treats the selector
+text as an artifact path and aborts after missing-fixture assertions, exit
+3221226505 in 853 ms. This is an invocation/provenance negative, not complete-tail
+checking, an economic result or a native candidate refusal. Its log, old binary
+hash, creation identities and clean owned-job receipts remain in
+[qualified continuation evidence](checks/finite-continuation-qualified-20261005/invocation-preflight.json).
+LOCAL releases at 04:59:47 UTC with an empty census. The source remains unbuilt.
+
+Any further finite launch must first demonstrate the changed source was built:
+compiler/link completion, changed binary identity, source/objects/artifact
+timestamps and selector/guard identity. Canonical Tests maps to existing CMake
+tests-only in the isolated engine directory; a bounded direct leaf invocation
+is proposed to avoid the demonstrated empty PowerShell wrapper. No runner,
+CMake flags, search scope or acceptance rule is changed. New LOCAL is required.
+
+The granted direct canonical CMake tests-only leaf also stays at the glob
+console edge. A phase census at roughly 61 s observes owned Ninja and no
+compiler child; the existing qualified callback cancels it. Total wall is
+100.900 s, cancellation acknowledgement 257 ms, job drained, no surviving
+process, unexpected descendant or cleanup error. No compiler/link completion,
+built delta or selector run occurs. LOCAL releases at 05:06:45 UTC, elevated
+census empty; [full phase and ownership evidence](checks/finite-continuation-direct-20261005/build-receipt.json)
+is retained. This reproduces an orchestration boundary despite the fast direct
+glob and avoids a second 600-second wait. No further launch is automatic.
+
+Narrow source inspection finds that the generated VerifyGlobs edge uses
+`pool = console`; the live qualified job includes verified System32 conhost
+alongside CMake and Ninja. [Upstream Ninja's Windows subprocess source](https://github.com/ninja-build/ninja/blob/master/src/subprocess-win32.cc)
+uses a different standard-handle path for console work and inherits its
+completion-notification pipe. [Windows process-creation documentation](https://learn.microsoft.com/en-us/windows/win32/procthread/process-creation-flags)
+distinguishes detached parent console ownership from later console allocation.
+A console/notification-handle lifetime interaction is a testable inference,
+not proof that this conhost owns the pipe, that the bundled Ninja matches
+upstream, or that earlier failures share one cause. No runner/CMake acceptance
+patch or speculative launch occurs in the solver branch.

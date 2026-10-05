@@ -1,0 +1,16 @@
+[
+  {
+    "file": "result.json.gz",
+    "uncompressed_bytes": 27616841,
+    "uncompressed_sha256": "f5a883eee47b1ee4db7700ee0e0c20362ee3738df167a9c100f0309c1fa91099",
+    "compressed_bytes": 714654,
+    "compressed_sha256": "b6cb503980c9f961983f3ce6db41e4ef61e77e7a08eaa4892611dd74df13d7ec"
+  },
+  {
+    "file": "partial.json.gz",
+    "uncompressed_bytes": 27616868,
+    "uncompressed_sha256": "2c0168924acdd69fcafc2fa9eb541e831814e953539000d049f454b7dc226656",
+    "compressed_bytes": 714661,
+    "compressed_sha256": "47ce0afb3e459b335bfe5321b3eec806d0b568dcae06877b05ca3f7143e2bf6c"
+  }
+]

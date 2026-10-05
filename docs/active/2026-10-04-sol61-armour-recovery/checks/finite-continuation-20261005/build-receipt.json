@@ -1,0 +1,12 @@
+{
+  "exit_code": 1,
+  "timed_out": true,
+  "canceled": false,
+  "cancellation_mode": null,
+  "cancellation_ack_ms": null,
+  "process_id": 55688,
+  "process_identity_token": "55688:134356485938214874",
+  "survivor": false,
+  "survivor_check": "process_group_kill_then_parent_poll",
+  "wall_ms": 787499.1001999006
+}

@@ -1,0 +1,13 @@
+{
+  "utc": "2026-10-05T04:59:47.1948493Z",
+  "survivors": [],
+  "empty": true,
+  "build_identity": {
+    "pid": 8216,
+    "creation_identity_token": "8216:134356498854103471"
+  },
+  "native_identity": {
+    "pid": 7524,
+    "creation_identity_token": "7524:134356498859348443"
+  }
+}

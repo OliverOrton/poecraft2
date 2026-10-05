@@ -32,9 +32,35 @@ Corrected admission completes in 134 ms at the separate mask-9 carrier: exact
 paid Ember/Exalt operator admitted with a retained native kernel. This is later-
 carrier admission, not observed original-root service; no root invocation,
 checking or export has run. LOCAL released at 03:56:16 UTC with no survivors.
-The first original Conquest root slot is requested as a passive existing-telemetry
-baseline. Both failed receipts remain in the programme record; passing checks
-need no repeat.
+The first original Conquest root slot now completes at isolated b02513b6:
+checked Current cost 101311.35474896732, success 1, complete prices, off-policy
+mass 0, requested 120-second Finish and cap mask 0. Exact P0 is present at parent
+state 160 with its normal Ember/Exalt kernel admitted, while returned routing
+chooses Chaos. Operator-wide lifecycle reports 446 retained rows/zero selected
+consumptions; 34 upper seed requests start none and joint assembly attempts are
+zero. Source's root-only selective artifact cannot supply parent statewise
+values; historical exact refusal branches and P0-specific service are unobserved.
+LOCAL released at 04:15:15 UTC with no survivors. Slot 1/2 spent, slot 2 remains
+reserved. Parent approves one finite checker candidate covering original root,
+P0 and every 33 positive physical exit, 512 MiB, native 60 s/host 75 s, Tests
+build Jobs2, exact seed-guard witness; no new Current root. Physical-entry
+certificates are not complete coarse-domain authority. Both failed receipts
+remain in the programme record; unrelated passing checks need no repeat.
+The finite continuation Tests build then times out before any observed compiler
+or link completion; the selector never runs. Only verified owned CMake/Ninja
+survivors are cleaned after main's adapter blocks output drain. LOCAL releases
+at 04:50:09 UTC with an empty census. New guard diagnostic/finite selector are
+unbuilt; no unchanged automatic retry. Later attempts must use the parent-
+qualified CI adapter d485ff11 / worker f532376a without patching a runner here.
+The qualified standalone glob passes in 86 ms. Its PowerShell wrapper later
+returns exit 0 without rebuilding; the consumer misses the binary provenance
+gate and the old unrecognized selector aborts on an invalid artifact path.
+Direct canonical CMake tests-only then stalls at the same console glob edge,
+with no compiler at the sampled phase, and is cancelled after 101 s through
+the qualified owner. LOCAL releases at 05:06:45 UTC with an empty census.
+These build/supervision negatives are separate from the unrun finite native
+checker and solver economics. Further execution needs a new concrete premise
+and parent LOCAL grant; the accepted root control remains the only root run.
 
 Published research checkpoints, both absent from main:
 
