@@ -359,6 +359,10 @@ to its existing owner. Do not hand-edit [generated research state](research-stat
 Keep the reconciliation's checked sources and outstanding evidence explicit.
 Live CI and local process status must be read
 at the next task, not inferred from this snapshot.
+The [October 5 CI lifecycle receipt](../active/2026-10-04-sol61-ci-supervision/README.md)
+qualifies focused synthetic supervisor tests and failure-path exit only; it does
+not close the original hosted completion failure or supply real-artifact,
+native/WASM, activation or economic qualification.
 
 
 ## Combined current-batch identity checkpoint (2026-10-02)

@@ -1,0 +1,127 @@
+{
+  "schema_version": "ci_scheduler_lifecycle_receipt_v1",
+  "base_main": "7eb16ac3d63834fd5d3256ab42483f47d264b764",
+  "branch": "dot/sol61-ci-lifecycle-20261005",
+  "host": "KIDS",
+  "python": "3.14",
+  "tested_source_sha256": "b0673f471beef0e94c969c1f4729d4a955adeb2aac56e03a89aada4e6eb4dc77",
+  "fixture": {
+    "executable_bytes": 29,
+    "manifest_bytes": 43,
+    "declared_payload_files": 0,
+    "production_preflights_preserved": true,
+    "real_artifact_integration_qualified": false
+  },
+  "hosted_completion_cause": "unproved",
+  "batch_sha256": "2c9ac191e31139d581ea8afc2d0972d744e950a0b3b3ebf281e8caa11beea8a8",
+  "survivor_check_sha256": "6895d1d2994e13f7da98f805258351c2ec62e37e920030e272d721b720f084f4",
+  "stages": [
+    {
+      "mode": "baseline_pair",
+      "exit_code": 0,
+      "timed_out": false,
+      "wall_ms": 3408.5943999234587,
+      "survivor": false,
+      "identity_after": "proved_absent",
+      "preflight_count": 8,
+      "preflight_min_seconds": 0.11613780003972352,
+      "preflight_max_seconds": 0.15821330016478896,
+      "process_receipt_sha256": "fe1c3669bd519cec98047dcbdbfe57541058b5e0926d0debf3c3fcc6dc6c9b61",
+      "state_receipt_sha256": "b1bcb9d2f0757360e0e28f506ac59c88dce6f7c22dc0857bf14c07f3d9fa9f09",
+      "live_threads": [
+        {
+          "daemon": false,
+          "name": "MainThread"
+        }
+      ]
+    },
+    {
+      "mode": "baseline_forced_parallel",
+      "exit_code": 1,
+      "timed_out": true,
+      "wall_ms": 10255.785699933767,
+      "survivor": false,
+      "identity_after": "proved_absent",
+      "preflight_count": 4,
+      "preflight_min_seconds": 0.11660149996168911,
+      "preflight_max_seconds": 0.14505279995501041,
+      "process_receipt_sha256": "7436701b77659f30ed7e896f2f1057ed5ee5d0fb226bba5e852a11c9aaf5bee5",
+      "state_receipt_sha256": "eaed83144ec93d893a197aeaf600ee82f9e9980f8ec4f8864b90405714731f99",
+      "live_threads": [
+        {
+          "daemon": false,
+          "name": "MainThread"
+        },
+        {
+          "daemon": false,
+          "name": "poecraft-solver-lab-supervisor"
+        },
+        {
+          "daemon": false,
+          "name": "ThreadPoolExecutor-0_0"
+        },
+        {
+          "daemon": false,
+          "name": "ThreadPoolExecutor-0_1"
+        }
+      ]
+    },
+    {
+      "mode": "candidate_suite",
+      "exit_code": 0,
+      "timed_out": false,
+      "wall_ms": 8112.466299906373,
+      "survivor": false,
+      "identity_after": "proved_absent",
+      "preflight_count": 16,
+      "preflight_min_seconds": 0.11543530016206205,
+      "preflight_max_seconds": 0.15665160003118217,
+      "process_receipt_sha256": "230efd47c884696d56931b6b8443cf5f23fcf8820a05c6fd642819ff374ed45f",
+      "state_receipt_sha256": "a3f20c9df352e0ae7717ce2d5363d2f07147f958f6f1303db1e4d92c0b70a21d",
+      "live_threads": [
+        {
+          "daemon": false,
+          "name": "MainThread"
+        }
+      ]
+    },
+    {
+      "mode": "candidate_forced_parallel",
+      "exit_code": 1,
+      "timed_out": false,
+      "wall_ms": 1615.7416000496596,
+      "survivor": false,
+      "identity_after": "proved_absent",
+      "preflight_count": 4,
+      "preflight_min_seconds": 0.11403500009328127,
+      "preflight_max_seconds": 0.1519009000621736,
+      "process_receipt_sha256": "7da9247e2cb1b97a8b10b843622703280cfb41433cd42f69d20dcb3688a12c47",
+      "state_receipt_sha256": "a827e197e1af95f3f9e9e69ffa8fdee75f226c4eebce255ff3fc5b345b33209b",
+      "live_threads": [
+        {
+          "daemon": false,
+          "name": "MainThread"
+        }
+      ]
+    },
+    {
+      "mode": "candidate_forced_retry",
+      "exit_code": 1,
+      "timed_out": false,
+      "wall_ms": 1692.5635999068618,
+      "survivor": false,
+      "identity_after": "proved_absent",
+      "preflight_count": 4,
+      "preflight_min_seconds": 0.11518140020780265,
+      "preflight_max_seconds": 0.12064619990997016,
+      "process_receipt_sha256": "4e05e33dee910dacdc05f477268cc3308f3d4fe4bb952c80be9f51a2b31334a4",
+      "state_receipt_sha256": "bfdb10aa146f95ec103439f260a03422ac25da39a16dd3ecf8b2740df51cdcd2",
+      "live_threads": [
+        {
+          "daemon": false,
+          "name": "MainThread"
+        }
+      ]
+    }
+  ]
+}

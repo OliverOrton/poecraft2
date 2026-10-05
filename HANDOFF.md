@@ -57,6 +57,13 @@ focused owned-handle qualification and prior failures; its broad gate and
 original scheduler timing cause remain unresolved. It is not merged into main.
 Keep the old six-hour cancelled CI negative and later failure receipts intact.
 
+The [October 5 CI continuation](docs/active/2026-10-04-sol61-ci-supervision/README.md)
+ports only scheduler-test ownership/diagnostics from fresh main. A forced main
+assertion demonstrates the post-summary thread hang; the candidate's 15-test
+suite and two forced-failure exits pass locally. The original hosted five-second
+completion cause and real-artifact/hosted integration remain open. LOCAL is
+released with no survivor; parent review gates publication and integration.
+
 Eight rendered screenshots are verified locally in the product record. Library
 delivery attempted zero uploads: the required multi-file helper lacks supported
 Windows metadata writeback. Leave the verified files intact and avoid duplicate

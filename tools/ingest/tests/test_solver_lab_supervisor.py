@@ -24,14 +24,51 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 GIB = 1024 * 1024 * 1024
 
 
+@pytest.fixture(autouse=True)
+def stop_owned_supervisors(monkeypatch: pytest.MonkeyPatch):
+    """A failed assertion must not keep pytest alive through non-daemon threads."""
+    supervisors: list[SolverLabSupervisor] = []
+    original_init = SolverLabSupervisor.__init__
+
+    def tracked_init(self, *args, **kwargs):
+        original_init(self, *args, **kwargs)
+        supervisors.append(self)
+
+    monkeypatch.setattr(SolverLabSupervisor, "__init__", tracked_init)
+    yield
+    for supervisor in reversed(supervisors):
+        supervisor.stop(wait=False)
+        for job in supervisor.service.catalog.list_jobs():
+            if job["status"] in {"queued", "blocked", "running", "canceling"}:
+                supervisor.service.cancel_job(
+                    job_id=job["job_id"],
+                    idempotency_key=f"test-finally-{job['job_id']}",
+                )
+        supervisor.stop(timeout=5.0)
+        assert not supervisor.is_alive(), supervisor.status()
+
+
 def _service(
     tmp_path: Path,
     *,
     worker_headroom_bytes: int = 512 * 1024 * 1024,
     global_safety_reserve_bytes: int = 512 * 1024 * 1024,
 ) -> SolverLabService:
+    # These tests run synthetic workers. Keep real request/preflight validation,
+    # but do not make dispatcher liveness depend on hashing a production runtime.
+    tmp_path.mkdir(parents=True, exist_ok=True)
+    executable = tmp_path / "scheduler-test.exe"
+    executable.write_bytes(b"synthetic scheduler worker v1")
+    artifact = tmp_path / "artifact"
+    artifact.mkdir(exist_ok=True)
+    (artifact / "manifest.json").write_text(
+        json.dumps({"artifact_schema_version": 1, "files": {}}),
+        encoding="utf-8",
+    )
     return SolverLabService.from_root(
         REPO_ROOT,
+        executable=executable,
+        artifact=artifact,
         catalog=tmp_path / "catalog.sqlite3",
         attempts=tmp_path / "attempts",
         worker_headroom_bytes=worker_headroom_bytes,
@@ -43,17 +80,33 @@ def _case_id(service: SolverLabService) -> str:
     return service.list_cases()["result"][0]["case_id"]
 
 
-def _wait_for(predicate, timeout: float = 5.0) -> None:
+def _wait_for(predicate, timeout: float = 5.0, *, supervisor=None) -> None:
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         if predicate():
             return
         time.sleep(0.02)
-    raise AssertionError("condition did not become true")
+    diagnostics = None
+    if supervisor is not None:
+        diagnostics = {
+            "supervisor": supervisor.status(),
+            "jobs": [
+                {key: job.get(key) for key in ("job_id", "status", "blocked_reason")}
+                for job in supervisor.service.catalog.list_jobs()
+            ],
+            "attempts": [
+                {key: attempt.get(key) for key in ("attempt_id", "status", "result")}
+                for attempt in supervisor.service.catalog.list_attempts()
+            ],
+        }
+    raise AssertionError(f"condition did not become true: {diagnostics}")
 
 
 def _fake_completed_run(
-    counter: dict[str, int] | None = None, *, duration_seconds: float = 0.08
+    counter: dict[str, int] | None = None, *, duration_seconds: float = 0.08,
+    entered: threading.Event | None = None,
+    release: threading.Event | None = None,
+    required_active: int = 1,
 ):
     lock = threading.Lock()
 
@@ -64,8 +117,16 @@ def _fake_completed_run(
             with lock:
                 counter["active"] += 1
                 counter["peak"] = max(counter["peak"], counter["active"])
+                if entered is not None and counter["active"] >= required_active:
+                    entered.set()
         try:
-            time.sleep(duration_seconds)
+            if release is not None:
+                # Also responds to assertion-failure cleanup.
+                while not release.wait(0.01):
+                    if kwargs["cancel_requested"]():
+                        return {"status": "canceled", "survivor": False}
+            else:
+                time.sleep(duration_seconds)
             paths.report_path.write_text(
                 json.dumps(
                     {
@@ -250,74 +311,76 @@ def test_oversize_jobs_drain_exclusively(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     service = _service(
-        tmp_path,
-        worker_headroom_bytes=0,
-        global_safety_reserve_bytes=0,
+        tmp_path, worker_headroom_bytes=0, global_safety_reserve_bytes=0,
     )
     for index in range(2):
         service.submit_job(
             case_id=_case_id(service), idempotency_key=f"oversize-{index}"
         )
     counter = {"active": 0, "peak": 0}
+    entered, release = threading.Event(), threading.Event()
     monkeypatch.setattr(
         "poecraft_ingest.solver_lab_supervisor._run_case",
-        _fake_completed_run(counter),
+        _fake_completed_run(counter, entered=entered, release=release),
     )
     supervisor = SolverLabSupervisor(
-        service,
-        max_workers=2,
-        memory_budget_bytes=GIB // 2,
+        service, max_workers=2, memory_budget_bytes=GIB // 2,
         memory_safety_reserve_bytes=0,
-        available_memory_provider=lambda: 4 * GIB,
-        poll_interval_seconds=0.01,
+        available_memory_provider=lambda: 4 * GIB, poll_interval_seconds=0.01,
     )
     supervisor.start()
+    _wait_for(entered.is_set, supervisor=supervisor)
+    assert supervisor.status()["running_attempts"] == 1
+    assert counter["active"] == 1
+    assert len(service.catalog.list_reserved_leases()) == 1
+    assert sum(job["status"] == "queued" for job in service.catalog.list_jobs()) == 1
+    release.set()
     _wait_for(
-        lambda: all(
-            job["status"] == "completed"
-            for job in service.catalog.list_jobs()
-        )
+        lambda: all(job["status"] == "completed" for job in service.catalog.list_jobs()),
+        supervisor=supervisor,
     )
-    supervisor.stop()
-
+    supervisor.stop(timeout=5.0)
     assert counter["peak"] == 1
+    assert service.catalog.list_reserved_leases() == []
 
 
 def test_bounded_dispatch_runs_two_ordinary_jobs_concurrently(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     service = _service(
-        tmp_path,
-        worker_headroom_bytes=0,
-        global_safety_reserve_bytes=0,
+        tmp_path, worker_headroom_bytes=0, global_safety_reserve_bytes=0,
     )
     for index in range(2):
         service.submit_job(
             case_id=_case_id(service), idempotency_key=f"parallel-{index}"
         )
     counter = {"active": 0, "peak": 0}
+    entered, release = threading.Event(), threading.Event()
     monkeypatch.setattr(
         "poecraft_ingest.solver_lab_supervisor._run_case",
-        _fake_completed_run(counter, duration_seconds=0.5),
+        _fake_completed_run(
+            counter, entered=entered, release=release, required_active=2,
+        ),
     )
     supervisor = SolverLabSupervisor(
-        service,
-        max_workers=2,
-        memory_budget_bytes=2 * GIB,
+        service, max_workers=2, memory_budget_bytes=2 * GIB,
         memory_safety_reserve_bytes=0,
-        available_memory_provider=lambda: 4 * GIB,
-        poll_interval_seconds=0.01,
+        available_memory_provider=lambda: 4 * GIB, poll_interval_seconds=0.01,
     )
     supervisor.start()
+    _wait_for(entered.is_set, supervisor=supervisor)
+    assert supervisor.status()["running_attempts"] == 2
+    assert supervisor.status()["reserved_host_memory_bytes"] == 2 * GIB
+    assert len(service.catalog.list_reserved_leases()) == 2
+    release.set()
     _wait_for(
-        lambda: all(
-            job["status"] == "completed"
-            for job in service.catalog.list_jobs()
-        )
+        lambda: all(job["status"] == "completed" for job in service.catalog.list_jobs()),
+        supervisor=supervisor,
     )
-    supervisor.stop()
-
+    supervisor.stop(timeout=5.0)
     assert counter["peak"] == 2
+    assert service.catalog.list_reserved_leases() == []
+
 
 
 def test_running_cancel_and_retry_preserve_first_attempt_artifacts(
@@ -348,9 +411,9 @@ def test_running_cancel_and_retry_preserve_first_attempt_artifacts(
     monkeypatch.setattr("poecraft_ingest.solver_lab_supervisor._run_case", cancelable)
     supervisor = SolverLabSupervisor(service, poll_interval_seconds=0.01)
     supervisor.start()
-    _wait_for(lambda: service.catalog.get_job(job_id)["status"] == "running")
+    _wait_for(lambda: service.catalog.get_job(job_id)["status"] == "running", supervisor=supervisor)
     service.cancel_job(job_id=job_id, idempotency_key="live-cancel")
-    _wait_for(lambda: service.catalog.get_job(job_id)["status"] == "canceled")
+    _wait_for(lambda: service.catalog.get_job(job_id)["status"] == "canceled", supervisor=supervisor)
     first = service.catalog.latest_attempt(job_id)
     first_log = Path(first["directory"]) / "worker.log"
     assert first_log.read_text(encoding="utf-8") == "canceled-first"
@@ -360,9 +423,9 @@ def test_running_cancel_and_retry_preserve_first_attempt_artifacts(
     )
     service.retry_job(job_id=job_id, idempotency_key="retry-after-cancel")
     supervisor.wake()
-    _wait_for(lambda: service.catalog.get_job(job_id)["status"] == "completed")
+    _wait_for(lambda: service.catalog.get_job(job_id)["status"] == "completed", supervisor=supervisor)
     second = service.catalog.latest_attempt(job_id)
-    supervisor.stop()
+    supervisor.stop(timeout=5.0)
 
     assert second["ordinal"] == 2
     assert second["directory"] != first["directory"]
