@@ -17097,12 +17097,21 @@ void run_solver_root_only_joint_service_tests() {
         proof.policy_reachable = baseline.policy_reachable;
         proof.goal_states = work.result.goal_states; proof.expanded = work.result.expanded;
         proof.upper_bound = proof.evaluated_policy_cost = baseline.certified_upper_bound;
+        proof.options = work.options;
+        const auto compile_live = work.estimated_owned_bytes();
+        const auto compile_proof = solve_detail::solve_result_owned_bytes(proof);
+        const auto compile_cap = work.options.max_solver_owned_bytes;
+        require(compile_live < compile_cap &&
+            compile_proof < compile_cap - compile_live,
+            "baseline compiler shared byte allowance");
+        const auto compiler_allowance = compile_cap - compile_live - compile_proof;
         PolicyCompilationTelemetry emitted;
         baseline.compiled_artifact.strategy_json = compile_policy_strategy_json(calc, proof,
             "native root-only fallback", &emitted, 1024 * 1024, nullptr,
-            512ull * 1024 * 1024, PolicyRouteDefaultMode::CertificationFailClosed);
+            compiler_allowance, PolicyRouteDefaultMode::CertificationFailClosed);
         baseline.compiled_artifact.nodes = emitted.nodes;
         baseline.compiled_artifact.edges = emitted.edges;
+        emitted = PolicyCompilationTelemetry{};
         baseline.compiled_artifact.policy_decision_bindings.clear();
         baseline.compiled_root_entry_only = true;
         baseline.policy_materialized = false;
