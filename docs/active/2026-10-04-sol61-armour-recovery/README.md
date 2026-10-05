@@ -176,6 +176,25 @@ cap mask 0. The returned 26-node/39-edge policy independently reconciles at
 101311.35474896732, success 1, off-policy mass 0 and complete prices. This is
 a checked native Current control, not an improvement or Finder/WASM activation.
 
+Static extraction from that same receipt gives the disjoint paid action costs
+below; their sum reconciles within 1.46e-11. No new native process is run for
+this [economic projection](checks/root-baseline-20261005/economic-projection.json).
+
+| Paid action | Expected executions | Expected Chaos cost |
+| --- | ---: | ---: |
+| Chaos | 19867.453764 | 19867.453764 |
+| Eldritch Annul | 816.330805 | 33085.887509 |
+| Eldritch Chaos | 1091.844779 | 42811.233790 |
+| Ember tier 1 | 0.999968 | 0.156295 |
+| Eldritch Exalt | 1545.020443 | 5546.623391 |
+
+Annul/side-reroll costs are about 75 percent of this actual Current control.
+This supports prioritizing complete paid fill/repair alternatives after the
+causal gate, without proving any particular alternative improves the root.
+Saved accounting regions expose coarse progress, not exact P0 occupancy, and
+the receipt retains no arbitrary-entry tail certificate. It cannot replace
+the prepared physical-entry checker or authorize reusing the root scalar.
+
 The [compact receipt](checks/root-baseline-20261005/summary.json) observes the
 exact P0 projection at parent state 160, retry basin 0, among 11,652 states.
 Its normal operator 220, paid Ember tier 1 then Eldritch Exalt, is admitted with
@@ -298,6 +317,13 @@ source gates are consistent with the control's counters; they do not identify
 the exact historical refusal branches or prove a cheaper closed joint policy
 was available. The existing joint builder copies frontier values only with
 statewise authority and otherwise requires complete native selected support.
+
+Scoped main-history blame places the joint checkpoint's upper-pass prerequisite
+at c192311a4 (August 22), the selective root-only artifact at ae24e0bb8
+(September 26), and original-root product continuation work at 6f76bf8d
+(October 2). These locate separate source premises; neither line blame nor
+commit subjects establish an introducing regression commit. Matched historical
+search/admission and the complete economic treatment remain absent.
 
 The finite 35-member check is a fixed-graph physical-tail diagnostic. Its
 separate full-identity seed-role fixture is not the product's 28-candidate

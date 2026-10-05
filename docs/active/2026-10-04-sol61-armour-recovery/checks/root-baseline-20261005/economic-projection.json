@@ -1,0 +1,102 @@
+{
+  "scope": "existing matched native Current control accounting only",
+  "source_head": "b02513b696595239c89f36afd4648e2dd06ddeab",
+  "receipt_gzip_sha256": "b6cb503980c9f961983f3ce6db41e4ef61e77e7a08eaa4892611dd74df13d7ec",
+  "checked_total_cost": 101311.35474896732,
+  "disjoint_action_sum": 101311.35474896731,
+  "reconciliation_delta": -1.4551915228366852e-11,
+  "expected_actions": 23321.649759118343,
+  "actions": [
+    {
+      "id": "chaos",
+      "expected_visits": 19867.453763869078,
+      "expected_applied": 19867.453763869078,
+      "expected_spend_known": 19867.453763869078,
+      "expected_spend_complete": true,
+      "known_cost_share": 0.19610293252022265,
+      "materials": [
+        {
+          "price_key": "chaos",
+          "expected_quantity": 19867.453763869078,
+          "price_status": "priced",
+          "unit_price": 1,
+          "cost_contribution": 19867.453763869078
+        }
+      ]
+    },
+    {
+      "id": "eldritch_annul",
+      "expected_visits": 816.3308045663857,
+      "expected_applied": 816.3308045663857,
+      "expected_spend_known": 33085.88750907561,
+      "expected_spend_complete": true,
+      "known_cost_share": 0.3265763012552437,
+      "materials": [
+        {
+          "price_key": "eldritch_annul",
+          "expected_quantity": 816.3308045663857,
+          "price_status": "priced",
+          "unit_price": 40.53,
+          "cost_contribution": 33085.88750907561
+        }
+      ]
+    },
+    {
+      "id": "eldritch_chaos",
+      "expected_visits": 1091.8447791331726,
+      "expected_applied": 1091.8447791331726,
+      "expected_spend_known": 42811.2337898117,
+      "expected_spend_complete": true,
+      "known_cost_share": 0.4225709338888105,
+      "materials": [
+        {
+          "price_key": "eldritch_chaos",
+          "expected_quantity": 1091.8447791331726,
+          "price_status": "priced",
+          "unit_price": 39.21,
+          "cost_contribution": 42811.2337898117
+        }
+      ]
+    },
+    {
+      "id": "eldritch_ember:1",
+      "expected_visits": 0.9999683293112973,
+      "expected_applied": 0.9999683293112973,
+      "expected_spend_known": 0.15629504987135576,
+      "expected_spend_complete": true,
+      "known_cost_share": 1.5427199671609256e-06,
+      "materials": [
+        {
+          "price_key": "eldritch_ember:1",
+          "expected_quantity": 0.9999683293112973,
+          "price_status": "priced",
+          "unit_price": 0.1563,
+          "cost_contribution": 0.15629504987135576
+        }
+      ]
+    },
+    {
+      "id": "eldritch_exalt",
+      "expected_visits": 1545.02044322035,
+      "expected_applied": 1545.02044322035,
+      "expected_spend_known": 5546.623391161056,
+      "expected_spend_complete": true,
+      "known_cost_share": 0.054748289615755966,
+      "materials": [
+        {
+          "price_key": "eldritch_exalt",
+          "expected_quantity": 1545.02044322035,
+          "price_status": "priced",
+          "unit_price": 3.59,
+          "cost_contribution": 5546.623391161056
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "accounting regions expose coarse progress, not exact P0 occupancy",
+    "no exact arbitrary-entry continuation certificate is retained here",
+    "static projection of existing receipt, no new root or economic treatment",
+    "no Finder/WASM or product activation claim"
+  ]
+}
