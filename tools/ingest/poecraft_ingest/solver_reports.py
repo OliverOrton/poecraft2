@@ -22,8 +22,17 @@ POLICY_ORDER = {
 }
 
 
+def _unique_json_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate JSON key: {key}")
+        result[key] = value
+    return result
+
+
 def _read_json(path: Path) -> dict[str, Any]:
-    value = json.loads(path.read_text(encoding="utf-8"))
+    value = json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=_unique_json_object)
     if not isinstance(value, dict):
         raise ValueError(f"{path} must contain a JSON object")
     return value
@@ -819,14 +828,108 @@ def _independently_evaluated_cost(case: dict[str, Any]) -> float | None:
     return cost if cost is not None and cost >= 0 else None
 
 
+def _case_index(cases: Sequence[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    indexed: dict[str, dict[str, Any]] = {}
+    for case in cases:
+        case_id = case.get("id")
+        if not isinstance(case_id, str) or not case_id:
+            raise ValueError("case report must have a nonempty string id")
+        if case_id in indexed:
+            raise ValueError(f"duplicate case report: {case_id}")
+        indexed[case_id] = case
+    return indexed
+
+
+def _expected_cohort(case_ids: Sequence[str]) -> list[str]:
+    if (not case_ids or not all(isinstance(cid, str) and cid for cid in case_ids)
+            or len(set(case_ids)) != len(case_ids)):
+        raise ValueError("declare nonempty unique expected case IDs")
+    return sorted(case_ids)
+
+
+def _cohort_outcomes(
+    ledger: dict[str, Any] | None,
+    cases: dict[str, dict[str, Any]],
+    expected: Sequence[str],
+) -> dict[str, Any]:
+    records = ledger.get("cases", {}) if isinstance(ledger, dict) else {}
+    if not isinstance(records, dict):
+        raise ValueError("run ledger must have a cases object")
+    rows = []
+    for cid in expected:
+        record, case = records.get(cid), cases.get(cid)
+        status = record.get("status") if isinstance(record, dict) else "missing"
+        reasons = []
+        if not isinstance(record, dict):
+            reasons.append("missing_ledger_case" if cid not in records else "invalid_ledger_record")
+        if case is None:
+            reasons.append("missing_report")
+        if status != "completed":
+            reasons.append("completed_measurement_required")
+        if isinstance(record, dict):
+            if record.get("survivor"):
+                reasons.append("surviving_process")
+            if record.get("native_expectations_met") is False:
+                reasons.append("native_expectations_not_met")
+            if record.get("exit_code") not in (None, 0):
+                reasons.append("invalid_completed_exit")
+        if case is not None:
+            runner = case.get("_runner")
+            if isinstance(runner, dict):
+                if runner.get("status") != "completed":
+                    reasons.append("completed_report_required")
+                if runner.get("observation_kind") != "completed_report":
+                    reasons.append("partial_report_not_release_evidence")
+            if case.get("errors"):
+                reasons.append("native_correctness_errors")
+            if case.get("expectation_met") is False:
+                reasons.append("native_expectations_not_met")
+        kind = (
+            "completed_measurement" if status == "completed" else
+            "administrative_censoring" if status == "watchdog_expired"
+                and case is not None and isinstance(record, dict)
+                and record.get("partial_observation_available") else
+            "watchdog_without_observation" if status == "watchdog_expired" else
+            "cancellation" if status == "canceled" else
+            "resource_refusal" if status == "memory_budget_refused" else
+            "missing" if status == "missing" else "failure"
+        )
+        reasons = list(dict.fromkeys(reasons))
+        rows.append({"id": cid, "runner_status": status, "outcome_kind": kind,
+                     "eligible": not reasons, "reasons": reasons,
+                     "availability_detail": record.get("analysis_report_unavailable")
+                         if isinstance(record, dict) else None})
+    unexpected_ledger = sorted(set(records) - set(expected))
+    unexpected_reports = sorted(set(cases) - set(expected))
+    return {"cases": rows, "unexpected_ledger_cases": unexpected_ledger,
+            "unexpected_report_cases": unexpected_reports,
+            "complete": bool(rows) and all(row["eligible"] for row in rows)
+                and not unexpected_ledger and not unexpected_reports}
+
+
 def compare_runs(
     baseline_label: str,
     baseline_cases: Sequence[dict[str, Any]],
     candidate_label: str,
     candidate_cases: Sequence[dict[str, Any]],
+    *,
+    expected_case_ids: Sequence[str] | None = None,
+    baseline_ledger: dict[str, Any] | None = None,
+    candidate_ledger: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    baseline = {case["id"]: case for case in baseline_cases}
-    candidate = {case["id"]: case for case in candidate_cases}
+    baseline = _case_index(baseline_cases)
+    candidate = _case_index(candidate_cases)
+    expected = _expected_cohort(expected_case_ids) if expected_case_ids is not None else []
+    cohort = {
+        "declared": expected_case_ids is not None,
+        "expected_case_ids": expected,
+        "baseline": _cohort_outcomes(baseline_ledger, baseline, expected),
+        "candidate": _cohort_outcomes(candidate_ledger, candidate, expected),
+    }
+    cohort["complete"] = cohort["declared"] and all(
+        cohort[arm]["complete"] for arm in ("baseline", "candidate")
+    )
+    required_ids = set(expected) if cohort["declared"] else set(baseline) | set(candidate)
     shared = sorted(set(baseline) & set(candidate))
     pairs: list[dict[str, Any]] = []
     excluded: list[dict[str, Any]] = []
@@ -931,8 +1034,8 @@ def compare_runs(
         "candidate": candidate_label,
         "shared_case_ids": len(shared),
         "paired_cases": len(pairs),
-        "missing_from_baseline": sorted(set(candidate) - set(baseline)),
-        "missing_from_candidate": sorted(set(baseline) - set(candidate)),
+        "missing_from_baseline": sorted(required_ids - set(baseline)),
+        "missing_from_candidate": sorted(required_ids - set(candidate)),
         "excluded": excluded,
         "delta_distributions": {
             field: _distribution(pair["deltas"][field] for pair in pairs)
@@ -955,12 +1058,15 @@ def compare_runs(
             )
         ),
         "regressions": regressions,
+        "cohort": cohort,
         "economic_gate": {
-            "passed": bool(pairs) and not excluded and not economic_failures
+            "passed": cohort["complete"] and bool(pairs) and not excluded and not economic_failures
                 and not missing_economic_evidence and set(baseline) == set(candidate),
             "cost_regressions": economic_failures,
             "missing_independent_cost": missing_economic_evidence,
             "requires_complete_matched_cohort": True,
+            "requires_declared_cohort": True,
+            "complete_cohort": cohort["complete"],
         },
         "pairs": pairs,
     }
@@ -970,6 +1076,7 @@ def build_report(
     runs: dict[str, tuple[dict[str, Any], list[dict[str, Any]]]],
     pairs: Sequence[tuple[str, str]] = (),
     *, outcome_profile: dict[str, Any] | None = None,
+    expected_case_ids: Sequence[str] | None = None,
 ) -> dict[str, Any]:
     report = {
         "schema_version": REPORT_VERSION,
@@ -999,6 +1106,9 @@ def build_report(
                 runs[baseline][1],
                 candidate,
                 runs[candidate][1],
+                expected_case_ids=expected_case_ids,
+                baseline_ledger=runs[baseline][0],
+                candidate_ledger=runs[candidate][0],
             )
         )
     if outcome_profile is not None:
@@ -1349,6 +1459,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--pair", action="append", type=_parse_pair, default=[])
     parser.add_argument("--economic-gate", action="store_true",
         help="Exit1 unless every paired case has matched complete independent cost evidence and no cost increase")
+    parser.add_argument("--expected-cohort", type=Path,
+        help="JSON object with predeclared unique case_ids; required for --economic-gate")
     parser.add_argument("--outcome-profile", type=Path)
     parser.add_argument("--research-series", type=Path)
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[3])
@@ -1356,7 +1468,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
     if args.research_series:
-        if args.run or args.pair or args.outcome_profile or args.economic_gate:
+        if args.run or args.pair or args.outcome_profile or args.expected_cohort or args.economic_gate:
             parser.error("research series and legacy run reports are separate views")
         report = build_research_report(args.root, args.research_series)
         args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -1370,13 +1482,24 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("legacy reports require --run; --markdown requires --research-series")
     if args.economic_gate and not args.pair:
         parser.error("--economic-gate requires at least one --pair")
+    if args.economic_gate and not args.expected_cohort:
+        parser.error("--economic-gate requires --expected-cohort")
+    expected_case_ids = None
+    if args.expected_cohort:
+        declaration = _read_json(args.expected_cohort)
+        ids = declaration.get("case_ids")
+        if not isinstance(ids, list):
+            parser.error("--expected-cohort must declare a case_ids array")
+        expected_case_ids = _expected_cohort(ids)
     runs: dict[str, tuple[dict[str, Any], list[dict[str, Any]]]] = {}
     for label, path in args.run:
         if label in runs:
             raise SystemExit(f"duplicate run label: {label}")
-        runs[label] = load_run(path, allow_missing_reports=args.outcome_profile is not None)
+        runs[label] = load_run(path, allow_missing_reports=(
+            args.outcome_profile is not None or args.expected_cohort is not None))
     report = build_report(runs, args.pair,
-                          outcome_profile=_read_json(args.outcome_profile) if args.outcome_profile else None)
+                          outcome_profile=_read_json(args.outcome_profile) if args.outcome_profile else None,
+                          expected_case_ids=expected_case_ids)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
         json.dumps(report, indent=2, sort_keys=True) + "\n",

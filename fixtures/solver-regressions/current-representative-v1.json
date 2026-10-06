@@ -1,0 +1,12 @@
+{
+  "case_ids": [
+    "sol61-trace-conquest5-currentmodel-120",
+    "sol61-preserved-bow4-currentmodel-120",
+    "sol61-bow5-matched-currentlaw-120",
+    "sol61-ring2-matched-currentlaw-120",
+    "sol61-amulet3-matched-currentlaw-120"
+  ],
+  "corpus": "docs/active/2026-10-03-sol61-recovery/qualification/law3/cases/manifest.json",
+  "solver_mode": "current",
+  "description": "Existing five-case current-law representative batch. Preserved Bow4 is not Oliver's separately improved request."
+}

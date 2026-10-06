@@ -469,10 +469,13 @@ def test_economic_gate_cli_preserves_report_and_fails_material_cost_regression(
     before = _economic_case(85558.70618560436)
     after = _economic_case(candidate_cost)
     monkeypatch.setattr("poecraft_ingest.solver_reports.load_run",
-        lambda path, **kwargs: ({}, [before if path.name == "before" else after]))
+        lambda path, **kwargs: _run([before if path.name == "before" else after]))
     output = tmp_path / "economic-gate.json"
+    cohort = tmp_path / "cohort.json"
+    cohort.write_text(json.dumps({"case_ids": ["economic"]}), encoding="utf-8")
     result = reports_main(["--run", "base=before", "--run", "candidate=after",
-        "--pair", "base:candidate", "--economic-gate", "--output", str(output)])
+        "--pair", "base:candidate", "--economic-gate", "--expected-cohort", str(cohort),
+        "--output", str(output)])
     assert result == expected_exit
     report = json.loads(output.read_text(encoding="utf-8"))
     assert report["comparisons"][0]["economic_gate"]["passed"] is (expected_exit == 0)
@@ -575,7 +578,9 @@ def test_financial_identity_excludes_changed_resolved_budget(
     assert comparison["economic_gate"]["passed"] is False
     assert comparison["excluded"][0]["fields"] == [f"input.{field}"]
     after["input"][field] = copy.deepcopy(before_budget)
-    matched = compare_runs("before", [before], "after", [after])
+    matched = compare_runs("before", [before], "after", [after],
+                           expected_case_ids=["economic"],
+                           baseline_ledger=_run([before])[0], candidate_ledger=_run([after])[0])
     assert matched["paired_cases"] == 1
     assert matched["economic_gate"]["passed"] is True
 
@@ -591,7 +596,9 @@ def test_financial_identity_excludes_changed_reforge_model(old_law_version) -> N
     assert comparison["economic_gate"]["passed"] is False
     assert comparison["excluded"][0]["fields"] == ["input.rare_reforge_count_law_version"]
     before["input"]["rare_reforge_count_law_version"] = 3
-    matched = compare_runs("before", [before], "after", [after])
+    matched = compare_runs("before", [before], "after", [after],
+                           expected_case_ids=["economic"],
+                           baseline_ledger=_run([before])[0], candidate_ledger=_run([after])[0])
     assert matched["paired_cases"] == 1
     assert matched["economic_gate"]["passed"] is True
 
@@ -603,3 +610,185 @@ def test_financial_identity_excludes_omitted_versus_explicit_override() -> None:
     assert comparison["paired_cases"] == 0
     assert comparison["economic_gate"]["passed"] is False
     assert comparison["excluded"][0]["fields"] == ["input.run_overrides"]
+
+
+def _write_economic_run(directory: Path, cases: list[dict], statuses: dict[str, str] | None = None):
+    directory.mkdir()
+    ledger, _ = _run(cases)
+    for case in cases:
+        report_path = directory / f"{case['id']}.json"
+        report_path.write_text(json.dumps({"cases": [case]}), encoding="utf-8")
+        ledger["cases"][case["id"]].update(
+            report_path=str(report_path), exit_code=0, native_expectations_met=True,
+        )
+    for cid, status in (statuses or {}).items():
+        ledger["cases"].setdefault(cid, {}).update(status=status)
+    (directory / "ledger.json").write_text(json.dumps(ledger), encoding="utf-8")
+    return load_run(directory, allow_missing_reports=True)
+
+
+def _cohort_comparison(before, after, ids=("economic", "second")):
+    return build_report({"before": before, "after": after}, [("before", "after")],
+                        expected_case_ids=list(ids))["comparisons"][0]
+
+
+@pytest.mark.parametrize("omitted_arm", ["both", "candidate"])
+def test_declared_economic_cohort_refuses_symmetric_and_one_sided_missing(tmp_path: Path, omitted_arm: str):
+    first = _economic_case(100)
+    second = copy.deepcopy(first)
+    second["id"] = "second"
+    before = _write_economic_run(tmp_path / "before", [first] if omitted_arm == "both" else [first, second])
+    after = _write_economic_run(tmp_path / "after", [first])
+    result = _cohort_comparison(before, after)
+    assert result["economic_gate"]["passed"] is False
+    assert result["missing_from_candidate"] == ["second"]
+    assert result["missing_from_baseline"] == (["second"] if omitted_arm == "both" else [])
+    assert result["cohort"]["candidate"]["cases"][1]["reasons"] == [
+        "missing_ledger_case", "missing_report", "completed_measurement_required",
+    ]
+
+
+@pytest.mark.parametrize("status,kind", [
+    ("failed", "failure"), ("runner_error", "failure"), ("crash", "failure"),
+    ("oom", "failure"), ("canceled", "cancellation"),
+    ("memory_budget_refused", "resource_refusal"),
+    ("watchdog_expired", "watchdog_without_observation"),
+])
+def test_symmetric_noncompleted_outcomes_never_pass_economics(tmp_path: Path, status: str, kind: str):
+    complete = _economic_case(100)
+    before = _write_economic_run(tmp_path / "before", [complete], {"second": status})
+    after = _write_economic_run(tmp_path / "after", [complete], {"second": status})
+    result = _cohort_comparison(before, after)
+    assert result["paired_cases"] == 1
+    assert result["economic_gate"]["passed"] is False
+    assert result["cohort"]["candidate"]["cases"][1]["outcome_kind"] == kind
+
+
+def test_partial_watchdog_is_censored_but_not_release_evidence(tmp_path: Path):
+    complete = _economic_case(100)
+    partial = copy.deepcopy(complete)
+    partial["id"] = "second"
+    runs = []
+    for label in ("before", "after"):
+        directory = tmp_path / label
+        _write_economic_run(directory, [complete, partial])
+        ledger_path = directory / "ledger.json"
+        ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
+        record = ledger["cases"]["second"]
+        record.update(status="watchdog_expired", partial_observation_available=True,
+                      partial_report_path=record.pop("report_path"))
+        ledger_path.write_text(json.dumps(ledger), encoding="utf-8")
+        runs.append(load_run(directory, allow_missing_reports=True))
+    result = _cohort_comparison(*runs)
+    assert result["paired_cases"] == 2
+    assert result["economic_gate"]["passed"] is False
+    row = result["cohort"]["candidate"]["cases"][1]
+    assert row["outcome_kind"] == "administrative_censoring"
+    assert "partial_report_not_release_evidence" in row["reasons"]
+
+
+def test_declared_cohort_preserves_missing_completed_report(tmp_path: Path):
+    complete = _economic_case(100)
+    before = _write_economic_run(tmp_path / "before", [complete])
+    _write_economic_run(tmp_path / "after", [complete])
+    (tmp_path / "after" / "economic.json").unlink()
+    after = load_run(tmp_path / "after", allow_missing_reports=True)
+    result = _cohort_comparison(before, after, ids=("economic",))
+    assert result["economic_gate"]["passed"] is False
+    row = result["cohort"]["candidate"]["cases"][0]
+    assert row["availability_detail"] == "recorded report file is missing"
+
+
+def test_duplicate_case_reports_and_declaration_refuse(tmp_path: Path):
+    case = _economic_case(100)
+    with pytest.raises(ValueError, match="duplicate case report"):
+        compare_runs("before", [case, copy.deepcopy(case)], "after", [case])
+    with pytest.raises(ValueError, match="unique expected case IDs"):
+        _cohort_comparison(_run([case]), _run([case]), ids=("economic", "economic"))
+    directory = tmp_path / "run"
+    directory.mkdir()
+    (directory / "ledger.json").write_text(
+        '{"cases":{"economic":{"status":"failed"},"economic":{"status":"completed"}}}',
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="duplicate JSON key: economic"):
+        load_run(directory, allow_missing_reports=True)
+
+
+@pytest.mark.parametrize("violation", ["identity", "errors", "native_expectation", "survivor"])
+def test_completed_cohort_still_requires_correctness_and_matched_identity(tmp_path: Path, violation: str):
+    before_case, after_case = _economic_case(100), _economic_case(50)
+    if violation == "identity":
+        after_case["input"]["economy"]["content_sha256"] = "changed"
+    elif violation == "errors":
+        after_case["errors"] = ["product failure"]
+    before = _write_economic_run(tmp_path / "before", [before_case])
+    after = _write_economic_run(tmp_path / "after", [after_case])
+    if violation in {"native_expectation", "survivor"}:
+        after[0]["cases"]["economic"].update(
+            {"native_expectations_met": False} if violation == "native_expectation" else {"survivor": True}
+        )
+    result = _cohort_comparison(before, after, ids=("economic",))
+    assert result["economic_gate"]["passed"] is False
+    if violation == "identity":
+        assert result["excluded"][0]["fields"] == ["input.economy"]
+
+
+def test_complete_declared_control_passes_without_promoting_exactness(tmp_path: Path):
+    before = _write_economic_run(tmp_path / "before", [_economic_case(100)])
+    after = _write_economic_run(tmp_path / "after", [_economic_case(50)])
+    result = _cohort_comparison(before, after, ids=("economic",))
+    assert result["economic_gate"]["passed"] is True
+    assert result["cohort"]["complete"] is True
+    assert result["pairs"][0]["economics"]["candidate_independently_evaluated_cost"] == 50
+    assert result["pairs"][0]["candidate_status"]["policy"] == "bounded_near_optimal"
+
+
+def test_undeclared_legacy_comparison_remains_diagnostic():
+    case = _economic_case(100)
+    result = build_report({"before": _run([case]), "after": _run([case])},
+                          [("before", "after")])["comparisons"][0]
+    assert result["paired_cases"] == 1
+    assert result["economic_gate"]["passed"] is False
+    assert result["cohort"]["declared"] is False
+
+
+def test_economic_gate_cli_keeps_symmetric_missing_outcome(tmp_path: Path):
+    complete = _economic_case(100)
+    _write_economic_run(tmp_path / "before", [complete])
+    _write_economic_run(tmp_path / "after", [complete])
+    cohort = tmp_path / "cohort.json"
+    cohort.write_text(json.dumps({"case_ids": ["economic", "second"]}), encoding="utf-8")
+    output = tmp_path / "comparison.json"
+    result = reports_main([
+        "--run", f"before={tmp_path / 'before'}", "--run", f"after={tmp_path / 'after'}",
+        "--pair", "before:after", "--economic-gate", "--expected-cohort", str(cohort),
+        "--output", str(output),
+    ])
+    assert result == 1
+    comparison = json.loads(output.read_text(encoding="utf-8"))["comparisons"][0]
+    assert comparison["missing_from_baseline"] == comparison["missing_from_candidate"] == ["second"]
+
+
+def test_unexpected_case_cannot_expand_declared_cohort(tmp_path: Path):
+    complete = _economic_case(100)
+    extra = copy.deepcopy(complete)
+    extra["id"] = "extra"
+    before = _write_economic_run(tmp_path / "before", [complete, extra])
+    after = _write_economic_run(tmp_path / "after", [complete, extra])
+    result = _cohort_comparison(before, after, ids=("economic",))
+    assert result["economic_gate"]["passed"] is False
+    assert result["cohort"]["baseline"]["unexpected_ledger_cases"] == ["extra"]
+    assert result["cohort"]["baseline"]["unexpected_report_cases"] == ["extra"]
+
+
+def test_native_expectation_miss_is_completed_measurement_but_not_release_pass(tmp_path: Path):
+    before = _write_economic_run(tmp_path / "before", [_economic_case(100)])
+    after = _write_economic_run(tmp_path / "after", [_economic_case(100)])
+    after[0]["cases"]["economic"].update(exit_code=2, native_expectations_met=False)
+    after[1][0]["expectation_met"] = False
+    result = _cohort_comparison(before, after, ids=("economic",))
+    row = result["cohort"]["candidate"]["cases"][0]
+    assert row["outcome_kind"] == "completed_measurement"
+    assert row["eligible"] is False
+    assert result["economic_gate"]["passed"] is False
