@@ -5621,12 +5621,15 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                         evaluated_choice_identity != prior_choice_identity) {
                         continue;
                     }
-                    /* Deliver the first complete proper candidate to the
-                     * publication owner before cost improvement can select
-                     * a cheaper row whose continuations are still missing.
-                     * Once an incumbent exists, ordinary strict improvement
-                     * remains active over this same completed joint envelope. */
-                    if (output_incumbent.has_value()) {
+                    /* Deliver a complete proper candidate before improvement
+                     * can select a cheaper row with unavailable continuations.
+                     * A root-only graph or rejected table cannot supply those
+                     * statewise tails. Ordinary strict improvement remains
+                     * active when the incumbent has statewise continuation
+                     * values; publication and native checking still own every
+                     * candidate's paid-support and cost authority. */
+                    if (output_incumbent.has_value() &&
+                        output_incumbent->has_statewise_upper_values()) {
                         bool improved = false;
                         while (!advance_policy_selection(improved)) {
                             if (check_solver_byte_cap_fast()) {
