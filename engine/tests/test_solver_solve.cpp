@@ -19100,7 +19100,7 @@ void run_solver_current_support_handoff_tests() {
         GoalSpec goal;
         goal.rarity = PC_RARITY_RARE;
         goal.automatic_candidates = true;
-        goal.terminal.extras = ExtraExplicitPolicy::Forbid;
+        goal.terminal.extras = ExtraExplicitPolicy::ForbidUnmatched;
         for (const auto family : {100u, 102u, 103u, 104u}) {
             GoalSlot slot; slot.family_id = family; slot.min_tier = 1;
             goal.slots.push_back(slot);
@@ -19194,7 +19194,7 @@ void run_solver_current_support_handoff_tests() {
         require(finish_requested && std::isfinite(issued_cost), "normal producer issued a checked fallback");
         if (fixture == 0) require(work.graph_only_support_handoffs > 0 && work.graph_only_support_selected > 0,
             "ordinary Current construction demonstrates the production continuation handoff");
-        const auto result = owner.take_result();
+        const auto result = owner.finish();
         require(result.policy_available && !result.refined_policy_artifact.strategy_json.empty() &&
             std::isfinite(result.evaluated_policy_cost) && result.evaluated_policy_cost <= issued_cost + 1e-8,
             "normal Finish exports its independently checked nonworsening strategy");
