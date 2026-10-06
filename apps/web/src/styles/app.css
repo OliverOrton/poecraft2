@@ -5454,6 +5454,7 @@ pc-recombination-calculator { display: block; height: 100%; min-width: 0; min-he
 .pc-recomb-odds-notice { margin: 0; font-size: 13px; }
 .pc-recomb-odds-details > summary { cursor: pointer; font-size: var(--pc-type-meta); padding: 4px; }
 .pc-recomb-odds-popover { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 10; padding: 12px; max-height: min(440px, 65vh); overflow-y: auto; background: var(--pc-surface-panel); border: 1px solid var(--pc-border-control); border-radius: var(--pc-radius-panel); box-shadow: 0 8px 24px #0008; }
+.pc-recomb-goal-options:not([open]) > div, .pc-recomb-odds-details:not([open]) .pc-recomb-odds-popover { display: none; }
 .pc-recomb-odds table { border-collapse: collapse; width: 100%; font-size: 13px; }
 .pc-recomb-odds th, .pc-recomb-odds td { text-align: left; padding: var(--pc-space-1); border-bottom: 1px solid var(--pc-border); overflow-wrap: anywhere; }
 .pc-recomb-assumptions { font-size: var(--pc-type-meta); color: var(--pc-text-muted); }
