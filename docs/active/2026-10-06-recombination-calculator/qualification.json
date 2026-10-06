@@ -4,7 +4,7 @@
   "branch": "dot/recomb-calculator-ui-20261006",
   "passed_source": "dd942153d22eee3506bdffe23a949e7db8b0852e",
   "final_code_source": "8d9b57fb9059fa142973397b9bf5c2f76b5e6238",
-  "final_followup_status": "source implemented; toolbar wrapping and its regression assertion browser-unrun",
+  "final_followup_status": "passed at abab3f60e5bfce6691e3c6db3e2389ab3186b8f2; see navigation-qualification.json",
   "build": {
     "schema_version": 1,
     "repository_commit": "dd942153d22eee3506bdffe23a949e7db8b0852e",
@@ -243,7 +243,6 @@
   "protected_path_inspections": 0,
   "memory_cap": "No explicit outer memory cap; adapter API has no memory-cap argument.",
   "remaining": [
-    "Parent-reserved source-matched browser QA for shared mobile navigation fix/assertion.",
     "Parent-owned integration to main and CI gate."
   ],
   "coordination_blocker": "Thread-messaging callable disappeared after final process cleanup; direct release send unavailable. Automatic delegation final notification is the handoff."

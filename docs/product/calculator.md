@@ -185,11 +185,12 @@ requirements and Cancel invalidate pending/previous odds. Cancellation drops
 delivery while synchronous native work finishes and releases its resources.
 
 Focused real-WASM tests, TypeScript, build/package and actual Chrome interactions
-pass at `dd942153`, including 390px calculator stacking and keyboard focus. Saved
-captures were reviewed. A subsequent shared toolbar wrapping fix and regression
-assertion at `8d9b57fb` await parent-reserved browser QA; main integration is
+pass at `dd942153`, including 390px calculator stacking and keyboard focus. Final
+source `abab3f60` also passes fresh build/package and Chrome checks for the shared
+toolbar wrapping fix; matching desktop/narrow captures were reviewed. Unchanged
+TypeScript and native/focused qualification are reused. Main integration is
 separate. The [living record](../active/2026-10-06-recombination-calculator/README.md)
-distinguishes tested source, final source and retained failed attempts.
+distinguishes both tested sources, artifact identities and retained failed attempts.
 
 Result-base requirements filter native terminal rows by actual base and native
 `is_goal`; they never choose a carrier or renormalize its mass. Equal input

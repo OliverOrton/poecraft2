@@ -25,13 +25,13 @@ mathematical authorities are unchanged by this presentation delta.
 
 Oliver separately selected the [authored two-item recombination calculator](docs/active/2026-10-06-recombination-calculator/README.md)
 in a fresh isolated session from main `7252027c`. Its page and existing pair-API
-integration pass focused real-WASM tests, TypeScript, build/package and Chrome
-interaction/mobile checks at `dd942153`; six saved captures were reviewed.
-LOCAL was released with proved-absent identities and elevated CIM zero at
-04:15:22 UTC. Screenshot review then found shared navigation clipping at 390px;
-the separate wrapping fix and regression assertion (`8d9b57fb`) are source
-implemented but browser-unrun. Parent owns its finite follow-up QA and main/CI
-gating. The optimizer, frozen inputs and normal checkout are untouched.
+integration pass focused real-WASM tests and TypeScript at `dd942153`, reused
+unchanged for the final navigation fix. Final source `abab3f60` passes fresh
+build/package and Chrome interaction/mobile checks; all six matching captures
+were reviewed, including wrapped navigation at 390px. LOCAL was released with
+proved-absent identities and elevated CIM zero at 04:26:05 UTC. Parent owns main/CI
+gating and reconciliation of this paragraph with newer main HANDOFF content.
+The optimizer, frozen inputs and normal checkout are untouched.
 
 Oliver resumed the coordinated work at 09:00 Vancouver on October 5. The
 [published solver record at `734f6722`](https://github.com/OliverOrton/poecraft2/blob/734f67228be0c6fa3262f656f41cb7d625cc57db/docs/active/2026-10-04-sol61-armour-recovery/README.md)

@@ -1,0 +1,226 @@
+{
+  "schema": "recombination_calculator_navigation_qualification_v1",
+  "qualified_source": "abab3f60e5bfce6691e3c6db3e2389ab3186b8f2",
+  "code_source": "8d9b57fb9059fa142973397b9bf5c2f76b5e6238",
+  "reused_source": "dd942153d22eee3506bdffe23a949e7db8b0852e",
+  "reused_layers": [
+    "six focused web tests",
+    "TypeScript",
+    "native pair/goal and cleanup",
+    "immutable WASM/ABI"
+  ],
+  "runtime_delta": "Two CSS lines wrapping document navigation; two browser assertion lines",
+  "status": "passed; all six final source-matched captures visually reviewed",
+  "build": {
+    "schema_version": 1,
+    "repository_commit": "abab3f60e5bfce6691e3c6db3e2389ab3186b8f2",
+    "working_tree_dirty": false,
+    "source_tree_sha256": "fa28bee482770b7462b13c79c84e5d89c6962bd20f84419365f2c7d82f05b467",
+    "game_assets": {
+      "catalog_sha256": "dd5affbe6a73f208bcdbb54074f9ad983536ffcaddcb689089a350c2d2eaffb0",
+      "image_count": 637
+    },
+    "base": "/",
+    "engine": {
+      "abi_version": 3,
+      "source_commit": null,
+      "loader_sha256": "8ec20cf7c0f86cbad4c5d0638e0733da3110610cf02091c0807d4b87186d2b97",
+      "wasm_sha256": "50c98f555d4ef9f6786c9a5fcfd138442a5d01ae1b3759b09712dbae059cdd9c"
+    },
+    "runtime": {
+      "manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+      "source": {
+        "data_hash": "d511e23d1289674c4ac869d20ccd62a979af65f58d4aac83a01ac9bbb02c853e",
+        "database_schema_version": "3",
+        "source_hash": "b458174874efbe64cf830d603f9e3effddd2042d0f3faa548b40c0e69a68ca7a",
+        "source_version": "repoe-b458174874efbe64"
+      },
+      "artifact_schema_version": 4,
+      "files": {
+        "game-data.json": {
+          "byte_size": 16914460,
+          "sha256": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e"
+        },
+        "strings.json": {
+          "byte_size": 6740473,
+          "sha256": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6"
+        }
+      },
+      "bundle_sha256": "6688e9e36d458d629554ca969a9c46901c362c4b919e41eebb0460bf3a3338ec",
+      "bundle_bytes": 23660953,
+      "url": "poecraft-data.6688e9e36d458d629554ca969a9c46901c362c4b919e41eebb0460bf3a3338ec.json"
+    },
+    "economy": {
+      "mode": "bundled",
+      "index_url": "economy/league-index.json",
+      "bundled_index_sha256": "2d71a5a96a669ac835b6e5bc06750c12ef8e5af3d7d9966c43fec0c62e86a2cd"
+    },
+    "build_id": "ff28cb2101e6280b1cc5b97ab5ebd6a74740ea8ca45c970b50cc230a169d6e91"
+  },
+  "archive": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-05\\task-9\\recomb-ui\\dist\\public-artifacts\\web\\fc87466556946fdf1161d51604a1cf2af7cee42dd562fce9b0587a605770e7e9",
+  "adapter_commit": "d485ff111fc6b3aafa1679bca97b9ff9bd70d2a8",
+  "worker_blob": "f532376adbde79d9f31da1bc2d97e1b24fe2f5d9",
+  "worker_sha256": "1f7978fa0cf43c331487ea57212286cbf92ff96141d379a901c4bd421d4aae92",
+  "immutable_file_count": 18,
+  "immutable_inputs_unchanged": true,
+  "gate_r6_images_unchanged": true,
+  "qa_window": {
+    "authorized": true,
+    "source": "abab3f60e5bfce6691e3c6db3e2389ab3186b8f2",
+    "started_utc": "2026-10-05T21:25:33.2641124-07:00",
+    "deadline_utc": "2026-10-05T21:32:33.2641124-07:00",
+    "parent_release_utc": "2026-10-06T04:21:34Z",
+    "scope": "Final navigation-only QA; metadata60 Vite60 package60 Chrome180 cleanup30"
+  },
+  "stages": [
+    {
+      "name": "metadata",
+      "status": "passed",
+      "wall_ms": 10347.815599991009,
+      "exit_code": 0,
+      "original_identity": "proved_absent",
+      "process_id": 33868,
+      "process_identity_token": "33868:134357343340173830",
+      "timed_out": false,
+      "canceled": false,
+      "descendants_after_parent_exit": false,
+      "cleanup_error": null,
+      "cleanup_drain_timed_out": false,
+      "survivor": false,
+      "receipt": "out/recombination-calculator/gate-navigation-final/metadata/stage.json"
+    },
+    {
+      "name": "vite",
+      "status": "passed",
+      "wall_ms": 3508.0838999710977,
+      "exit_code": 0,
+      "original_identity": "proved_absent",
+      "process_id": 87984,
+      "process_identity_token": "87984:134357343445924561",
+      "timed_out": false,
+      "canceled": false,
+      "descendants_after_parent_exit": false,
+      "cleanup_error": null,
+      "cleanup_drain_timed_out": false,
+      "survivor": false,
+      "receipt": "out/recombination-calculator/gate-navigation-final/vite/stage.json"
+    },
+    {
+      "name": "package",
+      "status": "passed",
+      "wall_ms": 1874.3208998348564,
+      "exit_code": 0,
+      "original_identity": "proved_absent",
+      "process_id": 33680,
+      "process_identity_token": "33680:134357343483414323",
+      "timed_out": false,
+      "canceled": false,
+      "descendants_after_parent_exit": false,
+      "cleanup_error": null,
+      "cleanup_drain_timed_out": false,
+      "survivor": false,
+      "receipt": "out/recombination-calculator/gate-navigation-final/package/stage.json"
+    },
+    {
+      "name": "render",
+      "status": "passed",
+      "wall_ms": 3096.3306000921875,
+      "exit_code": 0,
+      "original_identity": "proved_absent",
+      "process_id": 23596,
+      "process_identity_token": "23596:134357343504570797",
+      "timed_out": false,
+      "canceled": false,
+      "descendants_after_parent_exit": false,
+      "cleanup_error": null,
+      "cleanup_drain_timed_out": false,
+      "survivor": false,
+      "receipt": "out/recombination-calculator/gate-navigation-final/render/stage.json"
+    }
+  ],
+  "cleanup": {
+    "utc": "2026-10-06T04:26:05.9122919Z",
+    "error_action": "Stop",
+    "operation_timeout_seconds": 10,
+    "excluded_current_pid": 56260,
+    "stage_pids": [
+      33868,
+      33680,
+      23596,
+      87984
+    ],
+    "matches": [],
+    "count": 0
+  },
+  "local_released_utc": "2026-10-06T04:26:05.9122919Z",
+  "browser": {
+    "name": "Chrome",
+    "version": "152.0.7977.83",
+    "scope": "recombination-calculator",
+    "native_pair_goal": "real immutable WASM",
+    "navigation_390px": "passed and rendered review confirmed",
+    "page_errors": 0,
+    "console_errors": 0
+  },
+  "screenshots": [
+    {
+      "file": "out/recombination-calculator/gate-navigation-final/screens/chromium-recombination-goal-odds.png",
+      "bytes": 137924,
+      "sha256": "2c457bc146d368ab8350d175505ee5a6c96ae18b4adef1d322baa7b30e8cc798",
+      "width": 1536,
+      "height": 864,
+      "visually_reviewed": true
+    },
+    {
+      "file": "out/recombination-calculator/gate-navigation-final/screens/chromium-recombination-input-a.png",
+      "bytes": 86932,
+      "sha256": "311052fea04d8b8c3f49d3cee0fd8fe6e2414b327ff3aec1af87db4c720002d6",
+      "width": 1536,
+      "height": 864,
+      "visually_reviewed": true
+    },
+    {
+      "file": "out/recombination-calculator/gate-navigation-final/screens/chromium-recombination-input-b.png",
+      "bytes": 87264,
+      "sha256": "6cccc1d115cdf5b96656efdefff39bad1c0e69d3b868a2d334f516c5d118637a",
+      "width": 1536,
+      "height": 864,
+      "visually_reviewed": true
+    },
+    {
+      "file": "out/recombination-calculator/gate-navigation-final/screens/chromium-recombination-narrow-goal.png",
+      "bytes": 46154,
+      "sha256": "b4167a4ba359e1eda2d17748979696f0174f4a8c8fd995c5b827f5aee6778b74",
+      "width": 390,
+      "height": 844,
+      "visually_reviewed": true
+    },
+    {
+      "file": "out/recombination-calculator/gate-navigation-final/screens/chromium-recombination-narrow-picker.png",
+      "bytes": 64283,
+      "sha256": "76d5222e788a5704c92d1aac18f5bebb5cef93e2bbb1249d7794268a38a4a4c3",
+      "width": 390,
+      "height": 844,
+      "visually_reviewed": true
+    },
+    {
+      "file": "out/recombination-calculator/gate-navigation-final/screens/chromium-recombination-unsupported.png",
+      "bytes": 154387,
+      "sha256": "5d6f58444023113ca613314972493014f693bbcf14ab8c6ef79faecd238cbb54",
+      "width": 1536,
+      "height": 864,
+      "visually_reviewed": true
+    }
+  ],
+  "native_builds": 0,
+  "dependency_installs": 0,
+  "solver_searches": 0,
+  "simulator_trials": 0,
+  "remaining": [
+    "Parent-owned integration, main HANDOFF reconciliation and CI gating."
+  ],
+  "source_scope_frozen": true,
+  "finalization": "Receipts/docs only; no runtime or test change after qualification",
+  "memory_cap": "No explicit outer memory cap; adapter API has no memory-cap argument.",
+  "coordination_blocker": "Thread-messaging callable remains unavailable; automatic delegation final notification carries LOCAL release and integration handoff."
+}
