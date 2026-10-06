@@ -23,7 +23,7 @@ double solve_detail::issued_universal_source_lower(const SolveResult& result) {
     const auto& certificate = result.universal_source_lower_certificate;
     if (!result.options.current_independent_cover || !result.options.independent_cover_consume ||
         !result.has_exact_start_item || !certificate ||
-        !exact_item_equal(certificate->source, result.exact_start_item) ||
+        exact_item_state_key(certificate->source) != exact_item_state_key(result.exact_start_item) ||
         !std::isfinite(certificate->lower) || certificate->lower < 0 ||
         certificate->lower >= kValueCeiling) return 0;
     return certificate->lower;
