@@ -5289,9 +5289,14 @@ void run_solver_independent_cover_tests() {
             PC_CHECK(w.ensure_priced_operator(candidate.operator_index));
             const double floor = w.operator_proof_lower_value(held,candidate.operator_index);
             PC_CHECK(floor > .019999 && floor <= .02);
-            const auto exits = c.outcomes(held,candidate.operator_index);
-            PC_CHECK(exits.supported && sums_to_one(exits));
-            for (const auto& exit : exits.entries) PC_CHECK(c.is_goal_state(c.state(exit.state)));
+            const auto& kernel = c.option_kernel(held,candidate.operator_index);
+            PC_CHECK(kernel.supported && kernel.legal && kernel.entry_continues);
+            double mass = 0;
+            for (const auto& exit : kernel.exits) {
+                mass += exit.probability;
+                PC_CHECK(c.is_goal_state(c.state(exit.state)));
+            }
+            PC_CHECK(near(mass,1));
             observed = true;
         }
         PC_CHECK(observed);
