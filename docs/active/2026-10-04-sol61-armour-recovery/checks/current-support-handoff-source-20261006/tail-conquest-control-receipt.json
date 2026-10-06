@@ -1,0 +1,123 @@
+{
+  "exit_code": 0,
+  "timed_out": false,
+  "canceled": false,
+  "cancellation_mode": null,
+  "cancellation_ack_ms": null,
+  "process_id": 29280,
+  "process_creation_flags": 134218244,
+  "process_identity_token": "29280:134357963336719344",
+  "survivor": false,
+  "parent_survivor": false,
+  "descendants_after_parent_exit": false,
+  "descendant_observations": [
+    {
+      "parent_pid": 29280,
+      "parent_exit_code": 0,
+      "live_owned_processes": [
+        {
+          "pid": 50632,
+          "handle_identity": 2,
+          "process_identity_token": "50632:134357963337493120",
+          "identity_query_error": null,
+          "exit_signal": "live",
+          "image": null,
+          "image_query_error": 5,
+          "exit_wait_after_image_query": 258,
+          "owned_job_member": true,
+          "image_authority": "retained_owned_handle_full_image",
+          "verified_image": "C:\\Windows\\System32\\conhost.exe",
+          "image_observation_phase": "client_running",
+          "platform_console_host": true,
+          "diagnostic_exit_code": 0,
+          "diagnostic_exit_code_error": null,
+          "diagnostic_snapshot": {
+            "not_in_snapshot": true
+          }
+        }
+      ],
+      "disposition": "owned_platform_console_cleanup"
+    }
+  ],
+  "member_identity_observations": [
+    {
+      "pid": 29280,
+      "handle_identity": 1,
+      "process_identity_token": "29280:134357963336719344",
+      "identity_query_error": null,
+      "exit_signal": "live",
+      "image": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-handoff-control-20261006\\poecraft_solver_benchmark.exe",
+      "image_query_error": null,
+      "exit_wait_after_image_query": 258,
+      "owned_job_member": true,
+      "image_authority": "current_full_image_query",
+      "verified_image": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-handoff-control-20261006\\poecraft_solver_benchmark.exe",
+      "image_observation_phase": "client_running",
+      "platform_console_host": false,
+      "phase": "client_running",
+      "observed_at_monotonic": 1872387.8853475
+    },
+    {
+      "pid": 50632,
+      "handle_identity": 2,
+      "process_identity_token": "50632:134357963337493120",
+      "identity_query_error": null,
+      "exit_signal": "live",
+      "image": "C:\\Windows\\System32\\conhost.exe",
+      "image_query_error": null,
+      "exit_wait_after_image_query": 258,
+      "owned_job_member": true,
+      "image_authority": "current_full_image_query",
+      "verified_image": "C:\\Windows\\System32\\conhost.exe",
+      "image_observation_phase": "client_running",
+      "platform_console_host": true,
+      "phase": "client_running",
+      "observed_at_monotonic": 1872387.8854104
+    },
+    {
+      "pid": 50632,
+      "handle_identity": 2,
+      "process_identity_token": "50632:134357963337493120",
+      "identity_query_error": null,
+      "exit_signal": "live",
+      "image": null,
+      "image_query_error": 5,
+      "exit_wait_after_image_query": 258,
+      "owned_job_member": true,
+      "image_authority": "retained_owned_handle_full_image",
+      "verified_image": "C:\\Windows\\System32\\conhost.exe",
+      "image_observation_phase": "client_running",
+      "platform_console_host": true,
+      "diagnostic_exit_code": 0,
+      "diagnostic_exit_code_error": null,
+      "phase": "post_parent_exit",
+      "observed_at_monotonic": 1872509.85773
+    }
+  ],
+  "member_identity_observations_truncated": false,
+  "console_host_cleanup_performed": true,
+  "system_console_image": "C:\\WINDOWS\\system32\\conhost.exe",
+  "process_tree_owner": "windows_job",
+  "cleanup_drain_timed_out": false,
+  "cleanup_error": null,
+  "survivor_check": "owned_windows_job_drained",
+  "wall_ms": 122330.36580006592,
+  "log_path": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\tail-conquest-control.log",
+  "identity_after": "proved_absent",
+  "global_windows_after": [],
+  "elevated_live_processes": [],
+  "fresh_owned_identity_checks": [
+    {
+      "pid": 29280,
+      "token": "29280:134357963336719344",
+      "observation": "proved_absent"
+    },
+    {
+      "pid": 50632,
+      "token": "50632:134357963337493120",
+      "observation": "proved_absent"
+    }
+  ],
+  "clean": true,
+  "source_unchanged": true
+}

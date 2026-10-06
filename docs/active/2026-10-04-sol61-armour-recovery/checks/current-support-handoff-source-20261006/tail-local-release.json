@@ -1,0 +1,23 @@
+{
+  "utc": "2026-10-06T21:44:18.114453+00:00",
+  "source_head": "af48399842b056aa1c10bc27ba35d577270fe1b4",
+  "engine_tree": "561a0b877154f9a5aa7520011f9fbd94351bb28e",
+  "production_tree": "bf877b6713b3fe70cbd78c67ec21b8d28da6e823",
+  "elevated_global_native_processes": [],
+  "global_terminal_windows": [],
+  "all_owned_stages_clean": true,
+  "all_owned_stages_source_unchanged": true,
+  "owned_stages": [
+    "tail-source-build",
+    "tail-focused-current-support-handoff",
+    "tail-focused-assertion-service",
+    "tail-focused-selected-fallback",
+    "tail-focused-proof-handoff",
+    "tail-focused-bounded-finish",
+    "tail-conquest-control",
+    "tail-conquest-treatment"
+  ],
+  "LOCAL_released": true,
+  "execution_owner_retains_repair": true,
+  "activated": false
+}

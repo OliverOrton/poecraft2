@@ -1,0 +1,23 @@
+{
+  "utc": "2026-10-06T19:13:14.753879+00:00",
+  "source_head": "353d93eeff76bfc43d72315e8386ed9d0c361fd1",
+  "engine_tree": "faac715b4646c6c7c828e0d588abdd99c348b641",
+  "production_tree": "6a6d5e808e517a3dac426511771a9d4e40aaa2d7",
+  "elevated_global_native_processes": [],
+  "global_terminal_windows": [],
+  "all_owned_stages_clean": true,
+  "all_owned_stages_source_unchanged": true,
+  "owned_stages": [
+    "support-source-build",
+    "support-focused-current-support-handoff",
+    "support-focused-assertion-service",
+    "support-focused-selected-fallback",
+    "support-focused-proof-handoff",
+    "support-focused-bounded-finish",
+    "support-conquest-control",
+    "support-conquest-treatment"
+  ],
+  "LOCAL_released": true,
+  "execution_owner_retains_repair": true,
+  "activated": false
+}

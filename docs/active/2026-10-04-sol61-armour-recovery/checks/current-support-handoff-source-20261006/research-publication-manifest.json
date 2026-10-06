@@ -1,0 +1,245 @@
+{
+  "schema": "continuation-research-publication-v1",
+  "prepared_at": "2026-10-06T22:56:25.446904+00:00",
+  "repository_full_name": "OliverOrton/poecraft2",
+  "repository_id": 1270632620,
+  "repository_visibility": "public",
+  "remote_branch": "dot/sol61-solver-causal-20261005",
+  "baseline": "7eb16ac3d63834fd5d3256ab42483f47d264b764",
+  "source_head": "14cf997f25188fe789ec014c9e5e8d90b53b742c",
+  "engine_tree": "8c30a359f5d7754a7117093a757db63cda9f71e3",
+  "production_tree": "d29f002e47f869171d6958ff1d55007908f66e08",
+  "observer_built": false,
+  "observer_tested": false,
+  "observer_activated": false,
+  "observer_measured_economics": false,
+  "latest_measured_source": "af48399842b056aa1c10bc27ba35d577270fe1b4",
+  "approval_evidence": {
+    "assistant_request_utc": "2026-10-06T22:51:07Z",
+    "user_approval_utc": "2026-10-06T22:51:38Z",
+    "user_reply": "sure",
+    "scope": "Push current lower-bound and continuation source, documentation and compact benchmark evidence to separate branches in OliverOrton/poecraft2; no main write"
+  },
+  "history_audit": {
+    "owned_allowed_paths_only": true,
+    "history_changed_paths": 170,
+    "history_blobs_scanned": 260,
+    "credential_pattern_alerts": 0,
+    "raw_trace_sized_blobs": 0
+  },
+  "excluded": [
+    "protected path0",
+    "frozen data/price payloads",
+    "secrets",
+    "bulk raw native results/traces",
+    "compiled binaries"
+  ],
+  "files": [
+    {
+      "file": "tail-source-qualified.json",
+      "bytes": 1595,
+      "sha256": "c726f06967f3887ae1665d5150e42b2dc728123472736f4237bdf69ffbe52acc",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\tail-source-qualified.json"
+    },
+    {
+      "file": "tail-matched-pair-inputs.json",
+      "bytes": 3895,
+      "sha256": "9cea771180e2394340b9bb685b45be90591ec72f22050145fc46970eac9e1009",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\tail-matched-pair-inputs.json"
+    },
+    {
+      "file": "tail-matched-pair-summary.json",
+      "bytes": 2112,
+      "sha256": "f305156a0ebbbf3e0a1c333d43c7c3a1daf2fdb8dbb1dc9aaae6efd8d50e4806",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\tail-matched-pair-summary.json"
+    },
+    {
+      "file": "tail-local-release.json",
+      "bytes": 798,
+      "sha256": "348cbb97bc863bfa7a809b699a27f007ec41855fa89cfa0c4d5a8d999bb6e3b6",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\tail-local-release.json"
+    },
+    {
+      "file": "tail-native-service-projection.json",
+      "bytes": 13761,
+      "sha256": "d1fd394b2ad45c11fd828c7648ceb40cee22eb7a5c0fc36aac76206a0cee4de1",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\tail-native-service-projection.json"
+    },
+    {
+      "file": "tail-frontier-relevance-projection.json",
+      "bytes": 8098,
+      "sha256": "08bc2b237dd4bb6bf9409f352e947cc87caea881eb67f5212f690f92383f636a",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\tail-frontier-relevance-projection.json"
+    },
+    {
+      "file": "passive-observer-source-readiness.json",
+      "bytes": 2679,
+      "sha256": "6aea3bec90c63e246e095190ef787482a7b8fd306a41d42eaf259398cf9d6f7b",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\passive-observer-source-readiness.json"
+    },
+    {
+      "file": "tail-conquest-control-preflight.json",
+      "bytes": 23048,
+      "sha256": "4fd09b754f3c275c689d087e58be5fe9daacc5666b1760e00926ee539538e46c",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\tail-conquest-control-preflight.json"
+    },
+    {
+      "file": "tail-conquest-treatment-preflight.json",
+      "bytes": 23060,
+      "sha256": "f31c9a49c37058cd98d6f257bd2c895013f29b7808e9c248e1d0fb4f4777ba02",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\tail-conquest-treatment-preflight.json"
+    },
+    {
+      "file": "tail-conquest-control-receipt.json",
+      "bytes": 4429,
+      "sha256": "135157bf1894cec79be07b364be00c844d56c2778ef4fe130190039efc198d29",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\tail-conquest-control-receipt.json"
+    },
+    {
+      "file": "tail-conquest-treatment-receipt.json",
+      "bytes": 4894,
+      "sha256": "6a74e28eaabd765261009f0776c9be721cfd62e9002a7b5e602ee49686246b36",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\tail-conquest-treatment-receipt.json"
+    },
+    {
+      "file": "tail-source-build-receipt.json",
+      "bytes": 18247,
+      "sha256": "52e93971c50105c77a3730a9dee78e147b9f2df0c75801f4957ece41aa77d7d5",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\tail-source-build-receipt.json"
+    },
+    {
+      "file": "tail-focused-current-support-handoff.log",
+      "bytes": 79721,
+      "sha256": "1f84b2b2d9705fdaaded57412554b3e3bf7b85edf27ec0d1ec8080c39074e444",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\tail-focused-current-support-handoff.log"
+    },
+    {
+      "file": "matched-pair-inputs.json",
+      "bytes": 4565,
+      "sha256": "b08b99d362b25597698a1658b19391eeff654da2dab0b10f2d24c89100a51fbe",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\matched-pair-inputs.json"
+    },
+    {
+      "file": "matched-pair-summary.json",
+      "bytes": 757,
+      "sha256": "412a6a96cc1068267af2019aca4c65919a3fb0109204108468dfb1292b1f7a4e",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\matched-pair-summary.json"
+    },
+    {
+      "file": "source-qualified.json",
+      "bytes": 463,
+      "sha256": "4f25688a9cf264844cf8f05138c3a67b90fe8ef8bc0a2fbed49bd49ae724ae40",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\source-qualified.json"
+    },
+    {
+      "file": "support-matched-pair-inputs.json",
+      "bytes": 3895,
+      "sha256": "df3d883669fff99302358ed608d52595f93eb38bc9b903936eff5c83d470d09d",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\support-matched-pair-inputs.json"
+    },
+    {
+      "file": "support-matched-pair-summary.json",
+      "bytes": 2118,
+      "sha256": "3b29090718d11effcf5949d1d07061d8ec98246c8a1d853e219c70c750e699db",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\support-matched-pair-summary.json"
+    },
+    {
+      "file": "support-source-qualified.json",
+      "bytes": 1610,
+      "sha256": "7e0b5213d28a4e55cd21f561bafe541455569594da74afe7d9e9e3bf80aba8f7",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\support-source-qualified.json"
+    },
+    {
+      "file": "support-local-release.json",
+      "bytes": 822,
+      "sha256": "7094d71bc917d5caf8e1935ae6403fa6a5ca6534dc5db89782dad721de9884ed",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\support-local-release.json"
+    },
+    {
+      "file": "delivery-matched-pair-inputs.json",
+      "bytes": 3895,
+      "sha256": "fb2775f0d1261d326e6769475af747fc9305ecdd73012d29c25fb1e46bebbd76",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\delivery-matched-pair-inputs.json"
+    },
+    {
+      "file": "delivery-matched-pair-summary.json",
+      "bytes": 2120,
+      "sha256": "0da2592fa042accc26ce4c98c733e2065d9de4fd1bd9781ecd1a4b7878390198",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\delivery-matched-pair-summary.json"
+    },
+    {
+      "file": "delivery-corrected-source-qualified.json",
+      "bytes": 1663,
+      "sha256": "be75c6a14dcb9e07e0f1c43e4bce9fed1ac20720432f988410168ec6e1068872",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\delivery-corrected-source-qualified.json"
+    },
+    {
+      "file": "delivery-local-release.json",
+      "bytes": 1024,
+      "sha256": "1075b9fe21427388a4a01d1816c338532ee7f2e0d514f1488dd407dc46feac0d",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\delivery-local-release.json"
+    },
+    {
+      "file": "delivery-focused-current-support-handoff-preflight.json",
+      "bytes": 22223,
+      "sha256": "524f074e86e137b09a0b83210c6c3924568b77ae85574b2f5532032a6e987868",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\delivery-focused-current-support-handoff-preflight.json"
+    },
+    {
+      "file": "delivery-focused-current-support-handoff-receipt.json",
+      "bytes": 4914,
+      "sha256": "4a1ffa27cbad4bdef6e90eb1d03869a38b59349b7e5d225ac52561d58e9cabbc",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\delivery-focused-current-support-handoff-receipt.json"
+    },
+    {
+      "file": "delivery-focused-current-support-handoff.log",
+      "bytes": 18236,
+      "sha256": "200db248dc2d2920f9eef1b4bb8f61e1176ab91c30ba538c9db46ce2bda7432a",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\delivery-focused-current-support-handoff.log"
+    },
+    {
+      "file": "tail-focused-current-support-handoff-receipt.json",
+      "bytes": 3430,
+      "sha256": "3090c1a4a18d5db67c813a137449506d9703dbdc7d1f266bd83d6f1e2f18efb8",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\tail-focused-current-support-handoff-receipt.json"
+    },
+    {
+      "file": "tail-focused-assertion-service-receipt.json",
+      "bytes": 3423,
+      "sha256": "41e4f33f9abbfa1b7a455a63d5bab83ebd4e4b616918c6d95fa59b130430c090",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\tail-focused-assertion-service-receipt.json"
+    },
+    {
+      "file": "tail-focused-selected-fallback-receipt.json",
+      "bytes": 4883,
+      "sha256": "9859ecab51c48b8354e52d0fcb4d824f6cb10066c25610b51cd216fc57c398d5",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\tail-focused-selected-fallback-receipt.json"
+    },
+    {
+      "file": "tail-focused-proof-handoff-receipt.json",
+      "bytes": 4888,
+      "sha256": "2163b7abe727749c6155feb4554f701de203ea6546fa311fb4018c454777e030",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\tail-focused-proof-handoff-receipt.json"
+    },
+    {
+      "file": "tail-focused-bounded-finish-receipt.json",
+      "bytes": 3421,
+      "sha256": "b53cd0397fcddbf6c4d38de40e3d0f03e8b9a6eb2c80e462977dc2b86cd06c53",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\tail-focused-bounded-finish-receipt.json"
+    },
+    {
+      "file": "tail-conquest-returned.strategy.json",
+      "bytes": 6557,
+      "sha256": "d65787d11ad895d5925ce9dd4d0aefde483e53bc25df3a80a6a9dfe7a0d7e053",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\tail-conquest-treatment\\strategies\\sol61-trace-conquest5-currentmodel-120.strategy.json",
+      "same_bytes_as_control": true
+    },
+    {
+      "file": "tail-native-economics-projection.json",
+      "bytes": 4327,
+      "sha256": "1b46b0c4860943eec0ddb5cc6c1062982a809fb4795ea58471bfd4ea1c86b7c6",
+      "projection_from_summary_receipts": true,
+      "bulk_native_results_included": false
+    }
+  ]
+}

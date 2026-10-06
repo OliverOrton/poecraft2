@@ -1,0 +1,10 @@
+{
+  "source_head": "b200aec9e1b971022878ac9a6f461f13af702149",
+  "engine_tree": "dc591b50b51d2df895fe51c1d8c60aee3798ce37",
+  "production_tree": "0d36d9322baefbc27ba32d3412fca1df956dd627",
+  "test_binary_sha256": "cc6ba145be3b45d4333b4151fbea4d42d84c83ac20bf2adfc0e3c6e445505d4e",
+  "benchmark_sha256": "9d221727b02d29786877068200670238b064d38ef37e313ac188650700719ca6",
+  "focused_selectors": 5,
+  "activated": false,
+  "new_economics_measured": false
+}

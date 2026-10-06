@@ -1,0 +1,49 @@
+{
+  "source_head": "af48399842b056aa1c10bc27ba35d577270fe1b4",
+  "engine_tree": "561a0b877154f9a5aa7520011f9fbd94351bb28e",
+  "production_tree": "bf877b6713b3fe70cbd78c67ec21b8d28da6e823",
+  "test_binary_sha256": "eaf659a3999b2f1b11b318d13f9be321046c45bd2694c5a054df49e849b6d286",
+  "benchmark_sha256": "10734703510b15f1c5b6f4cd0ef0375d6b8e31eccbe70f77b1a6b6c20d430cb1",
+  "focused_selectors": 5,
+  "checks": 12906,
+  "failures": 0,
+  "runs": [
+    {
+      "selector": "--solver-current-support-handoff-only",
+      "checks": 9790,
+      "failures": 0,
+      "seconds": 0.39042529999278486,
+      "receipt": "tail-focused-current-support-handoff-receipt.json"
+    },
+    {
+      "selector": "--solver-assertion-service-only",
+      "checks": 424,
+      "failures": 0,
+      "seconds": 0.1079549000132829,
+      "receipt": "tail-focused-assertion-service-receipt.json"
+    },
+    {
+      "selector": "--solver-selected-fallback-only",
+      "checks": 2440,
+      "failures": 0,
+      "seconds": 1.8187514001037925,
+      "receipt": "tail-focused-selected-fallback-receipt.json"
+    },
+    {
+      "selector": "--solver-proof-handoff-only",
+      "checks": 49,
+      "failures": 0,
+      "seconds": 0.5378344000782818,
+      "receipt": "tail-focused-proof-handoff-receipt.json"
+    },
+    {
+      "selector": "--solver-bounded-finish-only",
+      "checks": 203,
+      "failures": 0,
+      "seconds": 0.16158440010622144,
+      "receipt": "tail-focused-bounded-finish-receipt.json"
+    }
+  ],
+  "activated": false,
+  "new_economics_measured": false
+}

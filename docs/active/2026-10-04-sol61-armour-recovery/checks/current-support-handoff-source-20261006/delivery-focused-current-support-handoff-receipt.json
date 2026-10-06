@@ -1,0 +1,133 @@
+{
+  "exit_code": 3221226505,
+  "timed_out": false,
+  "canceled": false,
+  "cancellation_mode": null,
+  "cancellation_ack_ms": null,
+  "process_id": 2936,
+  "process_creation_flags": 134218244,
+  "process_identity_token": "2936:134357908992708910",
+  "survivor": false,
+  "parent_survivor": false,
+  "descendants_after_parent_exit": false,
+  "descendant_observations": [
+    {
+      "parent_pid": 2936,
+      "parent_exit_code": 3221226505,
+      "live_owned_processes": [
+        {
+          "pid": 64108,
+          "handle_identity": 2,
+          "process_identity_token": "64108:134357908993352343",
+          "identity_query_error": null,
+          "exit_signal": "live",
+          "image": "C:\\Windows\\System32\\conhost.exe",
+          "image_query_error": null,
+          "exit_wait_after_image_query": 258,
+          "owned_job_member": true,
+          "image_authority": "current_full_image_query",
+          "verified_image": "C:\\Windows\\System32\\conhost.exe",
+          "image_observation_phase": "post_parent_exit",
+          "platform_console_host": true
+        }
+      ],
+      "disposition": "owned_platform_console_cleanup"
+    }
+  ],
+  "member_identity_observations": [
+    {
+      "pid": 2936,
+      "handle_identity": 1,
+      "process_identity_token": "2936:134357908992708910",
+      "identity_query_error": null,
+      "exit_signal": "live",
+      "image": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\poecraft2-solver-causal\\build\\engine\\poecraft_engine_tests.exe",
+      "image_query_error": null,
+      "exit_wait_after_image_query": 258,
+      "owned_job_member": true,
+      "image_authority": "current_full_image_query",
+      "verified_image": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\poecraft2-solver-causal\\build\\engine\\poecraft_engine_tests.exe",
+      "image_observation_phase": "client_running",
+      "platform_console_host": false,
+      "phase": "client_running",
+      "observed_at_monotonic": 1866953.4719105
+    },
+    {
+      "pid": 64108,
+      "handle_identity": 2,
+      "process_identity_token": "64108:134357908993352343",
+      "identity_query_error": null,
+      "exit_signal": "live",
+      "image": "C:\\Windows\\System32\\conhost.exe",
+      "image_query_error": null,
+      "exit_wait_after_image_query": 258,
+      "owned_job_member": true,
+      "image_authority": "current_full_image_query",
+      "verified_image": "C:\\Windows\\System32\\conhost.exe",
+      "image_observation_phase": "client_running",
+      "platform_console_host": true,
+      "phase": "client_running",
+      "observed_at_monotonic": 1866953.4719652
+    },
+    {
+      "pid": 64108,
+      "handle_identity": 2,
+      "process_identity_token": "64108:134357908993352343",
+      "identity_query_error": null,
+      "exit_signal": "live",
+      "image": "C:\\Windows\\System32\\conhost.exe",
+      "image_query_error": null,
+      "exit_wait_after_image_query": 258,
+      "owned_job_member": true,
+      "image_authority": "current_full_image_query",
+      "verified_image": "C:\\Windows\\System32\\conhost.exe",
+      "image_observation_phase": "post_parent_exit",
+      "platform_console_host": true,
+      "phase": "post_parent_exit",
+      "observed_at_monotonic": 1866954.9199923
+    },
+    {
+      "pid": 64108,
+      "handle_identity": 2,
+      "process_identity_token": "64108:134357908993352343",
+      "identity_query_error": null,
+      "exit_signal": "live",
+      "image": "C:\\Windows\\System32\\conhost.exe",
+      "image_query_error": null,
+      "exit_wait_after_image_query": 258,
+      "owned_job_member": true,
+      "image_authority": "current_full_image_query",
+      "verified_image": "C:\\Windows\\System32\\conhost.exe",
+      "image_observation_phase": "termination",
+      "platform_console_host": true,
+      "phase": "termination",
+      "observed_at_monotonic": 1866954.9200883
+    }
+  ],
+  "member_identity_observations_truncated": false,
+  "console_host_cleanup_performed": true,
+  "system_console_image": "C:\\WINDOWS\\system32\\conhost.exe",
+  "process_tree_owner": "windows_job",
+  "cleanup_drain_timed_out": false,
+  "cleanup_error": null,
+  "survivor_check": "owned_windows_job_drained",
+  "wall_ms": 2011.6701999213547,
+  "log_path": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\delivery-focused-current-support-handoff.log",
+  "identity_after": "proved_absent",
+  "global_windows_after": [],
+  "elevated_live_processes": [],
+  "fresh_owned_identity_checks": [
+    {
+      "pid": 2936,
+      "token": "2936:134357908992708910",
+      "observation": "proved_absent"
+    },
+    {
+      "pid": 64108,
+      "token": "64108:134357908993352343",
+      "observation": "proved_absent"
+    }
+  ],
+  "clean": true,
+  "source_unchanged": true
+}

@@ -1,0 +1,104 @@
+{
+  "schema": "tail-matched-native-economics-projection-v1",
+  "projection_only": true,
+  "measured_treatment_source": "af48399842b056aa1c10bc27ba35d577270fe1b4",
+  "new_observer_measurement": false,
+  "arms": {
+    "control": {
+      "summary_original_path": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\tail-conquest-control-summary.json",
+      "summary_original_sha256": "b8e745325e290ead6338850baa48d6e673e0e2f09b09502a2ac07842f412c3ef",
+      "source": "fb59476f54601f81dc18a8bf2457d8eb7d3eb36b",
+      "benchmark_sha256": "96732e9731453209b723d736b5ceaa81731aeff8f0dfc975b701fd81dcbb8cfa",
+      "actual_status": "bounded_feasible",
+      "expectation_met": true,
+      "solve_summary": {
+        "converged": false,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "stop_cause": "requested_bounded_finish",
+        "cap_hit_mask": 0,
+        "lower_bound": 0,
+        "upper_bound": 101311.35474896732,
+        "evaluated_policy_cost": 101311.35474896732,
+        "absolute_optimality_gap": 101311.35474896732,
+        "relative_optimality_gap": null,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "independent_evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 799.2483,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 101311.35474896732,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "strategies": [
+        {
+          "path": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\tail-conquest-control\\strategies\\sol61-trace-conquest5-currentmodel-120.strategy.json",
+          "bytes": 6557,
+          "sha256": "d65787d11ad895d5925ce9dd4d0aefde483e53bc25df3a80a6a9dfe7a0d7e053"
+        }
+      ],
+      "native_seconds": 122.33036580006592,
+      "clean": true,
+      "global_windows_after": 0
+    },
+    "treatment": {
+      "summary_original_path": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\tail-conquest-treatment-summary.json",
+      "summary_original_sha256": "c134030a3f0266a347815b26ac6a51bd5d96a5ebefd92700eed1eae98aac13ab",
+      "source": "af48399842b056aa1c10bc27ba35d577270fe1b4",
+      "benchmark_sha256": "10734703510b15f1c5b6f4cd0ef0375d6b8e31eccbe70f77b1a6b6c20d430cb1",
+      "actual_status": "bounded_feasible",
+      "expectation_met": true,
+      "solve_summary": {
+        "converged": false,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "stop_cause": "requested_bounded_finish",
+        "cap_hit_mask": 0,
+        "lower_bound": 0,
+        "upper_bound": 101311.35474896732,
+        "evaluated_policy_cost": 101311.35474896732,
+        "absolute_optimality_gap": 101311.35474896732,
+        "relative_optimality_gap": null,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "independent_evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 798.1144,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 101311.35474896732,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "strategies": [
+        {
+          "path": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\tail-conquest-treatment\\strategies\\sol61-trace-conquest5-currentmodel-120.strategy.json",
+          "bytes": 6557,
+          "sha256": "d65787d11ad895d5925ce9dd4d0aefde483e53bc25df3a80a6a9dfe7a0d7e053"
+        }
+      ],
+      "native_seconds": 122.24098429991864,
+      "clean": true,
+      "global_windows_after": 0
+    }
+  }
+}

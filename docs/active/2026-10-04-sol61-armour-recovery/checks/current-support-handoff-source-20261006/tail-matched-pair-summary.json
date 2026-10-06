@@ -1,0 +1,53 @@
+{
+  "source": "af48399842b056aa1c10bc27ba35d577270fe1b4",
+  "engine_tree": "561a0b877154f9a5aa7520011f9fbd94351bb28e",
+  "production_tree": "bf877b6713b3fe70cbd78c67ec21b8d28da6e823",
+  "request_sha256": "b4812e0e73d575bc8ede944fcb5a7f7689e63202ff66a09f49d5cff851722ece",
+  "manifest_sha256": "21fbb960b87165430117bfe46814fa42dc3b81ff9e013e9c2a8c8cb3c096e590",
+  "input_equal": true,
+  "case_id": "sol61-trace-conquest5-currentmodel-120",
+  "profile": {
+    "native_goal_terminal": "legacy-clean",
+    "native_goal_proof": "target-neutral-zero",
+    "native_selective_completion_service": false,
+    "solve_profile": {
+      "id": "calculator_product_v1",
+      "override_mask": 0
+    },
+    "native_continuation_search": "ordinary",
+    "candidate_limits": {
+      "max_states": 0,
+      "max_pairs": 0,
+      "max_transitions": 0,
+      "max_owned_bytes": 0
+    },
+    "goal_progress_gated_reforges": true,
+    "high_impact_executable_uppers": true,
+    "allow_economic_restart": false,
+    "consider_imprint_programs": false,
+    "max_states": 800000,
+    "max_discovered_states": 800000,
+    "max_expanded_states": 200000
+  },
+  "control_cost": 101311.35474896732,
+  "treatment_cost": 101311.35474896732,
+  "saving": 0.0,
+  "control_seconds": 122.33036580006592,
+  "treatment_seconds": 122.24098429991864,
+  "control_strategy": [
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\tail-conquest-control\\strategies\\sol61-trace-conquest5-currentmodel-120.strategy.json",
+      "bytes": 6557,
+      "sha256": "d65787d11ad895d5925ce9dd4d0aefde483e53bc25df3a80a6a9dfe7a0d7e053"
+    }
+  ],
+  "treatment_strategy": [
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\tail-conquest-treatment\\strategies\\sol61-trace-conquest5-currentmodel-120.strategy.json",
+      "bytes": 6557,
+      "sha256": "d65787d11ad895d5925ce9dd4d0aefde483e53bc25df3a80a6a9dfe7a0d7e053"
+    }
+  ],
+  "activated": false,
+  "current_finder_wasm_release_claim": false
+}
