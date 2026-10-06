@@ -37,10 +37,36 @@ unobserved numerical/property scope, exceptional-pair refusal and unknown
 gold/dust costs remain explicit. No optimizer, random Apply, native ABI change,
 new build, data refresh, price change or Simulator run is part of this task.
 
-## Requested finite QA
+## First finite QA: TypeScript failure retained
 
-No build/test/browser process has run yet. Parent was asked for one finite
-supervised LOCAL batch, reusing compatible immutable WASM/runtime/dependencies:
+Parent granted one serial LOCAL batch on full source
+`5a70d2d2d3b03db92c45337ff13585df4dff2084`. The unchanged qualified runner
+`d485ff11` / worker blob `f532376a` ran metadata (2.23s, pass), six focused
+web tests including the real pair/goal WASM contract (7.94s, pass), and
+TypeScript (3.72s, failed). Execution stopped immediately. Vite, package and
+render are **unrun**. Eight TypeScript diagnostics identify inherited HTMLElement
+member collisions (`focus`, `remove`), a narrowed side argument, optional
+influence metadata and a deferred-test resolver type. The source repair renames
+those controller members and fixes the narrow types; it is not yet requalified.
+
+All three original stage process identities are `proved_absent`, with clear
+timeout/cancellation/descendant/cleanup/survivor flags. Eighteen immutable hashes
+match before/after. The elevated ErrorAction=Stop census records zero survivors
+after explicitly excluding its own process. The first census's self-match is
+preserved rather than erased. LOCAL was released immediately after cleanup.
+Evidence is in `out/recombination-calculator/gate-r1/`, including original logs,
+`batch.json`, `survivor-check.json` and `survivor-check-final.json`.
+
+Dependencies reuse the qualified tree through a junction only after matching
+package-lock SHA256 `244102b6e9a380054cb847b8ecbed3ef3f7956eb79a18bf8562acbc200d5be3c`.
+The reused WASM `50c98f55`, loader `8ec20cf7` and runtime `82fb60a2` match the
+qualified artifact receipt, and engine/WASM source is unchanged from its
+`7fd6a48e` source. No dependency install, native build or data refresh occurred.
+
+## Requested repair qualification
+
+The source repair needs a new parent-granted finite supervised LOCAL batch,
+reusing the same compatible immutable WASM/runtime/dependencies:
 
 - Focused authored-pair terminal filtering, temporary-owner cleanup and stale
   request controls, plus existing goal/item/odds and recombination-WASM checks.

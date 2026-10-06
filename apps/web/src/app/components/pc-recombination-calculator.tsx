@@ -83,7 +83,7 @@ export class PcRecombinationCalculator extends HTMLElement {
     private bases: BaseInfo[] = [];
     private inputs = new Map<Input, AuthoredInput>();
     private goal: CalculatorGoalDraft = {...newCalculatorGoal("recomb-goal", "Goal result"), allowExtraModifiers: true};
-    private focus: Focus = "goal";
+    private editFocus: Focus = "goal";
     private baseCare = false;
     private requiredBase: Input = "a";
     private pickerSide: Input | null = null;
@@ -195,7 +195,7 @@ export class PcRecombinationCalculator extends HTMLElement {
         this.edit(async () => {task();});
     }
     private select(focus: Focus, side?: "prefix" | "suffix" | "implicit"): void {
-        this.focus = focus;
+        this.editFocus = focus;
         this.renderFocus(); this.renderPool();
         if (side) {this.pool.setActiveTab(side); this.pool.querySelector<HTMLInputElement>("input")?.focus();}
     }
@@ -255,13 +255,13 @@ export class PcRecombinationCalculator extends HTMLElement {
                     this.goal.minSatisfiedSlots = undefined;
                 });});
             } else {
-                list.addEventListener("remove-item-mod", event => this.remove(focus, (event as CustomEvent).detail));
+                list.addEventListener("remove-item-mod", event => this.removeInputModifier(focus, (event as CustomEvent).detail));
                 list.addEventListener("fracture-mod", event => this.fracture(focus, (event as CustomEvent).detail));
             }
         }
         this.pool.addEventListener("craft-mod", event => {
             const detail = (event as CustomEvent).detail;
-            const focus = this.focus;
+            const focus = this.editFocus;
             if (focus === "goal") this.addGoal(detail.key);
             else this.edit(async () => {
                 const input = this.inputs.get(focus)!;
@@ -270,8 +270,8 @@ export class PcRecombinationCalculator extends HTMLElement {
                 await this.refreshInput(input);
             });
         });
-        this.pool.addEventListener("remove-mod", event => {if (this.focus !== "goal") this.remove(this.focus, (event as CustomEvent).detail);});
-        this.pool.addEventListener("fracture-mod", event => {if (this.focus !== "goal") this.fracture(this.focus, (event as CustomEvent).detail);});
+        this.pool.addEventListener("remove-mod", event => {if (this.editFocus !== "goal") this.removeInputModifier(this.editFocus, (event as CustomEvent).detail);});
+        this.pool.addEventListener("fracture-mod", event => {if (this.editFocus !== "goal") this.fracture(this.editFocus, (event as CustomEvent).detail);});
         this.querySelector<PcBasePicker>("pc-base-picker")!.addEventListener("cancel", () => this.closePicker());
         this.querySelector<PcBasePicker>("pc-base-picker")!.addEventListener("confirm", event => {
             if (!this.pickerSide) return;
@@ -295,12 +295,12 @@ export class PcRecombinationCalculator extends HTMLElement {
         });
     }
 
-    private remove(side: Input, detail: {modId: number; side: "prefix" | "suffix" | "implicit"}): void {
+    private removeInputModifier(side: Input, detail: {modId: number; side: "prefix" | "suffix" | "implicit"}): void {
         this.select(side);
         this.edit(async () => {
             const input = this.inputs.get(side)!;
             if (detail.side === "implicit") await this.client.editItem(input.item, input.session, {remove_implicit: input.mods[detail.modId].key});
-            else await this.client.removeMod(input.item, detail);
+            else await this.client.removeMod(input.item, {modId: detail.modId, side: detail.side});
             await this.refreshInput(input);
         });
     }
@@ -388,7 +388,7 @@ export class PcRecombinationCalculator extends HTMLElement {
             const target = buildCalculatorTargetModel({baseKey: required, baseName: required ? this.baseName(required) : "Either input base",
                 itemLevel: 0, rarity: this.goal.goalRarity, slots: this.goal.slots,
                 modifierOptions: buildModifierOptions(a.mods, this.catalog), maxPrefix: 3, maxSuffix: 3, groupLabel: key => key});
-            this.list("goal")?.setModel({...target, properties: {influences: this.catalog.genericInfluences,
+            this.list("goal")?.setModel({...target, properties: {influences: this.catalog.genericInfluences ?? [],
                 influenceBits: this.goal.goalInfluenceBits, corrupted: this.goal.goalCorrupted},
                 implicits: (this.goal.goalImplicitKeys ?? []).map(key => ({key, textLines: a.mods.find(mod => mod.key === key)?.text_lines ?? [key]}))});
         }
@@ -408,23 +408,23 @@ export class PcRecombinationCalculator extends HTMLElement {
         this.renderFocus(); this.renderPool(); this.renderOdds();
     }
     private renderFocus(): void {
-        this.querySelectorAll<HTMLButtonElement>("[data-recomb-focus]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.recombFocus === this.focus)));
-        this.querySelectorAll<HTMLElement>("[data-recomb-card]").forEach(card => card.classList.toggle("is-editing", card.dataset.recombCard === this.focus));
-        this.querySelector<HTMLElement>(".pc-recomb-focus-label")!.textContent = `Editing ${names[this.focus]}${this.focus === "goal" ? " · goal catalog uses input A’s native session" : " · picker adds modifiers to this input"}`;
+        this.querySelectorAll<HTMLButtonElement>("[data-recomb-focus]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.recombFocus === this.editFocus)));
+        this.querySelectorAll<HTMLElement>("[data-recomb-card]").forEach(card => card.classList.toggle("is-editing", card.dataset.recombCard === this.editFocus));
+        this.querySelector<HTMLElement>(".pc-recomb-focus-label")!.textContent = `Editing ${names[this.editFocus]}${this.editFocus === "goal" ? " · goal catalog uses input A’s native session" : " · picker adds modifiers to this input"}`;
     }
     private renderPool(): void {
-        const input = this.inputs.get(this.focus === "goal" ? "a" : this.focus);
+        const input = this.inputs.get(this.editFocus === "goal" ? "a" : this.editFocus);
         if (!input) return;
         const ids = (side: string) => (input.info[`${side}_mod_ids`] as number[]) ?? [];
-        this.pool.setInteractionMode(this.focus === "goal" ? "goal" : "direct");
+        this.pool.setInteractionMode(this.editFocus === "goal" ? "goal" : "direct");
         this.pool.setModel({mods: input.mods, allowUnrollable: true, pool: null, poolWeights: new Map(), item: {
             rarity: input.card.rarity, prefixOnItem: new Set(ids("prefix")), suffixOnItem: new Set(ids("suffix")),
             implicitOnItem: new Set(ids("implicit")), enchantmentOnItem: new Set(ids("enchantment")),
             fracturedPrefixOnItem: new Set(input.info.fractured_prefix_mod_ids as number[]), fracturedSuffixOnItem: new Set(input.info.fractured_suffix_mod_ids as number[]),
             groupOnItem: new Set([...ids("prefix"), ...ids("suffix")].map(id => input.mods[id].primary_group_id)), maxPrefix: input.card.maxPrefix, maxSuffix: input.card.maxSuffix,
         }});
-        this.pool.setSelectedTiers(this.focus === "goal" ? this.goal.slots.flatMap(slot => slot.familyModKey ? [{familyModKey: slot.familyModKey, minTier: slot.minTier}] : []) : []);
-        this.pool.setSelectedImplicits(this.focus === "goal" ? this.goal.goalImplicitKeys ?? [] : []);
+        this.pool.setSelectedTiers(this.editFocus === "goal" ? this.goal.slots.flatMap(slot => slot.familyModKey ? [{familyModKey: slot.familyModKey, minTier: slot.minTier}] : []) : []);
+        this.pool.setSelectedImplicits(this.editFocus === "goal" ? this.goal.goalImplicitKeys ?? [] : []);
     }
     private renderOdds(): void {
         if (this.disposed || !this.querySelector("[data-recomb-output]")) return;

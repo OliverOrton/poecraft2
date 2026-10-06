@@ -69,11 +69,11 @@ const access = calculator as unknown as {client: EngineClient; data: number; bus
 access.busy = false; access.data = 1;
 access.inputs = new Map([["a", {snapshot: structuredClone(inputs[0])}], ["b", {snapshot: structuredClone(inputs[1])}]]);
 access.renderOdds = () => {};
-let resolveResult: ((value: CalcResult) => void) | undefined;
+const delivery: {resolve?: (value: CalcResult) => void} = {};
 let frozenGoal: CalculatorGoalSet | undefined;
 access.client = {...fake, recombinationCalculate: async (_pair: number, goal: CalculatorGoalSet) => {
     frozenGoal = structuredClone(goal);
-    return new Promise<CalcResult>(resolve => {resolveResult = resolve;});
+    return new Promise<CalcResult>(resolve => {delivery.resolve = resolve;});
 }} as unknown as EngineClient;
 for (const change of [
     () => {access.goal.slots.push({familyModKey: "new-goal", minTier: 1}); access.invalidate();},
@@ -85,11 +85,11 @@ for (const change of [
     () => {access.disposed = true;},
 ]) {
     access.disposed = false; access.baseCare = false; access.requiredBase = "a"; access.goal = newCalculatorGoal("goal");
-    resolveResult = undefined; closed.length = 0; handle = 0;
+    delete delivery.resolve; closed.length = 0; handle = 0;
     access.calculate();
-    for (let i = 0; i < 20 && !resolveResult; ++i) await Promise.resolve();
-    assert.ok(resolveResult, "Native calculation started");
-    change(); resolveResult(result); await Promise.all(access.calculations);
+    for (let i = 0; i < 20 && !delivery.resolve; ++i) await Promise.resolve();
+    assert.ok(delivery.resolve, "Native calculation started");
+    change(); delivery.resolve(result); await Promise.all(access.calculations);
     assert.equal(access.result, null, "Edited, cancelled or disposed requests reject stale native odds");
     assert.equal(frozenGoal?.goals[0].goal.slots.length, 0, "Submitted goal is frozen");
     assert.ok(closed.includes("pair:5") && closed.includes("session:3"), "Stale calculation releases its owners");

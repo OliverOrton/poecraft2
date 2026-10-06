@@ -25,8 +25,9 @@ mathematical authorities are unchanged by this presentation delta.
 
 Oliver separately selected the [authored two-item recombination calculator](docs/active/2026-10-06-recombination-calculator/README.md)
 in a fresh isolated session from main `7252027c`. Its standalone page and narrow
-existing pair-API integration are source implemented, with build/test/render
-checks unrun pending a finite parent-controlled LOCAL batch. The active optimizer
+existing pair-API integration are source implemented. First isolated metadata
+and focused tests pass; TypeScript fails and stops the batch. Source types are
+repaired but unqualified; build/render await a new parent-controlled LOCAL batch. The active optimizer
 and normal checkout are untouched; parent owns publication and main/CI gating.
 
 Oliver resumed the coordinated work at 09:00 Vancouver on October 5. The
