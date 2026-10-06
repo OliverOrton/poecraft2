@@ -3404,7 +3404,7 @@ void run_solver_native_continuation_api_tests(const char* artifact_dir) {
         // Actual C ABI default selection, without a native-retention diagnostic
         // setter. Current queues only the qualified clean Rare source domain;
         // Finder receives no Current source-lower authority through this owner.
-        for (const auto mode : {PC_SOLVER_MODE_CURRENT, PC_SOLVER_MODE_FINDER}) {
+        for (const auto mode : {PC_SOLVER_MODE_CURRENT, PC_SOLVER_MODE_STRATEGY_FINDER}) {
             pc_solver_handle normal=nullptr;
             PC_CHECK(pc_solver_create(session,one_side.c_str(),one_side.size(),&normal,&error)==PC_RESULT_OK);
             if (!normal) continue;
