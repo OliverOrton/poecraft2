@@ -5319,7 +5319,7 @@ void run_solver_scoped_lower_tests() {
     }
     Impl stochastic(stochastic_calc,stochastic_start,prices,options);
     while (!stochastic.advance_setup()) {}
-    PC_CHECK(stochastic.native_retention_potential);
+    PC_CHECK(stochastic.native_retention_potential != nullptr);
     PC_CHECK(stochastic.native_retention_lower_value(stochastic.result.start_state)>1.9 &&
         stochastic.native_retention_lower_value(stochastic.result.start_state)<=2);
 
