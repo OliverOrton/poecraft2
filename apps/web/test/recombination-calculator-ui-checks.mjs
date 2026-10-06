@@ -136,6 +136,8 @@ export async function checkRecombinationCalculator(page, capture) {
     await page.setViewportSize({width: 390, height: 844});
     // Dockview uses ResizeObserver to update its panel's explicit dimensions.
     await page.waitForFunction(() => document.querySelector('pc-recombination-calculator').clientWidth <= 390);
+    const navigation = await page.locator('.pc-document-actions').evaluate(node => [...node.children].map(child => child.getBoundingClientRect().right));
+    assert.ok(navigation.every(right => right <= 391), 'Shared document navigation remains reachable at 390px');
     const narrow = await host.evaluate(node => {
         const boxes = ['.pc-recomb-a', '.pc-recomb-b', '.pc-recomb-goal', '.pc-recomb-picker'].map(selector => {
             const box = node.querySelector(selector).getBoundingClientRect(); return {x: box.x, right: box.right, top: box.top};
