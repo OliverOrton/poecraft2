@@ -192,7 +192,7 @@ export class PcRecombinationCalculator extends HTMLElement {
         }).finally(() => {this.busy = false; if (!this.disposed) this.render();});
     }
     private goalEdit(task: () => void): void {
-        this.edit(async () => {task();});
+        this.edit(async () => {task(); this.render();});
     }
     private select(focus: Focus, side?: "prefix" | "suffix" | "implicit"): void {
         this.editFocus = focus;
@@ -221,10 +221,11 @@ export class PcRecombinationCalculator extends HTMLElement {
         });
         this.addEventListener("change", event => {
             const control = event.target as HTMLInputElement;
-            if (control.hasAttribute("data-recomb-base-care")) this.goalEdit(() => {this.baseCare = control.checked;});
-            if (control.hasAttribute("data-recomb-required-base")) this.goalEdit(() => {this.requiredBase = control.value as Input;});
-            if (control.hasAttribute("data-recomb-extras")) this.goalEdit(() => {this.goal.allowExtraModifiers = control.checked;});
-            if (control.hasAttribute("data-recomb-threshold")) this.goalEdit(() => {this.goal.minSatisfiedSlots = Number(control.value);});
+            const checked = control.checked, value = control.value;
+            if (control.hasAttribute("data-recomb-base-care")) this.goalEdit(() => {this.baseCare = checked;});
+            if (control.hasAttribute("data-recomb-required-base")) this.goalEdit(() => {this.requiredBase = value as Input;});
+            if (control.hasAttribute("data-recomb-extras")) this.goalEdit(() => {this.goal.allowExtraModifiers = checked;});
+            if (control.hasAttribute("data-recomb-threshold")) this.goalEdit(() => {this.goal.minSatisfiedSlots = Number(value);});
         });
         for (const focus of ["a", "b", "goal"] as const) {
             const list = this.list(focus)!;
