@@ -36,6 +36,21 @@ Current benchmark economics, policy gains and activation remain unmeasured.
 Hosted qualification and guarded main integration use the exact published head;
 experimental solver and scoped-lower work remain separate.
 
+## Qualified private Windows batch launcher
+
+The [launcher qualification](docs/foundation/solver-launcher-qualification.md)
+repairs the retained private job owner used by the solver batches. Its detached
+root allowed ordinary descendants to allocate Terminal windows outside the job;
+the repaired root uses a nonvisible inheritable console and retains suspended
+admission, exact handles, finite cleanup and fail-closed unknown identities.
+Eight descendant checks, eight installed-Ninja ordinary/console-pool checks and
+37 lifecycle/handle checks pass with zero new desktop Terminal windows and all
+recorded process identities absent. Two test-fixture failures remain preserved.
+This branch is local; main already used the nonvisible flag and has not received
+the broader private job owner. Solver owners must use the pinned repaired module
+from that qualification, then obtain parent LOCAL before feature execution.
+No compiler workload, solver economics, activation or main push was performed.
+
 ## Selected work: isolated solver causal and economic continuation
 
 Oliver resumed the coordinated work at 09:00 Vancouver on October 5. The

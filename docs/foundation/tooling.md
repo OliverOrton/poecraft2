@@ -6,6 +6,13 @@ prefer a small extension or faithful adapter. Native C++ owns computation and
 evaluation. The Lab and corpus runner share the isolated worker and supervision
 contracts; they are different entry points, not competing solvers.
 
+For private Windows batches using the retained job owner, follow the
+[qualified launcher reference](solver-launcher-qualification.md). A detached
+root can leave service-activated Terminal windows outside its job when ordinary
+children allocate consoles. Use the qualified nonvisible-console launch and
+retain job cleanup; a scoped process check alone does not establish desktop
+window cleanup. Main's older owner already uses the nonvisible launch flag.
+
 Run from the repository root with
 `$env:PYTHONPATH = "tools/ingest;bindings/python"`. The commands below use
 `py -3 -m poecraft_ingest.<module>` as a local-launcher shorthand; use
