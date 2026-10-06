@@ -618,3 +618,21 @@ Source-only next gate distinguishes actual tail-branch reachability from normal
 joint complete-support refusal, within existing candidate/entry/row bounds.
 Do not repeat unchanged source or activate private210. This owner retains repair
 responsibility; all preceding source-only preparation states are historical.
+
+
+Source-only relevance audit afteraf483998 uses saved native events:7941 missing
+at114.771s,79 unsupported entries, while all8 handoff cells were spent on other
+states by43.927s. No usable row/frontier authority; rebuild invocation relative
+to fixed-policy evaluation remains unknown. Mask27's four satisfied goals makes
+the modified three-held/two-target zero-target branch false at this entry.
+The checked first selective proposal771410.903008549 is expensive; no matched
+per-proposal saving or later branch occupancy is claimed. Typed native entry
+certificates survive, but retained authored provenance is empty; copying it
+alone fails the existing non-primitive/support/global-routing obligations.
+See checks/current-support-handoff-source-20261006/normal-frontier-relevance-audit.md
+and existing evidence tail-frontier-relevance-projection.json. Smallest next gate:
+passive bounded branch/first-latest closure/native physical-certificate census,
+qualified focused ownership first, then at most one original diagnostic Conquest
+case under a fresh LOCAL grant. No next root pair or tail proposal before actual
+relevance evidence; lower owns LOCAL, no heavy work taken. All prior negatives,
+root/every-positive-entry/paid-support guards and source pins remain.

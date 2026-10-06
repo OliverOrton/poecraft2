@@ -158,6 +158,16 @@ Component validity, a service input flag or proposal estimates grant no new
 root scalar, statewise continuation or lower authority. Changed-tail branch
 reachability remains unavailable in this receipt.
 
+The subsequent [source-only relevance audit](../active/2026-10-04-sol61-armour-recovery/checks/current-support-handoff-source-20261006/normal-frontier-relevance-audit.md)
+observes no owned row or usable statewise frontier at the late missing entry.
+Selective retention preserves its typed native programme-entry certificate,
+while authored graph-local provenance is empty. This does not make copying the
+metadata sufficient: the existing entry owner also requires a supported primitive
+and exact global routing of an actual positive physical/controller entry. Both
+saved query counters are0, so no dynamic metadata rejection is proved. Native
+programme, root-only, global-entry and statewise roles remain distinct; none is
+promoted from a coarse mask or representative materialization.
+
 Compiler-authored graph-local declarations identify genuine native decisions in
 an immutable emitted graph. They bind full graph bytes, native operator semantics
 and observable control boundaries. Composition carries declarations through its

@@ -55,6 +55,16 @@ state7941/mask27 remains unresolved. LOCAL released21:44:18UTC: elevated census0
 windows0/all8 owned stages clean. No consumer activation. The living record owns
 exact pins, the native checker census and all distinct negatives.
 
+The [source-only relevance audit](../active/2026-10-04-sol61-armour-recovery/checks/current-support-handoff-source-20261006/normal-frontier-relevance-audit.md)
+finds that7941 arrives in the saved missing-support events at114.771s, after the
+eight-cell handoff budget was spent on other states by43.927s. It lacks both an
+owned row and usable certified frontier. Four satisfied goals also falsify the
+modified three-held/two-target zero-target guard directly at that entry. Actual
+physical/controller identity and later branch occupancy remain unavailable.
+The next gate is passive native branch/entry-certificate/closure evidence before
+another tail or root pair; lower owns LOCAL. Metadata copying alone would not
+satisfy the current primitive-only entry guard. No production activation follows.
+
 ## Normal Current registry lookup repair - October 6
 
 075 Tests/Benchmark compile and link; focused prefix contract completes, then

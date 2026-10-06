@@ -269,6 +269,39 @@ reachability from the unresolved complete paid-tail support in normal joint
 construction. Whole-search cause, introducing commit and exact improved Bow
 request remain unproved; all earlier failures and tied comparisons remain.
 
+### Source-only relevance gate after the tied tail pair
+
+The [normal frontier audit](checks/current-support-handoff-source-20261006/normal-frontier-relevance-audit.md)
+uses the already saved native result, not another run. State7941 first appears
+in the saved missing-support events at114.771s, followed by79 unique unsupported
+entries in the same closure walk. All eight bounded service cells were selected
+on other states by43.927s. The active graph has no statewise frontier/renewal
+support, and7941 has no owned row. The rebuild occurs before and after fixed-
+policy evaluation; the receipt does not identify which invocation failed.
+
+The direct modified branch is inapplicable at7941: mask27 has four satisfied
+of five required goals, whereas the variant holds three and targets two.
+At least one target goal must be present. This proves only the zero-target
+guard's failure at this entry; it does not reconstruct the physical state or
+exclude later zero-target visits. A first checked retained selective proposal
+costs771410.903008549 before the later101311.35474896732 winner. Its matched
+control cost and actual changed-branch occupancy are unavailable.
+
+Source also separates preserved native programme-entry certificates from omitted
+retained graph-local provenance. Merely copying that metadata cannot enable the
+current entry owner: its supported primitive guard excludes these non-primitive
+programme declarations. Both saved entry-query counters are0, so no dynamic
+metadata rejection is claimed. No root/lower/continuation authority is changed.
+`tail-frontier-relevance-projection.json` binds the compact selected events.
+
+The next experiment is a passive bounded census of actual native branch visits,
+first/latest missing-entry identity/incoming obligation, and retained native
+certificate matches. Qualify that diagnostic source and ownership first; one
+original Conquest diagnostic case can then discriminate missing physical support
+from unsupported routing/certificate ownership. No further economic root pair,
+new tail, capacity widening, private210 or blind unchanged repeat precedes that
+gate. No heavy work or new execution owner was taken; lower has the next LOCAL.
+
 ## Question and first gate
 
 Identify the first demonstrated boundary in normal enumeration, admission,

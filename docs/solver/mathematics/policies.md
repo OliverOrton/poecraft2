@@ -1433,6 +1433,21 @@ cause, numerical lower authority, consumer activation or private210 activation
 follows. [The living checkpoint](../../active/2026-10-04-sol61-armour-recovery/README.md#bounded-repair-tail---qualified-no-conquest-saving)
 keeps exact pins, checker ownership, unchanged gates and every prior negative.
 
+The [saved-event relevance audit](../../active/2026-10-04-sol61-armour-recovery/checks/current-support-handoff-source-20261006/normal-frontier-relevance-audit.md)
+adds a narrower negative: mask27 records four satisfied of five required goals.
+A three-held/two-target programme cannot have zero satisfied target goals there;
+its modified direct-Chaos guard is false at that entry. This cardinality argument
+supplies no physical frame, incoming cursor or inference about later reroll
+visits. The late missing request occurs after all eight bounded service cells
+were spent elsewhere. No owned row/statewise frontier is available. Because
+closure is rebuilt before and after evaluation, the exact invocation remains
+unidentified. Checked native programme-entry certificates and root graph validity
+also do not imply the supported primitive/global-routing predicates of the
+existing actual-entry owner; copying absent retained provenance alone is
+insufficient. These are scoped necessary-condition refusals, not a global cause,
+new cost theorem, permission to reuse a root scalar, or justification to widen
+service. A bounded passive physical/certificate/branch census is the next gate.
+
 <a id="bounded-checked-graph-support-service"></a>
 ### Bounded checked-graph support service
 
