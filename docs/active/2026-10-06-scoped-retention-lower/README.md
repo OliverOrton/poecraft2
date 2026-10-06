@@ -87,7 +87,11 @@ Three permissions remain separate:
 3. The new local retirement permission needs a complete materialized row,
    compatible statewise values from the output policy incumbent, and the
    incumbent's independent certification/evaluation, properness and executable
-   flags. Root-only/rejected values and working result values do not qualify.
+   flags. Immediately before an attempted new retirement, the existing
+   `certified_incumbent_invalid_reason` owner must also return null for the
+   current goal, economy, action prefix, caller scope, artifact, monotone graph
+   generations, retained graph prefix and materialization/provenance.
+   Root-only/rejected values and working result values do not qualify.
 
 The first consumer is delayed row classification. For a row with no explicit,
 embedded or observed-choice source return, transport the lower once through
@@ -117,6 +121,32 @@ transitions and observed-choice successors, with constant extra scratch.
 Neutral lower-vector construction remains linear in discovered states, using
 the existing vector allocation. Proof preparation retains its existing labelled
 32/64 MiB cap and aggregate accounting; no larger allowance is introduced.
+The final compatibility check is called only after the lower comparison
+passes. Its existing owner hashes the retained graph/action prefixes and uses
+an allocation-free quadratic economy-key scan. This cost is additional to row
+transport and may matter economically; no new cache or framework is introduced.
+
+### CI source-review correction before runtime validation
+
+Review of initial freeze `4015c2beb0b930b8dc1f9616d6444c6a1718ade2`
+identified that assignment plus certification flags did not establish current
+compatibility. `commit_output_incumbent` does not validate on assignment, so no
+lifetime invariant is asserted. The corrected consumer calls the existing
+`certified_incumbent_invalid_reason` immediately before granting its new
+retirement permission. That owner delegates to `retained_incumbent_invalid_reason`
+and the existing retained-fallback contract; its identity/generation/provenance
+checks precede certification, properness, executable and evaluated-cost checks.
+
+New consumer countertests hold certificate flags and values fixed while
+changing goal/economy/action/caller/artifact identities, actual caller restart
+scope, source/target generations, retained prefix and materialization/payload
+provenance. They also mutate an actual retained-prefix probability. Each must
+return the precise owner's invalidation reason and leave Scour unresolved.
+The positive control retains a separately captured native Bench prefix,
+appends Scour outside it and remains compatible; self/choice probes therefore
+exercise their own vetoes rather than being hidden by stale-prefix rejection.
+These are structural consumer/compatibility tests with the separately derived
+native Bench value oracle, not graph-issuance qualification. All remain unrun.
 
 ## Finite independent witnesses and counterexamples
 

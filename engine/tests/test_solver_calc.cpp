@@ -5138,6 +5138,34 @@ void run_solver_scoped_lower_tests() {
     work.focused_lower_completion_proof_values.assign(calc.state_count(),456);
     const auto lower=work.certified_incremental_lower_values();
     PC_CHECK(lower[root]==root_lower && lower[terminal]==0 && lower[normal]>1);
+    // Capture an immutable native Bench prefix for the upper. The alternative
+    // Scour row is appended later, so its self/choice probes cannot invalidate
+    // this prefix and accidentally conceal a missing consumer veto.
+    Impl::BoundedPolicyIncumbent incumbent;
+    solve_detail::SparseRow finish_row; finish_row.owner_state=root;
+    finish_row.transition_offset=work.transition_cache->successors.size();
+    finish_row.transition_count=1;
+    const auto finish_row_id=work.transition_cache->rows.size();
+    work.transition_cache->rows.push_back(finish_row);
+    work.transition_cache->successors.push_back(terminal);
+    work.transition_cache->probabilities.push_back(1);
+    work.priced_rows.resize(finish_row_id+1);
+    work.priced_rows[finish_row_id].operator_index=bench;
+    work.priced_rows[finish_row_id].cost=1;
+    incumbent.graph_row_count=work.transition_cache->rows.size();
+    incumbent.graph_priced_row_count=work.priced_rows.size();
+    incumbent.graph_successor_count=work.transition_cache->successors.size();
+    incumbent.graph_probability_count=work.transition_cache->probabilities.size();
+    incumbent.graph_choice_count=work.transition_cache->choices.size();
+    incumbent.graph_choice_successor_count=work.transition_cache->choice_successors.size();
+    incumbent.graph_choice_option_count=work.transition_cache->choice_options.size();
+    incumbent.graph_prefix_identity=work.incumbent_graph_prefix_identity(
+        incumbent.graph_row_count,incumbent.graph_priced_row_count,
+        incumbent.graph_successor_count,incumbent.graph_probability_count,
+        incumbent.graph_choice_count,incumbent.graph_choice_successor_count,
+        incumbent.graph_choice_option_count);
+    incumbent.source_generation=work.transition_cache->rows.size();
+    incumbent.target_generation=calc.state_count();
     // Install one COMPLETE deterministic native Scour row from the independently
     // enumerated kernel. This fixture controls the consumer, not graph admission.
     solve_detail::SparseRow row; row.owner_state=root; row.admitted=false;
@@ -5147,7 +5175,6 @@ void run_solver_scoped_lower_tests() {
     work.priced_rows.resize(row_id+1); work.priced_rows[row_id].operator_index=scour;
     work.priced_rows[row_id].cost=0.5;
     work.expanded.assign(calc.state_count(),1);
-    Impl::BoundedPolicyIncumbent incumbent;
     // The native Bench kernel above independently witnesses root U=1, goal U=0.
     // No finite upper at Normal is asserted or needed for source-row retirement.
     incumbent.certified_upper_bound=incumbent.evaluated_policy_cost=1;
@@ -5158,6 +5185,23 @@ void run_solver_scoped_lower_tests() {
     incumbent.proper=incumbent.executable=true;
     incumbent.values.assign(calc.state_count(),kInfinity);
     incumbent.values[root]=1; incumbent.values[terminal]=0;
+    incumbent.goal_identity=work.goal_identity(); incumbent.economy_identity=work.economy_identity();
+    incumbent.caller_scope_identity=work.caller_scope_identity(); incumbent.artifact_identity=work.artifact_identity();
+    incumbent.action_vocabulary_size=work.operators.size();
+    incumbent.action_vocabulary_identity=work.action_vocabulary_prefix_identity(incumbent.action_vocabulary_size);
+    incumbent.policy_materialized=true;
+    incumbent.policy.assign(calc.state_count(),PolicyOperatorRef{});
+    incumbent.policy[root]=PolicyOperatorRef{bench};
+    incumbent.policy_rows.assign(calc.state_count(),std::numeric_limits<std::uint64_t>::max());
+    incumbent.policy_rows[root]=finish_row_id;
+    incumbent.policy_reachable.assign(calc.state_count(),0);
+    incumbent.policy_reachable[root]=incumbent.policy_reachable[terminal]=1;
+    // Structural payload/provenance stand-ins, as in retained-pool ownership
+    // fixtures. No compiled graph admission is claimed by this consumer test.
+    incumbent.compiled_artifact.strategy_json="scoped-native-Bench-consumer-fixture";
+    incumbent.compilation_provenance="structural_consumer_fixture_native_kernel_oracle";
+    PC_CHECK(incumbent.source_generation<work.transition_cache->rows.size());
+    PC_CHECK(work.certified_incumbent_invalid_reason(incumbent)==nullptr);
     const auto classify=[&](bool consumed, bool root_only, bool rejected, bool self,
                             bool policy_upper=true) {
         work.options.native_retention_consume=consumed;
@@ -5188,6 +5232,35 @@ void run_solver_scoped_lower_tests() {
     incumbent.proper=false;
     PC_CHECK(classify(true,false,false,false)==Status::Unresolved); // no checked proper-policy issuer
     incumbent.proper=true;
+    // Flags and copied values remain valid in every stale case. The existing
+    // compatibility owner, not those flags, must veto actual row retirement.
+    const auto compatible_incumbent=incumbent;
+    const auto stale=[&](const char* expected) {
+        const char* reason=work.certified_incumbent_invalid_reason(incumbent);
+        PC_CHECK(reason && std::string(reason)==expected);
+        PC_CHECK(classify(true,false,false,false)==Status::Unresolved);
+        incumbent=compatible_incumbent;
+    };
+    incumbent.goal_identity^=1; stale("goal_identity_changed");
+    incumbent.economy_identity^=1; stale("economy_identity_changed");
+    incumbent.action_vocabulary_identity^=1; stale("action_vocabulary_changed");
+    incumbent.caller_scope_identity^=1; stale("caller_scope_changed");
+    work.options.allow_economic_restart=true; stale("caller_scope_changed");
+    work.options.allow_economic_restart=false;
+    incumbent.artifact_identity^=1; stale("artifact_generation_changed");
+    incumbent.source_generation=work.transition_cache->rows.size()+1; stale("graph_generation_rewound");
+    incumbent.target_generation=calc.state_count()+1; stale("graph_generation_rewound");
+    incumbent.graph_prefix_identity^=1; stale("graph_prefix_changed");
+    incumbent.policy_materialized=false; stale("retained_artifact_provenance_missing");
+    incumbent.compiled_artifact.strategy_json.clear(); stale("retained_artifact_provenance_missing");
+    incumbent.compilation_provenance.clear(); stale("retained_artifact_provenance_missing");
+    // Actual in-place mutation of the retained prefix, rather than a changed
+    // hash field, must be caught. Appending Scour above remains a valid control.
+    work.transition_cache->probabilities[finish_row.transition_offset]=0.5;
+    stale("graph_prefix_changed");
+    work.transition_cache->probabilities[finish_row.transition_offset]=1;
+    PC_CHECK(work.certified_incumbent_invalid_reason(incumbent)==nullptr);
+    PC_CHECK(classify(true,false,false,false)==Status::NonImproving);
     work.result_statewise_values_rejected=false;
     work.result.values=incumbent.values;
     PC_CHECK(classify(true,false,false,false,false)==Status::Unresolved); // working values are no policy issuer

@@ -2364,10 +2364,16 @@ bool SolveWork::Impl::advance_incremental_classification() {
             incremental_classification_admitted = true;
             return false;
         }
-        if ((proof_capabilities().lower_retirement || scoped_retirement) &&
-            std::isfinite(current_upper) &&
+        if (std::isfinite(current_upper) &&
             current_upper < kValueCeiling &&
-            candidate.lower_q >= current_upper) {
+            candidate.lower_q >= current_upper &&
+            (proof_capabilities().lower_retirement ||
+             (scoped_retirement &&
+              // The output assignment/flags do not prove freshness. Reuse
+              // the existing owner at each attempted new retirement, after
+              // the cheap comparison: full scope, generations, retained
+              // graph prefix, materialization and certification must match.
+              certified_incumbent_invalid_reason(*output_incumbent) == nullptr))) {
             candidate.status =
                 IncrementalAlternativeRow::Status::NonImproving;
             candidate.improvement_margin =
