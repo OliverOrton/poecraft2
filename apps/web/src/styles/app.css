@@ -5398,8 +5398,8 @@ input::placeholder, textarea::placeholder {
 .pc-mod-list.is-compact .pc-mod-slot { height: auto; min-height: 40px; max-height: none; flex: 0 0 auto; grid-template-columns: 3px 28px minmax(0, 1fr); padding: 4px 5px 4px 0; }
 .pc-mod-list.is-compact .pc-mod-slot-content { overflow: visible; padding-left: 6px; }
 .pc-mod-list.is-compact .pc-mod-slot-lines { font-size: var(--pc-type-body); overflow-wrap: anywhere; }
-.pc-mod-list.is-compact .pc-mod-group h4 { margin: 6px 0 4px; }
-.pc-mod-list.is-compact .pc-mod-explicit-ledger { gap: 4px; }
+.pc-mod-list.is-compact .pc-mod-group h4 { margin: 4px 0; }
+.pc-mod-list.is-compact .pc-mod-explicit-ledger { gap: 3px; }
 .pc-mod-list.is-compact .pc-item-fracture-mod { min-height: 20px; }
 .pc-mod-list.is-compact .pc-item-open-summary { margin: 4px 0; color: var(--pc-text-muted); font-size: var(--pc-type-meta); }
 .pc-mod-list.is-compact .pc-mod-target-slot .pc-mod-slot-content { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 3px 6px; }
