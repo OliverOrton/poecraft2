@@ -5120,6 +5120,9 @@ void run_solver_scoped_lower_tests() {
     const auto root = work.result.start_state;
     const auto root_lower = work.native_retention_lower_value(root);
     PC_CHECK(root_lower>0.9 && root_lower<=1);
+    PC_CHECK(saved->preparation_stats.checked_source_minimum_action==bench);
+    PC_CHECK(saved->preparation_stats.checked_source_minimum_cost==1 &&
+        saved->preparation_stats.checked_source_minimum_rhs<=1);
     PC_CHECK(work.certified_global_lower_bound()==0); // no public/profile flip
     PC_CHECK(work.progress().lower_bound==0);
     PC_CHECK(saved->native_action_relations>=registry.actions.size());
@@ -5360,6 +5363,49 @@ void run_solver_scoped_lower_tests() {
             stochastic_lower,stochastic_oracle,stochastic.native_retention_refusal.c_str());
     PC_CHECK(stochastic_lower>1.9 && stochastic_lower<=stochastic_oracle);
 
+    // Independent refill-debt oracle. Chaos costs 1, Annul costs 10, and
+    // EVERY other registry primitive costs 100, including the proper one-step
+    // Bench finish. This pool always fills at least four affixes. To finish
+    // with one clean goal after Chaos needs at least three paid removals;
+    // a further Chaos refills the debt. Thus every proper policy costs >=31,
+    // and Bench independently witnesses an upper of 100. A fictitious clean
+    // Chaos exit/no-op would invalidate this positive lower-strength control.
+    auto renewal_registry=registry;
+    for (auto& action:renewal_registry.actions) action.cost_keys={"fixture:other"};
+    const auto chaos=renewal_registry.index_by_id.at("chaos");
+    renewal_registry.actions[chaos].cost_keys={"fixture:chaos"};
+    renewal_registry.actions[annul].cost_keys={"fixture:annul"};
+    const PhaseLowerPrices renewal_prices{{"fixture:other",100},
+        {"fixture:chaos",1}, {"fixture:annul",10}};
+    CalcContext renewal_calc(session,goal,renewal_registry,{bench,chaos,annul});
+    const auto renewal_root=renewal_calc.intern_item(start);
+    const auto& refill=renewal_calc.outcomes(renewal_root,chaos);
+    bool native_floor=refill.supported && refill.applicable && !refill.entries.empty() &&
+        refill.choice_groups.empty() && sums_to_one(refill);
+    for (const auto& exit:refill.entries) if (exit.probability>0) {
+        const auto& after=renewal_calc.state(exit.state);
+        native_floor &= after.rarity==PC_RARITY_RARE &&
+            after.prefix_count+after.suffix_count>=4 && !renewal_calc.is_goal_state(after);
+    }
+    PC_CHECK(native_floor);
+    const auto& direct_finish=renewal_calc.outcomes(renewal_root,bench);
+    PC_CHECK(direct_finish.supported && direct_finish.entries.size()==1 &&
+        direct_finish.entries.front().probability==1 &&
+        renewal_calc.is_goal_state(renewal_calc.state(direct_finish.entries.front().state)));
+    auto renewal_options=options;
+    // Complete native Chaos exits above belong to this new fixture, rather
+    // than the two-action consumer fixture's 64-state cap.
+    renewal_options.max_states=renewal_options.max_discovered_states=
+        renewal_options.max_expanded_states=1024;
+    Impl renewal(renewal_calc,start,renewal_prices,renewal_options);
+    while (!renewal.advance_setup()) {}
+    PC_CHECK(renewal.native_retention_potential != nullptr);
+    const auto renewal_lower=renewal.native_retention_lower_value(renewal.result.start_state);
+    if (!(renewal_lower>30.9 && renewal_lower<=100))
+        std::fprintf(stderr,"Chaos refill-debt lower: actual=%.17g oracle_floor=31 oracle_upper=100 refusal=%s\n",
+            renewal_lower,renewal.native_retention_refusal.c_str());
+    PC_CHECK(renewal_lower>30.9 && renewal_lower<=100);
+
     // Newly admitted actual cheaper action: the SAME native Bench mechanics,
     // a distinct priced registry operator. Exact optimum becomes 1/4. Complete
     // registry coverage includes it even before local-family materialization.
@@ -5464,6 +5510,22 @@ void run_solver_phase_lower_tests() {
     };
     const auto alchemy_facts=action_transition_facts(ActionType::Alchemy);
     PC_CHECK(alchemy_facts.applied_rarity==PC_RARITY_RARE && alchemy_facts.minimum_refill_target==4);
+    const auto chaos_facts=action_transition_facts(ActionType::Chaos);
+    PC_CHECK(chaos_facts.applied_rarity==PC_RARITY_RARE && chaos_facts.minimum_refill_target==4);
+    for (const auto [kind, minimum] : {
+            std::pair{RareReforgeCountKind::Equipment,4},
+            std::pair{RareReforgeCountKind::LegacyJewel,4},
+            std::pair{RareReforgeCountKind::ClusterJewel,3}}) {
+        const auto law=rare_reforge_count_law(kind);
+        PC_CHECK(law.minimum_target()==minimum);
+        bool witnessed=false, bounded=true;
+        for (unsigned draw=0;draw<law.denominator;++draw) {
+            const auto native_target=law.select(draw);
+            witnessed |= native_target==minimum;
+            bounded &= native_target>=minimum;
+        }
+        PC_CHECK(witnessed && bounded);
+    }
     PC_CHECK(action_transition_facts(ActionType::Annul).applied_rarity==255);
     PC_CHECK(phase_refill_minimum(0,0,4,[](unsigned,unsigned){return true;})==4);
     PC_CHECK(phase_refill_minimum(0,0,4,[](unsigned p,unsigned s){return p+s==0;})==1);
@@ -5483,6 +5545,16 @@ void run_solver_phase_lower_tests() {
         const auto before=exact_item_state_key(normal);
         PC_CHECK(!apply_action(application,&normal,alchemy).applied);
         PC_CHECK(exact_item_state_key(normal)==before);
+        ActionParameters chaos; chaos.type=ActionType::Chaos;
+        const auto renewed=apply_action(application,&normal,chaos);
+        // Native empty/singleton pools stop refill without rolling the old
+        // carrier back. A minimum TARGET is never unconditional occupancy.
+        PC_CHECK(renewed.applied && normal.rarity==PC_RARITY_RARE);
+        PC_CHECK(normal.prefix_count+normal.suffix_count==unsigned(singleton));
+        pc_item_state wrong_rarity{}; pc_item_clear(&wrong_rarity);
+        const auto unchanged=exact_item_state_key(wrong_rarity);
+        PC_CHECK(!apply_action(application,&wrong_rarity,chaos).applied);
+        PC_CHECK(exact_item_state_key(wrong_rarity)==unchanged);
     }
     const auto converted = phase_completion_proposal({0, 3, 5, 8}, 2);
     PC_CHECK(converted.role == PhaseTableRole::MaskCompletion);

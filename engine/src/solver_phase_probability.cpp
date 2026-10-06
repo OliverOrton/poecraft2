@@ -10,7 +10,7 @@
 namespace poecraft::solver {
 using namespace quotient;
 namespace {
-constexpr std::uint64_t version = 0x50524f424c4f0007ull;
+constexpr std::uint64_t version = 0x50524f424c4f0008ull;
 using PreparationClock = std::chrono::steady_clock;
 std::uint64_t elapsed_ns(PreparationClock::time_point start) {
     return std::chrono::duration_cast<std::chrono::nanoseconds>(PreparationClock::now()-start).count();
@@ -669,13 +669,18 @@ solve_detail::CooperativeTask<std::shared_ptr<const PreparedPhasePotential>> Pha
         const auto key=std::tuple{a,p,s};
         if (const auto found=refill_cache.find(key);found!=refill_cache.end()) return found->second;
         const auto facts=action_transition_facts(calc.registry().actions[a].params.type);
-        // Alchemy has no forced draw, tag-changing affix or metamod in frame.
+        // Alchemy/Chaos have no forced draw, tag-changing affix or metamod in frame.
         // Its natural Rare pool and insertion rules match get_draw. Every
         // previous draw is a blocker in nonempty_add, including hidden members;
         // its residual excludes target mass and never assumes a target survives.
-        const auto result=phase_refill_minimum(p,s,facts.minimum_refill_target,
+        // The transition facts' ordinary target floor must also satisfy the
+        // session's native count law. In particular, a Cluster count of three
+        // cannot inherit equipment's four. Zero-weight entries are not draws.
+        const unsigned target=std::min<unsigned>(facts.minimum_refill_target,
+            rare_reforge_count_law(calc.session().rare_reforge_count_kind).minimum_target());
+        const auto result=phase_refill_minimum(p,s,target,
             [&](unsigned pp,unsigned ss) { return nonempty_add(a,pp,ss,-1,kNoId); });
-        refill_witnesses.push_back({a,p,s,facts.minimum_refill_target,result});
+        refill_witnesses.push_back({a,p,s,target,result});
         refill_cache.emplace(key,result); return result;
     };
     const auto upper = [&](unsigned a, unsigned slot, unsigned p, unsigned s, unsigned count, unsigned filter) {
@@ -735,7 +740,9 @@ solve_detail::CooperativeTask<std::shared_ptr<const PreparedPhasePotential>> Pha
         joint_events.push_back(std::move(w));
         return joint_events.back().joint_upper;
     };
-    // At most two rarities x two regions plus one Alchemy occupancy cutoff.
+    // Two rarities x two regions plus a Rare refill cutoff in each region.
+    // Alchemy and Chaos share the fresh natural-pool cutoff; Chaos can also
+    // refill the retained-fracture region. The byte reservation is unchanged.
     // Reserve bounded geometry storage before generating any template. This
     // cache lives only inside this compatible preparation; it contains neither
     // event probabilities nor selected minima, allocations or scalar values.
@@ -829,11 +836,20 @@ solve_detail::CooperativeTask<std::shared_ptr<const PreparedPhasePotential>> Pha
         std::uint64_t relation_count=0;
         std::uint64_t relation_payload_bytes=0;
         std::vector<double> minimum_rhs(extent, std::numeric_limits<double>::infinity());
+        stats.checked_source_minimum_action=UINT32_MAX;
+        stats.checked_source_minimum_cost=stats.checked_source_minimum_rhs=0;
+        stats.checked_source_minimum_paid_exit=false;
         PhaseProposalRefusal first_violation;
         const auto keep_record = [&](PhasePotentialRelation record) {
             ++relation_count;
             relation_payload_bytes+=sizeof(PhasePotentialRelation)+record.targets.capacity()*4+
                 record.probabilities.capacity()*8+record.events.capacity()*sizeof(PhasePotentialRelation::Event);
+            if (record.cell==anchor_cell && record.rhs<minimum_rhs[record.cell]) {
+                stats.checked_source_minimum_action=record.action;
+                stats.checked_source_minimum_cost=record.cost;
+                stats.checked_source_minimum_rhs=record.rhs;
+                stats.checked_source_minimum_paid_exit=record.independent_price;
+            }
             minimum_rhs[record.cell]=std::min(minimum_rhs[record.cell],record.rhs);
             if (rounds==0 && first_violation.kind.empty()) {
                 double upper=0;
@@ -1123,7 +1139,7 @@ solve_detail::CooperativeTask<std::shared_ptr<const PreparedPhasePotential>> Pha
                                     // overlap-aware feasibility and zero removable crafts.
                                     // Caller source, forced events and no-op alternatives
                                     // are deliberately applied AFTER taking this copy.
-                                    if (renewal_geometry.size()>=5) throw std::length_error("renewal geometry scope exceeds reservation");
+                                    if (renewal_geometry.size()>=6) throw std::length_error("renewal geometry scope exceeds reservation");
                                     auto& saved=renewal_geometry[geometry_key]; saved=groups;
                                     std::uint64_t bytes=128+saved.capacity()*sizeof(Group);
                                     for (const auto& g:saved) bytes+=g.cells.capacity()*sizeof(std::uint32_t);

@@ -829,7 +829,7 @@ struct ActionTransitionFacts {
     bool respects_metamod_pool_blocks = false;
     // Guaranteed after legal application, independently of refill exhaustion.
     // 255 means no claimed postcondition. Native reforge assigns rarity before
-    // fill_random_mods; Alchemy has no fallible direct-mod setup.
+    // fill_random_mods; Alchemy and Chaos have no fallible direct-mod setup.
     std::uint8_t applied_rarity = 255;
     std::uint8_t minimum_refill_target = 0;
 };
@@ -839,12 +839,12 @@ inline constexpr ActionTransitionFacts action_transition_facts(
     switch (type) {
     case ActionType::Transmute:
     case ActionType::Alteration:
-    case ActionType::Chaos:
     case ActionType::VeiledChaos:
     case ActionType::HarvestReforge:
     case ActionType::EldritchChaos:
         return {true, true, true, true};
     case ActionType::Alchemy:
+    case ActionType::Chaos:
         return {true, true, true, true, PC_RARITY_RARE, 4};
     case ActionType::Essence:
     case ActionType::Fossil:

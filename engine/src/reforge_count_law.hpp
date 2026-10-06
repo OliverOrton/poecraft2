@@ -21,6 +21,18 @@ struct RareReforgeCountLaw {
     std::array<Draw, 3> draws;
     std::uint32_t denominator;
 
+    int minimum_target() const {
+        int result = 0;
+        bool present = false;
+        for (const auto& entry : draws) {
+            if (!entry.weight) continue;
+            result = present ? std::min(result, entry.count) : entry.count;
+            present = true;
+        }
+        if (!present) throw std::invalid_argument("empty rare reforge count law");
+        return result;
+    }
+
     int select(std::uint64_t draw) const {
         for (const auto& entry : draws) {
             if (draw < entry.weight) return entry.count;

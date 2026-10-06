@@ -173,6 +173,11 @@ struct PhasePreparationOptions {
 };
 struct PhasePreparationStats {
     bool accepted_early_subsolution = false;
+    // One bounded root relation from the final frozen-vector rebuild. This
+    // identifies a bottleneck, not an executable/proper relaxed policy.
+    std::uint32_t checked_source_minimum_action = UINT32_MAX;
+    double checked_source_minimum_cost = 0, checked_source_minimum_rhs = 0;
+    bool checked_source_minimum_paid_exit = false;
     // Bounded diagnostic history; values are marked only after complete
     // current-vector checking and with no pending price reactivation.
     std::array<double, 64> checked_source_lowers{};

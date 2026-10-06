@@ -133,6 +133,15 @@ CooperativeTask<bool> SolveWork::Impl::run_retention_setup(const PhaseLowerQuery
         entry.residual=early ? std::numeric_limits<double>::infinity() : 0;
         entry.fallback_reason.clear();
         if (early) entry.refinement_trace="checked_native_subsolution; stopped_before_auxiliary_refinement_close";
+        const auto& stats=native_retention_potential->preparation_stats;
+        if (stats.checked_source_minimum_action<calc.registry().actions.size()) {
+            if (!entry.refinement_trace.empty()) entry.refinement_trace+="; ";
+            entry.refinement_trace+="checked_root_relation="+
+                calc.registry().actions[stats.checked_source_minimum_action].id+
+                "; immediate_cost="+std::to_string(stats.checked_source_minimum_cost)+
+                "; rhs="+std::to_string(stats.checked_source_minimum_rhs)+
+                "; paid_exit="+(stats.checked_source_minimum_paid_exit ? "true" : "false");
+        }
         entry.solution_sweeps=native_retention_potential->model_rounds;
         entry.start_contribution=native_retention_lower_value(result.start_state);
         // This existing field carries the maximum of independent start-state
