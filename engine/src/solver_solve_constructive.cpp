@@ -3456,6 +3456,50 @@ bool SolveWork::Impl::retain_current_certified_incumbent() {
             output_incumbent->compiled_artifact.strategy_json.empty()) {
             return true;
         }
+        const auto& candidate = *output_incumbent;
+        if (!candidate.compiled_root_entry_only &&
+            certified_incumbent_invalid_reason(candidate) == nullptr &&
+            candidate.compiled_artifact.continuation_upper.available() &&
+            candidate.compiled_artifact.strategy_json ==
+                candidate.compiled_artifact.certification_strategy_json) {
+            // The emitted graph's independently checked physical root survives
+            // a parent quotient. Keep its separate root-only role; copied
+            // parent policies and values still require their original prefix.
+            const auto live = fast_estimated_owned_bytes();
+            const auto copied = incumbent_owned_bytes(candidate);
+            if (copied < options.max_solver_owned_bytes &&
+                live < options.max_solver_owned_bytes - copied) {
+                BoundedPolicyIncumbent root(candidate);
+                root.compiled_root_entry_only = true;
+                root.strict_state_provenance = false;
+                root.policy_materialized = true;
+                root.values.assign(candidate.values.size(), kInfinity);
+                root.values.at(result.start_state) = candidate.evaluated_policy_cost;
+                root.policy.assign(root.values.size(), PolicyOperatorRef{});
+                root.policy_rows.assign(root.values.size(),
+                    std::numeric_limits<std::uint64_t>::max());
+                root.policy_reachable.assign(root.values.size(), 0);
+                root.policy_row_costs.clear();
+                root.choice_sources.clear();
+                root.unveil_preferences.clear();
+                root.option_unveil_preferences.clear();
+                root.frontier_operators.clear();
+                root.behavioral_representative_by_state.clear();
+                root.primitive_renewal_witness = {};
+                root.fallback = {};
+                root.restart_operator = root.restart_state = root.fallback_anchor_state = kNoId;
+                root.compiled_artifact.policy_decision_bindings.clear();
+                root.source_generation = root.target_generation = 0;
+                root.graph_row_count = root.graph_priced_row_count = 0;
+                root.graph_successor_count = root.graph_probability_count = 0;
+                root.graph_choice_count = root.graph_choice_successor_count = root.graph_choice_option_count = 0;
+                root.graph_prefix_identity = incumbent_graph_prefix_identity(0, 0, 0, 0, 0, 0, 0);
+                identity_mix_string(root.portfolio_identity, "independent_original_root_fallback_v1");
+                root.retained_owned_bytes = incumbent_owned_bytes(root);
+                if (certified_incumbent_invalid_reason(root) == nullptr &&
+                    retain_certified_incumbent(root, root.retained_owned_bytes)) return true;
+            }
+        }
         return retain_certified_incumbent(*output_incumbent);
     }
 

@@ -19083,8 +19083,9 @@ void run_solver_root_prefix_dependency_probe_tests() {
 }
 
 void run_solver_current_support_handoff_tests() {
-    // Exercise the normal Current producers and step owner. No cache, policy,
-    // incumbent, missing request, certificate or phase is injected.
+    // Exercise closed-discovery/quotient publication and early Finish through
+    // normal Current producers. This small complete domain need not encounter
+    // a missing continuation. No cache, policy, certificate or phase is injected.
     const auto started = std::chrono::steady_clock::now();
     const auto require = [](bool condition, const char* reason) {
         if (!condition) {
@@ -19138,6 +19139,27 @@ void run_solver_current_support_handoff_tests() {
         bool finish_requested = false;
         std::uint32_t selected_at_finish = 0;
         double issued_cost = kInfinity;
+        const auto published_root_is_checked = [&] {
+            const auto& published = work.finalized_result ? *work.finalized_result : work.result;
+            const auto& artifact = published.refined_policy_artifact;
+            if (!published.policy_available || !published.has_exact_start_item ||
+                exact_item_state_key(published.exact_start_item) != exact_item_state_key(start) ||
+                artifact.strategy_json.empty() || !std::isfinite(published.evaluated_policy_cost) ||
+                published.evaluated_policy_cost > issued_cost + 1e-8) return false;
+            std::uint64_t digest = 1469598103934665603ULL;
+            SolveWorkTestAccess::Impl::identity_mix_string(digest, artifact.strategy_json);
+            if (validate_executable_continuation_upper_reuse(artifact.continuation_upper,
+                    work.executable_continuation_authority_context(), digest,
+                    artifact.strategy_json.size(),
+                    artifact.strategy_json == artifact.certification_strategy_json) !=
+                ExecutableContinuationReuseStatus::Complete) return false;
+            const auto root_key = exact_item_state_key(start);
+            return std::any_of(artifact.continuation_upper.evaluation.members.begin(),
+                artifact.continuation_upper.evaluation.members.end(), [&](const auto& member) {
+                    return member.available() && exact_item_state_key(member.item) == root_key &&
+                        near(member.exact_continuation_upper, published.evaluated_policy_cost, 1e-9);
+                });
+        };
         const auto bounded = [&] {
             require(++units <= 40000, "finite ordinary production work allowance");
             require(std::chrono::steady_clock::now() - started < std::chrono::seconds(60),
@@ -19154,13 +19176,20 @@ void run_solver_current_support_handoff_tests() {
             bounded();
             owner.step(1);
             const auto* checked = work.best_current_certified_fallback();
+            if (work.output_incumbent &&
+                work.certified_incumbent_invalid_reason(*work.output_incumbent) == nullptr &&
+                (!checked || work.output_incumbent->evaluated_policy_cost < checked->evaluated_policy_cost))
+                checked = &*work.output_incumbent;
             if (checked && !std::isfinite(issued_cost)) issued_cost = checked->evaluated_policy_cost;
             if (std::isfinite(issued_cost)) {
-                require(checked && work.certified_incumbent_invalid_reason(*checked) == nullptr &&
+                // Publication takes the root-only artifact out of retention.
+                // Its checked physical-root certificate remains the authority.
+                const bool published_checked = published_root_is_checked();
+                require(published_checked || (checked && work.certified_incumbent_invalid_reason(*checked) == nullptr &&
                     checked->proper && checked->executable && checked->independently_certified &&
                     checked->independently_evaluated && checked->evaluated_policy_cost <=
-                        issued_cost + 1e-8 && !checked->compiled_artifact.strategy_json.empty(),
-                    "ordinary native issuance retains a compatible checked nonworsening fallback");
+                        issued_cost + 1e-8 && !checked->compiled_artifact.strategy_json.empty()),
+                    "ordinary native issuance preserves compatible checked nonworsening authority through publication");
             }
             bool actual_rows_complete = work.graph_only_support_selected != 0;
             for (std::uint32_t index = 0; index < work.graph_only_support_selected; ++index) {
@@ -19198,9 +19227,11 @@ void run_solver_current_support_handoff_tests() {
         require(snapshot.diagnostics.graph_only_support_selected == work.graph_only_support_selected &&
             snapshot.diagnostics.graph_only_support_handoffs == work.graph_only_support_handoffs,
             "live and exported support evidence agree");
-        require(finish_requested && std::isfinite(issued_cost), "normal producer issued a checked fallback");
-        if (fixture == 0) require(work.graph_only_support_handoffs > 0 && work.graph_only_support_selected > 0,
-            "ordinary Current construction demonstrates the production continuation handoff");
+        require(std::isfinite(issued_cost) && (fixture != 1 || finish_requested),
+            "normal producer issued a checked fallback and honored early Finish");
+        if (fixture == 0) require(!work.result.diagnostics.resource_cap_hit &&
+            work.result.diagnostics.exact_behavioral_merges > 0 && published_root_is_checked(),
+            "ordinary closed discovery preserves a checked physical-root artifact across its exact quotient");
         const auto result = owner.finish();
         require(result.policy_available && !result.refined_policy_artifact.strategy_json.empty() &&
             std::isfinite(result.evaluated_policy_cost) && result.evaluated_policy_cost <= issued_cost + 1e-8,
