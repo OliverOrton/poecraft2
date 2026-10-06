@@ -175,7 +175,7 @@ Code authority:
 `apps/web/src/app/components/pc-mod-list.tsx`, and
 `apps/web/src/app/workspace/persistence.ts`.
 
-## Authored random pair page (isolated calculator gate passed)
+## Authored random pair page (layout repair qualification pending)
 
 `+ Recombination` opens the standalone authored two-item calculator. Independent
 input A/B cards share a modifier picker with one goal card above it. The page
@@ -184,13 +184,17 @@ resources, and draft recovery. Goal edits, either input edit, result-base
 requirements and Cancel invalidate pending/previous odds. Cancellation drops
 delivery while synchronous native work finishes and releases its resources.
 
-Focused real-WASM tests, TypeScript, build/package and actual Chrome interactions
-pass at `dd942153`, including 390px calculator stacking and keyboard focus. Final
-source `abab3f60` also passes fresh build/package and Chrome checks for the shared
-toolbar wrapping fix; matching desktop/narrow captures were reviewed. Unchanged
-TypeScript and native/focused qualification are reused. Main integration is
-separate. The [living record](../active/2026-10-06-recombination-calculator/README.md)
-distinguishes both tested sources, artifact identities and retained failed attempts.
+Earlier focused real-WASM, TypeScript and Chrome contracts pass at `dd942153` /
+`abab3f60`. Oliver rejected the delivered visual fit: the expanded odds table and
+tall cards put key edits below the fold. Source repair `4c932d9f` makes odds a
+compact strip with expandable carrier/model details, opts into compact shared
+cards, and gives desktop item/goal/picker panels their own scroll areas. Mobile
+uses an A/B/Goal overview and selected card above the picker. Existing mechanics,
+pair odds, base-care and stale-result behavior are unchanged. The repair's tests,
+TypeScript, build and actual six-affix fit checks at 1536×864 / 1366×768 remain
+unrun pending parent-reserved LOCAL. Main UI integration is held. The
+[living record](../active/2026-10-06-recombination-calculator/README.md) retains
+earlier evidence separately from the new layout's unqualified source.
 
 Result-base requirements filter native terminal rows by actual base and native
 `is_goal`; they never choose a carrier or renormalize its mass. Equal input

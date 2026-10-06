@@ -1,6 +1,43 @@
 # Authored random recombination calculator
 
-The final isolated calculator gate **passes** at clean source
+## Layout repair selected; qualification pending
+
+Oliver rejected the delivered visual fit at **04:43:10 UTC**: the desktop odds
+table and full cards pushed the actual mods/picker below the fold, and mobile
+captures started mid-card. Parent holds UI main integration. Earlier behavioral
+qualification and Library previews describe the older source, not visual
+acceptance of the repair. Existing images/receipts are preserved.
+
+Source repair `4c932d9fd336174d6c418242a5e475dc4b495c34` opts into compact shared
+ItemCards, retains base/level/rarity/influences and full affix text, summarizes
+empty capacity, and leaves advanced properties collapsible. Odds and Calculate
+occupy one compact strip; carrier, attempt and model details expand on demand.
+Desktop keeps A left, B right and goal above the middle picker in bounded panels
+with independent scrolling. Mobile presents A/B/Goal summaries, the selected
+card and a naturally scrolling picker, with initial capture at the logical top.
+Changing the selected mobile item returns to that overview; editing the same
+item preserves position. Text sizes and charcoal/ember component geometry remain
+shared. No API, native mechanics, optimizer, dependency, data or price change.
+
+The shared card's compact mode is opt-in; default cards retain their stable full
+slot presentation. The existing functional native/base/stale/picker/keyboard
+checks remain. New browser acceptance requires native-authored six-affix A/B and
+goal, all input affixes visible inside their scrollports at **1536×864** and
+**1366×768**, visible goal affixes/picker controls/odds together, reachable final
+goal tiers through internal scrolling, closed carrier details and actual mobile
+top/selector behavior. Four earlier functional captures plus two populated
+desktop and two mobile captures are planned for pixel inspection.
+
+**Built/tested/rendered for this repair: unrun.** Only source review and
+`git diff --check` have completed while CI owns LOCAL. A finite supervised batch
+is requested from parent, using compatible immutable WASM and the existing
+qualified owner, with metadata/focused tests/TypeScript/Vite/package/Chrome and
+cleanup. No further product changes are planned unless that gate finds an
+actual failure. Parent owns subsequent visual review, publication and main/CI.
+
+## Earlier behavioral qualification (visually rejected)
+
+The earlier isolated calculator gate **passes** at clean source
 `abab3f60e5bfce6691e3c6db3e2389ab3186b8f2`, including the navigation wrapping fix
 and regression assertion at `8d9b57fb9059fa142973397b9bf5c2f76b5e6238`. Fresh Vite,
 immutable packaging and actual Chrome interaction checks passed. All six matching
@@ -124,8 +161,9 @@ and browser run at `abab3f60`. Its six separately reviewed PNGs are in
 continue to describe the earlier source. No further source polish followed the
 final gate. Finalization changes receipts/docs only. Parent owns image delivery,
 reconciliation with main `1b038ef8` HANDOFF, publication and CI gating; no rebase
-is required for its unrelated reporter regression. There is no remaining local
-calculator QA blocker.
+is required for its unrelated reporter regression. Behavioral QA was complete
+at that checkpoint; Oliver's later visual rejection and the repair above
+supersede its visual acceptance claim.
 
 The thread-messaging tool disappeared after the cleanup receipt. Sending the
 immediate LOCAL-release message failed because the callable was unavailable;
