@@ -16887,6 +16887,7 @@ void run_solver_proof_handoff_tests() {
 }
 
 void run_solver_root_only_joint_service_tests();
+void run_solver_root_prefix_dependency_probe_tests();
 
 void run_solver_integrity_tests(const char* case_name) {
     const std::string name = case_name;
@@ -16911,6 +16912,7 @@ void run_solver_integrity_tests(const char* case_name) {
     else if (name == "joint-fracture") run_joint_product_fracture_publication_tests();
     else if (name == "completed-policy-boundary") run_completed_policy_boundary_tests();
     else if (name == "root-only-joint-service") run_solver_root_only_joint_service_tests();
+    else if (name == "root-prefix-dependency-probe") run_solver_root_prefix_dependency_probe_tests();
     else throw std::invalid_argument("unknown solver integrity subcase");
 }
 
@@ -16985,7 +16987,7 @@ void run_solver_setup_service_tests() {
 }
 
 void run_graph_only_missing_entry_service_counterparts(
-    std::chrono::steady_clock::time_point started);
+    std::chrono::steady_clock::time_point started, bool prefix_dependency_probe = false);
 
 void run_solver_root_only_joint_service_tests() {
     using Impl = SolveWorkTestAccess::Impl;
@@ -17536,7 +17538,7 @@ void run_solver_root_only_joint_service_tests() {
 }
 
 void run_graph_only_missing_entry_service_counterparts(
-    const std::chrono::steady_clock::time_point started) {
+    const std::chrono::steady_clock::time_point started, const bool prefix_dependency_probe) {
     using Impl = SolveWorkTestAccess::Impl;
     const auto require = [](bool condition, const char* reason) {
         if (!condition) {
@@ -17724,10 +17726,13 @@ void run_graph_only_missing_entry_service_counterparts(
         Impl::identity_mix_string(baseline.portfolio_identity, baseline.compiled_artifact.strategy_json);
         Impl::identity_mix(baseline.portfolio_identity, baseline.caller_scope_identity);
         proof = SolveResult{};
+        unsigned prefix_probe_units = 0;
         const auto check_queued = [&](const auto& observe) {
             for (unsigned unit = 0; work.publication_pipeline.initial_candidate_task; ++unit) {
                 bounded();
                 require(unit < 10000, "missing-entry cooperative checker work cap");
+                if (prefix_dependency_probe)
+                    require(++prefix_probe_units <= 10000, "prefix probe aggregate cooperative unit cap");
                 work.advance_initial_candidate_publication();
                 observe();
             }
@@ -18226,6 +18231,348 @@ void run_graph_only_missing_entry_service_counterparts(
                     work.phase == SolvePhase::Iterating || work.phase == SolvePhase::Refining ||
                     work.phase == SolvePhase::Compiling || work.phase == SolvePhase::Certifying);
         };
+        if (prefix_dependency_probe) {
+            // Separate selector: the original eight-case path and its positive
+            // retention assertion below remain unchanged. This probe expects
+            // that assertion's rejection, never grants the wrapper authority.
+            struct ProbeVariant {
+                std::uint32_t index = kNoId, op = kNoId;
+                std::uint64_t quantity_offset = 0, choice_offset = 0;
+                std::uint32_t quantity_count = 0, choice_count = 0;
+                double paid_cost = solve_detail::kInfinity;
+                std::vector<std::uint64_t> semantic, resources, choices;
+                bool same_payload(const ProbeVariant& other) const {
+                    return op == other.op && semantic == other.semantic &&
+                        resources == other.resources && choices == other.choices &&
+                        std::bit_cast<std::uint64_t>(paid_cost) ==
+                            std::bit_cast<std::uint64_t>(other.paid_cost);
+                }
+            };
+            struct ProbeSnapshot {
+                std::vector<std::uint64_t> rows, priced, transitions, kernel, selected, root_key;
+                std::vector<ProbeVariant> variants;
+                ExecutableContinuationAuthorityContext context;
+                std::uint64_t prefix = 0;
+                std::uint64_t owned_bytes() const {
+                    std::uint64_t bytes = variants.capacity() * sizeof(ProbeVariant);
+                    for (const auto* words : {&rows, &priced, &transitions, &kernel, &selected, &root_key,
+                            &context.goal, &context.economy, &context.mechanics_artifact,
+                            &context.caller_scope, &context.action_vocabulary, &context.terminal_semantics})
+                        bytes += words->capacity() * sizeof(std::uint64_t);
+                    for (const auto& variant : variants)
+                        bytes += (variant.semantic.capacity() + variant.resources.capacity() +
+                            variant.choices.capacity()) * sizeof(std::uint64_t);
+                    return bytes;
+                }
+            };
+            // Charge an explicit evidence envelope before allocating snapshots,
+            // including their temporary growth. Print their actual capacities;
+            // the envelope also remains charged to the child checker budget.
+            constexpr std::uint64_t snapshot_envelope = 256 * 1024;
+            evidence_bytes += snapshot_envelope;
+            bounded();
+            require(!ordinary && entries.size() + 1 <= 8,
+                "prefix probe uses one root candidate and at most eight boundary cells");
+            const auto capture = [&] {
+                require(work.output_incumbent && work.output_incumbent->portfolio_identity == root_identity &&
+                    work.output_incumbent->compiled_root_entry_only &&
+                    work.output_incumbent->compiled_artifact.strategy_json == root_graph,
+                    "prefix probe cannot substitute a different candidate or graph");
+                const auto& candidate = *work.output_incumbent;
+                const auto& cache = *work.transition_cache;
+                ProbeSnapshot out;
+                out.prefix = work.incumbent_graph_prefix_identity(candidate.graph_row_count,
+                    candidate.graph_priced_row_count, candidate.graph_successor_count,
+                    candidate.graph_probability_count, candidate.graph_choice_count,
+                    candidate.graph_choice_successor_count, candidate.graph_choice_option_count);
+                out.context = work.executable_continuation_authority_context(candidate.action_vocabulary_size);
+                out.root_key = exact_item_state_key(work.result.exact_start_item);
+                out.rows.push_back(candidate.graph_row_count);
+                for (std::uint64_t index = 0; index < candidate.graph_row_count; ++index) {
+                    const auto& row = cache.rows.at(index);
+                    out.rows.insert(out.rows.end(), {row.owner_state, row.variant_offset,
+                        row.variant_count, row.variant_capacity, row.transition_offset, row.transition_count,
+                        std::bit_cast<std::uint64_t>(row.self_probability),
+                        std::bit_cast<std::uint64_t>(row.embedded_self_probability),
+                        row.self_probability_embedded, row.choice_offset, row.choice_count});
+                }
+                out.priced.push_back(candidate.graph_priced_row_count);
+                for (std::uint64_t index = 0; index < candidate.graph_priced_row_count; ++index) {
+                    const auto& row = work.priced_rows.at(index);
+                    out.priced.insert(out.priced.end(), {row.operator_index,
+                        std::bit_cast<std::uint64_t>(row.cost), row.choice_option_offset, row.choice_option_count});
+                }
+                const auto append_options = [&](auto& words, std::uint64_t offset, std::uint64_t count) {
+                    words.push_back(count);
+                    for (std::uint64_t index = 0; index < count; ++index) {
+                        const auto& option = cache.choice_options.at(offset + index);
+                        words.insert(words.end(), {option.mod_id, option.state,
+                            option.observation_state, option.actual_state});
+                    }
+                };
+                out.transitions.push_back(candidate.graph_successor_count);
+                for (std::uint64_t index = 0; index < candidate.graph_successor_count; ++index)
+                    out.transitions.push_back(cache.successors.at(index));
+                out.transitions.push_back(candidate.graph_probability_count);
+                for (std::uint64_t index = 0; index < candidate.graph_probability_count; ++index)
+                    out.transitions.push_back(std::bit_cast<std::uint64_t>(cache.probabilities.at(index)));
+                out.transitions.push_back(candidate.graph_choice_count);
+                for (std::uint64_t index = 0; index < candidate.graph_choice_count; ++index) {
+                    const auto& choice = cache.choices.at(index);
+                    out.transitions.insert(out.transitions.end(), {choice.successor_offset,
+                        choice.successor_count, std::bit_cast<std::uint64_t>(choice.probability), choice.has_self});
+                }
+                out.transitions.push_back(candidate.graph_choice_successor_count);
+                for (std::uint64_t index = 0; index < candidate.graph_choice_successor_count; ++index)
+                    out.transitions.push_back(cache.choice_successors.at(index));
+                append_options(out.transitions, 0, candidate.graph_choice_option_count);
+                const auto& row = cache.rows.at(0);
+                require(row.owner_state == root, "prefix probe row zero belongs to the original root");
+                out.kernel = {row.owner_state, row.transition_count,
+                    std::bit_cast<std::uint64_t>(row.self_probability),
+                    std::bit_cast<std::uint64_t>(row.embedded_self_probability), row.self_probability_embedded};
+                for (std::uint64_t index = 0; index < row.transition_count; ++index) {
+                    const auto offset = row.transition_offset + index;
+                    out.kernel.insert(out.kernel.end(), {cache.successors.at(offset),
+                        std::bit_cast<std::uint64_t>(cache.probabilities.at(offset))});
+                }
+                out.kernel.push_back(row.choice_count);
+                for (std::uint64_t index = 0; index < row.choice_count; ++index) {
+                    const auto& choice = cache.choices.at(row.choice_offset + index);
+                    out.kernel.insert(out.kernel.end(), {choice.successor_count,
+                        std::bit_cast<std::uint64_t>(choice.probability), choice.has_self});
+                    for (std::uint64_t successor = 0; successor < choice.successor_count; ++successor)
+                        out.kernel.push_back(cache.choice_successors.at(choice.successor_offset + successor));
+                }
+                const auto& selected = work.priced_rows.at(0);
+                out.selected = {selected.operator_index, std::bit_cast<std::uint64_t>(selected.cost),
+                    selected.choice_option_offset, selected.choice_option_count, row.admitted};
+                append_options(out.selected, selected.choice_option_offset, selected.choice_option_count);
+                const auto& arena = *cache.variant_arena;
+                out.variants.reserve(row.variant_count);
+                for (std::uint64_t index = 0; index < row.variant_count; ++index) {
+                    ProbeVariant variant;
+                    variant.index = arena.row_variant_indices.at(row.variant_offset + index);
+                    const auto& stored = arena.variants.at(variant.index);
+                    variant.op = stored.operator_index;
+                    variant.quantity_offset = stored.quantity_offset; variant.quantity_count = stored.quantity_count;
+                    variant.choice_offset = stored.choice_option_offset; variant.choice_count = stored.choice_option_count;
+                    variant.semantic = planner_operator_semantic_key(calc.operators().at(variant.op));
+                    const auto& priced = work.operators.at(static_cast<std::size_t>(work.priced_operator_position.at(variant.op)));
+                    require(stored.quantity_count == priced.resource_prices.size() &&
+                        work.priced_variant_cost(stored, variant.paid_cost),
+                        "prefix probe records every native resource quantity and complete paid price");
+                    variant.resources.push_back(priced.resource_prices.size());
+                    for (std::size_t resource = 0; resource < priced.resource_prices.size(); ++resource) {
+                        const auto& [key, price] = priced.resource_prices[resource];
+                        variant.resources.push_back(key.size());
+                        for (const unsigned char byte : key) variant.resources.push_back(byte);
+                        variant.resources.push_back(std::bit_cast<std::uint64_t>(
+                            arena.variant_quantities.at(stored.quantity_offset + resource)));
+                        variant.resources.push_back(std::bit_cast<std::uint64_t>(price));
+                    }
+                    append_options(variant.choices, stored.choice_option_offset, stored.choice_option_count);
+                    out.variants.push_back(std::move(variant));
+                }
+                require(out.owned_bytes() <= snapshot_envelope / 4,
+                    "prefix snapshot and transient growth fit charged evidence envelope");
+                return out;
+            };
+            const auto emit_words = [](const char* stage, const char* field, const auto& words, unsigned variant = 0) {
+                std::printf("prefix dependency words stage=%s field=%s variant=%u count=%llu values=[",
+                    stage, field, variant, static_cast<unsigned long long>(words.size()));
+                for (std::size_t index = 0; index < words.size(); ++index)
+                    std::printf("%s%llu", index ? "," : "", static_cast<unsigned long long>(words[index]));
+                std::printf("]\n");
+            };
+            const auto emit = [&](const char* stage, const ProbeSnapshot& snapshot) {
+                std::printf("prefix dependency snapshot stage=%s prefix=%llu variants=%llu owned_capacity_bytes=%llu\n",
+                    stage, static_cast<unsigned long long>(snapshot.prefix),
+                    static_cast<unsigned long long>(snapshot.variants.size()),
+                    static_cast<unsigned long long>(snapshot.owned_bytes()));
+                emit_words(stage, "captured_sparse_rows", snapshot.rows);
+                emit_words(stage, "captured_priced_rows", snapshot.priced);
+                emit_words(stage, "captured_transition_choice_spans", snapshot.transitions);
+                emit_words(stage, "row0_native_kernel", snapshot.kernel);
+                emit_words(stage, "row0_selected_routing", snapshot.selected);
+                emit_words(stage, "exact_physical_root", snapshot.root_key);
+                emit_words(stage, "goal", snapshot.context.goal);
+                emit_words(stage, "economy", snapshot.context.economy);
+                emit_words(stage, "mechanics_artifact", snapshot.context.mechanics_artifact);
+                emit_words(stage, "caller_scope", snapshot.context.caller_scope);
+                emit_words(stage, "action_vocabulary", snapshot.context.action_vocabulary);
+                emit_words(stage, "terminal_semantics", snapshot.context.terminal_semantics);
+                for (unsigned index = 0; index < snapshot.variants.size(); ++index) {
+                    const auto& variant = snapshot.variants[index];
+                    std::printf("prefix dependency variant stage=%s slot=%u arena_index=%u operator=%u "
+                        "quantity_offset=%llu quantity_count=%u choice_offset=%llu choice_count=%u paid_cost=%.17g\n",
+                        stage, index, variant.index, variant.op,
+                        static_cast<unsigned long long>(variant.quantity_offset), variant.quantity_count,
+                        static_cast<unsigned long long>(variant.choice_offset), variant.choice_count, variant.paid_cost);
+                    emit_words(stage, "operator_semantics", variant.semantic, index);
+                    emit_words(stage, "resource_key_bytes_quantity_price_bits", variant.resources, index);
+                    emit_words(stage, "variant_choice_routing", variant.choices, index);
+                }
+                std::fflush(stdout);
+            };
+            const auto before = capture();
+            emit("before_normal_mutation", before);
+            emit_authority_snapshot("prefix_probe_before_normal_mutation");
+            require(before.variants.size() == 1 && before.prefix == work.output_incumbent->graph_prefix_identity &&
+                work.certified_incumbent_invalid_reason(*work.output_incumbent) == nullptr,
+                "prefix probe starts with the checked compatible original root and one actual variant");
+            while (natural_work_available() && work.output_incumbent &&
+                work.transition_cache->rows.at(0).variant_count == 1 &&
+                work.retained_incumbent_invalid_reason(*work.output_incumbent) == nullptr) {
+                bounded();
+                require(work.phase == SolvePhase::Expanding && !work.publication_pipeline.initial_candidate_task &&
+                    !work.finalization_task && (work.expansion_active ? work.expansion_state == root :
+                        !work.queue.empty() && work.queue.front() == root),
+                    "prefix mutation uses only the already queued root's ordinary expansion owner");
+                require(++prefix_probe_units <= 10000, "prefix probe aggregate cooperative unit cap");
+                work.step(1);
+                emit_authority_snapshot("prefix_probe_normal_owner_after_step");
+                observe_events();
+                require(captured_candidates == 1 && real_check_starts == 1 && real_check_completions == 1 &&
+                    !work.publication_pipeline.initial_candidate_task,
+                    "prefix probe normal mutation cannot add a candidate or root checker attempt");
+            }
+            const auto after = capture();
+            emit("after_normal_mutation", after);
+            const auto* rejection = work.retained_incumbent_invalid_reason(*work.output_incumbent);
+            std::printf("prefix dependency wrapper rejection reason=%s original_root_predicate=%u cooperative_units=%u\n",
+                rejection ? rejection : "valid", checked_original_root(*work.output_incumbent) ? 1u : 0u, prefix_probe_units);
+            std::fflush(stdout);
+            require(after.variants.size() == 2 && rejection && std::string_view(rejection) == "graph_prefix_changed" &&
+                !checked_original_root(*work.output_incumbent),
+                "prefix probe observes the original wrapper rejection without weakening its predicate");
+            const auto emit_differences = [](const char* group, const auto& old_words, const auto& new_words) {
+                std::size_t differences = 0;
+                for (std::size_t index = 0; index < std::max(old_words.size(), new_words.size()); ++index)
+                    if (index >= old_words.size() || index >= new_words.size() || old_words[index] != new_words[index]) {
+                        ++differences;
+                        std::printf("prefix dependency difference group=%s index=%llu old_present=%u new_present=%u "
+                            "old=%llu new=%llu\n", group, static_cast<unsigned long long>(index),
+                            index < old_words.size() ? 1u : 0u, index < new_words.size() ? 1u : 0u,
+                            static_cast<unsigned long long>(index < old_words.size() ? old_words[index] : 0),
+                            static_cast<unsigned long long>(index < new_words.size() ? new_words[index] : 0));
+                    }
+                return differences;
+            };
+            const auto row_differences = emit_differences("captured_sparse_rows", before.rows, after.rows);
+            const auto price_differences = emit_differences("captured_priced_rows", before.priced, after.priced);
+            const auto transition_differences = emit_differences("captured_transition_choice_spans", before.transitions, after.transitions);
+            const bool duplicate = before.variants[0].same_payload(after.variants[0]) &&
+                before.variants[0].same_payload(after.variants[1]);
+            const bool kernel_same = before.kernel == after.kernel;
+            const bool selected_same = before.selected == after.selected;
+            const bool context_same = before.context == after.context && before.root_key == after.root_key;
+            const bool only_count_changed = row_differences == 1 && price_differences == 0 &&
+                transition_differences == 0 && before.rows.size() == after.rows.size() &&
+                before.rows.at(3) == 1 && after.rows.at(3) == 2;
+            std::printf("prefix dependency comparison duplicate_payload=%u kernel_same=%u selected_routing_same=%u "
+                "full_context_and_root_same=%u only_row0_variant_count_changed=%u\n",
+                duplicate ? 1u : 0u, kernel_same ? 1u : 0u, selected_same ? 1u : 0u,
+                context_same ? 1u : 0u, only_count_changed ? 1u : 0u);
+            std::fflush(stdout);
+
+            // Fresh independent checker, not certify_initial_candidate()'s
+            // already-evaluated early return, and no portfolio/slot rebinding.
+            SolveResult root_proof;
+            root_proof.policy_available = true; root_proof.policy_status = SolvePolicyStatus::BoundedFeasible;
+            root_proof.start_state = root; root_proof.has_exact_start_item = true; root_proof.exact_start_item = item;
+            root_proof.lower_bound = 0; root_proof.upper_bound = root_proof.evaluated_policy_cost = baseline_checked_cost;
+            root_proof.values.assign(calc.state_count(), solve_detail::kInfinity); root_proof.values[root] = baseline_checked_cost;
+            root_proof.policy.assign(calc.state_count(), PolicyOperatorRef{});
+            root_proof.policy_reachable.assign(calc.state_count(), 0);
+            root_proof.expanded.assign(calc.state_count(), 0);
+            root_proof.goal_states.resize(calc.state_count());
+            for (std::uint32_t state = 0; state < calc.state_count(); ++state)
+                root_proof.goal_states[state] = calc.is_goal_state(calc.state(state));
+            require(work.publication_pipeline.initial_candidate_proof_bytes == 0,
+                "prefix root checker cannot overlap another owned proof");
+            work.publication_pipeline.initial_candidate_proof_bytes = solve_detail::solve_result_owned_bytes(root_proof);
+            struct PrefixProofBytesLease {
+                std::uint64_t& bytes;
+                ~PrefixProofBytesLease() { bytes = 0; }
+            } proof_lease{work.publication_pipeline.initial_candidate_proof_bytes};
+            const auto live = work.estimated_owned_bytes() + evidence_bytes;
+            const auto retained = estimated_retained_solver_bytes(calc, &root_proof);
+            const auto external = live > retained ? live - retained : 0;
+            require(external < options.max_solver_owned_bytes && calc.state_count() < 32,
+                "prefix root checker leaves a shared native state and ownership allowance");
+            SolveOptions scoped = options;
+            scoped.max_solver_owned_bytes -= external;
+            scoped.candidate_evaluation_limits.max_states = 32 - calc.state_count();
+            root_proof.options = scoped;
+            PolicyCompilationTelemetry compilation;
+            compilation.nodes = work.output_incumbent->compiled_artifact.nodes;
+            compilation.edges = work.output_incumbent->compiled_artifact.edges;
+            compilation.strategy_json_bytes = root_graph.size();
+            refinement::CompiledPolicyAssertionWork checker(calc, root_proof, work.prices, scoped,
+                "saved original root after native variant mutation", nullptr, &root_graph, &compilation,
+                true, false, false, refinement::CompiledPolicyAssertionMode::OriginalRootController);
+            std::uint64_t child_state_peak = 0;
+            for (; !checker.progress().done;) {
+                bounded();
+                require(++prefix_probe_units <= 10000, "prefix probe aggregate cooperative unit cap");
+                require(checker.retained_bytes() <= scoped.max_solver_owned_bytes,
+                    "prefix independent checker live bytes fit the shared remainder");
+                checker.step(1);
+                child_state_peak = std::max(child_state_peak, checker.progress().evaluation.exact_states);
+                require(calc.state_count() + child_state_peak <= 32,
+                    "prefix root checker actual parent plus child states stay within32");
+            }
+            const auto child_states = checker.progress().evaluation.exact_states;
+            const auto checked = checker.take_result();
+            bool exact_root_available = false;
+            for (const auto& member : checked.evaluation.continuation_upper.members)
+                if (member.available() && exact_item_state_key(member.item) == original_root_key &&
+                    near(member.exact_continuation_upper, baseline_checked_cost, 1e-8)) exact_root_available = true;
+            std::printf("prefix dependency independent root check attempts=2 candidate_captures=%u "
+                "status=%u executable=%u proper=%u zero_off_policy=%u reconciled=%u converged=%u complete_prices=%u "
+                "success=%.17g off_policy=%.17g cost=%.17g graph_exact=%u root_member_available=%u "
+                "resource_cap=%s child_peak=%llu external_bytes=%llu shared_allowance=%llu "
+                "parent_states=%u child_states=%llu child_peak_states=%llu child_state_limit=%u cooperative_units=%u\n", captured_candidates,
+                static_cast<unsigned>(checked.status), checked.executable ? 1u : 0u, checked.proper ? 1u : 0u,
+                checked.zero_off_policy ? 1u : 0u, checked.cost_reconciled ? 1u : 0u,
+                checked.evaluation.converged ? 1u : 0u, checked.evaluation.cost_complete ? 1u : 0u,
+                checked.evaluation.success_probability, checked.off_policy_probability, checked.exact_cost,
+                checked.strategy_json == root_graph ? 1u : 0u, exact_root_available ? 1u : 0u, checked.resource_cap.c_str(),
+                static_cast<unsigned long long>(checked.publication_peak_owned_bytes),
+                static_cast<unsigned long long>(external), static_cast<unsigned long long>(options.max_solver_owned_bytes),
+                calc.state_count(), static_cast<unsigned long long>(child_states),
+                static_cast<unsigned long long>(child_state_peak),
+                scoped.candidate_evaluation_limits.max_states, prefix_probe_units);
+            emit_authority_snapshot("prefix_probe_after_independent_root_check");
+            std::fflush(stdout);
+            require(checked.status == refinement::CompiledPolicyAssertionStatus::Complete &&
+                checked.executable && checked.proper && checked.zero_off_policy && checked.cost_reconciled &&
+                checked.evaluation.converged && checked.evaluation.cost_complete && checked.resource_cap.empty() &&
+                near(checked.evaluation.success_probability, 1, 1e-12) && near(checked.off_policy_probability, 0, 1e-12) &&
+                near(checked.exact_cost, baseline_checked_cost, 1e-8) && checked.strategy_json == root_graph &&
+                !checked.paired_default_only && checked.evaluation.continuation_upper.requested &&
+                checked.evaluation.continuation_upper.members.size() == 1 && exact_root_available,
+                "saved root graph independently checks complete paid proper native support after mutation");
+            require(checked.publication_peak_owned_bytes <= scoped.max_solver_owned_bytes,
+                "prefix checker peak plus external ownership stays within shared512MiB");
+            const auto* after_check_rejection = work.retained_incumbent_invalid_reason(*work.output_incumbent);
+            require(work.output_incumbent->portfolio_identity == root_identity &&
+                work.output_incumbent->compiled_artifact.strategy_json == root_graph &&
+                after_check_rejection && std::string_view(after_check_rejection) == "graph_prefix_changed" &&
+                work.publication_pipeline.complete_candidate_attempted_identity == 0 &&
+                work.certified_global_lower_bound() == 0 && work.options.goal_proof_profile == GoalProofProfile::TargetNeutralZero,
+                "independent evidence cannot rebind the wrapper, spend the portfolio slot or promote a lower");
+            const bool duplicate_only = duplicate && kernel_same && selected_same && context_same && only_count_changed;
+            bounded();
+            std::printf("prefix dependency probe complete fixture_duplicate_only=%u duplicate_only_gate=%s wrapper_rejected=1 "
+                "independent_root_checked=1 cost=%.17g production_lifetime_defect=unproved "
+                "binding_removal_authorized=0 evidence_envelope=%llu\n", duplicate_only ? 1u : 0u,
+                duplicate_only ? "pass" : "fail_additional_variant_or_prefix_change", checked.exact_cost,
+                static_cast<unsigned long long>(snapshot_envelope));
+            std::fflush(stdout);
+            return;
+        }
         observe_authority("before_natural_owner_service");
         while (natural_work_available() && checked_native_improvement() == nullptr) {
             bounded();
@@ -18726,4 +19073,8 @@ void run_graph_only_missing_entry_service_counterparts(
             static_cast<unsigned long long>(work.fast_estimated_owned_bytes() + evidence_bytes));
         std::fflush(stdout);
     }
+}
+
+void run_solver_root_prefix_dependency_probe_tests() {
+    run_graph_only_missing_entry_service_counterparts(std::chrono::steady_clock::now(), true);
 }
