@@ -175,7 +175,7 @@ Code authority:
 `apps/web/src/app/components/pc-mod-list.tsx`, and
 `apps/web/src/app/workspace/persistence.ts`.
 
-## Authored random pair page (source implemented; qualification pending)
+## Authored random pair page (isolated calculator gate passed)
 
 `+ Recombination` opens the standalone authored two-item calculator. Independent
 input A/B cards share a modifier picker with one goal card above it. The page
@@ -183,6 +183,13 @@ uses the existing native random-pair goal endpoint, temporary read-only
 resources, and draft recovery. Goal edits, either input edit, result-base
 requirements and Cancel invalidate pending/previous odds. Cancellation drops
 delivery while synchronous native work finishes and releases its resources.
+
+Focused real-WASM tests, TypeScript, build/package and actual Chrome interactions
+pass at `dd942153`, including 390px calculator stacking and keyboard focus. Saved
+captures were reviewed. A subsequent shared toolbar wrapping fix and regression
+assertion at `8d9b57fb` await parent-reserved browser QA; main integration is
+separate. The [living record](../active/2026-10-06-recombination-calculator/README.md)
+distinguishes tested source, final source and retained failed attempts.
 
 Result-base requirements filter native terminal rows by actual base and native
 `is_goal`; they never choose a carrier or renormalize its mass. Equal input

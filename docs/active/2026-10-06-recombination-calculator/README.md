@@ -1,93 +1,113 @@
 # Authored random recombination calculator
 
-Oliver selected a fresh standalone two-input calculator on October 6. Source
-starts from verified remote main `7252027c80856628ed16734583bfc9d6e166458b`, in
-`dot/recomb-calculator-ui-20261006`, isolated at
-`C:/Users/Oliver/Documents/Codex/2026-10-05/task-9/recomb-ui`. The normal checkout,
-protected `0`, native mechanics, optimizer worktree and frozen data/prices are
-untouched. Parent owns LOCAL reservations, main publication and CI gating.
+The isolated calculator gate **passes** at clean source
+`dd942153d22eee3506bdffe23a949e7db8b0852e`. Focused real-WASM web tests, TypeScript,
+Vite, immutable packaging and actual Chrome interaction checks passed. All six
+saved desktop/mobile captures were reviewed. A subsequent shared navigation
+wrapping fix and regression assertion at `8d9b57fb9059fa142973397b9bf5c2f76b5e6238`
+are **source implemented, browser-unrun**. Parent must reserve that final narrow
+follow-up before accepting the final branch for main/CI integration.
 
-## Source implemented; qualification pending
+LOCAL was released at **04:15:22 UTC**: all six original stage identities are
+proved absent, timeout/cancellation/descendant/cleanup/survivor flags are clear,
+and elevated ErrorAction=Stop CIM returns zero matching processes. Eighteen
+immutable hashes match before/after. No heavy job remains from this session.
 
-`+ Recombination` opens a dedicated workspace document. Input A and B have
-independent native sessions and shared editable ItemCards; the goal sits above
-one shared modifier picker. Buttons and outlined cards name the active edit
-target. Narrow views stack both inputs, goal and picker; odds remain in a
-separate visible section. Palette, normal-weight modifier copy, influence
-display, buttons and geometry use the current charcoal/ember owners.
+## Scope and behavior
 
-The page uses native atomic item editing and the existing read-only pair/goal
-API. Each calculation owns temporary sessions/items and a pair snapshot;
-authored inputs are never consumed. Edits and Cancel invalidate request
-lifetimes immediately. Cancel discards delivery while pending synchronous
-native work finishes and its handles close. Drafts recover inputs and goal,
-never old odds. Base-picker cancellation preserves state and returns focus.
+Oliver selected a fresh standalone two-input calculator. Branch
+`dot/recomb-calculator-ui-20261006` starts from reverified remote main
+`7252027c80856628ed16734583bfc9d6e166458b`, isolated at
+`C:/Users/Oliver/Documents/Codex/2026-10-05/task-9/recomb-ui`. The private bare
+repository is its sibling `source.git`; parent may fetch the local branch there.
+The normal checkout, protected `0`, native mechanics, optimizer worktree and
+frozen data/prices are untouched. Parent owns main publication and CI gating.
 
-The result base may be unconstrained or required to equal A's/B's base. This
-does not select a carrier: native carrier/base rows and `is_goal` determine
-the displayed unconditional success mass. Equal bases count both carriers.
-No modifier survival law or goal predicate is recreated in TypeScript. The
-shared pair endpoint interprets goals in A's native session; that catalogue
-limitation is disclosed beside the picker. Missing goal families and other
-unsupported states remain native refusals.
+`+ Recombination` opens a dedicated workspace document. Input A left and B right
+use independent native sessions and shared editable ItemCards; one goal sits
+above the shared modifier picker. Tabs, buttons, outlined cards and picker text
+identify the edit target. Narrow calculator views stack A, B, goal and picker;
+odds occupy their own section. The existing charcoal/ember tokens, normal-weight
+modifier copy, influence display and shared geometry are retained.
 
-Odds are exact enumeration of the supported **estimated game model**, not
-game-exact odds. Existing provisional spawn weights, no unverified upgrades,
-unobserved numerical/property scope, exceptional-pair refusal and unknown
-gold/dust costs remain explicit. No optimizer, random Apply, native ABI change,
-new build, data refresh, price change or Simulator run is part of this task.
+Native atomic editing authors the inputs. The existing read-only random pair/goal
+API calculates a snapshot using temporary sessions/items and a pair, all closed
+on success or failure. Goal/input/base edits and Cancel invalidate previous and
+pending odds. Cancellation drops delivery while synchronous native work finishes
+and cleans up. IndexedDB recovers independent inputs and the goal, never odds.
+The base modal traps focus; cancellation preserves state and returns focus.
 
-## First finite QA: TypeScript failure retained
+A result-base requirement matches A's or B's actual base, without selecting a
+carrier or renormalizing probability. Native terminal `is_goal` and base rows
+provide unconditional mass; equal bases count both carriers. The endpoint uses
+A's native goal catalogue, disclosed beside the selector; absent goal families
+and unsupported pairs are native refusals. No frontend probability model,
+optimizer, Apply button or simulator was added.
 
-Parent granted one serial LOCAL batch on full source
-`5a70d2d2d3b03db92c45337ff13585df4dff2084`. The unchanged qualified runner
-`d485ff11` / worker blob `f532376a` ran metadata (2.23s, pass), six focused
-web tests including the real pair/goal WASM contract (7.94s, pass), and
-TypeScript (3.72s, failed). Execution stopped immediately. Vite, package and
-render are **unrun**. Eight TypeScript diagnostics identify inherited HTMLElement
-member collisions (`focus`, `remove`), a narrowed side argument, optional
-influence metadata and a deferred-test resolver type. The source repair renames
-those controller members and fixes the narrow types; it is not yet requalified.
+Odds enumerate the supported **estimated game model**, not game-exact mechanics.
+Provisional spawn weights, omitted unverified upgrades, unobserved numerical
+rolls/property scope, exceptional-pair refusal and unknown gold/dust costs remain
+explicit. There is no API blocker for the supported authored-pair calculator.
 
-All three original stage process identities are `proved_absent`, with clear
-timeout/cancellation/descendant/cleanup/survivor flags. Eighteen immutable hashes
-match before/after. The elevated ErrorAction=Stop census records zero survivors
-after explicitly excluding its own process. The first census's self-match is
-preserved rather than erased. LOCAL was released immediately after cleanup.
-Evidence is in `out/recombination-calculator/gate-r1/`, including original logs,
-`batch.json`, `survivor-check.json` and `survivor-check-final.json`.
+## Qualification and identities
 
-Dependencies reuse the qualified tree through a junction only after matching
-package-lock SHA256 `244102b6e9a380054cb847b8ecbed3ef3f7956eb79a18bf8562acbc200d5be3c`.
-The reused WASM `50c98f55`, loader `8ec20cf7` and runtime `82fb60a2` match the
-qualified artifact receipt, and engine/WASM source is unchanged from its
-`7fd6a48e` source. No dependency install, native build or data refresh occurred.
+Final passed receipt: [qualification.json](qualification.json); original detailed
+logs are retained locally in `out/recombination-calculator/gate-r6/`.
 
-## Requested repair qualification
+| Layer | Status | Wall time |
+| --- | --- | --- |
+| Metadata / immutable input checks | Passed | 10.34s |
+| Six focused web tests, including real pair/goal WASM | Passed | 23.03s |
+| TypeScript | Passed | 3.28s |
+| Vite | Passed | 3.46s |
+| Immutable package | Passed | 1.83s |
+| Real Chrome 152.0.7977.83 | Passed | 3.08s |
 
-The second granted gate on `ffc029ce053f68029556a719ca46026ac808bbbf`
-passes metadata (10.33s) and the same focused tests (23.02s), then stops at
-TypeScript (3.30s). The sole remaining diagnostic is test resolver control-flow
-narrowing after deleting the property; the component diagnostics are gone.
-The fixture now reads the asynchronously assigned resolver through a typed
-getter and asserts that returned value before calling it. Assertions and native
-odds are unchanged. Vite, package and render remain unrun. `gate-r2/` retains
-the failed receipt, clean process identities and elevated zero-survivor census;
-all eighteen hashes still match. LOCAL was released at 04:03:41 UTC.
+Browser coverage: A/B/goal selection, shared modifier authoring, native 100% goal
+fixture, equal/different-base mass, base-toggle invalidation, repeated/interrupted
+picker, invalid item level, native corruption refusal, atomic invalid edit,
+delayed real native delivery after edits/Cancel, normal/hover button contrast,
+normal-weight mods, actual Tab focus, 390px calculator bounds/stacking and reload.
+The full existing smoke scope is unchanged; the dedicated scope was run here.
+The Node DOM fixture logs the existing game-art relative-URL fallback warning;
+the real browser loads artwork and has no console/page errors.
 
-The source repair needs a new parent-granted finite supervised LOCAL batch,
-reusing the same compatible immutable WASM/runtime/dependencies:
+Build ID `84520ecc74fbef8b9553250a0b0c1309d50f22b0982976c9d9c874ff1582f6db`,
+source-tree SHA256 `e1c013f95762bfc8d872ac25f292b6d632417658d275c61f14474a5bc6d1f19d`.
+Immutable web archive:
+`dist/public-artifacts/web/f75f104dff38c2446d258088e6a2af31fa955a578431f6eb2521ef73f2970a54`.
 
-- Focused authored-pair terminal filtering, temporary-owner cleanup and stale
-  request controls, plus existing goal/item/odds and recombination-WASM checks.
-- TypeScript, Vite packaging and the existing static-host harness's new
-  `recombination-calculator` scope in Chrome.
-- Actual A/B/goal selection, real native odds, equal/different-base filtering,
-  delayed native delivery, cancellation, invalid/unsupported edits, repeated
-  interrupted base picker, keyboard focus, 390px layout and reload recovery.
-- Six actual captures, to inspect before visual acceptance. Parent owns any
-  image delivery; source-only state supplies no rendered evidence.
+The unchanged qualified runner is `d485ff11`; worker blob `f532376a`, SHA256
+`1f7978fa0cf43c331487ea57212286cbf92ff96141d379a901c4bd421d4aae92`.
+Every stage uses owned-job cleanup with a 5s drain and a finite watchdog, bounded
+by the parent's 04:06:24–04:21:24 UTC reservation. No explicit outer memory cap
+exists in the adapter API. No native compiler, dependency install, data refresh,
+solver search or Simulator trials ran.
 
-The full existing smoke scope is preserved. Final qualification will record
-source/artifact identity and each passed/failed/unrun layer here. Local commits
-do not imply main integration, deployment or dev-server restart.
+Dependencies reuse the qualified tree only after exact package-lock SHA256
+`244102b6e9a380054cb847b8ecbed3ef3f7956eb79a18bf8562acbc200d5be3c` match.
+Reused WASM `50c98f55`, loader `8ec20cf7`, runtime `82fb60a2`, ABI 3 match the
+qualified receipt; engine/WASM source matches its `7fd6a48e` source.
+
+## Retained attempts and remaining QA
+
+`gate-r1` and `gate-r2` stop at TypeScript diagnostics, subsequently fixed.
+`gate-r3` reaches Chrome and exposes a base-checkbox event value being reset by
+busy rendering; the production handlers now snapshot values before rendering.
+`gate-r4` stops at a normal-color assertion with a hovered pointer; the test now
+explicitly checks normal and hover states. `gate-r5` stops at narrow overflow;
+scoped picker wrapping and ResizeObserver settlement fix it. All failed logs and
+receipts remain; each attempt proves original process absence and immutable hash
+agreement before its next attempt. No assertions or native odds were weakened.
+
+Six PNGs in `gate-r6/screens/` show input A/B focus, goal odds, unsupported input,
+narrow goal and narrow picker. The cards/picker are readable without horizontal
+overflow. Saved narrow pixels also expose clipped shared document navigation.
+The isolated two-line wrapping fix (`40f7e5c1`) and two-line gate assertion
+(`8d9b57fb`) are committed after the passed artifact; they need a new supervised
+browser run and source-matched build/package. Do not label the old artifact as
+containing that fix. Parent owns final image delivery, main writes and CI gating.
+
+The thread-messaging tool disappeared after the cleanup receipt. Sending the
+immediate LOCAL-release message failed because the callable was unavailable;
+this final delegation result supplies the release and source identities.

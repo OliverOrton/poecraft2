@@ -1,0 +1,250 @@
+{
+  "schema": "recombination_calculator_qualification_v1",
+  "baseline_main": "7252027c80856628ed16734583bfc9d6e166458b",
+  "branch": "dot/recomb-calculator-ui-20261006",
+  "passed_source": "dd942153d22eee3506bdffe23a949e7db8b0852e",
+  "final_code_source": "8d9b57fb9059fa142973397b9bf5c2f76b5e6238",
+  "final_followup_status": "source implemented; toolbar wrapping and its regression assertion browser-unrun",
+  "build": {
+    "schema_version": 1,
+    "repository_commit": "dd942153d22eee3506bdffe23a949e7db8b0852e",
+    "working_tree_dirty": false,
+    "source_tree_sha256": "e1c013f95762bfc8d872ac25f292b6d632417658d275c61f14474a5bc6d1f19d",
+    "game_assets": {
+      "catalog_sha256": "dd5affbe6a73f208bcdbb54074f9ad983536ffcaddcb689089a350c2d2eaffb0",
+      "image_count": 637
+    },
+    "base": "/",
+    "engine": {
+      "abi_version": 3,
+      "source_commit": null,
+      "loader_sha256": "8ec20cf7c0f86cbad4c5d0638e0733da3110610cf02091c0807d4b87186d2b97",
+      "wasm_sha256": "50c98f555d4ef9f6786c9a5fcfd138442a5d01ae1b3759b09712dbae059cdd9c"
+    },
+    "runtime": {
+      "manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+      "source": {
+        "data_hash": "d511e23d1289674c4ac869d20ccd62a979af65f58d4aac83a01ac9bbb02c853e",
+        "database_schema_version": "3",
+        "source_hash": "b458174874efbe64cf830d603f9e3effddd2042d0f3faa548b40c0e69a68ca7a",
+        "source_version": "repoe-b458174874efbe64"
+      },
+      "artifact_schema_version": 4,
+      "files": {
+        "game-data.json": {
+          "byte_size": 16914460,
+          "sha256": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e"
+        },
+        "strings.json": {
+          "byte_size": 6740473,
+          "sha256": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6"
+        }
+      },
+      "bundle_sha256": "6688e9e36d458d629554ca969a9c46901c362c4b919e41eebb0460bf3a3338ec",
+      "bundle_bytes": 23660953,
+      "url": "poecraft-data.6688e9e36d458d629554ca969a9c46901c362c4b919e41eebb0460bf3a3338ec.json"
+    },
+    "economy": {
+      "mode": "bundled",
+      "index_url": "economy/league-index.json",
+      "bundled_index_sha256": "2d71a5a96a669ac835b6e5bc06750c12ef8e5af3d7d9966c43fec0c62e86a2cd"
+    },
+    "build_id": "84520ecc74fbef8b9553250a0b0c1309d50f22b0982976c9d9c874ff1582f6db"
+  },
+  "archive": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-05\\task-9\\recomb-ui\\dist\\public-artifacts\\web\\f75f104dff38c2446d258088e6a2af31fa955a578431f6eb2521ef73f2970a54",
+  "qualified_adapter_commit": "d485ff111fc6b3aafa1679bca97b9ff9bd70d2a8",
+  "qualified_worker_blob": "f532376adbde79d9f31da1bc2d97e1b24fe2f5d9",
+  "qualified_worker_sha256": "1f7978fa0cf43c331487ea57212286cbf92ff96141d379a901c4bd421d4aae92",
+  "immutable_file_count": 18,
+  "immutable_inputs_unchanged": true,
+  "stages": [
+    {
+      "name": "metadata",
+      "status": "passed",
+      "wall_ms": 10341.137200128287,
+      "exit_code": 0,
+      "original_identity": "proved_absent",
+      "process_id": 30796,
+      "process_identity_token": "30796:134357336601377586",
+      "timed_out": false,
+      "canceled": false,
+      "descendants_after_parent_exit": false,
+      "cleanup_error": null,
+      "cleanup_drain_timed_out": false,
+      "survivor": false,
+      "receipt": "out/recombination-calculator/gate-r6/metadata/stage.json"
+    },
+    {
+      "name": "focused-tests",
+      "status": "passed",
+      "wall_ms": 23033.867900026962,
+      "exit_code": 0,
+      "original_identity": "proved_absent",
+      "process_id": 17056,
+      "process_identity_token": "17056:134357336707259802",
+      "timed_out": false,
+      "canceled": false,
+      "descendants_after_parent_exit": false,
+      "cleanup_error": null,
+      "cleanup_drain_timed_out": false,
+      "survivor": false,
+      "receipt": "out/recombination-calculator/gate-r6/focused-tests/stage.json"
+    },
+    {
+      "name": "typescript",
+      "status": "passed",
+      "wall_ms": 3280.1218999084085,
+      "exit_code": 0,
+      "original_identity": "proved_absent",
+      "process_id": 15144,
+      "process_identity_token": "15144:134357336939890119",
+      "timed_out": false,
+      "canceled": false,
+      "descendants_after_parent_exit": false,
+      "cleanup_error": null,
+      "cleanup_drain_timed_out": false,
+      "survivor": false,
+      "receipt": "out/recombination-calculator/gate-r6/typescript/stage.json"
+    },
+    {
+      "name": "vite",
+      "status": "passed",
+      "wall_ms": 3460.13560006395,
+      "exit_code": 0,
+      "original_identity": "proved_absent",
+      "process_id": 46152,
+      "process_identity_token": "46152:134357336975056616",
+      "timed_out": false,
+      "canceled": false,
+      "descendants_after_parent_exit": false,
+      "cleanup_error": null,
+      "cleanup_drain_timed_out": false,
+      "survivor": false,
+      "receipt": "out/recombination-calculator/gate-r6/vite/stage.json"
+    },
+    {
+      "name": "package",
+      "status": "passed",
+      "wall_ms": 1829.0413001086563,
+      "exit_code": 0,
+      "original_identity": "proved_absent",
+      "process_id": 22896,
+      "process_identity_token": "22896:134357337012177157",
+      "timed_out": false,
+      "canceled": false,
+      "descendants_after_parent_exit": false,
+      "cleanup_error": null,
+      "cleanup_drain_timed_out": false,
+      "survivor": false,
+      "receipt": "out/recombination-calculator/gate-r6/package/stage.json"
+    },
+    {
+      "name": "render",
+      "status": "passed",
+      "wall_ms": 3079.115299973637,
+      "exit_code": 0,
+      "original_identity": "proved_absent",
+      "process_id": 89260,
+      "process_identity_token": "89260:134357337032862424",
+      "timed_out": false,
+      "canceled": false,
+      "descendants_after_parent_exit": false,
+      "cleanup_error": null,
+      "cleanup_drain_timed_out": false,
+      "survivor": false,
+      "receipt": "out/recombination-calculator/gate-r6/render/stage.json"
+    }
+  ],
+  "cleanup": {
+    "utc": "2026-10-06T04:15:22.1130536Z",
+    "error_action": "Stop",
+    "excluded_current_pid": 91164,
+    "stage_pids": [
+      17056,
+      30796,
+      22896,
+      89260,
+      15144,
+      46152
+    ],
+    "matches": [],
+    "count": 0
+  },
+  "local_released_utc": "2026-10-06T04:15:22.1130536Z",
+  "browser": {
+    "name": "Chrome",
+    "version": "152.0.7977.83",
+    "scope": "recombination-calculator",
+    "real_native_pair_goal": true,
+    "page_errors": 0,
+    "console_errors": 0
+  },
+  "screenshots": [
+    {
+      "file": "out/recombination-calculator/gate-r6/screens/chromium-recombination-goal-odds.png",
+      "bytes": 138057,
+      "sha256": "4880b0b2ef12dce904adfce14c0459a12a37240fac981c946c9b8c8529ebbc32",
+      "width": 1536,
+      "height": 864,
+      "visually_reviewed": true
+    },
+    {
+      "file": "out/recombination-calculator/gate-r6/screens/chromium-recombination-input-a.png",
+      "bytes": 87055,
+      "sha256": "052c1e92b4ac320bc9fd8c69815d134cd5d1190a05feebc3feee771e9449a0e0",
+      "width": 1536,
+      "height": 864,
+      "visually_reviewed": true
+    },
+    {
+      "file": "out/recombination-calculator/gate-r6/screens/chromium-recombination-input-b.png",
+      "bytes": 87382,
+      "sha256": "2f173a1bcdbb201ee9c297e38f8673c610592bd63501b747843c0d9994b13572",
+      "width": 1536,
+      "height": 864,
+      "visually_reviewed": true
+    },
+    {
+      "file": "out/recombination-calculator/gate-r6/screens/chromium-recombination-narrow-goal.png",
+      "bytes": 45488,
+      "sha256": "7eeea2ae69e0dab3073c8f4df5b17e0b114fec0f9c12f9701bd2dfa72721868d",
+      "width": 390,
+      "height": 844,
+      "visually_reviewed": true
+    },
+    {
+      "file": "out/recombination-calculator/gate-r6/screens/chromium-recombination-narrow-picker.png",
+      "bytes": 63048,
+      "sha256": "42e9da06892cbf8da39426457abc15823eb2fd4b02ba1a6461c8401518792ccf",
+      "width": 390,
+      "height": 844,
+      "visually_reviewed": true
+    },
+    {
+      "file": "out/recombination-calculator/gate-r6/screens/chromium-recombination-unsupported.png",
+      "bytes": 154519,
+      "sha256": "f274f2ff212019e9064e16812cf3c9e9896b3aaf81c09f0701c095c5b7f0bab3",
+      "width": 1536,
+      "height": 864,
+      "visually_reviewed": true
+    }
+  ],
+  "retained_attempts": [
+    "gate-r1",
+    "gate-r2",
+    "gate-r3",
+    "gate-r4",
+    "gate-r5"
+  ],
+  "native_builds": 0,
+  "dependency_installs": 0,
+  "solver_searches": 0,
+  "simulator_trials": 0,
+  "protected_path_inspections": 0,
+  "memory_cap": "No explicit outer memory cap; adapter API has no memory-cap argument.",
+  "remaining": [
+    "Parent-reserved source-matched browser QA for shared mobile navigation fix/assertion.",
+    "Parent-owned integration to main and CI gate."
+  ],
+  "coordination_blocker": "Thread-messaging callable disappeared after final process cleanup; direct release send unavailable. Automatic delegation final notification is the handoff."
+}

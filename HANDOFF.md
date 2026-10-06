@@ -24,11 +24,14 @@ mathematical authorities are unchanged by this presentation delta.
 ## Selected work: isolated solver causal and economic continuation
 
 Oliver separately selected the [authored two-item recombination calculator](docs/active/2026-10-06-recombination-calculator/README.md)
-in a fresh isolated session from main `7252027c`. Its standalone page and narrow
-existing pair-API integration are source implemented. First isolated metadata
-and focused tests pass; TypeScript fails and stops the batch. Source types are
-repaired but unqualified; build/render await a new parent-controlled LOCAL batch. The active optimizer
-and normal checkout are untouched; parent owns publication and main/CI gating.
+in a fresh isolated session from main `7252027c`. Its page and existing pair-API
+integration pass focused real-WASM tests, TypeScript, build/package and Chrome
+interaction/mobile checks at `dd942153`; six saved captures were reviewed.
+LOCAL was released with proved-absent identities and elevated CIM zero at
+04:15:22 UTC. Screenshot review then found shared navigation clipping at 390px;
+the separate wrapping fix and regression assertion (`8d9b57fb`) are source
+implemented but browser-unrun. Parent owns its finite follow-up QA and main/CI
+gating. The optimizer, frozen inputs and normal checkout are untouched.
 
 Oliver resumed the coordinated work at 09:00 Vancouver on October 5. The
 [published solver record at `734f6722`](https://github.com/OliverOrton/poecraft2/blob/734f67228be0c6fa3262f656f41cb7d625cc57db/docs/active/2026-10-04-sol61-armour-recovery/README.md)
