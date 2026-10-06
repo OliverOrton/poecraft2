@@ -17539,6 +17539,10 @@ void run_graph_only_missing_entry_service_counterparts(
     const std::chrono::steady_clock::time_point started) {
     using Impl = SolveWorkTestAccess::Impl;
     const auto require = [](bool condition, const char* reason) {
+        if (!condition) {
+            std::printf("graph-only missing assertion predicate=0 reason=%s\n", reason);
+            std::fflush(stdout);
+        }
         PC_CHECK(condition);
         if (!condition) throw std::runtime_error(reason);
     };
@@ -17843,16 +17847,14 @@ void run_graph_only_missing_entry_service_counterparts(
             require(captured_candidates <= 6, "finite counterpart admits at most six actual candidate captures");
             require(repeated_check_attempts == 0, "owner admission cannot repeat a spent candidate check");
         };
-        unsigned authority_snapshots = 0;
-        const auto observe_authority = [&](const char* stage) {
-            bounded();
-            observe_events();
-            if (++authority_snapshots > 256) {
-                std::printf("graph-only missing unresolved case=%u reason=authority_snapshot_limit\n", scenario);
-                std::fflush(stdout);
-            }
-            require(authority_snapshots <= 256, "decisive owner diagnostics have a finite snapshot bound");
-            const auto emit = [&](const Impl::BoundedPolicyIncumbent& candidate, const char* owner) {
+        // Read-only, synchronous views are reacquired after each owner mutation.
+        // This emitter has no assertions, owner writes, parsing or work service.
+        // It flushes before the unchanged authority predicate can itself fail a
+        // shared-allowance assertion. Per-step output uses the existing 10,000
+        // owner-unit bound; the separate 256 checkpoint bound stays unchanged.
+        const auto emit_authority_snapshot = [&](const char* stage) {
+            const auto emit = [&](const Impl::BoundedPolicyIncumbent& candidate, const char* owner,
+                                  std::size_t location) {
                 std::uint64_t payload = 1469598103934665603ULL;
                 Impl::identity_mix_string(payload, candidate.compiled_artifact.strategy_json);
                 const auto current_prefix = work.incumbent_graph_prefix_identity(
@@ -17862,20 +17864,24 @@ void run_graph_only_missing_entry_service_counterparts(
                     candidate.graph_choice_option_count);
                 const auto* retained_reason = work.retained_incumbent_invalid_reason(candidate);
                 const auto* certified_reason = work.certified_incumbent_invalid_reason(candidate);
-                std::printf("graph-only missing authority case=%u stage=%s owner=%s identity=%llu "
+                std::printf("graph-only missing authority case=%u stage=%s owner=%s location=%llu identity=%llu "
                     "graph=%llu payload=%llu payload_bytes=%llu kind=%s root_only=%u materialized=%u "
-                    "root=%u upper=%.17g checked_cost=%.17g root_table=%.17g evaluated=%u certified=%u "
+                    "root=%u upper=%.17g checked_cost=%.17g baseline_checked_cost=%.17g nonworsening=%u "
+                    "root_table=%.17g evaluated=%u certified=%u "
                     "proper=%u executable=%u sticky_rejected=%u statewise=%u goal=%llu economy=%llu "
                     "caller=%llu vocabulary=%llu artifact=%llu captured_prefix=%llu current_prefix=%llu "
-                    "source_generation=%llu target_generation=%llu original_root_member=%u "
-                    "retained_reason=%s certified_reason=%s\n",
-                    scenario, stage, owner, static_cast<unsigned long long>(candidate.portfolio_identity),
+                    "source_generation=%llu target_generation=%llu exact_old_root_bundle=%u "
+                    "retained_valid=%u certified_valid=%u retained_reason=%s certified_reason=%s\n",
+                    scenario, stage, owner, static_cast<unsigned long long>(location),
+                    static_cast<unsigned long long>(candidate.portfolio_identity),
                     static_cast<unsigned long long>(candidate.graph_identity),
                     static_cast<unsigned long long>(payload),
                     static_cast<unsigned long long>(candidate.compiled_artifact.strategy_json.size()),
                     candidate.kind.c_str(), candidate.compiled_root_entry_only ? 1u : 0u,
                     candidate.policy_materialized ? 1u : 0u, root, candidate.certified_upper_bound,
-                    candidate.evaluated_policy_cost, root < candidate.values.size()
+                    candidate.evaluated_policy_cost, baseline_checked_cost,
+                    candidate.evaluated_policy_cost <= baseline_checked_cost ? 1u : 0u,
+                    root < candidate.values.size()
                         ? candidate.values[root] : solve_detail::kInfinity,
                     candidate.independently_evaluated ? 1u : 0u, candidate.independently_certified ? 1u : 0u,
                     candidate.proper ? 1u : 0u, candidate.executable ? 1u : 0u,
@@ -17889,12 +17895,61 @@ void run_graph_only_missing_entry_service_counterparts(
                     static_cast<unsigned long long>(current_prefix),
                     static_cast<unsigned long long>(candidate.source_generation),
                     static_cast<unsigned long long>(candidate.target_generation),
-                    checked_original_root(candidate) ? 1u : 0u,
+                    candidate.portfolio_identity == root_identity &&
+                        candidate.compiled_artifact.strategy_json == root_graph ? 1u : 0u,
+                    retained_reason == nullptr ? 1u : 0u, certified_reason == nullptr ? 1u : 0u,
                     retained_reason ? retained_reason : "valid", certified_reason ? certified_reason : "valid");
+                // Membership is recorded independently of certificate validity.
+                // Equality compares the complete physical key, never its digest.
+                const auto& certificate = candidate.compiled_artifact.continuation_upper;
+                unsigned root_members = 0, available_root_members = 0;
+                const auto member_count = std::min<std::size_t>(32, certificate.evaluation.members.size());
+                for (std::size_t member_index = 0; member_index < member_count; ++member_index) {
+                    const auto& member = certificate.evaluation.members[member_index];
+                    if (exact_item_state_key(member.item) == original_root_key) {
+                        ++root_members;
+                        available_root_members += member.available() ? 1u : 0u;
+                    }
+                }
+                std::printf("graph-only missing authority certificate case=%u stage=%s owner=%s location=%llu "
+                    "role=%s schema=%llu evaluator=%llu strategy_identity=%llu strategy_bytes=%llu "
+                    "exact_certification_payload=%u requested=%u members=%llu membership_scan_complete=%u "
+                    "members_omitted=%llu original_root_members=%u "
+                    "available_original_root_members=%u certificate_available=%u policy_entries_available=%u "
+                    "current_goal=%llu current_economy=%llu current_caller=%llu current_vocabulary=%llu "
+                    "current_vocabulary_prefix=%llu captured_vocabulary_size=%llu current_vocabulary_size=%llu "
+                    "current_artifact=%llu current_source_generation=%llu current_target_generation=%llu\n",
+                    scenario, stage, owner, static_cast<unsigned long long>(location),
+                    candidate.compiled_root_entry_only ? "root_entry_only" : "ordinary_policy",
+                    static_cast<unsigned long long>(certificate.schema_version),
+                    static_cast<unsigned long long>(certificate.evaluation.evaluator_version),
+                    static_cast<unsigned long long>(certificate.strategy_identity_digest),
+                    static_cast<unsigned long long>(certificate.strategy_identity_bytes),
+                    candidate.compiled_artifact.strategy_json ==
+                        candidate.compiled_artifact.certification_strategy_json ? 1u : 0u,
+                    certificate.evaluation.requested ? 1u : 0u,
+                    static_cast<unsigned long long>(certificate.evaluation.members.size()),
+                    member_count == certificate.evaluation.members.size() ? 1u : 0u,
+                    static_cast<unsigned long long>(certificate.evaluation.members.size() - member_count),
+                    root_members, available_root_members, certificate.available() ? 1u : 0u,
+                    certificate.policy_entries_available() ? 1u : 0u,
+                    static_cast<unsigned long long>(work.goal_identity()),
+                    static_cast<unsigned long long>(work.economy_identity()),
+                    static_cast<unsigned long long>(work.caller_scope_identity()),
+                    static_cast<unsigned long long>(work.action_vocabulary_identity()),
+                    static_cast<unsigned long long>(work.action_vocabulary_prefix_identity(candidate.action_vocabulary_size)),
+                    static_cast<unsigned long long>(candidate.action_vocabulary_size),
+                    static_cast<unsigned long long>(work.operators.size()),
+                    static_cast<unsigned long long>(work.artifact_identity()),
+                    static_cast<unsigned long long>(work.transition_cache->rows.size()),
+                    static_cast<unsigned long long>(calc.state_count()));
             };
-            if (work.output_incumbent) emit(*work.output_incumbent, "active");
-            for (const auto& candidate : work.incumbent_portfolio.retained()) emit(candidate, "retained");
-            for (std::size_t row_id = 0; row_id < std::min<std::size_t>(5, work.transition_cache->rows.size()); ++row_id) {
+            if (work.output_incumbent) emit(*work.output_incumbent, "active", 0);
+            std::size_t retained_location = 0;
+            for (const auto& candidate : work.incumbent_portfolio.retained())
+                emit(candidate, "retained_logical_view", retained_location++);
+            for (std::size_t row_id = 0; row_id < std::min({std::size_t(5),
+                work.transition_cache->rows.size(), work.priced_rows.size()}); ++row_id) {
                 const auto& row = work.transition_cache->rows[row_id];
                 const auto& price = work.priced_rows[row_id];
                 std::printf("graph-only missing authority row case=%u stage=%s row=%llu owner=%u "
@@ -17904,12 +17959,13 @@ void run_graph_only_missing_entry_service_counterparts(
             }
             const auto checkpoint = work.graph_only_checkpoint_observation();
             std::printf("graph-only missing authority owner case=%u stage=%s exact_old_root_retained=%u "
-                "checked_original_root_authority=%u checker_queued=%u checker_identity=%llu proof_bytes=%llu "
+                "active_present=%u retained_locations=%llu checker_queued=%u checker_identity=%llu proof_bytes=%llu "
                 "candidate_captures=%u real_check_starts=%u real_check_completions=%u "
                 "focused_lower_stage=%u phase=%u focus_optimizing=%u refinement=%u expansion=%u "
                 "row_due=%u material_improvement=%u next_row_checkpoint=%llu current_goal=%llu current_economy=%llu "
                 "current_caller=%llu current_vocabulary=%llu current_artifact=%llu\n", scenario, stage,
-                root_retained() ? 1u : 0u, root_authority_preserved() ? 1u : 0u,
+                root_retained() ? 1u : 0u, work.output_incumbent.has_value() ? 1u : 0u,
+                static_cast<unsigned long long>(retained_location),
                 work.publication_pipeline.initial_candidate_task.has_value() ? 1u : 0u,
                 static_cast<unsigned long long>(work.publication_pipeline.complete_candidate_attempted_identity),
                 static_cast<unsigned long long>(work.publication_pipeline.initial_candidate_proof_bytes),
@@ -17924,7 +17980,29 @@ void run_graph_only_missing_entry_service_counterparts(
                 static_cast<unsigned long long>(work.caller_scope_identity()),
                 static_cast<unsigned long long>(work.action_vocabulary_identity()),
                 static_cast<unsigned long long>(work.artifact_identity()));
-            std::printf("graph-only missing authority original root case=%u stage=%s physical_key=[", scenario, stage);
+            const auto& evaluation = work.publication_pipeline.evaluation_progress;
+            std::printf("graph-only missing authority evaluation owner case=%u stage=%s "
+                "publication_task=%u evaluation_phase=%u evaluation_subphase=%u evaluation_done=%u "
+                "evaluation_pending_pairs=%llu initial_task_bytes=%llu publication_task_bytes=%llu "
+                "shared_proof_bytes=%llu live_owned_bytes=%llu evidence_bytes=%llu shared_allowance=%llu "
+                "detached_owner_identity_visibility=private_logical_view_only\n", scenario, stage,
+                work.publication_pipeline.task.has_value() ? 1u : 0u,
+                static_cast<unsigned>(evaluation.phase), static_cast<unsigned>(evaluation.subphase),
+                evaluation.done ? 1u : 0u, static_cast<unsigned long long>(evaluation.pending_pairs),
+                static_cast<unsigned long long>(work.publication_pipeline.initial_candidate_task
+                    ? work.publication_pipeline.initial_candidate_task->retained_bytes() : 0),
+                static_cast<unsigned long long>(work.publication_pipeline.task
+                    ? work.publication_pipeline.task->retained_bytes() : 0),
+                static_cast<unsigned long long>(work.publication_pipeline.initial_candidate_proof_bytes),
+                static_cast<unsigned long long>(work.fast_estimated_owned_bytes()),
+                static_cast<unsigned long long>(evidence_bytes),
+                static_cast<unsigned long long>(options.max_solver_owned_bytes));
+            std::printf("graph-only missing authority original root case=%u stage=%s "
+                "current_exact_root_matches=%u exact_start_present=%u current_start_state=%u expected_start_state=%u "
+                "physical_key=[", scenario, stage,
+                work.result.has_exact_start_item &&
+                    exact_item_state_key(work.result.exact_start_item) == original_root_key ? 1u : 0u,
+                work.result.has_exact_start_item ? 1u : 0u, work.result.start_state, root);
             for (std::size_t index = 0; index < original_root_key.size(); ++index)
                 std::printf("%s%llu", index ? "," : "", static_cast<unsigned long long>(original_root_key[index]));
             std::printf("]\n");
@@ -17941,6 +18019,25 @@ void run_graph_only_missing_entry_service_counterparts(
             }
             std::printf("] omitted=%llu\n", static_cast<unsigned long long>(work.queue.size() - queue_sample));
             std::fflush(stdout);
+        };
+        const auto capture_root_authority = [&](const char* stage) {
+            emit_authority_snapshot(stage); // Flush before any predicate-internal assertion.
+            const bool preserved = root_authority_preserved();
+            std::printf("graph-only missing authority predicate case=%u stage=%s "
+                "checked_original_root_authority=%u\n", scenario, stage, preserved ? 1u : 0u);
+            std::fflush(stdout);
+            return preserved;
+        };
+        unsigned authority_snapshots = 0;
+        const auto observe_authority = [&](const char* stage) {
+            emit_authority_snapshot(stage);
+            bounded();
+            observe_events();
+            if (++authority_snapshots > 256) {
+                std::printf("graph-only missing unresolved case=%u reason=authority_snapshot_limit\n", scenario);
+                std::fflush(stdout);
+            }
+            require(authority_snapshots <= 256, "decisive owner diagnostics have a finite snapshot bound");
         };
         const auto original_rejection_preserved = [&] {
             if (!ordinary) return true;
@@ -18139,11 +18236,13 @@ void run_graph_only_missing_entry_service_counterparts(
             const auto phase = work.phase;
             const bool queued = work.publication_pipeline.initial_candidate_task.has_value();
             work.step(1);
+            emit_authority_snapshot("natural_owner_after_step");
             observe_events();
             if (!work.output_incumbent || identity != work.output_incumbent->portfolio_identity ||
                 phase != work.phase || queued != work.publication_pipeline.initial_candidate_task.has_value())
                 observe_authority("natural_owner_transition");
-            require(root_authority_preserved(), "natural owner retains checked nonworsening original-root authority");
+            const bool after_step_authority = capture_root_authority("natural_owner_authority_assertion");
+            require(after_step_authority, "natural owner retains checked nonworsening original-root authority");
             require(original_rejection_preserved(), "natural owner cannot promote the old rejected table");
         }
         const bool natural_checked_improvement = checked_native_improvement() != nullptr;
@@ -18178,6 +18277,7 @@ void run_graph_only_missing_entry_service_counterparts(
             const auto identity = work.output_incumbent ? work.output_incumbent->portfolio_identity : 0;
             const bool queued = work.publication_pipeline.initial_candidate_task.has_value();
             work.step(1);
+            emit_authority_snapshot("initial_native_owner_after_step");
             observe_events();
             if (!work.output_incumbent || identity != work.output_incumbent->portfolio_identity ||
                 queued != work.publication_pipeline.initial_candidate_task.has_value())
@@ -18207,7 +18307,7 @@ void run_graph_only_missing_entry_service_counterparts(
                 near(work.transition_cache->probabilities[row.transition_offset], 1, 1e-12),
                 "native Regal continuation has complete paid physical support");
         }
-        require(root_authority_preserved(), "initial native service preserves checked nonworsening original-root authority");
+        require(capture_root_authority("initial_service_authority_assertion"), "initial native service preserves checked nonworsening original-root authority");
         require(original_rejection_preserved(), "initial native service preserves the rejected table veto");
         const auto alternatives = work.incremental_alternative_rows.size();
         const bool resumed_by_checkpoint = !natural_checked_improvement && !work.consumed && !work.finalized_result &&
@@ -18285,7 +18385,7 @@ void run_graph_only_missing_entry_service_counterparts(
             std::printf("graph-only missing assembly remaining case=%u namespace=outer_calculator state=%u\n",
                 scenario, state);
         std::fflush(stdout);
-        require(root_authority_preserved(), "initial assembly preserves checked nonworsening original-root authority");
+        require(capture_root_authority("initial_assembly_authority_assertion"), "initial assembly preserves checked nonworsening original-root authority");
         require(original_rejection_preserved(), "initial assembly cannot promote the old rejected table");
         if (!assembled)
             require(!work.incremental_anytime_missing_frontier_states.empty() &&
@@ -18310,6 +18410,7 @@ void run_graph_only_missing_entry_service_counterparts(
             const auto identity = work.output_incumbent ? work.output_incumbent->portfolio_identity : 0;
             const bool queued = work.publication_pipeline.initial_candidate_task.has_value();
             work.step(1);
+            emit_authority_snapshot("frontier_native_owner_after_step");
             observe_events();
             if (!work.output_incumbent || identity != work.output_incumbent->portfolio_identity ||
                 queued != work.publication_pipeline.initial_candidate_task.has_value())
@@ -18341,7 +18442,7 @@ void run_graph_only_missing_entry_service_counterparts(
             while (work.focused_lower_preparation_stage != Impl::FocusedLowerPreparationStage::Idle)
                 advance_service();
             observe_authority("after_frontier_preparation");
-            require(root_authority_preserved(), "focused repricing preserves checked nonworsening original-root authority");
+            require(capture_root_authority("focused_repricing_authority_assertion"), "focused repricing preserves checked nonworsening original-root authority");
             require(original_rejection_preserved(), "focused preparation preserves sticky rejection authority");
             if (checked_native_improvement() != nullptr || complete_service_candidate()) {
                 assembled = true;
@@ -18416,7 +18517,7 @@ void run_graph_only_missing_entry_service_counterparts(
                     "ledger_rows=%u owner_rows=%u expanded=1\n", scenario, frontier_round, state,
                     completed_rows, work.transition_cache->state_rows[state].count);
             }
-            require(root_authority_preserved(), "native frontier service preserves checked nonworsening original-root authority");
+            require(capture_root_authority("frontier_service_authority_assertion"), "native frontier service preserves checked nonworsening original-root authority");
             require(original_rejection_preserved(), "native frontier service preserves the rejected table veto");
             const bool checkpoint_resumed = !work.publication_pipeline.initial_candidate_task &&
                 work.continue_initial_candidate();
@@ -18453,7 +18554,7 @@ void run_graph_only_missing_entry_service_counterparts(
         observe_authority("before_complete_candidate_check");
         require(assembled && (checked_native_improvement() != nullptr || complete_service_candidate()),
             "final captured native candidate owns a complete improving materialized policy");
-        require(root_authority_preserved(), "complete native assembly preserves checked nonworsening original-root authority");
+        require(capture_root_authority("complete_assembly_authority_assertion"), "complete native assembly preserves checked nonworsening original-root authority");
         require(original_rejection_preserved(), "complete native assembly retains the original rejected table veto");
         // Reference is a paid fixed controller derived from the full original
         // native kernels. The delivered improved controller is independently
@@ -18492,7 +18593,10 @@ void run_graph_only_missing_entry_service_counterparts(
         }
         const auto slot_identity = work.publication_pipeline.complete_candidate_attempted_identity;
         observe_authority("complete_candidate_checker_owned");
-        check_queued(observe_events);
+        check_queued([&] {
+            emit_authority_snapshot("complete_candidate_checker_after_step");
+            observe_events();
+        });
         observe_authority("after_complete_candidate_check");
         std::printf("graph-only missing owner admission completed case=%u pre_check_identity=%llu "
             "post_check_identity=%llu spent_identity=%llu refused=%u repeated_attempts=%u proof_bytes=%llu\n",
@@ -18504,7 +18608,7 @@ void run_graph_only_missing_entry_service_counterparts(
         std::fflush(stdout);
         native_checked = checked_native_improvement(); // Reacquire after every mutation.
         require(native_checked && near(native_checked->evaluated_policy_cost, composed_estimate, 1e-8) &&
-            root_authority_preserved(),
+            capture_root_authority("complete_check_authority_assertion"),
             "independent native checker establishes the complete captured challenger cost and strict improvement");
         const auto capture_bytes = work.incumbent_owned_bytes(*native_checked);
         require(capture_bytes < options.max_solver_owned_bytes -
@@ -18571,6 +18675,7 @@ void run_graph_only_missing_entry_service_counterparts(
                     bounded();
                     require(unit < 10000, "positive-entry checker work cap");
                     checker.step(1);
+                    emit_authority_snapshot("positive_entry_checker_after_step");
                 }
                 const auto checked = checker.take_result();
                 std::printf("graph-only missing entry outcome case=%u entry=%u state=%u executable=%u "
@@ -18608,7 +18713,8 @@ void run_graph_only_missing_entry_service_counterparts(
             work.publication_pipeline.complete_candidate_attempted_identity == slot_identity &&
             work.action_vocabulary_identity() == scope && work.certified_global_lower_bound() == 0 &&
             work.options.goal_proof_profile == GoalProofProfile::TargetNeutralZero &&
-            work.options.max_solver_owned_bytes == options.max_solver_owned_bytes && root_authority_preserved(),
+            work.options.max_solver_owned_bytes == options.max_solver_owned_bytes &&
+            capture_root_authority("final_checkpoint_authority_assertion"),
             "missing-entry checker slot, scope, lower, allowance and fallback remain fixed");
         bounded();
         std::printf("graph-only missing service native case=%u states=%u baseline=24 checked=%.17g "
