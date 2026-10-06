@@ -312,3 +312,22 @@ assert.match(readOnlyMarkup, /Searing Exarch T3/);
 assert.match(readOnlyMarkup, /data-item-state="foreseeing"/);
 assert.match(readOnlyMarkup, /data-item-state="fractured"|data-item-state="crafted"/);
 console.log("  ok - influence context, native fact parity, preview cleanup and keyboard fracture identity");
+
+// Compact workbenches retain actual facts/affixes and default cards retain slots.
+const compactList = new PcModList();
+compactList.setAttribute("compact", "");
+compactList.setModel(mutableFixture);
+assert.equal(compactList.querySelectorAll(".pc-mod-slot.is-empty").length, 0);
+assert.equal(compactList.querySelectorAll(".pc-mod-slot.is-filled").length, mutableFixture.prefixes.length);
+assert.match(compactList.textContent!, /Long example item name/);
+assert.match(compactList.textContent!, /iLvl 86/);
+assert.match(compactList.textContent!, /Actual influence: Shaper/);
+assert.match(compactList.textContent!, /10 to maximum Life/);
+assert.ok(compactList.querySelector(".pc-item-properties summary"));
+assert.ok(compactList.querySelector('[data-add-mod-side="suffix"]'));
+assert.match(compactList.querySelector(".pc-item-open-summary")!.textContent!, /open suffix slots/);
+assert.match(nativeCaseMarkup, /is-empty/);
+const compactTargetMarkup = renderToStaticMarkup(createElement(ItemCard, {model: targetFixture, compact: true}));
+assert.doesNotMatch(compactTargetMarkup, /is-empty/);
+assert.match(compactTargetMarkup, /Any ordinary influence|Required: Searing Exarch/);
+console.log("  ok - opt-in compact cards preserve authored facts and editing paths");

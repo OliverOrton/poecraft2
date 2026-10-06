@@ -102,6 +102,8 @@ import { InfluenceBadge, ItemStateBadge, RarityBadge } from "./pc-item-badges";
 
 interface ItemCardProps {
     model: PcModListModel;
+    /** Opt-in authored-item workbench view; other shared cards retain full slots. */
+    compact?: boolean;
     slotHistory?: ItemSlotHistory;
     onFracture?: (detail: {key: string; modId: number; side: "prefix" | "suffix"}) => void;
     onTierChange?: (detail: {familyModKey: string; minTier: number}) => void;
@@ -117,7 +119,7 @@ interface ItemSlotHistory {
 }
 
 /** One item-card view for emulator, calculator targets, strategies and stash. */
-export function ItemCard({ model, slotHistory, onFracture, onTierChange, onRemove, onProperties, onChooseMods, onRemoveMod }: ItemCardProps) {
+export function ItemCard({ model, compact = false, slotHistory, onFracture, onTierChange, onRemove, onProperties, onChooseMods, onRemoveMod }: ItemCardProps) {
     const concreteIds = useRef(slotHistory?.concrete ?? {prefix: [] as Array<number | undefined>, suffix: [] as Array<number | undefined>});
     const targetIds = useRef(slotHistory?.target ?? {prefix: [] as Array<string | undefined>, suffix: [] as Array<string | undefined>});
     const target = model.kind === "target";
@@ -138,22 +140,23 @@ export function ItemCard({ model, slotHistory, onFracture, onTierChange, onRemov
             length = layout.slots.length;
             rows = layout.slots.map((mod, index) => mod
                 ? <ConcreteSlot key={index} mod={mod} side={side} index={index} onFracture={model.readOnly ? undefined : onFracture} onRemove={editable ? onRemoveMod : undefined} />
-                : <EmptySlot key={index} side={side} index={index} target={false} />);
+                : compact ? null : <EmptySlot key={index} side={side} index={index} target={false} />);
         } else {
             const layout = placeStableSlots(mods as TargetSlotMod[], Math.max(capacity, mods.length), targetIds.current[side], mod => mod.familyModKey);
             targetIds.current[side] = layout.ids;
             length = layout.slots.length;
             rows = layout.slots.map((mod, index) => mod
                 ? <TargetSlot key={index} mod={mod} side={side} index={index} onTierChange={onTierChange} onRemove={onRemove} />
-                : <EmptySlot key={index} side={side} index={index} target />);
+                : compact ? null : <EmptySlot key={index} side={side} index={index} target />);
         }
         if (!length) return null;
         return <section className={`pc-mod-group pc-mod-group-${side}`}>
             <h4><span>{side === "prefix" ? "Prefixes" : "Suffixes"}</span><span>{mods.length}/{target ? capacity : length}</span>{editable && <button className="pc-item-add-mod" type="button" data-add-mod-side={side} onClick={() => onChooseMods?.(side)}>Add</button>}</h4>
             <ul className="pc-mod-slots">{rows}</ul>
+            {compact && !mods.length && <p className="pc-item-open-summary">{target ? `No ${side} requirements` : `${length} open ${side} slots`}</p>}
         </section>;
     }
-    return <div className={`pc-mod-list ${target ? "pc-mod-list-target" : ""} ${corrupted ? "is-corrupted" : ""} pc-item-rarity-${model.rarity.toLowerCase()}`} data-mode={model.kind}>
+    return <div className={`pc-mod-list ${compact ? "is-compact" : ""} ${target ? "pc-mod-list-target" : ""} ${corrupted ? "is-corrupted" : ""} pc-item-rarity-${model.rarity.toLowerCase()}`} data-mode={model.kind}>
         <header className="pc-item-card-header">
             <GameIcon assetKey={model.baseKey ?? "name:" + model.baseName} size="item" />
             {model.baseName && <div className="pc-item-title-line"><strong title={model.baseName}>{model.baseName}</strong>{!!model.itemLevel && <span>iLvl {model.itemLevel}</span>}</div>}
@@ -191,7 +194,7 @@ export function ItemCard({ model, slotHistory, onFracture, onTierChange, onRemov
                 {target && model.properties.influenceBits !== undefined && <small>Exactly the selected influences{model.properties.influenceBits === 0 ? " (none)" : ""}.</small>}
             </fieldset>
         </details>}
-        {(!!model.implicits?.length || model.properties) && <section className="pc-mod-group pc-mod-group-implicit">
+        {(!!model.implicits?.length || (!compact && model.properties)) && <section className="pc-mod-group pc-mod-group-implicit">
             <h4><span>Implicits</span><span>{model.implicits?.length ?? 0}</span></h4>
             <ul className="pc-mod-slots">{model.kind === "concrete" ? model.implicits.map((mod, index) => <ConcreteSlot key={mod.key} mod={mod} side="implicit" index={index} onRemove={editable ? onRemoveMod : undefined} />)
                 : model.implicits?.map((mod, index) => <li className="pc-mod-slot pc-mod-implicit is-filled" key={mod.key} data-target-implicit={mod.key}>
@@ -316,7 +319,7 @@ export class PcModList extends HTMLElement {
     setModel(model: PcModListModel): void {
         this.model = model;
         const emit = (name: string, detail: unknown) => this.dispatchEvent(new CustomEvent(name, {bubbles: true, detail}));
-        renderReact(this, <ItemCard model={model} slotHistory={this.slotHistory} onFracture={detail => emit("fracture-mod", detail)}
+        renderReact(this, <ItemCard model={model} compact={this.hasAttribute("compact")} slotHistory={this.slotHistory} onFracture={detail => emit("fracture-mod", detail)}
             onTierChange={detail => emit("target-tier-change", detail)} onRemove={detail => emit("target-remove", detail)}
             onProperties={detail => emit("item-properties-change", detail)} onChooseMods={side => emit("choose-mods", {side})}
             onRemoveMod={detail => emit("remove-item-mod", detail)} />);

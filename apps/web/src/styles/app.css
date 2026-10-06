@@ -5388,57 +5388,103 @@ input::placeholder, textarea::placeholder {
 
 .pc-mod-slot-content:focus-visible { outline-offset: -2px; }
 
-/* Authored random pair calculator: existing cards, picker and charcoal tokens. */
-pc-recombination-calculator { display: block; height: 100%; min-width: 0; overflow: auto; }
-.pc-recombination-calculator { position: relative; min-height: 100%; padding-bottom: var(--pc-space-4); }
-.pc-recomb-intro { margin: var(--pc-space-3) var(--pc-space-4); }
-.pc-recomb-layout { display: grid; grid-template-columns: minmax(270px, 1fr) minmax(350px, 1.35fr) minmax(270px, 1fr); align-items: start; gap: var(--pc-space-4); padding: 0 var(--pc-space-4); }
-.pc-recomb-input, .pc-recomb-goal, .pc-recomb-picker, .pc-recomb-odds { min-width: 0; padding: var(--pc-space-3); background: var(--pc-surface-panel); border: 1px solid var(--pc-border); border-radius: var(--pc-radius-panel); }
-.pc-recomb-a { grid-column: 1; grid-row: 2; }
-.pc-recomb-b { grid-column: 3; grid-row: 2; }
-.pc-recomb-middle { grid-column: 2; grid-row: 2; display: grid; min-width: 0; gap: var(--pc-space-4); }
-.pc-recomb-odds { grid-column: 1 / -1; grid-row: 1; }
-.pc-recomb-card-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--pc-space-2); margin-bottom: var(--pc-space-3); }
+
+/* Opt-in compact shared cards keep actual facts and full text; no fixed slot heights. */
+.pc-mod-list.is-compact { padding: 8px; }
+.pc-mod-list.is-compact .pc-item-card-header { min-height: 0; margin: -8px -8px 6px; padding: 6px 8px; }
+.pc-mod-list.is-compact .pc-item-card-header > .pc-game-art-item { width: 34px; height: 44px; margin-right: 8px; }
+.pc-mod-list.is-compact .pc-item-title-line strong { font-size: var(--pc-type-body); }
+.pc-mod-list.is-compact .pc-mod-slot { height: auto; min-height: 40px; max-height: none; flex: 0 0 auto; grid-template-columns: 3px 28px minmax(0, 1fr); padding: 4px 5px 4px 0; }
+.pc-mod-list.is-compact .pc-mod-slot-content { overflow: visible; padding-left: 6px; }
+.pc-mod-list.is-compact .pc-mod-slot-lines { font-size: var(--pc-type-body); overflow-wrap: anywhere; }
+.pc-mod-list.is-compact .pc-mod-group h4 { margin: 6px 0 4px; }
+.pc-mod-list.is-compact .pc-mod-explicit-ledger { gap: 4px; }
+.pc-mod-list.is-compact .pc-item-fracture-mod { min-height: 20px; }
+.pc-mod-list.is-compact .pc-item-open-summary { margin: 4px 0; color: var(--pc-text-muted); font-size: var(--pc-type-meta); }
+.pc-mod-list.is-compact .pc-mod-target-slot .pc-mod-slot-content { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 3px 6px; }
+.pc-mod-list.is-compact .pc-mod-target-slot .pc-mod-slot-lines { grid-column: 1; }
+.pc-mod-list.is-compact .pc-mod-target-slot .pc-mod-slot-tags { grid-column: 1; margin: 0; }
+.pc-mod-list.is-compact .pc-mod-target-actions { grid-column: 2; grid-row: 1 / span 2; }
+.pc-mod-list.is-compact .pc-mod-target-actions select { width: 104px; font-size: var(--pc-type-meta); }
+
+/* Authored random pair: compact odds and independently scrolling desktop panels. */
+pc-recombination-calculator { display: block; height: 100%; min-width: 0; min-height: 0; overflow: auto; }
+.pc-recombination-calculator, .pc-recomb-workbench { height: 100%; min-height: 0; }
+.pc-recomb-workbench { display: flex; flex-direction: column; gap: var(--pc-space-2); padding: var(--pc-space-2); }
+.pc-recomb-page-heading { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px 16px; flex: none; }
+.pc-recomb-page-heading .pc-help { margin: 0; }
+.pc-recomb-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(390px, 1.2fr) minmax(0, 1fr); min-height: 0; flex: 1; gap: var(--pc-space-2); }
+.pc-recomb-input, .pc-recomb-goal, .pc-recomb-picker, .pc-recomb-odds { min-width: 0; padding: var(--pc-space-2); background: var(--pc-surface-panel); border: 1px solid var(--pc-border); border-radius: var(--pc-radius-panel); }
+.pc-recomb-input, .pc-recomb-goal, .pc-recomb-picker { position: relative; min-height: 0; display: flex; flex-direction: column; }
+.pc-recomb-a { grid-column: 1; grid-row: 1; }
+.pc-recomb-b { grid-column: 3; grid-row: 1; }
+.pc-recomb-middle { grid-column: 2; grid-row: 1; display: grid; min-width: 0; min-height: 0; gap: var(--pc-space-2); grid-template-rows: minmax(250px, .95fr) minmax(260px, 1.05fr); }
+.pc-recomb-input pc-mod-list, .pc-recomb-goal pc-mod-list { display: block; flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-gutter: stable; }
+.pc-recomb-card-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--pc-space-1); margin-bottom: var(--pc-space-1); flex: none; }
 .pc-recomb-card-heading h3 { margin: 0; font-size: var(--pc-type-heading); }
-.pc-recomb-card-heading > div, .pc-recomb-input-actions { display: flex; flex-wrap: wrap; gap: var(--pc-space-2); }
-.pc-recomb-input-actions { margin-bottom: var(--pc-space-3); }
-.pc-recomb-goal-controls { display: grid; gap: var(--pc-space-2); margin-bottom: var(--pc-space-3); font-size: 13px; }
-.pc-recomb-goal-controls label { display: flex; align-items: center; flex-wrap: wrap; gap: var(--pc-space-2); }
-.pc-recomb-focus-tabs { display: flex; gap: var(--pc-space-2); flex-wrap: wrap; }
+.pc-recomb-card-heading > div, .pc-recomb-input-actions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--pc-space-1); }
+.pc-recomb-input-actions { margin-bottom: var(--pc-space-2); flex: none; }
+.pc-recomb-goal-controls { display: flex; align-items: center; flex-wrap: wrap; gap: var(--pc-space-1) var(--pc-space-2); margin-bottom: var(--pc-space-1); font-size: 13px; flex: none; }
+.pc-recomb-goal-controls label, .pc-recomb-goal-options label { display: flex; align-items: center; flex-wrap: wrap; gap: var(--pc-space-1); }
+.pc-recomb-goal-options { font-size: var(--pc-type-meta); }
+.pc-recomb-goal-options summary { cursor: pointer; padding: 4px; }
+.pc-recomb-goal-options > div { position: absolute; top: 40px; left: 8px; right: 8px; z-index: 5; display: grid; gap: 8px; padding: 12px; max-height: 260px; overflow-y: auto; background: var(--pc-surface-panel); border: 1px solid var(--pc-border-control); border-radius: var(--pc-radius-panel); }
+.pc-recomb-focus-tabs { display: flex; gap: var(--pc-space-1); flex: none; }
 .pc-recomb-focus-tabs button { flex: 1; white-space: nowrap; }
 .pc-recombination-calculator [aria-pressed="true"] { border-color: var(--pc-accent); color: var(--pc-text-strong); background: var(--pc-surface-hover); box-shadow: inset 0 -2px var(--pc-accent); }
 .pc-recombination-calculator .is-editing { border-color: var(--pc-accent); }
-.pc-recomb-focus-label { color: var(--pc-accent); font-size: var(--pc-type-meta); min-height: 2.8em; margin: var(--pc-space-3) 0; }
-.pc-recomb-picker pc-mod-pool { display: block; min-width: 0; height: auto; min-height: 320px; }
-.pc-recomb-picker .pc-mod-pool-header { flex-wrap: wrap; gap: var(--pc-space-2); }
-.pc-recomb-picker .pc-mod-pool-tabs { flex-wrap: wrap; }
-.pc-recomb-picker .pc-mod-pool-search { min-width: 0; }
+.pc-recomb-focus-label { color: var(--pc-accent); font-size: var(--pc-type-meta); margin: 4px 0; flex: none; }
+.pc-recomb-picker pc-mod-pool { display: block; flex: 1; min-width: 0; min-height: 0; }
+.pc-recomb-picker .pc-mod-pool { min-height: 0; }
+.pc-recomb-picker .pc-mod-pool-header { flex-wrap: wrap; gap: var(--pc-space-1); padding: 6px 8px; flex: none; }
+.pc-recomb-picker .pc-mod-pool-hint { display: none; } /* The focus caption gives the same interaction instruction. */
+.pc-recomb-picker .pc-mod-pool-tabs { flex-wrap: wrap; padding: 0 8px; flex: none; }
+.pc-recomb-picker .pc-mod-pool-search { min-width: 0; margin: 0 8px 6px; flex: none; }
 .pc-recomb-picker .pc-mod-family-name, .pc-recomb-picker .pc-mod-tier-text { overflow-wrap: anywhere; }
-.pc-recomb-picker .pc-mod-pool-body { max-height: 480px; overflow-y: auto; }
-.pc-recomb-answer { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--pc-space-2) var(--pc-space-4); margin-bottom: var(--pc-space-3); }
-.pc-recomb-answer strong { font-size: 30px; color: var(--pc-accent); }
+.pc-recomb-picker .pc-mod-pool-body { min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-gutter: stable; }
+.pc-recomb-picker .pc-mod-family-header { padding: 6px 8px; }
+.pc-recomb-picker .pc-mod-tier-btn { padding: 4px 12px; }
+.pc-recomb-odds { position: relative; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 16px; flex: none; }
+.pc-recomb-odds-summary { display: flex; align-items: baseline; gap: 12px; min-width: 0; flex: 1; }
+.pc-recomb-odds-label { color: var(--pc-text-muted); font-size: var(--pc-type-meta); }
+.pc-recomb-odds-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.pc-recomb-answer { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; }
+.pc-recomb-answer strong { font-size: 24px; color: var(--pc-accent); }
 .pc-recomb-answer span:last-child { font-size: var(--pc-type-meta); color: var(--pc-text-muted); }
+.pc-recomb-odds-notice { margin: 0; font-size: 13px; }
+.pc-recomb-odds-details > summary { cursor: pointer; font-size: var(--pc-type-meta); padding: 4px; }
+.pc-recomb-odds-popover { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 10; padding: 12px; max-height: min(440px, 65vh); overflow-y: auto; background: var(--pc-surface-panel); border: 1px solid var(--pc-border-control); border-radius: var(--pc-radius-panel); box-shadow: 0 8px 24px #0008; }
 .pc-recomb-odds table { border-collapse: collapse; width: 100%; font-size: 13px; }
-.pc-recomb-odds th, .pc-recomb-odds td { text-align: left; padding: var(--pc-space-2); border-bottom: 1px solid var(--pc-border); overflow-wrap: anywhere; }
+.pc-recomb-odds th, .pc-recomb-odds td { text-align: left; padding: var(--pc-space-1); border-bottom: 1px solid var(--pc-border); overflow-wrap: anywhere; }
 .pc-recomb-assumptions { font-size: var(--pc-type-meta); color: var(--pc-text-muted); }
-.pc-recomb-assumptions summary { cursor: pointer; }
-.pc-recomb-error { color: var(--pc-status-danger); margin: var(--pc-space-4); }
+.pc-recomb-assumptions h4 { margin: 8px 0; }
+.pc-recomb-mobile-tabs { display: none; }
+.pc-recomb-error { color: var(--pc-status-danger); margin: 0; font-size: 13px; flex: none; }
 .pc-recomb-base-overlay { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: var(--pc-space-4); background: #000a; }
 .pc-recomb-base-overlay[hidden] { display: none; }
 .pc-recomb-base-dialog { width: min(760px, 100%); max-height: 90vh; overflow-y: auto; padding: var(--pc-space-4); border: 1px solid var(--pc-border-control); border-radius: var(--pc-radius-panel); background: var(--pc-surface-panel); }
 .pc-recombination-calculator button:focus-visible, .pc-recombination-calculator select:focus-visible,
 .pc-recombination-calculator input:focus-visible, .pc-recombination-calculator summary:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
-@media (max-width: 1100px) {
-    .pc-recomb-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-    .pc-recomb-a { grid-column: 1; }
-    .pc-recomb-b { grid-column: 2; }
-    .pc-recomb-middle { grid-column: 1 / -1; grid-row: 3; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
-}
-@media (max-width: 700px) {
-    .pc-recomb-layout { grid-template-columns: minmax(0, 1fr); gap: var(--pc-space-3); padding: 0 var(--pc-space-2); }
-    .pc-recomb-a { grid-column: 1; grid-row: 2; }
-    .pc-recomb-b { grid-column: 1; grid-row: 3; }
-    .pc-recomb-middle { grid-column: 1; grid-row: 4; grid-template-columns: minmax(0, 1fr); }
-    .pc-recomb-focus-tabs button { min-height: 40px; }
-    .pc-recomb-odds th, .pc-recomb-odds td { padding: var(--pc-space-1); font-size: var(--pc-type-meta); }
+@media (max-width: 900px) {
+    .pc-recombination-calculator, .pc-recomb-workbench { height: auto; min-height: 100%; }
+    .pc-recomb-workbench { gap: var(--pc-space-2); }
+    .pc-recomb-layout { display: flex; flex-direction: column; flex: none; }
+    .pc-recomb-middle { display: contents; }
+    .pc-recomb-input, .pc-recomb-goal { display: none; }
+    [data-edit-focus="a"] .pc-recomb-a, [data-edit-focus="b"] .pc-recomb-b, [data-edit-focus="goal"] .pc-recomb-goal { display: flex; order: 1; }
+    .pc-recomb-input pc-mod-list, .pc-recomb-goal pc-mod-list { flex: none; overflow: visible; scrollbar-gutter: auto; }
+    .pc-recomb-picker { order: 2; min-height: 400px; }
+    .pc-recomb-picker pc-mod-pool { flex: none; }
+    .pc-recomb-picker .pc-mod-pool-body { max-height: 440px; }
+    .pc-recomb-focus-tabs { display: none; }
+    .pc-recomb-mobile-tabs { display: flex; gap: 4px; flex: none; }
+    .pc-recomb-mobile-tabs button { flex: 1; min-width: 0; min-height: 44px; padding: 6px; display: flex; flex-direction: column; gap: 4px; }
+    .pc-recomb-mobile-tabs small { font-size: var(--pc-type-meta); color: var(--pc-text-muted); font-weight: 400; overflow-wrap: anywhere; }
+    .pc-recomb-odds { align-items: stretch; }
+    .pc-recomb-odds-summary { flex-basis: 100%; }
+    .pc-recomb-odds-actions { justify-content: space-between; width: 100%; }
+    .pc-recomb-page-heading .pc-help { font-size: var(--pc-type-meta); }
+    .pc-recomb-odds th, .pc-recomb-odds td { font-size: var(--pc-type-meta); }
+    .pc-mod-list.is-compact .pc-mod-target-slot .pc-mod-slot-content { display: flex; }
+    .pc-mod-list.is-compact .pc-mod-target-actions { align-self: flex-start; }
 }

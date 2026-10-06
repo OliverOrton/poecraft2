@@ -31,24 +31,45 @@ function RecombinationShell({id}: {id: string}) {
     const input = (side: Input) => <section className={`pc-recomb-input pc-recomb-${side}`} data-recomb-card={side} aria-label={names[side]}>
         <header className="pc-recomb-card-heading"><h3>{names[side]}</h3><button data-recomb-focus={side} aria-pressed="false">Edit {side.toUpperCase()}</button></header>
         <div className="pc-recomb-input-actions"><button data-recomb-base={side}>Change base</button><button data-recomb-clear={side}>Clear mods</button></div>
-        <ControllerElement tag="pc-mod-list" data-recomb-item={side} />
+        <ControllerElement tag="pc-mod-list" compact="" data-recomb-item={side} />
     </section>;
     return <div className="pc-recombination-calculator">
-        <header className="pc-craft-bar"><span className="pc-calc-workbench-title">Recombination</span><span>Combine two authored items</span></header>
-        <p className="pc-help pc-recomb-intro">Random recombination keeps either input’s base and carrier properties. Each attempt consumes both items. This calculator leaves your inputs editable.</p>
+        <div className="pc-recomb-workbench" data-edit-focus="goal">
+        <header className="pc-recomb-page-heading"><span className="pc-calc-workbench-title">Recombination</span><span className="pc-help">Random carrier · both inputs consumed per attempt</span></header>
+        <section className="pc-recomb-odds" aria-label="Recombination odds">
+            <div className="pc-recomb-odds-summary"><span className="pc-recomb-odds-label">Odds</span><div data-recomb-output aria-live="polite" /></div>
+            <div className="pc-recomb-odds-actions"><button className="pc-button-primary" data-recomb-calculate>Calculate odds</button><button data-recomb-cancel hidden>Cancel</button>
+                <details className="pc-recomb-odds-details"><summary>Details &amp; model</summary><div className="pc-recomb-odds-popover">
+                    <div data-recomb-breakdown />
+                    <section className="pc-recomb-assumptions"><h4>Model and supported scope</h4>
+                        <p>Estimated game odds from the native random recombination model. Modifier selection uses provisional spawn weights. Selected tiers and recorded rolls are preserved; unverified upgrades are omitted.</p>
+                        <p>Supports rare ordinary equipment of the same item class. Fractured or special explicit modifiers, generic influence, corruption, mirroring, foresight, jewel and cluster capacities, unresolved cross-side exclusions and the exceptional one-prefix / one-suffix pair are refused by the engine.</p>
+                        <p>Goal odds observe explicit structure, selected implicits and represented item properties. Numerical rolls, memory strands, sockets, enchantments and defence percentiles are unobserved. Gold and dust costs are unknown; acquisition and retry costs are excluded.</p>
+                        <p>The calculator snapshots your authored items; it does not consume the editable inputs.</p>
+                    </section>
+                </div></details>
+            </div>
+        </section>
+        <nav className="pc-recomb-mobile-tabs" aria-label="Item to edit">{(["a", "goal", "b"] as Focus[]).map(focus =>
+            <button key={focus} data-recomb-focus={focus} aria-pressed={focus === "goal"}><span>{names[focus]}</span><small data-recomb-overview={focus} /></button>)}</nav>
+        <p className="pc-recomb-error" role="alert" hidden />
         <div className="pc-recomb-layout">
             {input("a")}
             <div className="pc-recomb-middle">
                 <section className="pc-recomb-goal" data-recomb-card="goal" aria-label="Goal result">
-                    <header className="pc-recomb-card-heading"><h3>Goal result</h3><button data-recomb-focus="goal" aria-pressed="true">Edit goal</button></header>
+                    <header className="pc-recomb-card-heading"><h3>Goal result</h3><div>
+                        <details className="pc-recomb-goal-options"><summary>Goal options</summary><div>
+                            <label><input type="checkbox" data-recomb-extras defaultChecked /> Allow extra explicit modifiers</label>
+                            <label>Success means <select data-recomb-threshold aria-label="Required goal modifier count" /></label>
+                            <p className="pc-help">Choose tiers or better. Selected implicits and item properties are required. No requirements matches any supported rare result.</p>
+                        </div></details>
+                        <button data-recomb-focus="goal" aria-pressed="true">Edit goal</button>
+                    </div></header>
                     <div className="pc-recomb-goal-controls">
                         <label><input type="checkbox" data-recomb-base-care /> Result base matters</label>
-                        <label className="pc-recomb-required-base">Required base <select data-recomb-required-base aria-label="Required result base"><option value="a">Input A’s base</option><option value="b">Input B’s base</option></select></label>
-                        <label><input type="checkbox" data-recomb-extras defaultChecked /> Allow extra explicit modifiers</label>
-                        <label>Success means <select data-recomb-threshold aria-label="Required goal modifier count" /></label>
+                        <select data-recomb-required-base aria-label="Required result base"><option value="a">Input A's base</option><option value="b">Input B's base</option></select>
                     </div>
-                    <ControllerElement tag="pc-mod-list" data-recomb-item="goal" />
-                    <p className="pc-help">Select modifier tiers or better. All selected implicits and item properties are required. No requirements means any supported rare result matches.</p>
+                    <ControllerElement tag="pc-mod-list" compact="" data-recomb-item="goal" />
                 </section>
                 <section className="pc-recomb-picker" aria-label="Shared modifier selector">
                     <nav className="pc-recomb-focus-tabs" aria-label="Item to edit">{(["a", "goal", "b"] as Focus[]).map(focus =>
@@ -58,17 +79,8 @@ function RecombinationShell({id}: {id: string}) {
                 </section>
             </div>
             {input("b")}
-            <section className="pc-recomb-odds" aria-label="Recombination odds">
-            <header className="pc-recomb-card-heading"><h3>Odds</h3><div><button className="pc-button-primary" data-recomb-calculate>Calculate odds</button><button data-recomb-cancel hidden>Cancel</button></div></header>
-                <div data-recomb-output aria-live="polite" />
-                <details className="pc-recomb-assumptions"><summary>Model and supported scope</summary>
-                    <p>Estimated game odds from the native random recombination model. Modifier selection uses provisional spawn weights. Selected tiers and recorded rolls are preserved; unverified upgrades are omitted.</p>
-                    <p>Supports rare ordinary equipment of the same item class. Fractured or special explicit modifiers, generic influence, corruption, mirroring, foresight, jewel and cluster capacities, unresolved cross-side exclusions and the exceptional one-prefix / one-suffix pair are refused by the engine.</p>
-                    <p>Goal odds observe explicit structure, selected implicits and represented item properties. Numerical rolls, memory strands, sockets, enchantments and defence percentiles are unobserved. Gold and dust costs are unknown; acquisition and retry costs are excluded.</p>
-                </details>
-            </section>
         </div>
-        <p className="pc-recomb-error" role="alert" hidden />
+        </div>
         <div className="pc-recomb-base-overlay" hidden><section className="pc-recomb-base-dialog" role="dialog" aria-modal="true" aria-labelledby={`${id}-base-title`} tabIndex={-1}>
             <header className="pc-recomb-card-heading"><h3 className="pc-recomb-base-title" id={`${id}-base-title`}>Choose input base</h3><button data-recomb-close-picker>Cancel</button></header>
             <ControllerElement tag="pc-base-picker" />
@@ -195,15 +207,20 @@ export class PcRecombinationCalculator extends HTMLElement {
         this.edit(async () => {task(); this.render();});
     }
     private select(focus: Focus, side?: "prefix" | "suffix" | "implicit"): void {
+        const changed = focus !== this.editFocus;
         this.editFocus = focus;
         this.renderFocus(); this.renderPool();
+        if (changed && window.matchMedia("(max-width: 900px)").matches) this.scrollTop = 0;
         if (side) {this.pool.setActiveTab(side); this.pool.querySelector<HTMLInputElement>("input")?.focus();}
     }
     private bind(): void {
         this.addEventListener("click", event => {
             const button = (event.target as HTMLElement).closest<HTMLButtonElement>("button");
             if (!button || button.disabled) return;
-            if (button.dataset.recombFocus) this.select(button.dataset.recombFocus as Focus);
+            if (button.dataset.recombFocus) {
+                this.select(button.dataset.recombFocus as Focus);
+                if (window.matchMedia("(max-width: 900px)").matches) this.scrollTop = 0;
+            }
             if (button.dataset.recombBase) this.openPicker(button.dataset.recombBase as Input, button);
             if (button.hasAttribute("data-recomb-close-picker")) this.closePicker();
             if (button.dataset.recombClear) {
@@ -285,6 +302,7 @@ export class PcRecombinationCalculator extends HTMLElement {
             });
         });
         this.addEventListener("keydown", event => {
+            if (event.key === "Escape") this.querySelector<HTMLDetailsElement>(".pc-recomb-odds-details")?.removeAttribute("open");
             if (!this.pickerSide) return;
             if (event.key === "Escape") {event.preventDefault(); this.closePicker();}
             if (event.key === "Tab") {
@@ -346,13 +364,13 @@ export class PcRecombinationCalculator extends HTMLElement {
         if (snapshot) picker.setSelection(snapshot.base, snapshot.itemLevel);
         this.querySelector<HTMLElement>(".pc-recomb-base-overlay")!.hidden = false;
         this.querySelector<HTMLElement>(".pc-recomb-base-title")!.textContent = `Choose ${names[side]} base · creates a fresh rare item`;
-        this.querySelector<HTMLElement>(".pc-recomb-layout")!.inert = true;
+        this.querySelector<HTMLElement>(".pc-recomb-workbench")!.inert = true;
         this.querySelector<HTMLButtonElement>("[data-recomb-close-picker]")!.focus();
     }
     private closePicker(): void {
         this.pickerSide = null;
         this.querySelector<HTMLElement>(".pc-recomb-base-overlay")!.hidden = true;
-        this.querySelector<HTMLElement>(".pc-recomb-layout")!.inert = false;
+        this.querySelector<HTMLElement>(".pc-recomb-workbench")!.inert = false;
         this.returnFocus?.focus(); this.returnFocus = null;
     }
 
@@ -409,9 +427,16 @@ export class PcRecombinationCalculator extends HTMLElement {
         this.renderFocus(); this.renderPool(); this.renderOdds();
     }
     private renderFocus(): void {
+        this.querySelector<HTMLElement>(".pc-recomb-workbench")!.dataset.editFocus = this.editFocus;
         this.querySelectorAll<HTMLButtonElement>("[data-recomb-focus]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.recombFocus === this.editFocus)));
         this.querySelectorAll<HTMLElement>("[data-recomb-card]").forEach(card => card.classList.toggle("is-editing", card.dataset.recombCard === this.editFocus));
-        this.querySelector<HTMLElement>(".pc-recomb-focus-label")!.textContent = `Editing ${names[this.editFocus]}${this.editFocus === "goal" ? " · goal catalog uses input A’s native session" : " · picker adds modifiers to this input"}`;
+        this.querySelector<HTMLElement>(".pc-recomb-focus-label")!.textContent = `Editing ${names[this.editFocus]}${this.editFocus === "goal" ? " · goal catalog uses input A's native session" : " · click a tier to add or remove"}`;
+        for (const side of ["a", "b"] as const) {
+            const input = this.inputs.get(side);
+            this.querySelector<HTMLElement>(`[data-recomb-overview="${side}"]`)!.textContent = input ?
+                `${this.baseName(input.snapshot.base)} · i${input.snapshot.itemLevel} · ${input.card.prefixes.length + input.card.suffixes.length} mods` : "Preparing item";
+        }
+        this.querySelector<HTMLElement>('[data-recomb-overview="goal"]')!.textContent = `${this.goal.slots.length} modifiers · ${this.baseCare ? "required base" : "either base"}`;
     }
     private renderPool(): void {
         const input = this.inputs.get(this.editFocus === "goal" ? "a" : this.editFocus);
@@ -433,8 +458,10 @@ export class PcRecombinationCalculator extends HTMLElement {
         button.disabled = this.busy || this.calculating || this.inputs.size !== 2;
         this.querySelector<HTMLButtonElement>("[data-recomb-cancel]")!.hidden = !this.calculating;
         const odds = this.result ? recombinationOdds(this.result, this.baseCare ? this.inputs.get(this.requiredBase)?.snapshot.base : undefined) : null;
-        renderReact(this.querySelector<HTMLElement>("[data-recomb-output]")!, odds ? <>
-            <div className="pc-recomb-answer"><strong>{percent(odds.success)}</strong><span>Chance of the goal result{this.baseCare ? " on the required base" : " on either base"}</span><span>Estimated game odds · native model enumeration</span></div>
+        renderReact(this.querySelector<HTMLElement>("[data-recomb-output]")!, odds ?
+            <div className="pc-recomb-answer"><strong>{percent(odds.success)}</strong><span>Goal{this.baseCare ? " on required base" : " on either base"}</span><span>Estimated game odds</span></div> :
+            <p className="pc-recomb-odds-notice" role={this.oddsNotice.startsWith("Odds unavailable") ? "alert" : undefined}>{this.busy ? "Preparing authored items." : this.oddsNotice}</p>);
+        renderReact(this.querySelector<HTMLElement>("[data-recomb-breakdown]")!, odds ? <>
             <table><thead><tr><th>Result carrier / base</th><th>Base chance</th><th>Goal on this carrier</th></tr></thead><tbody>{odds.carriers.map(carrier => <tr key={carrier.carrier}>
                 <td>{carrier.carrier === 0 ? "A" : "B"} · {this.baseName(carrier.base)} · iLvl {carrier.itemLevel}</td><td>{percent(carrier.probability)}</td><td>{percent(carrier.goalMass)}</td>
             </tr>)}</tbody></table>
