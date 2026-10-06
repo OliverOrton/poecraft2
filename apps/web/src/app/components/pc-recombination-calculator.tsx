@@ -27,7 +27,7 @@ interface AuthoredInput {
 const names = {a: "Input A", b: "Input B", goal: "Goal result"};
 const percent = (value: number) => `${(value * 100).toLocaleString(undefined, {maximumFractionDigits: 4})}%`;
 
-function RecombinationShell() {
+function RecombinationShell({id}: {id: string}) {
     const input = (side: Input) => <section className={`pc-recomb-input pc-recomb-${side}`} data-recomb-card={side} aria-label={names[side]}>
         <header className="pc-recomb-card-heading"><h3>{names[side]}</h3><button data-recomb-focus={side} aria-pressed="false">Edit {side.toUpperCase()}</button></header>
         <div className="pc-recomb-input-actions"><button data-recomb-base={side}>Change base</button><button data-recomb-clear={side}>Clear mods</button></div>
@@ -69,8 +69,8 @@ function RecombinationShell() {
             </section>
         </div>
         <p className="pc-recomb-error" role="alert" hidden />
-        <div className="pc-recomb-base-overlay" hidden><section className="pc-recomb-base-dialog" role="dialog" aria-modal="true" aria-labelledby="recomb-base-title" tabIndex={-1}>
-            <header className="pc-recomb-card-heading"><h3 id="recomb-base-title">Choose input base</h3><button data-recomb-close-picker>Cancel</button></header>
+        <div className="pc-recomb-base-overlay" hidden><section className="pc-recomb-base-dialog" role="dialog" aria-modal="true" aria-labelledby={`${id}-base-title`} tabIndex={-1}>
+            <header className="pc-recomb-card-heading"><h3 className="pc-recomb-base-title" id={`${id}-base-title`}>Choose input base</h3><button data-recomb-close-picker>Cancel</button></header>
             <ControllerElement tag="pc-base-picker" />
         </section></div>
     </div>;
@@ -104,7 +104,7 @@ export class PcRecombinationCalculator extends HTMLElement {
         if (this.started) return;
         this.started = true;
         this.docId = this.getAttribute("doc-id") ?? `doc-${crypto.randomUUID()}`;
-        renderReact(this, <RecombinationShell />);
+        renderReact(this, <RecombinationShell id={this.docId} />);
         this.bind();
         workspace().registerDocument(this.docId, {save: async () => true, dispose: () => this.dispose()});
         this.currentWork = this.initialize().catch(error => { this.error = String(error instanceof Error ? error.message : error); })
@@ -172,8 +172,8 @@ export class PcRecombinationCalculator extends HTMLElement {
     }
 
     private baseName(base: string): string {return this.bases.find(entry => entry.path === base)?.name ?? base;}
-    private list(focus: Focus): PcModList | null {return this.querySelector(`[data-recomb-item="${focus}"]`);}
-    private get pool(): PcModPool {return this.querySelector("pc-mod-pool")!;}
+    private list(focus: Focus): PcModList | null {return this.querySelector<PcModList>(`[data-recomb-item="${focus}"]`);}
+    private get pool(): PcModPool {return this.querySelector<PcModPool>("pc-mod-pool")!;}
     private identity(): string {
         return JSON.stringify([[this.inputs.get("a")?.snapshot, this.inputs.get("b")?.snapshot], calculatorItemGoal(this.goal),
             this.baseCare ? this.inputs.get(this.requiredBase)?.snapshot.base : null]);
@@ -344,7 +344,7 @@ export class PcRecombinationCalculator extends HTMLElement {
         const snapshot = this.inputs.get(side)?.snapshot;
         if (snapshot) picker.setSelection(snapshot.base, snapshot.itemLevel);
         this.querySelector<HTMLElement>(".pc-recomb-base-overlay")!.hidden = false;
-        this.querySelector<HTMLElement>("#recomb-base-title")!.textContent = `Choose ${names[side]} base · creates a fresh rare item`;
+        this.querySelector<HTMLElement>(".pc-recomb-base-title")!.textContent = `Choose ${names[side]} base · creates a fresh rare item`;
         this.querySelector<HTMLElement>(".pc-recomb-layout")!.inert = true;
         this.querySelector<HTMLButtonElement>("[data-recomb-close-picker]")!.focus();
     }
@@ -432,7 +432,7 @@ export class PcRecombinationCalculator extends HTMLElement {
         button.disabled = this.busy || this.calculating || this.inputs.size !== 2;
         this.querySelector<HTMLButtonElement>("[data-recomb-cancel]")!.hidden = !this.calculating;
         const odds = this.result ? recombinationOdds(this.result, this.baseCare ? this.inputs.get(this.requiredBase)?.snapshot.base : undefined) : null;
-        renderReact(this.querySelector("[data-recomb-output]")!, odds ? <>
+        renderReact(this.querySelector<HTMLElement>("[data-recomb-output]")!, odds ? <>
             <div className="pc-recomb-answer"><strong>{percent(odds.success)}</strong><span>Chance of the goal result{this.baseCare ? " on the required base" : " on either base"}</span><span>Estimated game odds · native model enumeration</span></div>
             <table><thead><tr><th>Result carrier / base</th><th>Base chance</th><th>Goal on this carrier</th></tr></thead><tbody>{odds.carriers.map(carrier => <tr key={carrier.carrier}>
                 <td>{carrier.carrier === 0 ? "A" : "B"} · {this.baseName(carrier.base)} · iLvl {carrier.itemLevel}</td><td>{percent(carrier.probability)}</td><td>{percent(carrier.goalMass)}</td>
