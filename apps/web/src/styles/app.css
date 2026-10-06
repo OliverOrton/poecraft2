@@ -5394,6 +5394,7 @@ input::placeholder, textarea::placeholder {
 .pc-mod-list.is-compact .pc-item-card-header { min-height: 0; margin: -8px -8px 6px; padding: 6px 8px; }
 .pc-mod-list.is-compact .pc-item-card-header > .pc-game-art-item { width: 34px; height: 44px; margin-right: 8px; }
 .pc-mod-list.is-compact .pc-item-title-line strong { font-size: var(--pc-type-body); }
+.pc-mod-list.is-compact .pc-item-properties { margin: 4px 0; padding: 4px 8px; }
 .pc-mod-list.is-compact .pc-mod-slot { height: auto; min-height: 40px; max-height: none; flex: 0 0 auto; grid-template-columns: 3px 28px minmax(0, 1fr); padding: 4px 5px 4px 0; }
 .pc-mod-list.is-compact .pc-mod-slot-content { overflow: visible; padding-left: 6px; }
 .pc-mod-list.is-compact .pc-mod-slot-lines { font-size: var(--pc-type-body); overflow-wrap: anywhere; }
@@ -5423,7 +5424,7 @@ pc-recombination-calculator { display: block; height: 100%; min-width: 0; min-he
 .pc-recomb-card-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--pc-space-1); margin-bottom: var(--pc-space-1); flex: none; }
 .pc-recomb-card-heading h3 { margin: 0; font-size: var(--pc-type-heading); }
 .pc-recomb-card-heading > div, .pc-recomb-input-actions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--pc-space-1); }
-.pc-recomb-input-actions { margin-bottom: var(--pc-space-2); flex: none; }
+.pc-recomb-input-actions { margin: 0; flex: none; }
 .pc-recomb-goal-controls { display: flex; align-items: center; flex-wrap: wrap; gap: var(--pc-space-1) var(--pc-space-2); margin-bottom: var(--pc-space-1); font-size: 13px; flex: none; }
 .pc-recomb-goal-controls label, .pc-recomb-goal-options label { display: flex; align-items: center; flex-wrap: wrap; gap: var(--pc-space-1); }
 .pc-recomb-goal-options { font-size: var(--pc-type-meta); }

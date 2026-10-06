@@ -29,8 +29,9 @@ const percent = (value: number) => `${(value * 100).toLocaleString(undefined, {m
 
 function RecombinationShell({id}: {id: string}) {
     const input = (side: Input) => <section className={`pc-recomb-input pc-recomb-${side}`} data-recomb-card={side} aria-label={names[side]}>
-        <header className="pc-recomb-card-heading"><h3>{names[side]}</h3><button data-recomb-focus={side} aria-pressed="false">Edit {side.toUpperCase()}</button></header>
-        <div className="pc-recomb-input-actions"><button data-recomb-base={side}>Change base</button><button data-recomb-clear={side}>Clear mods</button></div>
+        <header className="pc-recomb-card-heading"><h3>{names[side]}</h3><div className="pc-recomb-input-actions">
+            <button data-recomb-focus={side} aria-pressed="false">Edit {side.toUpperCase()}</button><button data-recomb-base={side}>Change base</button><button data-recomb-clear={side}>Clear mods</button>
+        </div></header>
         <ControllerElement tag="pc-mod-list" compact="" data-recomb-item={side} />
     </section>;
     return <div className="pc-recombination-calculator">

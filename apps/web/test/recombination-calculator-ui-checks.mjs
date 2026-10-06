@@ -201,7 +201,7 @@ export async function checkRecombinationCalculator(page, capture) {
         assert.ok(layout.named.a.right < layout.named.goal.left && layout.named.b.left > layout.named.goal.right);
         assert.ok(layout.named.goal.bottom < layout.named.picker.top);
         assert.ok(layout.named.odds.height <= 86 && inScreen(layout.calculate));
-        assert.ok(['a', 'b'].every(side => layout.rows[side].every(row => inScreen(row) && inPort(row, layout.ports[side]))), 'All six affixes on each input are visible inside their scrollports');
+        assert.ok(['a', 'b'].every(side => layout.rows[side].every(row => inScreen(row) && inPort(row, layout.ports[side]))), `All six affixes on each input are visible inside their scrollports: ${JSON.stringify(layout)}`);
         assert.ok(inScreen(layout.goalFirst) && inScreen(layout.pickerSearch) && inScreen(layout.pickerFirst), 'Goal affixes and working mod picker are visible together');
         assert.ok(inPort(layout.goalFirst, layout.ports.goal) && inPort(layout.pickerFirst, layout.ports.pool), 'Visible goal/picker content is not merely clipped inside the panels');
         assert.ok(layout.scroll <= layout.height + 1, 'Desktop workbench does not require whole-page scrolling');
