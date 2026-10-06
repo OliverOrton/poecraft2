@@ -5290,7 +5290,10 @@ void run_solver_independent_cover_tests() {
             const double floor = w.operator_proof_lower_value(held,candidate.operator_index);
             PC_CHECK(floor > .019999 && floor <= .02);
             const auto& kernel = c.option_kernel(held,candidate.operator_index);
-            PC_CHECK(kernel.supported && kernel.legal && kernel.entry_continues);
+            PC_CHECK(kernel.supported && kernel.legal && kernel.terminates_almost_surely);
+            // entry_continues denotes the special conditional-entry recipe,
+            // not whether an ordinary protected programme executes its steps.
+            PC_CHECK(!kernel.entry_continues && kernel.expected_primitive_actions == 2);
             double mass = 0;
             for (const auto& exit : kernel.exits) {
                 mass += exit.probability;
