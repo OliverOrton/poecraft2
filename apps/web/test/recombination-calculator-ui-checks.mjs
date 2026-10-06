@@ -115,6 +115,8 @@ export async function checkRecombinationCalculator(page, capture) {
         const after = await c.client.exportItem(input.item, input.session);
         if (JSON.stringify(after) !== before) throw new Error('Invalid edit changed authored input');
     });
+    await page.mouse.move(0, 0);
+    await page.waitForFunction(() => getComputedStyle(document.querySelector('pc-recombination-calculator [data-recomb-calculate]')).backgroundColor === 'rgb(230, 160, 120)');
     const styles = await host.evaluate(node => {
         const button = node.querySelector('[data-recomb-calculate]'), style = getComputedStyle(button);
         return {background: style.backgroundColor, text: style.color,
@@ -122,6 +124,9 @@ export async function checkRecombinationCalculator(page, capture) {
     });
     assert.equal(styles.background, 'rgb(230, 160, 120)'); assert.equal(styles.text, 'rgb(24, 24, 24)');
     assert.ok(styles.modWeights.length > 0 && styles.modWeights.every(weight => weight === '400'));
+    await host.locator('[data-recomb-calculate]').hover();
+    assert.equal(await host.locator('[data-recomb-calculate]').evaluate(node => getComputedStyle(node).backgroundColor), 'rgb(240, 180, 142)');
+    await page.mouse.move(0, 0);
     await host.locator('[data-recomb-calculate]').focus();
     await page.keyboard.press('Shift+Tab'); await page.keyboard.press('Tab');
     assert.equal(await host.locator('[data-recomb-calculate]').evaluate(node => node === document.activeElement), true);
