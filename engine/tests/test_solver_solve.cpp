@@ -17984,7 +17984,7 @@ void run_graph_only_missing_entry_service_counterparts(
             std::printf("graph-only missing authority evaluation owner case=%u stage=%s "
                 "publication_task=%u evaluation_phase=%u evaluation_subphase=%u evaluation_done=%u "
                 "evaluation_pending_pairs=%llu initial_task_bytes=%llu publication_task_bytes=%llu "
-                "shared_proof_bytes=%llu live_owned_bytes=%llu evidence_bytes=%llu shared_allowance=%llu "
+                "shared_proof_bytes=%llu live_owned_bytes=unavailable evidence_bytes=%llu shared_allowance=%llu "
                 "detached_owner_identity_visibility=private_logical_view_only\n", scenario, stage,
                 work.publication_pipeline.task.has_value() ? 1u : 0u,
                 static_cast<unsigned>(evaluation.phase), static_cast<unsigned>(evaluation.subphase),
@@ -17994,7 +17994,6 @@ void run_graph_only_missing_entry_service_counterparts(
                 static_cast<unsigned long long>(work.publication_pipeline.task
                     ? work.publication_pipeline.task->retained_bytes() : 0),
                 static_cast<unsigned long long>(work.publication_pipeline.initial_candidate_proof_bytes),
-                static_cast<unsigned long long>(work.fast_estimated_owned_bytes()),
                 static_cast<unsigned long long>(evidence_bytes),
                 static_cast<unsigned long long>(options.max_solver_owned_bytes));
             std::printf("graph-only missing authority original root case=%u stage=%s "
