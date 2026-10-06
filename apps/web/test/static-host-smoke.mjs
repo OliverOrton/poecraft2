@@ -7,11 +7,12 @@ import assert from 'node:assert/strict';
 import { checkUiContinuity } from './ui-continuity-checks.mjs';
 import { captureUiCheckpoint, checkDockTheme } from './ui-presentation-checks.mjs';
 import { checkRetainedNativeBuilder } from './integrated-builder-ui-checks.mjs';
+import { checkRecombinationCalculator } from './recombination-calculator-ui-checks.mjs';
 
 const directory = resolve(process.argv[2] || 'dist');
 const build = JSON.parse(readFileSync(resolve(directory, 'build-info.json')));
 const smokeScope = process.env.POECRAFT_UI_SMOKE_SCOPE || 'full';
-assert.ok(['full', 'dock-theme'].includes(smokeScope), 'Unknown UI smoke scope');
+assert.ok(['full', 'dock-theme', 'recombination-calculator'].includes(smokeScope), 'Unknown UI smoke scope');
 const builderConnectorContract = process.env.POECRAFT_UI_BUILDER_CONTRACT || 'legacy-48';
 assert.ok(['legacy-48', 'resource-v1'].includes(builderConnectorContract), 'Unknown Builder connector contract');
 const mime = { '.html': 'text/html', '.json': 'application/json', '.js': 'text/javascript', '.wasm': 'application/wasm', '.css': 'text/css', '.txt': 'text/plain', '.png': 'image/png', '.woff2': 'font/woff2' };
@@ -48,6 +49,15 @@ try {
             await page.goto(origin + build.base);
             await page.waitForFunction(() => document.querySelector('pc-emulator')?.client?.getAbiVersion() > 0 && document.querySelector('pc-emulator')?.dataId > 0);
             await page.waitForFunction(() => document.querySelector('pc-economy-selector')?.textContent.includes('Bundled snapshot'));
+            if (smokeScope === 'recombination-calculator') {
+                try {
+                    const ui = await checkRecombinationCalculator(page, captureUiCheckpoint);
+                    assert.deepEqual(failures, []);
+                    console.log(JSON.stringify({browser: browserType.name(), version: browser.version(),
+                        channel: channel || 'pinned', base: build.base, build_id: build.build_id, scope: smokeScope, ui}));
+                } catch (error) {await captureUiCheckpoint(page, 'recombination-failure'); throw error;}
+                continue;
+            }
             // A narrow palette-only continuation reuses this server/profile and
             // makes its exclusions explicit; the default full gate is unchanged.
             if (smokeScope === 'dock-theme') {

@@ -5385,3 +5385,54 @@ input::placeholder, textarea::placeholder {
 .pc-stash-error { color: var(--pc-status-danger); font-size: var(--pc-type-meta); }
 
 .pc-mod-slot-content:focus-visible { outline-offset: -2px; }
+
+/* Authored random pair calculator: existing cards, picker and charcoal tokens. */
+pc-recombination-calculator { display: block; height: 100%; min-width: 0; overflow: auto; }
+.pc-recombination-calculator { position: relative; min-height: 100%; padding-bottom: var(--pc-space-4); }
+.pc-recomb-intro { margin: var(--pc-space-3) var(--pc-space-4); }
+.pc-recomb-layout { display: grid; grid-template-columns: minmax(270px, 1fr) minmax(350px, 1.35fr) minmax(270px, 1fr); align-items: start; gap: var(--pc-space-4); padding: 0 var(--pc-space-4); }
+.pc-recomb-input, .pc-recomb-goal, .pc-recomb-picker, .pc-recomb-odds { min-width: 0; padding: var(--pc-space-3); background: var(--pc-surface-panel); border: 1px solid var(--pc-border); border-radius: var(--pc-radius-panel); }
+.pc-recomb-a { grid-column: 1; grid-row: 2; }
+.pc-recomb-b { grid-column: 3; grid-row: 2; }
+.pc-recomb-middle { grid-column: 2; grid-row: 2; display: grid; min-width: 0; gap: var(--pc-space-4); }
+.pc-recomb-odds { grid-column: 1 / -1; grid-row: 1; }
+.pc-recomb-card-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--pc-space-2); margin-bottom: var(--pc-space-3); }
+.pc-recomb-card-heading h3 { margin: 0; font-size: var(--pc-type-heading); }
+.pc-recomb-card-heading > div, .pc-recomb-input-actions { display: flex; flex-wrap: wrap; gap: var(--pc-space-2); }
+.pc-recomb-input-actions { margin-bottom: var(--pc-space-3); }
+.pc-recomb-goal-controls { display: grid; gap: var(--pc-space-2); margin-bottom: var(--pc-space-3); font-size: 13px; }
+.pc-recomb-goal-controls label { display: flex; align-items: center; flex-wrap: wrap; gap: var(--pc-space-2); }
+.pc-recomb-focus-tabs { display: flex; gap: var(--pc-space-2); flex-wrap: wrap; }
+.pc-recomb-focus-tabs button { flex: 1; white-space: nowrap; }
+.pc-recombination-calculator [aria-pressed="true"] { border-color: var(--pc-accent); color: var(--pc-text-strong); background: var(--pc-surface-hover); box-shadow: inset 0 -2px var(--pc-accent); }
+.pc-recombination-calculator .is-editing { border-color: var(--pc-accent); }
+.pc-recomb-focus-label { color: var(--pc-accent); font-size: var(--pc-type-meta); min-height: 2.8em; margin: var(--pc-space-3) 0; }
+.pc-recomb-picker pc-mod-pool { height: auto; min-height: 320px; }
+.pc-recomb-picker .pc-mod-pool-body { max-height: 480px; overflow-y: auto; }
+.pc-recomb-answer { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--pc-space-2) var(--pc-space-4); margin-bottom: var(--pc-space-3); }
+.pc-recomb-answer strong { font-size: 30px; color: var(--pc-accent); }
+.pc-recomb-answer span:last-child { font-size: var(--pc-type-meta); color: var(--pc-text-muted); }
+.pc-recomb-odds table { border-collapse: collapse; width: 100%; font-size: 13px; }
+.pc-recomb-odds th, .pc-recomb-odds td { text-align: left; padding: var(--pc-space-2); border-bottom: 1px solid var(--pc-border); overflow-wrap: anywhere; }
+.pc-recomb-assumptions { font-size: var(--pc-type-meta); color: var(--pc-text-muted); }
+.pc-recomb-assumptions summary { cursor: pointer; }
+.pc-recomb-error { color: var(--pc-status-danger); margin: var(--pc-space-4); }
+.pc-recomb-base-overlay { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: var(--pc-space-4); background: #000a; }
+.pc-recomb-base-overlay[hidden] { display: none; }
+.pc-recomb-base-dialog { width: min(760px, 100%); max-height: 90vh; overflow-y: auto; padding: var(--pc-space-4); border: 1px solid var(--pc-border-control); border-radius: var(--pc-radius-panel); background: var(--pc-surface-panel); }
+.pc-recombination-calculator button:focus-visible, .pc-recombination-calculator select:focus-visible,
+.pc-recombination-calculator input:focus-visible, .pc-recombination-calculator summary:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+@media (max-width: 1100px) {
+    .pc-recomb-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .pc-recomb-a { grid-column: 1; }
+    .pc-recomb-b { grid-column: 2; }
+    .pc-recomb-middle { grid-column: 1 / -1; grid-row: 3; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+}
+@media (max-width: 700px) {
+    .pc-recomb-layout { grid-template-columns: minmax(0, 1fr); gap: var(--pc-space-3); padding: 0 var(--pc-space-2); }
+    .pc-recomb-a { grid-column: 1; grid-row: 2; }
+    .pc-recomb-b { grid-column: 1; grid-row: 3; }
+    .pc-recomb-middle { grid-column: 1; grid-row: 4; grid-template-columns: minmax(0, 1fr); }
+    .pc-recomb-focus-tabs button { min-height: 40px; }
+    .pc-recomb-odds th, .pc-recomb-odds td { padding: var(--pc-space-1); font-size: var(--pc-type-meta); }
+}

@@ -175,6 +175,25 @@ Code authority:
 `apps/web/src/app/components/pc-mod-list.tsx`, and
 `apps/web/src/app/workspace/persistence.ts`.
 
+## Authored random pair page (source implemented; qualification pending)
+
+`+ Recombination` opens the standalone authored two-item calculator. Independent
+input A/B cards share a modifier picker with one goal card above it. The page
+uses the existing native random-pair goal endpoint, temporary read-only
+resources, and draft recovery. Goal edits, either input edit, result-base
+requirements and Cancel invalidate pending/previous odds. Cancellation drops
+delivery while synchronous native work finishes and releases its resources.
+
+Result-base requirements filter native terminal rows by actual base and native
+`is_goal`; they never choose a carrier or renormalize its mass. Equal input
+bases count both random carriers. The native endpoint interprets goal families
+in input A's session, which the shared picker explicitly discloses. Unsupported
+goals/pairs show native refusals. Odds remain estimated game odds under the
+[native model](../engine/recombination.md); gold/dust and acquisition/retry costs
+remain incomplete. The [living record](../active/2026-10-06-recombination-calculator/README.md)
+owns the pending tests and rendered review. The separate optimizer is not part
+of this page.
+
 ## Exact One-Action Result
 
 Calculator opens an inspection-only `pc_calc_create_goal` context and uses

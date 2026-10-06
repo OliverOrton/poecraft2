@@ -333,6 +333,23 @@ export function getCalculatorDraft(
     return tx("drafts", "readonly", (store) => store.get(docId));
 }
 
+/** Authored two-item calculator recovery; never a Stash inventory resource. */
+export interface RecombinationDraftRecord {
+    version: "recombination_calculator_v1";
+    docId: string;
+    inputs: {a: ItemSnapshot; b: ItemSnapshot};
+    goal: import("../calculator-goal-set").CalculatorGoalDraft;
+    baseCare: boolean;
+    requiredBase: "a" | "b";
+    updatedAt: number;
+}
+export function putRecombinationDraft(record: RecombinationDraftRecord): Promise<unknown> {
+    return tx("drafts", "readwrite", store => store.put(record));
+}
+export function getRecombinationDraft(docId: string): Promise<RecombinationDraftRecord | undefined> {
+    return tx("drafts", "readonly", store => store.get(docId));
+}
+
 export function isStrategyStashRecord(
     record: StashRecord,
 ): record is StrategyStashRecord {

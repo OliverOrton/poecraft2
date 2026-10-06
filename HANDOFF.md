@@ -23,6 +23,12 @@ mathematical authorities are unchanged by this presentation delta.
 
 ## Selected work: isolated solver causal and economic continuation
 
+Oliver separately selected the [authored two-item recombination calculator](docs/active/2026-10-06-recombination-calculator/README.md)
+in a fresh isolated session from main `7252027c`. Its standalone page and narrow
+existing pair-API integration are source implemented, with build/test/render
+checks unrun pending a finite parent-controlled LOCAL batch. The active optimizer
+and normal checkout are untouched; parent owns publication and main/CI gating.
+
 Oliver resumed the coordinated work at 09:00 Vancouver on October 5. The
 [published solver record at `734f6722`](https://github.com/OliverOrton/poecraft2/blob/734f67228be0c6fa3262f656f41cb7d625cc57db/docs/active/2026-10-04-sol61-armour-recovery/README.md)
 owns the exact controls, physical-entry certificates and all retained failed

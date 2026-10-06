@@ -22,6 +22,7 @@ function App() {
                 <button data-cmd="new-emulator" onClick={() => void workspace.current?.openEmulator()}>+ Emulator</button>
                 <button data-cmd="new-strategy" onClick={() => void workspace.current?.openStrategy()}>+ Strategy</button>
                 <button data-cmd="new-calculator" onClick={() => void workspace.current?.openCalculator()}>+ Calculator</button>
+                <button data-cmd="new-recombination" onClick={() => void workspace.current?.openRecombinationCalculator()}>+ Recombination</button>
                 <button data-cmd="open-stash" onClick={() => workspace.current?.openStash()}>Stash</button>
             </nav>
             <details className="pc-build-menu">

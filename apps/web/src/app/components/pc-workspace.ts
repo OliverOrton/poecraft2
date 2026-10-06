@@ -50,6 +50,7 @@ import {
 import { openDirtyModal } from "../workspace/dirty-modal";
 
 import "./pc-calculator";
+import "./pc-recombination-calculator";
 import "./pc-emulator";
 import "./pc-strategy-editor";
 import "./pc-stash";
@@ -106,6 +107,8 @@ export class PcWorkspace extends HTMLElement implements WorkspaceApi {
                         return new ElementRenderer("pc-strategy-editor");
                     case "calculator":
                         return new ElementRenderer("pc-calculator");
+                    case "recombination-calculator":
+                        return new ElementRenderer("pc-recombination-calculator");
                     case "emulator":
                     default:
                         return new ElementRenderer("pc-emulator");
@@ -234,6 +237,13 @@ export class PcWorkspace extends HTMLElement implements WorkspaceApi {
             title,
             params: { docId },
         });
+    }
+
+    async openRecombinationCalculator(): Promise<void> {
+        const docId = newDocId();
+        const title = "Recombination";
+        this.titles.set(docId, title);
+        this.api.addPanel({id: docId, component: "recombination-calculator", title, params: {docId}});
     }
 
     openStash(): void {
