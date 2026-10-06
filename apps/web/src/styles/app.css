@@ -4811,6 +4811,8 @@ pc-run-trace {
 .pc-document-actions {
     display: flex;
     gap: 4px;
+    flex-wrap: wrap;
+    max-width: 100%;
 }
 
 .pc-build-menu {
