@@ -636,3 +636,42 @@ qualified focused ownership first, then at most one original diagnostic Conquest
 case under a fresh LOCAL grant. No next root pair or tail proposal before actual
 relevance evidence; lower owns LOCAL, no heavy work taken. All prior negatives,
 root/every-positive-entry/paid-support guards and source pins remain.
+
+
+Passive diagnostic source is now locally committed14cf997f25188fe789ec014c9e5e8d90b53b742c,
+engine8c30a359f5d7754a7117093a757db63cda9f71e3, production
+d29f002e47f869171d6958ff1d55007908f66e08. Existing owners expose bounded actual
+branch predicate occupancy, first/latest missing identity/incoming obligation
+and retained native item/programme/controller certificates with explicit scope
+mismatch/truncation. No search/admission/service-cap/authority change. Callee
+source audit excludes mutating const accounting getters; raw nonmutation/key/
+serialization assertions are added but UNRUN. Fixed storage/scratch is charged
+in both ledgers; scoped diff check passes. Unbuilt/untested/unactivated/unmeasured.
+Lower owns LOCAL. After parent handoff, qualify exact source/max2 jobs and the
+five focused selectors, then ONE unchanged original Conquest diagnostic case.
+No extra matched pair or speculative tail before this evidence. See the normal
+frontier audit's source-ready section; existing af measurements/negatives remain.
+This owner retains end-to-end repair responsibility. No push/merge/deployment.
+
+
+Parent's automatic-service/zero-gate question is source-audited in the normal
+frontier audit. Existing native selective-service toggle is enable-only in the
+benchmark, and false is overridden by derived product scope. Automatic JSON false
+is OR-overridden by goal-relevant mode; masking grammar or changing progress/
+high-impact/profile flags changes represented scope. TargetNeutralZero is proof
+capability, distinct from zero-progress reforge restriction and optional service.
+A future diagnostic dispatch-only off control can preserve the product-scope flag,
+full grammar, TargetNeutralZero and checked fallback at the existing Bellman
+service gate; no such effective product off-switch is currently exposed. No
+causal relation or85k current admitted baseline is proved. Parent reports weak
+lower restoration alone unchanged; not newly reproduced here. After passive
+observer evidence, the smallest valid comparison is one same-binary original
+service on/off pair with semantic identities/proof fixed, not a new2x2 now.
+No source toggle, run, activation or heavy work added; lower still holds LOCAL.
+
+
+Oliver's revised heavy-work cutoff is2026-10-07 00:00UTC (Oct6,5pmVancouver),
+including cleanup; no local heavy work00:00-05:00UTC. After05:00UTC resume only
+through parent LOCAL coordination. No stage may launch without enough bounded
+runtime/cleanup margin. Parent owns connector-only evening research/discourse;
+this owner adds no task dispatch or push/merge/publication authority.

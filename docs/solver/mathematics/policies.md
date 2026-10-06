@@ -1448,6 +1448,30 @@ insufficient. These are scoped necessary-condition refusals, not a global cause,
 new cost theorem, permission to reuse a root scalar, or justification to widen
 service. A bounded passive physical/certificate/branch census is the next gate.
 
+Source14cf997f implements that passive census with actual checked native items,
+full canonical keys and compiled/programme/global-target identities. A native
+item projected into a missing coarse class is a class witness, not proof of the
+failed selected prefix's physical reachability or permission to reuse its cost.
+Original request-scope and graph-prefix differences remain explicit; an artifact
+mismatch is unprojectable. Positive primary-programme entries in the zero-target/
+repair-occupancy class show predicate relevance, not a recovered preceding guard
+edge or matched saving. Incomplete scans/keys, unvalidated proposals and missing
+physical/controller items remain unavailable evidence. Fixed storage/scratch is
+charged in both ledgers; observer callees do not mutate owner/interner/accounting
+state. Source review/diff check only; new nonmutation assertions are unrun. One
+original diagnostic case after exact qualification/LOCAL is the next gate. No
+new native correspondence theorem, authority, tail or economic pair follows.
+
+The [automatic-service toggle audit](../../active/2026-10-04-sol61-armour-recovery/checks/current-support-handoff-source-20261006/normal-frontier-relevance-audit.md#automatic-service-and-zero-gate-question---source-diagnosis-only)
+separates TargetNeutralZero proof capability from the zero-progress reforge
+policy restriction and optional upper-producer dispatch. The existing enable
+bit cannot force off derived product service. Clearing product-scope/grammar or
+progress flags changes the mathematical problem. A future dispatch-only service
+comparison must preserve the same full grammar/caller identities/checked fallback
+and TargetNeutralZero in both arms. Any lower axis additionally needs a sound
+lower for that same grammar. No current off-arm, new2x2,85k admitted baseline or
+whole-search causal theorem is established; passive observation remains first.
+
 <a id="bounded-checked-graph-support-service"></a>
 ### Bounded checked-graph support service
 

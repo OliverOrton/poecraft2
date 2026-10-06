@@ -302,6 +302,28 @@ from unsupported routing/certificate ownership. No further economic root pair,
 new tail, capacity widening, private210 or blind unchanged repeat precedes that
 gate. No heavy work or new execution owner was taken; lower has the next LOCAL.
 
+
+### Passive continuation observer - source ready, no execution
+
+Local source `14cf997f25188fe789ec014c9e5e8d90b53b742c` (engine
+`8c30a359f5d7754a7117093a757db63cda9f71e3`, production
+`d29f002e47f869171d6958ff1d55007908f66e08`) implements the parent-selected
+passive branch/first-latest missing-entry/native certificate observer in existing
+owners. Fixed proposal/witness/incoming storage,8192-entry/10ms cooperative scans,
+128-word complete-or-unavailable keys and fixed scratch charged in both ledgers
+bound its added cost. Actual graph/node/item/programme keys, original typed scope
+and mismatches are preserved; a native coarse-class match is diagnostic only.
+No search/admission rule, service capacity, native checking or authority changes.
+The [callee audit](checks/current-support-handoff-source-20261006/normal-frontier-relevance-audit.md#source-ready-passive-observer-and-callee-audit)
+records the allocation-free canonical projection/encoding and excludes mutating
+const accounting getters. Focused raw interner/cache/ledger/debit/policy/incumbent
+nonmutation and serialization assertions are added but UNRUN. Scoped diff check
+passes. Source is unbuilt, untested, unactivated and economically unmeasured.
+Lower owns LOCAL; no heavy work taken. After handoff, qualify exact source/max2
+jobs and five focused selectors, then one unchanged original Conquest diagnostic
+case. No further matched pair or speculative tail before that evidence. This
+owner retains end-to-end repair responsibility and all prior negatives.
+
 ## Question and first gate
 
 Identify the first demonstrated boundary in normal enumeration, admission,
@@ -1281,3 +1303,19 @@ The original qualified075 artifacts/failed receipt and all negatives remain;
 CI release05:09:39UTC clean,58 identities absent/CIM0. New source is unbuilt,
 unrun, unactivated/unmeasured; LOCAL unused. Parent CI qualification/focused
 correctness remain gates. Both real Conquest arms are unspent, no new economics.
+
+
+Parent's automatic-service/zero-gate question is source-audited in the normal
+frontier audit. Existing native selective-service toggle is enable-only in the
+benchmark, and false is overridden by derived product scope. Automatic JSON false
+is OR-overridden by goal-relevant mode; masking grammar or changing progress/
+high-impact/profile flags changes represented scope. TargetNeutralZero is proof
+capability, distinct from zero-progress reforge restriction and optional service.
+A future diagnostic dispatch-only off control can preserve the product-scope flag,
+full grammar, TargetNeutralZero and checked fallback at the existing Bellman
+service gate; no such effective product off-switch is currently exposed. No
+causal relation or85k current admitted baseline is proved. Parent reports weak
+lower restoration alone unchanged; not newly reproduced here. After passive
+observer evidence, the smallest valid comparison is one same-binary original
+service on/off pair with semantic identities/proof fixed, not a new2x2 now.
+No source toggle, run, activation or heavy work added; lower still holds LOCAL.

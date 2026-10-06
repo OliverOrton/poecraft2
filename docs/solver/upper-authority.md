@@ -168,6 +168,29 @@ saved query counters are0, so no dynamic metadata rejection is proved. Native
 programme, root-only, global-entry and statewise roles remain distinct; none is
 promoted from a coarse mask or representative materialization.
 
+Source14cf997f now exposes passive actual native item/entry/programme and compiled/
+global-target keys, with original typed scope and mismatch/completeness flags.
+A projected coarse-class witness carries continuation_authorityfalse and
+reuse_authorityfalse; it does not identify the failed selected prefix's physical
+entry or make a non-primitive programme usable by the current entry owner.
+Missing selected-prefix item/controller remains null. Native root checking,
+subsequent programme validation and retention disposition stay separate. The
+fixed observer/scratch is charged in both ledgers and calls no owner/interner/
+accounting estimator or native work. New raw nonmutation/serialization assertions
+are unrun: source ready, unbuilt/untested/unactivated/unmeasured. Only exact
+qualification and one original diagnostic case after LOCAL can advance this gate;
+no added scalar/table/lower authority, matched saving or speculative tail follows.
+
+Current product scope recomputation re-enables selective service and forces
+TargetNeutralZero regardless of a false native enable bit. A service-only
+scheduling control can be placed at the existing post-checked-incumbent dispatch
+without clearing product grammar/caller scope or checked fallback; it is proposed,
+not exposed or tested here. Positive lower/retirement/exactness remains separately
+qualified. Changing progress restriction/automatic grammar to disable service
+changes scope; restoring unsupported OrdinaryClean authority is not a fix or a
+valid causal arm. Historical85k graph quality and service/zero causality remain
+unproved; passive observer evidence precedes any later matched scheduling pair.
+
 Compiler-authored graph-local declarations identify genuine native decisions in
 an immutable emitted graph. They bind full graph bytes, native operator semantics
 and observable control boundaries. Composition carries declarations through its

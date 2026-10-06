@@ -21,6 +21,18 @@ qualification. [HANDOFF](../../HANDOFF.md) owns selected sequencing.
 
 ## Resumed Current ownership repair - October 6
 
+Latest selected source gate: passive observer14cf997f25188fe789ec014c9e5e8d90b53b742c
+(engine8c30a359f5d7754a7117093a757db63cda9f71e3, production
+d29f002e47f869171d6958ff1d55007908f66e08) is unbuilt/untested/unactivated/
+unmeasured. [Callee/source audit](../active/2026-10-04-sol61-armour-recovery/checks/current-support-handoff-source-20261006/normal-frontier-relevance-audit.md#source-ready-passive-observer-and-callee-audit)
+records fixed, charged storage/scratch and bounded physical/native/controller
+observations, with no search/admission/authority change or mutating accounting
+getter. Raw nonmutation/key/serialization assertions are source-ready only.
+Lower owns LOCAL; no heavy work taken. After handoff: exact max2-job qualification,
+five focused selectors, then ONE original Conquest diagnostic case. No new pair
+or tail before that evidence. All measurements below stay attached to their
+qualified older source; end-to-end repair remains owned here.
+
 Localb200aec9 preserves separately checked physical-root graph authority across
 parent quotienting and publication; ordinary statewise prefix gates remain.
 Five selectors pass12,754 checks. The matched original Conquest pair exports
@@ -935,3 +947,19 @@ work/memory limits and 120/150/165-second protocol. Passive benchmark observer
 is unchanged from b02513b6; f532 host-supervision replacement is declared. CI
 Benchmark qualification and a parent LOCAL grant remain required; no new root,
 normal product activation, Conquest economic recovery or whole-search cause is proved.
+
+
+Parent's automatic-service/zero-gate question is source-audited in the normal
+frontier audit. Existing native selective-service toggle is enable-only in the
+benchmark, and false is overridden by derived product scope. Automatic JSON false
+is OR-overridden by goal-relevant mode; masking grammar or changing progress/
+high-impact/profile flags changes represented scope. TargetNeutralZero is proof
+capability, distinct from zero-progress reforge restriction and optional service.
+A future diagnostic dispatch-only off control can preserve the product-scope flag,
+full grammar, TargetNeutralZero and checked fallback at the existing Bellman
+service gate; no such effective product off-switch is currently exposed. No
+causal relation or85k current admitted baseline is proved. Parent reports weak
+lower restoration alone unchanged; not newly reproduced here. After passive
+observer evidence, the smallest valid comparison is one same-binary original
+service on/off pair with semantic identities/proof fixed, not a new2x2 now.
+No source toggle, run, activation or heavy work added; lower still holds LOCAL.
