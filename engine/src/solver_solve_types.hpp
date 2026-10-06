@@ -2756,7 +2756,8 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
 
     std::uint64_t select_joint_policy_seed_row(
         std::uint32_t state,
-        const std::vector<double>& selection_values) const;
+        const std::vector<double>& selection_values,
+        const std::vector<std::uint8_t>* completed_rows = nullptr) const;
 
     solve_detail::JointPolicySemanticKey joint_policy_row_semantic_key(
         std::uint32_t state,

@@ -2263,6 +2263,31 @@ void run_dirty_terminal_debt_counterexample_tests() {
             .calls_gate_false_output == 1);
         PC_CHECK(work.carrier_bound_attribution->seed_progress
             .complete_priced_row_comparisons == compared);
+        // Selection-only SSP counterexample, not a native crafting recipe or
+        // an injected certificate. One tiny positive exit still needs a tail.
+        const auto partly_open = add(root, exalt, .001,
+            {{terminal, .999}, {pending_state, .001}});
+        const auto unfinished_tail = add(pending_state, annul, 1,
+            {{terminal, 1}});
+        work.transition_cache->state_rows.resize(calc.state_count());
+        std::vector<std::uint8_t> completed(work.transition_cache->rows.size(), 1);
+        completed[drow] = completed[unfinished_tail] = 0;
+        work.output_incumbent->compiled_root_entry_only = true;
+        const auto original_values = work.result.values;
+        const auto original_upper = work.output_incumbent->certified_upper_bound;
+        PC_CHECK(work.transition_cache->state_rows[pending_state].count != 0);
+        PC_CHECK(work.select_joint_policy_seed_row(root, work.result.values) == partly_open);
+        PC_CHECK(work.select_joint_policy_seed_row(root, work.result.values, &completed) == clean);
+        completed[unfinished_tail] = 1;
+        PC_CHECK(work.select_joint_policy_seed_row(root, work.result.values, &completed) == partly_open);
+        completed[unfinished_tail] = 0;
+        work.output_incumbent->compiled_root_entry_only = false;
+        work.output_incumbent->statewise_values_rejected = true;
+        PC_CHECK(work.select_joint_policy_seed_row(root, work.result.values, &completed) == clean);
+        work.output_incumbent->statewise_values_rejected = false;
+        PC_CHECK(work.select_joint_policy_seed_row(root, work.result.values, &completed) == partly_open);
+        PC_CHECK(work.result.values == original_values);
+        PC_CHECK(work.output_incumbent->certified_upper_bound == original_upper);
     }
 }
 
@@ -19083,6 +19108,7 @@ void run_solver_root_prefix_dependency_probe_tests() {
 }
 
 void run_solver_current_support_handoff_tests() {
+    run_dirty_terminal_debt_counterexample_tests();
     // Exercise closed-discovery/quotient publication and early Finish through
     // normal Current producers. This small complete domain need not encounter
     // a missing continuation. No cache, policy, certificate or phase is injected.

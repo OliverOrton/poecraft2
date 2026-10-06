@@ -4188,11 +4188,19 @@ unsigned SolveWork::Impl::joint_policy_terminal_debt(const std::uint32_t state) 
 
 std::uint64_t SolveWork::Impl::select_joint_policy_seed_row(
         const std::uint32_t state,
-        const std::vector<double>& selection_values) const {
+        const std::vector<double>& selection_values,
+        const std::vector<std::uint8_t>* const completed_rows) const {
     const std::uint64_t no_row =
         std::numeric_limits<std::uint64_t>::max();
     const bool first_policy = options.high_impact_executable_uppers &&
         incremental_action_generation && !output_incumbent.has_value();
+    // A root-only graph (or a rejected table) supplies no non-root tail.
+    // Prefer materialized successor rows when this assembly owner supplies
+    // its completion census. One-step coverage orders proposals; it proves
+    // neither closure nor properness and grants no continuation authority.
+    const bool needs_completed_tails = options.high_impact_executable_uppers &&
+        incremental_action_generation && output_incumbent.has_value() &&
+        !output_incumbent->has_statewise_upper_values() && completed_rows != nullptr;
     auto* observation =
         options.seed_progress_observation_diagnostic &&
                 carrier_bound_attribution
@@ -4288,9 +4296,9 @@ std::uint64_t SolveWork::Impl::select_joint_policy_seed_row(
         return std::pair{probability.value(), alternate.value()};
     };
     std::uint64_t best = no_row;
-    std::tuple<int, std::uint64_t, double, double, double, std::uint64_t> best_key{
-        std::numeric_limits<int>::max(), no_row, kInfinity, kInfinity,
-        kInfinity, no_row};
+    std::tuple<int, int, std::uint64_t, double, double, double, std::uint64_t> best_key{
+        std::numeric_limits<int>::max(), std::numeric_limits<int>::max(),
+        no_row, kInfinity, kInfinity, kInfinity, no_row};
     auto alternate_key = best_key;
     std::uint64_t alternate_best = no_row;
     CarrierBoundAttributionWork::SeedRowSnapshot old_snapshot;
@@ -4319,11 +4327,23 @@ std::uint64_t SolveWork::Impl::select_joint_policy_seed_row(
             ? priced.cost / progress
             : priced.cost;
         std::uint64_t pending_routes = 0;
-        if (first_policy) {
+        if (first_policy || needs_completed_tails) {
             const auto pending = [&](const std::uint32_t next) {
-                return next != state && !calc.is_goal_state(calc.state(next)) &&
-                    (next >= transition_cache->state_rows.size() ||
-                     transition_cache->state_rows[next].count == 0);
+                if (next == state || calc.is_goal_state(calc.state(next))) return false;
+                if (next >= transition_cache->state_rows.size()) return true;
+                if (!needs_completed_tails)
+                    return transition_cache->state_rows[next].count == 0;
+                // A row count can include an unfinished or unpriced choice.
+                // Use the same completed/priced eligibility as this selector.
+                for (const auto next_row : state_row_indices(*transition_cache, next)) {
+                    if (next_row >= completed_rows->size() || !(*completed_rows)[next_row] ||
+                        next_row >= priced_rows.size() || next_row >= transition_cache->rows.size() ||
+                        transition_cache->rows[next_row].owner_state != next) continue;
+                    const auto& next_price = priced_rows[next_row];
+                    if (next_price.operator_index < calc.operators().size() &&
+                        std::isfinite(next_price.cost) && next_price.cost >= 0.0) return false;
+                }
+                return true;
             };
             const auto& row = transition_cache->rows.at(row_index);
             for (std::uint32_t i = 0; i < row.transition_count; ++i) {
@@ -4339,8 +4359,9 @@ std::uint64_t SolveWork::Impl::select_joint_policy_seed_row(
                         group.successor_offset + j));
             }
         }
+        const int tail_rank = needs_completed_tails && pending_routes != 0 ? 1 : 0;
         const auto key = std::tuple{
-            class_rank, pending_routes, attempt_cost, -goal, -progress, row_index};
+            tail_rank, class_rank, pending_routes, attempt_cost, -goal, -progress, row_index};
         const auto make_snapshot = [&]() {
             CarrierBoundAttributionWork::SeedRowSnapshot snapshot;
             snapshot.row = row_index;
@@ -4364,7 +4385,7 @@ std::uint64_t SolveWork::Impl::select_joint_policy_seed_row(
             const double alternative_attempt = alternate_progress > 0.0
                 ? priced.cost / alternate_progress : priced.cost;
             const auto candidate_key = std::tuple{
-                alternative_class, pending_routes, alternative_attempt,
+                tail_rank, alternative_class, pending_routes, alternative_attempt,
                 -goal, -alternate_progress, row_index};
             if (candidate_key < alternate_key) {
                 alternate_key = candidate_key;
@@ -5183,7 +5204,7 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
             const auto select_initial_row = [&](const std::uint32_t state) {
                 // Same complete-row seed for initial construction and retained
                 // candidate resumption; qualification still owns properness.
-                return select_joint_policy_seed_row(state, result.values);
+                return select_joint_policy_seed_row(state, result.values, &completed);
             };
 
             const auto row_is_completed = [&](const std::uint32_t state,
