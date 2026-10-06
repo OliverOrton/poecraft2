@@ -93,6 +93,14 @@ retry bounds. Native gold/dust quantities remain unknown. Unsupported inputs and
 joint laws still refuse. Current/Finder producers, lower and exactness authorities
 gain no activation from this integration. [Native contract](../engine/recombination-solver.md).
 
+The isolated [October 6 recombination increment](../active/2026-10-03-recombination-solver/README.md#october-6-retained-item-annul-increment)
+adds opt-in C++ retained-item Annul. Source `a2c18955` passed focused native
+qualification and six independently checked declared-price comparisons; the
+living record owns exact evidence and scope. Public ABI/worker/UI/WASM and
+Current/Finder activation are unchanged. The narrow integration preserves the
+tested code over main `1b038ef8`; exact-head hosted Windows and Solver knowledge
+validation remain separate gates from the native fixture qualification.
+
 ## Approved reforge count-law correction (2026-10-02)
 
 The isolated [reforge-law execution](../active/2026-10-02-reforge-law/README.md)

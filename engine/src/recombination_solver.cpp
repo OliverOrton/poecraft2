@@ -27,7 +27,25 @@ struct Action {
     std::vector<std::pair<unsigned, double>> exits;
     double child_actions = 0;
     std::vector<double> resource_rewards;
+    unsigned input = 0;
 };
+const char* preparation_name(ActionType type) {
+    switch (type) {
+    case ActionType::Annul: return "annul";
+    default: throw std::invalid_argument("Inventory preparation has no approved full represented removal law");
+    }
+}
+double preparation_cost(const RecombSolverRequest& request, ActionType type) {
+    (void)preparation_name(type);
+    require(request.preparation_economy && request.preparation_economy->id == request.price_identity,
+            "Inventory preparation requires matching complete prices");
+    // The same native primitive key used by compile_operation.
+    const auto key = "annul";
+    const auto price = request.preparation_economy->prices.find(key);
+    require(price != request.preparation_economy->prices.end() && finite_cost(price->second),
+            "Inventory preparation material price is incomplete");
+    return price->second;
+}
 double reward(const Action& action, unsigned j) {
     if (j == 0) return action.cost;
     if (j == 1) return action.kind == RecombDecisionKind::Recombine;
@@ -319,6 +337,16 @@ RecombSolverResult solve_random_recomb_inventory(const RecombSolverRequest& requ
         for (auto alpha : request.scenario->prefix_first)
             require(std::isfinite(alpha) && alpha >= 0 && alpha <= 1, "Invalid explicit first-side scenario probability");
     }
+    require(request.preparation_actions.size() <= 1, "Inventory preparation catalogue cap reached");
+    std::set<ActionType> preparation_types;
+    std::vector<double> preparation_prices;
+    for (auto type : request.preparation_actions) {
+        require(preparation_types.insert(type).second, "Duplicate inventory preparation action");
+        preparation_prices.push_back(preparation_cost(request,type));
+    }
+    const unsigned acquisition_count = unsigned(request.acquisitions.size());
+    const unsigned reward_count = acquisition_count + unsigned(request.preparation_actions.size());
+    ActionContextImpl preparation_context(0); preparation_context.session = request.session;
     WorkGuard work{request}; work.tick();
     validate_random_recomb_goal_projection(request.goal_set_json.data(), request.goal_set_json.size());
     RecombSolverResult result; result.model_id = request.model_id; result.price_identity = request.price_identity; result.cost_complete = complete_attempt;
@@ -405,6 +433,26 @@ RecombSolverResult solve_random_recomb_inventory(const RecombSolverRequest& requ
         for (unsigned i = 0; i < inventory.size(); ++i) {
             auto next = inventory; next.erase(next.begin() + i);
             actions.push_back({RecombDecisionKind::Discard, i, 0, {{intern_state(std::move(next)), 1}}});
+            for (unsigned p = 0; p < request.preparation_actions.size(); ++p) {
+                ActionParameters primitive; primitive.type = request.preparation_actions[p];
+                std::vector<std::pair<pc_item_state,double>> outputs;
+                const auto applied = visit_full_item_removal_outcomes(preparation_context,result.items[inventory[i]],primitive,
+                    [&](const pc_item_state& output,long double probability) {
+                        work.tick(); require(probability > 0 && std::isfinite(double(probability)), "Invalid preparation probability");
+                        outputs.emplace_back(output,double(probability));
+                    });
+                if (!applied.applied) continue; // Illegal/no-op calls are not search actions.
+                std::map<unsigned,double> mass; double total = 0;
+                for (const auto& [output,probability] : outputs) {
+                    auto prepared = inventory; prepared[i] = intern_item(output);
+                    mass[intern_state(std::move(prepared))] += probability; total += probability;
+                }
+                require(std::abs(total-1) <= 1e-10, "Inventory preparation loses positive output mass");
+                Action preparation{RecombDecisionKind::Prepare,p,preparation_prices[p],{mass.begin(),mass.end()}};
+                preparation.input = i; preparation.resource_rewards.assign(reward_count,0);
+                preparation.resource_rewards[acquisition_count+p] = 1;
+                actions.push_back(std::move(preparation));
+            }
         }
         if (inventory.size() == 2) {
             std::optional<RandomRecombPair> pair;
@@ -436,7 +484,7 @@ RecombSolverResult solve_random_recomb_inventory(const RecombSolverRequest& requ
     const auto winning = winning_states(states);
     require(winning.at(result.initial_state), "No proper policy in the declared bounded inventory scope");
     auto policy = bootstrap_policy(states, winning);
-    auto values = evaluate_policy(states, winning, policy, static_cast<unsigned>(request.acquisitions.size()), work);
+    auto values = evaluate_policy(states, winning, policy, reward_count, work);
     for (unsigned iteration = 0; result.cost_complete && iteration < request.max_policy_iterations; ++iteration) {
         result.policy_iterations = iteration + 1; auto next = policy; bool changed = false;
         for (unsigned s = 0; s < states.size(); ++s) if (winning[s] && !states[s].terminal) {
@@ -451,13 +499,14 @@ RecombSolverResult solve_random_recomb_inventory(const RecombSolverRequest& requ
         if (!changed) { result.search_converged = true; break; }
         if (!policy_is_proper(states, winning, next)) { exclusions.insert("Policy improvement proposed a nonterminating policy"); break; }
         policy = std::move(next);
-        values = evaluate_policy(states, winning, policy, static_cast<unsigned>(request.acquisitions.size()), work);
+        values = evaluate_policy(states, winning, policy, reward_count, work);
     }
     const auto& entry = values[result.initial_state];
     result.expected_cost_chaos = entry[0] + result.entry_cost_chaos;
     result.expected_recombinations = entry[1]; result.expected_discards = entry[2];
     result.expected_child_actions = entry[3];
-    result.expected_acquisitions.assign(entry.begin() + 4, entry.end());
+    result.expected_acquisitions.assign(entry.begin() + 4, entry.begin() + 4 + acquisition_count);
+    result.expected_preparations.assign(entry.begin() + 4 + acquisition_count, entry.end());
     require(std::isfinite(result.expected_cost_chaos), "Inventory expected cost overflow");
     for (unsigned s = 0; s < states.size(); ++s) {
         result.inventories.push_back(states[s].items); result.terminal.push_back(states[s].terminal);
@@ -469,6 +518,9 @@ RecombSolverResult solve_random_recomb_inventory(const RecombSolverRequest& requ
             decision.input_a = states[s].items[0]; decision.input_b = states[s].items[1];
         }
         if (action.kind == RecombDecisionKind::Discard) decision.input_a = action.argument;
+        if (action.kind == RecombDecisionKind::Prepare) {
+            decision.input_a = action.input; decision.preparation = action.argument;
+        }
         decision.outcomes = action.exits; result.policy.push_back(std::move(decision));
     }
     result.work_spent = work.spent;
@@ -499,6 +551,10 @@ std::string bridge_economy(const RecombSolverRequest& request) {
             for(const auto& [key,value]:a.checked_feeder->economy()->prices) bind(key,value);
         }
     }
+    for (auto type : request.preparation_actions) {
+        (void)preparation_cost(request,type);
+        bind("annul",request.preparation_economy->prices.at("annul"));
+    }
     std::ostringstream out;out<<std::setprecision(17)<<"{\"version\":\"v1\",\"id\":"<<bridge_quote(request.price_identity)<<",\"prices\":{";
     bool comma=false;for(const auto& [key,value]:prices){if(comma)out<<',';comma=true;out<<bridge_quote(key)<<':'<<value;}return out.str()+"}}";
 }
@@ -519,6 +575,12 @@ void check_bridge_scope(const RecombSolverRequest& request,const RecombSolverRes
         request.recombination_cost_complete && request.recombination_cost_chaos && result.item_is_goal.size()==result.items.size(),
         "Checked export request/result identity or economic status mismatch");
     require(request.model_id==kRandomRecombModel || request.model_id==kRandomRecombExtendedModel,"Unsupported executable provider");
+    if(!request.preparation_actions.empty()) {
+        SessionImpl ordinary;ordinary.data=request.session->data;ordinary.base_index=request.session->base_index;
+        ordinary.item_level=request.session->item_level;build_session(ordinary);
+        require(ordinary.global_index==request.session->global_index,
+                "Prepared Builder export requires the ordinary current-session mapping; retained-session moves are held");
+    }
 }
 }
 RecombBuilderExport export_recomb_builder_policy(const RecombSolverRequest& request,const RecombSolverResult& result) {
@@ -593,6 +655,26 @@ RecombBuilderExport export_recomb_builder_policy(const RecombSolverRequest& requ
                 const unsigned item=result.inventories[target][0];
                 edge(id,"state_"+std::to_string(intern(target,{int(item),-1})),full(item));
             }
+        } else if(d->kind==RecombDecisionKind::Prepare) {
+            const auto spec=result.inventories.at(context.state).at(d->input_a);
+            unsigned selected=0;
+            if(context.slots[0]!=int(spec) || (d->input_a==1 && context.slots[0]==context.slots[1]))selected=1;
+            require(context.slots[selected]==int(spec),"Export preparation lacks its physical item");
+            const auto type=request.preparation_actions.at(d->preparation);
+            op(id,"Prepare held item","move_resource","{\"from\":\"slot_"+std::to_string(selected)+"\",\"to\":\"current\"}");
+            const auto prepare="prepare_"+std::to_string(c),restore="restore_"+std::to_string(c),route="prepared_"+std::to_string(c);
+            op(prepare,"Paid retained-item cleanup",preparation_name(type),"{}");
+            op(restore,"Retain prepared item","move_resource","{\"from\":\"current\",\"to\":\"slot_"+std::to_string(selected)+"\"}");
+            node(route,"router");edge(id,prepare);edge(prepare,restore);edge(restore,route);
+            for(const auto& [target,p]:d->outcomes) {
+                require(p>0,"Export preparation contains a nonpositive output");
+                auto next=result.inventories.at(target);
+                const auto held=context.slots[1-selected];
+                if(held>=0){const auto f=std::find(next.begin(),next.end(),unsigned(held));require(f!=next.end(),"Preparation loses the other input");next.erase(f);}
+                require(next.size()==1,"Preparation must retain one full physical output");
+                auto slots=context.slots;slots[selected]=int(next[0]);
+                edge(route,"state_"+std::to_string(intern(target,slots)),full(next[0]));
+            }
         } else if(d->kind==RecombDecisionKind::Discard) {
             const auto spec=result.inventories.at(context.state).at(d->input_a);
             unsigned slot=0;
@@ -639,6 +721,7 @@ RecombBuilderExport check_recomb_builder_policy(const RecombSolverRequest& reque
     std::vector<State> graph;
     std::map<std::tuple<unsigned,std::vector<int>,int>,unsigned> ids;
     const auto slot=[&](const std::string& id) {
+        if(id=="current")return unsigned(strategy->resources.size());
         for(unsigned i=0;i<strategy->resources.size();++i)if(strategy->resources[i].id==id)return i;
         throw std::invalid_argument("Checked Builder references unavailable current/physical slot");
     };
@@ -649,7 +732,7 @@ RecombBuilderExport check_recomb_builder_policy(const RecombSolverRequest& reque
         if(graph.size()>=request.max_states)throw std::length_error("Independent Builder checker state cap reached");
         const auto i=unsigned(graph.size());ids.emplace(key,i);physical.push_back({node,std::move(slots),incoming});graph.push_back({{},{},false});return i;
     };
-    std::vector<int> initial(strategy->resources.size(),-1);std::vector<std::pair<std::string,double>> owned;
+    std::vector<int> initial(strategy->resources.size()+1,-1);std::vector<std::pair<std::string,double>> owned;
     for(unsigned i=0;i<strategy->resources.size();++i)if(strategy->resources[i].initially_owned) {
         const auto& r=strategy->resources[i];const auto item=root_item(r.item,*r.session,*request.session);
         initial[i]=int(bridge_item(result,item));owned.emplace_back(random_recomb_item_key(item),r.initial_cost);
@@ -662,11 +745,19 @@ RecombBuilderExport check_recomb_builder_policy(const RecombSolverRequest& reque
         work.tick();const auto state=physical[st];const auto& node=strategy->nodes.at(state.node);
         require(!node.source_only && node.input_edges[0].empty() && node.input_edges[1].empty(),"Restricted checked Builder excludes lazy dependency graphs");
         if(node.kind==StrategyNodeKind::Terminal) {
-            bool goal=false;for(auto id:state.slots)if(id>=0)goal|=result.item_is_goal.at(id);
-            require(node.terminal_kind==PC_TERMINAL_SUCCESS && goal,"Checked Builder has a positive non-goal/failure terminal");graph[st].terminal=true;continue;
+            bool accepted=false;
+            for(const auto& contract:strategy->output_contracts) {
+                const auto output=state.slots.at(slot(contract.resource_id));
+                if(output>=0 && result.item_is_goal.at(output) &&
+                    contract.base_key==request.session->data->string_at(request.session->data->base_metadata_path_sid[request.session->base_index]) &&
+                    evaluate_compiled_condition(contract.predicate,*request.session,result.items[output]))accepted=true;
+            }
+            require(node.terminal_kind==PC_TERMINAL_SUCCESS && accepted,"Checked Builder has a positive unaccepted output/failure terminal");
+            graph[st].terminal=true;continue;
         }
         std::vector<std::pair<Physical,double>> outcomes;
-        Action a{RecombDecisionKind::Child,0,0,{}};a.resource_rewards.assign(request.acquisitions.size()+1,0);
+        Action a{RecombDecisionKind::Child,0,0,{}};
+        a.resource_rewards.assign(request.acquisitions.size()+request.preparation_actions.size()+1,0);
         if(node.kind!=StrategyNodeKind::Operation)outcomes.push_back({state,1});
         else {
             a.resource_rewards.back()=1;
@@ -705,7 +796,21 @@ RecombBuilderExport check_recomb_builder_policy(const RecombSolverRequest& reque
                     auto next=state;next.slots[ai]=-1;next.slots[bi]=-1;next.slots[oi]=int(bridge_item(result,item));outcomes.push_back({std::move(next),output.probability});
                 }
                 a.kind=RecombDecisionKind::Recombine;a.cost=*request.recombination_cost_chaos;
-            }else throw std::invalid_argument("Builder operation is outside the restricted checked inventory language");
+            }else {
+                const auto found=std::find(request.preparation_actions.begin(),request.preparation_actions.end(),node.action.type);
+                require(found!=request.preparation_actions.end() && node.action_type==int(node.action.type),
+                        "Builder operation is outside the restricted checked inventory language");
+                const auto target=slot("current");require(state.slots[target]>=0,"Checked Builder preparation lacks a live current item");
+                a.kind=RecombDecisionKind::Prepare;a.cost=preparation_cost(request,node.action.type);
+                require(node.price_keys==std::vector<std::string>{"annul"},
+                        "Checked Builder preparation price keys differ");
+                a.resource_rewards[request.acquisitions.size()+unsigned(found-request.preparation_actions.begin())]=1;
+                ActionContextImpl context(0);context.session=request.session;
+                require(visit_full_item_removal_outcomes(context,result.items[state.slots[target]],node.action,
+                    [&](const pc_item_state& output,long double p){
+                        work.tick();auto next=state;next.slots[target]=int(bridge_item(result,output));outcomes.push_back({std::move(next),double(p)});
+                    }).applied,"Checked Builder preparation has a positive failed action");
+            }
         }
         std::map<unsigned,double> mass;
         for(auto& [next,p]:outcomes) {
@@ -732,15 +837,20 @@ RecombBuilderExport check_recomb_builder_policy(const RecombSolverRequest& reque
         a.exits.assign(mass.begin(),mass.end());graph[st].actions.push_back(std::move(a));
     }
     const auto winning=winning_states(graph);require(std::all_of(winning.begin(),winning.end(),[](bool b){return b;}),"Checked Builder policy is not proper");
-    const std::vector<unsigned> policy(graph.size(),0);const auto values=evaluate_policy(graph,winning,policy,unsigned(request.acquisitions.size()+1),work);
+    const std::vector<unsigned> policy(graph.size(),0);
+    const auto values=evaluate_policy(graph,winning,policy,unsigned(request.acquisitions.size()+request.preparation_actions.size()+1),work);
     RecombBuilderExport checked;checked.strategy_json=document;checked.economy_json=economy_json;
     checked.checked_cost=values[root][0]+result.entry_cost_chaos;checked.checked_recombinations=values[root][1];checked.checked_discards=values[root][2];checked.checked_child_actions=values[root][3];
-    checked.checked_acquisitions.assign(values[root].begin()+4,values[root].end()-1);checked.checked_builder_actions=values[root].back();
+    const auto preparation_begin=values[root].begin()+4+request.acquisitions.size();
+    checked.checked_acquisitions.assign(values[root].begin()+4,preparation_begin);
+    checked.checked_preparations.assign(preparation_begin,values[root].end()-1);checked.checked_builder_actions=values[root].back();
     const auto same=[](double a,double b){return std::abs(a-b)<=1e-8*std::max(1.,std::abs(b));};
     require(same(checked.checked_cost,result.expected_cost_chaos) && same(checked.checked_recombinations,result.expected_recombinations) &&
         same(checked.checked_discards,result.expected_discards) && same(checked.checked_child_actions,result.expected_child_actions),"Builder export/evaluated-policy reward mismatch");
     require(checked.checked_acquisitions.size()==result.expected_acquisitions.size(),"Builder acquisition counter arity differs");
     for(unsigned i=0;i<checked.checked_acquisitions.size();++i)require(same(checked.checked_acquisitions[i],result.expected_acquisitions[i]),"Builder export/source acquisition counter mismatch");
+    require(checked.checked_preparations.size()==result.expected_preparations.size(),"Builder preparation counter arity differs");
+    for(unsigned i=0;i<checked.checked_preparations.size();++i)require(same(checked.checked_preparations[i],result.expected_preparations[i]),"Builder export/source preparation counter mismatch");
     return checked;
 }
 

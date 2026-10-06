@@ -34,7 +34,8 @@ const char* decision_kind(poecraft::RecombDecisionKind kind) {
     case poecraft::RecombDecisionKind::Acquire: return "acquire";
     case poecraft::RecombDecisionKind::Recombine: return "recombine";
     case poecraft::RecombDecisionKind::Discard: return "discard";
-    case poecraft::RecombDecisionKind::Child: break;
+    case poecraft::RecombDecisionKind::Child:
+    case poecraft::RecombDecisionKind::Prepare: break; // Native-only; no public request admission.
     }
     throw std::logic_error("Invalid inventory decision");
 }

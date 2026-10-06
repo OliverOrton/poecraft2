@@ -132,3 +132,23 @@ This replaces superseded operational sequencing. Earlier detailed handoffs remai
 in [pre-closeout Git history](https://github.com/OliverOrton/poecraft2/blob/81d4f47106993d7c36af502595fcba24fa0b7e51/HANDOFF.md)
 and their existing living programme records; no historical qualification is
 relabelled or erased.
+
+## Selected parallel recombination increment (October 6)
+
+Oliver approved the isolated continuation alongside Current at 03:28 UTC.
+The [recombination living record](docs/active/2026-10-03-recombination-solver/README.md#october-6-retained-item-annul-increment)
+owns qualification at frozen source `a2c18955800ac87c9692ac416ad7d3978f8ff310`:
+header smoke and 1,533 solver/237 random checks passed with zero failures; all six
+paid finite policies were independently checked. Four declared-price comparisons
+improved and the expensive-cleanup/clean-donor controls stayed unchanged. This is
+C++ retained-item Annul under adopted spawn proxies, not a general feeder route,
+new blocking-law proof, global optimum or public ABI/worker/UI/WASM/Current/Finder
+activation. LOCAL was released at 05:00:47 UTC with all 377 tracked identities
+absent and zero live processes. Documentation finalization at `4a0342f0`
+preserves the tested engine. The narrow `dot/recomb-optimizer-integration-20261006`
+branch integrates those same four code files over main
+`1b038ef8bec8b11092e9fef1f51f726ab8e93bc8`, preserving the qualified Current
+comparison record. Exact-head Windows and Solver knowledge success gate the
+parent-authorized non-force main fast-forward. No extra implementation or
+benchmark is selected. The visually rejected UI and unfinished lower/causal
+changes are outside this integration; public activation remains held.

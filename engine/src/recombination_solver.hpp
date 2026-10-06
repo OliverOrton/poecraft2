@@ -57,15 +57,20 @@ struct RecombSolverRequest {
     std::optional<double> recombination_cost_chaos;
     bool recombination_cost_complete = false;
     bool allow_incomplete_costs = false;
+    // Opt-in native-only retained-item Annul. Uses the full represented removal
+    // law; the public request ABI/worker does not yet expose this slice.
+    std::vector<ActionType> preparation_actions;
+    std::shared_ptr<const EconomyImpl> preparation_economy;
     unsigned max_items = 64, max_states = 256, max_policy_iterations = 32;
     std::uint64_t max_work = 20000000;
     std::function<bool()> cancelled;
 };
-enum class RecombDecisionKind { Acquire, Recombine, Discard, Child };
+enum class RecombDecisionKind { Acquire, Recombine, Discard, Child, Prepare };
 struct RecombPolicyDecision {
     unsigned state = 0;
     RecombDecisionKind kind = RecombDecisionKind::Acquire;
     unsigned acquisition = 0, input_a = 0, input_b = 0;
+    unsigned preparation = 0;
     std::vector<std::pair<unsigned, double>> outcomes;
 };
 struct RecombSolverResult {
@@ -75,6 +80,7 @@ struct RecombSolverResult {
     double expected_cost_chaos = 0, entry_cost_chaos = 0;
     double expected_recombinations = 0, expected_discards = 0, expected_child_actions = 0;
     std::vector<double> expected_acquisitions;
+    std::vector<double> expected_preparations;
     std::vector<pc_item_state> items;
     std::vector<std::vector<unsigned>> inventories;
     std::vector<bool> terminal, item_is_goal;
@@ -91,6 +97,7 @@ struct RecombBuilderExport {
     double checked_cost = 0, checked_recombinations = 0, checked_discards = 0,
         checked_child_actions = 0, checked_builder_actions = 0;
     std::vector<double> checked_acquisitions;
+    std::vector<double> checked_preparations;
 };
 // Restricted native export/check. General authored inventory evaluator stays held.
 RecombBuilderExport export_recomb_builder_policy(const RecombSolverRequest&, const RecombSolverResult&);

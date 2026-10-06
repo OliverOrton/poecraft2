@@ -606,3 +606,128 @@ this focused native/worker bridge, not full product delivery. Full npm, integrat
 rendered UI and hosted Build/Test remain unrun; the integration owner must align
 generated product metadata with matching source/artifacts. No bundle packaging,
 refresh, main merge/push, deployment or dev-server action occurred in this batch.
+
+## October 6 retained-item Annul increment
+
+Oliver resumed recombination alongside Current work at 03:28 UTC. This bounded
+implementation continues the reviewed [October 5 report](https://github.com/OliverOrton/poecraft2/blob/ea5b77beb3e97ed1692ef3bc48c4aef08c1bcad5/docs/research/2026-10-05-recomb/report.md),
+not its entire proposed programme. Remote main was independently verified as
+`7252027c80856628ed16734583bfc9d6e166458b`. Fresh branch
+`dot/sol61-recomb-optimizer-20261006` starts there; the normal checkout remains
+`7eb16ac3` and other worktrees/research branches are untouched. An initial
+checkout rolled back on Windows archive path lengths; the short task-local
+worktree completed with per-command long-path support. No archive was researched.
+
+**Baseline and selected slice.** The existing native planner already searches
+acquire/recombine/discard, complete admitted outputs, two-slot recycling, quoted
+finished feeders and checked Annul/Scour/crafted-removal children. Calculator
+observes one pair; worker/planner transport exists, while the inspected Calculator
+component does not author an acquisition catalogue. Builder already supplies
+paid typed physical inputs and checked exports. The new C++-only opt-in is paid
+Annul of an already held item, including a retained recombination output. Scour,
+crafted-removal inventory actions and growing-feeder generation are later slices.
+
+The existing removal kernel provides full payloads and every positive failure.
+The other held item stays physical and unchanged; initial paid costs and child
+costs are settled once. The same proper-policy factorization also evaluates new
+preparation counters. Export/check uses existing move/Annul/router vocabulary,
+with an initially absent `current` slot. No pair model, selector weights,
+exclusive/count/order/side guards, frozen data/prices, base choice or goal changes.
+Roll/spawn-weight proxies remain provisional adopted assumptions. Ducat/Pantheon
+origins and missing special weights remain unadmitted as in the reviewed report.
+The checker also requires an actual satisfied declared output contract at success;
+a goal held elsewhere cannot excuse an absent designated output. A tampered-slot
+negative is included for every new comparison fixture.
+Prepared export requires ordinary-root canonical mapping to preserve the runtime
+slot-to-current guard; additional retained-session mappings remain held.
+
+**Focused native qualification (October 6, 05:01 UTC).** The CI owner built the
+frozen source, passed header smoke and the existing `--recombination-solver-only`
+(1,533 checks) and `--random-recombination-only` (237 checks) selectors, with zero
+failures and exit code zero. This replaces the earlier unbuilt/unrun gate for this
+increment only. Both comparison arms use the same binary, with preparation disabled
+versus enabled; they are not separate old/new-source performance runs.
+
+The CI owner's external retained receipt is
+`ci-evidence/recomb-optimizer-batch-handoff-20261006.json`, SHA-256
+`3c98a8cb09e1ac1597c09fdf5aaaafe2be49047f73dbb45434900666977d212a`.
+Its sibling `recomb-optimizer-qualified-batch-20261006` directory owns preflight,
+build provenance, qualification, native records, selector logs and cleanup evidence.
+Verified qualification identities are:
+
+- Source `a2c18955800ac87c9692ac416ad7d3978f8ff310`, tree
+  `134277568beee0dbadf6cc19bbb5c475513cb038`, engine tree
+  `15a980bcb66dce564380029033771a5a32be3591`, based on main `7252027c`.
+- Test executable SHA-256
+  `8e82ef2f36ee9fe32b3fbb87488b8ecbe3836a1d758000037d47535d41d05856`;
+  frozen runtime manifest SHA-256
+  `82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d`.
+- Solver log SHA-256
+  `45908daef8e2b042ded3fe0b6f308842246b6d572e12268f731a002ab04d3181`;
+  random-pair log SHA-256
+  `2b7d795b1018710527df75c885587a1d6fb2a046d7ab9f41c81247ab7c5931c2`.
+
+**Six measured, independently checked paid-policy comparisons.** The printed
+native expected costs below preserve log precision; floating-point evaluations
+are subject to the unchanged numerical gates. Prices are declared fixture inputs:
+clean AB costs 20, supplied dirty/filler/clean donor starts cost 1, Annul costs .1
+(200 in the expensive control), and an all-in recombination costs 1 (1,000 in the
+two-held and paid-multimod cases). Incoming entry cost is 4, or 5 with the second
+owned item. These prices are not refreshed market data.
+
+| Case | Control expected cost | Annul-enabled expected cost |
+| --- | ---: | ---: |
+| Incoming dirty ABC, clean AB goal | 24 | 17.43333333333333 |
+| Two held physical items | 25 | 18.43333333333333 |
+| Paid dirty multi-mod feeder | 20 | 3.2999999999999989 |
+| Ordinary filler A+X plus B | 12.082073497804984 | 9.40780780780781 |
+| Expensive cleanup | 24 | 24 |
+| Clean donors | 7.0060060060060056 | 7.0060060060060056 |
+
+All six control/treatment policies passed the independent restricted Builder
+export/check, complete-cost/convergence checks, positive-row mass checks and
+counter reconciliation. The second physical item remains untouched on every
+preparation outcome; a goal in the wrong declared output slot refuses. Missing or
+mismatched prices, unsupported/duplicate actions and closure-cap refusals passed,
+as did the repricing cost/count checks. `checked:true` alone is not the acceptance
+verdict; the zero-failure summary establishes that the other assertions passed too.
+
+The incoming and two-held treatments each use one expected Annul and no
+recombination. Paid-multimod uses approximately three paid starts/Annuls and two
+failure discards, also without recombination. Ordinary-filler uses
+4.0030030030030046 expected Annuls and 3.0030030030030033 recombinations; the
+predeclared gain assertion passed. Both economic controls choose zero Annuls.
+Thus the first three establish conditional cleanup/acquisition value; the fourth
+establishes incremental cleanup value within its supplied filler catalogue. It
+does not prove fillers beat clean donors, alter exclusive-blocking mechanics, or
+certify a crafting route to the paid multi-mod start. No global optimum is claimed.
+
+The fixed Ring1/level-80 identity uses the adopted
+`poe1-random-spawn-proxy-preserve-tier-roll-no-upgrade-v1` model and native
+AddedColdDamage1/AddedFireDamage1/AddedLightningDamage1 modifiers with proxies
+500/500/500, full-group disjointness and a clean shared AB goal. All represented
+payloads and every positive failure remain accounted for. No selected-mod mode,
+live-game weight verification or mixed-base optimization follows. The existing
+first-selector Ring Builder control completed its 1,000 runs successfully; no
+additional real-quality or Simulator invocation was made.
+
+**Resources, cleanup and integration gate.** Two compiler jobs used 407.2641703 s
+combined build time inside the CI owner's 600 s ceiling; configuration had 120 s
+and each selector 180 s. Solver/random selectors took 126.1391036/0.3684600 s.
+Existing native item/state/iteration/work limits remain 64/256/32/20,000,000.
+These are this completed batch's receipts, not a renewed execution allowance or
+a performance claim. LOCAL was released at 05:00:47.577655 UTC: all 377 original
+tracked identities were absent and the final live-process count was zero.
+
+Documentation finalization at `4a0342f0` changes no engine source or tested binary.
+The parent-authorized `dot/recomb-optimizer-integration-20261006` branch starts
+from independently verified main `1b038ef8bec8b11092e9fef1f51f726ab8e93bc8`,
+preserves all four tested code blobs, and reconciles these four documents while
+retaining the newer qualified Current comparison record. Exact-head hosted
+Windows and Solver knowledge success gate the guarded non-force main
+fast-forward. That hosted integration gate is separate from the native fixture
+qualification above. The visually rejected UI and unfinished lower/causal work
+are outside this narrow change. Public ABI/worker/UI/WASM,
+Current/Finder activation, general feeder crafting, mixed-base optimization and
+unresolved blocking laws remain held. No further implementation or benchmark is
+selected. This native increment does not depend on the separate UI layout repair.

@@ -7,6 +7,7 @@
 #include <cmath>
 #include <cstring>
 #include <limits>
+#include <cstdio>
 
 namespace {
 void run_blocking_witnesses() {
@@ -142,6 +143,132 @@ void run_checked_bridge_witnesses(const poecraft::RecombSolverRequest& original,
     }
 }
 
+void run_preparation_witnesses(const poecraft::RecombSolverRequest& original,
+        const std::vector<unsigned>& mods) {
+    using namespace poecraft;
+    const auto& session=*original.session;
+    auto economy=std::make_shared<EconomyImpl>();economy->id=original.price_identity;
+    economy->prices={{"annul",.1},{"scour",.2}};
+    auto acquisition_economy=std::make_shared<EconomyImpl>();acquisition_economy->id=original.price_identity;
+    const auto child=[&](const pc_item_state& item) {
+        return std::string("{\"version\":\"v1\",\"start_node_id\":\"start\",\"base_state\":")+
+            random_recomb_base_state_json(item,session)+
+            ",\"output_contracts\":[{\"id\":\"full\",\"base_key\":\""+
+            session.data->string_at(session.data->base_metadata_path_sid[session.base_index])+
+            "\",\"predicate\":{\"type\":\"always\"}}],\"nodes\":[{\"id\":\"start\",\"kind\":\"start\"},"
+            "{\"id\":\"end\",\"kind\":\"terminal\",\"terminal\":\"success\"}],"
+            "\"edges\":[{\"id\":\"done\",\"from\":\"start\",\"to\":\"end\",\"is_default\":true}]}";
+    };
+    const auto offer=[&](const char* id,const pc_item_state& item,double paid_start) {
+        const auto checked=check_recomb_feeder(original.session,id,"prepared-fixture-v1",child(item),"full",paid_start,acquisition_economy);
+        PC_CHECK(checked->total_cost()==paid_start && checked->outcomes().size()==1);
+        RecombAcquisition acquisition{id,"checked_feeder",id,item,paid_start,true};acquisition.checked_feeder=checked;return acquisition;
+    };
+    auto dirty=original.acquisitions[2].item;
+    PC_CHECK(pc_item_add_mod(&dirty,PC_SIDE_PREFIX,mods[2],uint16_t(session.primary_group[mods[2]]),0,nullptr)==PC_RESULT_OK);
+    const auto paid_finish=offer("paid-finish",original.acquisitions[2].item,20);
+    const auto prepared=[&](RecombSolverRequest request) {
+        request.preparation_actions={ActionType::Annul};request.preparation_economy=economy;return request;
+    };
+    const auto audit=[&](const char* name,const RecombSolverRequest& baseline_request,const RecombSolverRequest& treatment_request) {
+        const auto before=solve_random_recomb_inventory(baseline_request),after=solve_random_recomb_inventory(treatment_request);
+        const auto before_checked=export_recomb_builder_policy(baseline_request,before);
+        const auto after_checked=export_recomb_builder_policy(treatment_request,after);
+        PC_CHECK(before.cost_complete && after.cost_complete && before.search_converged && after.search_converged);
+        PC_CHECK(!before.global_optimality_claim && !after.global_optimality_claim);
+        PC_CHECK(std::abs(before_checked.checked_cost-before.expected_cost_chaos)<1e-8);
+        PC_CHECK(std::abs(after_checked.checked_cost-after.expected_cost_chaos)<1e-8);
+        auto wrong_output=after_checked.strategy_json;
+        const std::string contract_slot="\"resource_id\":\"finished\",\"predicate\"";
+        const auto position=wrong_output.find(contract_slot);PC_CHECK(position!=std::string::npos);
+        if(position!=std::string::npos) {
+            wrong_output.replace(position,contract_slot.size(),"\"resource_id\":\"current\",\"predicate\"");
+            bool refused=false;try{(void)check_recomb_builder_policy(treatment_request,after,wrong_output);}catch(const std::exception&){refused=true;}
+            PC_CHECK(refused); // A goal in another slot cannot satisfy the declared output.
+        }
+        for (const auto& decision:after.policy) {
+            double total=0;for(const auto& [next,p]:decision.outcomes){PC_CHECK(p>0 && next<after.inventories.size());total+=p;}
+            PC_CHECK(std::abs(total-1)<1e-10);
+            if(decision.kind==RecombDecisionKind::Prepare) {
+                const auto input=after.inventories[decision.state][decision.input_a];
+                for(const auto& [next,p]:decision.outcomes) {
+                    (void)p;
+                    PC_CHECK(after.inventories[next].size()==after.inventories[decision.state].size());
+                    if(after.inventories[next].size()==1)
+                        PC_CHECK(after.items[after.inventories[next][0]].prefix_count+1==after.items[input].prefix_count);
+                    else {
+                        const auto other=after.inventories[decision.state][1-decision.input_a];
+                        PC_CHECK(std::find(after.inventories[next].begin(),after.inventories[next].end(),other)!=after.inventories[next].end());
+                    }
+                }
+            }
+        }
+        std::printf("recomb_preparation_case {\"case\":\"%s\",\"before\":%.17g,\"after\":%.17g,\"annuls\":%.17g,\"recombinations\":%.17g,\"discards\":%.17g,\"states_before\":%zu,\"states_after\":%zu,\"work_before\":%llu,\"work_after\":%llu,\"checked\":true}\n",
+            name,before.expected_cost_chaos,after.expected_cost_chaos,after.expected_preparations[0],after.expected_recombinations,
+            after.expected_discards,before.inventories.size(),after.inventories.size(),
+            static_cast<unsigned long long>(before.work_spent),static_cast<unsigned long long>(after.work_spent));
+        return std::make_pair(before,after);
+    };
+    auto incoming=original;incoming.acquisitions={paid_finish};incoming.initial_items={dirty};incoming.initial_item_costs={4};
+    const auto incoming_pair=audit("incoming-dirty",incoming,prepared(incoming));
+    PC_CHECK(std::abs(incoming_pair.first.expected_cost_chaos-24)<1e-8);
+    PC_CHECK(std::abs(incoming_pair.second.expected_cost_chaos-(4+.1+20*2/3.))<1e-8);
+    PC_CHECK(std::abs(incoming_pair.second.expected_preparations[0]-1)<1e-8);
+    PC_CHECK(std::abs(incoming_pair.second.expected_acquisitions[0]-2/3.)<1e-8);
+    auto held=incoming;held.initial_items.push_back(original.acquisitions[0].item);held.initial_item_costs.push_back(1);
+    held.recombination_cost_chaos=1000;
+    const auto held_pair=audit("two-held-physical-items",held,prepared(held));
+    PC_CHECK(std::abs(held_pair.first.expected_cost_chaos-25)<1e-8);
+    PC_CHECK(std::abs(held_pair.second.expected_cost_chaos-(5+.1+20*2/3.))<1e-8);
+    auto multi=original;multi.acquisitions={offer("dirty-multimod",dirty,1),paid_finish};multi.recombination_cost_chaos=1000;
+    const auto multi_pair=audit("paid-multimod",multi,prepared(multi));
+    PC_CHECK(std::abs(multi_pair.first.expected_cost_chaos-20)<1e-8);
+    PC_CHECK(std::abs(multi_pair.second.expected_cost_chaos-3.3)<1e-8);
+    PC_CHECK(std::abs(multi_pair.second.expected_acquisitions[0]-3)<1e-8);
+    PC_CHECK(std::abs(multi_pair.second.expected_preparations[0]-3)<1e-8);
+    PC_CHECK(std::abs(multi_pair.second.expected_discards-2)<1e-8);
+    auto filler=original;auto ax=original.acquisitions[0].item;ax.rarity=PC_RARITY_RARE;
+    PC_CHECK(pc_item_add_mod(&ax,PC_SIDE_PREFIX,mods[2],uint16_t(session.primary_group[mods[2]]),0,nullptr)==PC_RESULT_OK);
+    filler.acquisitions={offer("ordinary-filler",ax,1),offer("clean-b",original.acquisitions[1].item,1),paid_finish};
+    const auto filler_pair=audit("ordinary-filler",filler,prepared(filler));
+    PC_CHECK(filler_pair.second.expected_cost_chaos<filler_pair.first.expected_cost_chaos-1e-8);
+    PC_CHECK(filler_pair.second.expected_recombinations>0 && filler_pair.second.expected_preparations[0]>0);
+    auto costly_economy=std::make_shared<EconomyImpl>(*economy);costly_economy->prices["annul"]=200;
+    auto expensive=prepared(incoming);expensive.preparation_economy=costly_economy;
+    const auto expensive_pair=audit("expensive-cleanup-control",incoming,expensive);
+    PC_CHECK(std::abs(expensive_pair.second.expected_cost_chaos-expensive_pair.first.expected_cost_chaos)<1e-8);
+    PC_CHECK(expensive_pair.second.expected_preparations[0]==0);
+    auto clean=original;clean.acquisitions={offer("clean-a",original.acquisitions[0].item,1),offer("clean-b",original.acquisitions[1].item,1),paid_finish};
+    const auto clean_pair=audit("unchanged-clean-donors",clean,prepared(clean));
+    PC_CHECK(std::abs(clean_pair.second.expected_cost_chaos-clean_pair.first.expected_cost_chaos)<1e-8);
+    PC_CHECK(clean_pair.second.expected_preparations[0]==0);
+    const auto refusal=[&](RecombSolverRequest request) {
+        bool refused=false;try{(void)solve_random_recomb_inventory(request);}catch(const std::exception&){refused=true;}PC_CHECK(refused);
+    };
+    auto invalid=prepared(incoming);invalid.preparation_economy.reset();refusal(invalid);
+    invalid=prepared(incoming);invalid.preparation_actions={ActionType::Exalt};refusal(invalid);
+    invalid=prepared(incoming);invalid.preparation_actions={ActionType::Scour};refusal(invalid);
+    invalid=prepared(incoming);invalid.preparation_actions.push_back(ActionType::Annul);refusal(invalid);
+    auto missing=std::make_shared<EconomyImpl>(*economy);missing->prices.erase("annul");
+    invalid=prepared(incoming);invalid.preparation_economy=missing;refusal(invalid);
+    auto wrong=std::make_shared<EconomyImpl>(*economy);wrong->id="other-prices";
+    invalid=prepared(incoming);invalid.preparation_economy=wrong;refusal(invalid);
+    invalid=prepared(incoming);invalid.max_items=2;refusal(invalid); // No positive removal output may be pruned.
+    // The paid immutable feeder identity stays compatible with the cleanup prices.
+    auto changed_price=std::make_shared<EconomyImpl>(*economy);changed_price->prices["annul"]=.3;
+    auto changed=prepared(incoming);changed.preparation_economy=changed_price;
+    const auto repriced=solve_random_recomb_inventory(changed);
+    PC_CHECK(std::abs(repriced.expected_cost_chaos-(4+.3+20*2/3.))<1e-8);
+    PC_CHECK(std::abs(repriced.expected_preparations[0]-1)<1e-8);
+    std::printf("recomb_preparation_identity {\"base\":\"%s\",\"level\":%u,\"model\":\"%s\",\"data\":\"%s\",\"goal\":%s,\"dirty_input\":%s,\"modifier_keys\":[\"%s\",\"%s\",\"%s\"],\"spawn_proxies\":[%u,%u,%u],\"prices_are_declared_fixtures\":true}\n",
+        session.data->string_at(session.data->base_metadata_path_sid[session.base_index]).c_str(),session.item_level,
+        original.model_id.c_str(),session.data->artifact_data_hash.c_str(),original.goal_set_json.c_str(),
+        random_recomb_base_state_json(dirty,session).c_str(),
+        session.data->string_at(session.data->mod_key_sid[session.global_index[mods[0]]]).c_str(),
+        session.data->string_at(session.data->mod_key_sid[session.global_index[mods[1]]]).c_str(),
+        session.data->string_at(session.data->mod_key_sid[session.global_index[mods[2]]]).c_str(),
+        session.base_spawn_weight[mods[0]],session.base_spawn_weight[mods[1]],session.base_spawn_weight[mods[2]]);
+}
 void run_constraint_witnesses(pc_data_handle data, pc_session_handle ring) {
     using namespace poecraft;
     const std::pair<const char*,RecombOrigin> fixtures[] = {
@@ -363,7 +490,7 @@ void run_recombination_solver_tests(const char* artifact_dir) {
     run_constraint_witnesses(data,session);
     std::vector<unsigned> mods;
     const auto& s = *session->impl;
-    for (unsigned m = 0; m < s.mod_count && mods.size() < 2; ++m)
+    for (unsigned m = 0; m < s.mod_count && mods.size() < 3; ++m)
         if (s.gen_type[m] == 0 && !s.flags[m] && s.special_kind[m] < 0 &&
             s.metamod_type[m] < 0 && s.influence_code[m] <= 0 && s.base_spawn_weight[m] > 0) {
             bool overlap = false;
@@ -372,8 +499,8 @@ void run_recombination_solver_tests(const char* artifact_dir) {
                     if (s.group_ids[i] == s.group_ids[j]) overlap = true;
             if (!overlap) mods.push_back(m);
         }
-    PC_CHECK(mods.size() == 2);
-    if (mods.size() != 2) { pc_session_destroy(session); pc_data_destroy(data); return; }
+    PC_CHECK(mods.size() == 3);
+    if (mods.size() != 3) { pc_session_destroy(session); pc_data_destroy(data); return; }
     pc_item_state a{}, b{}, ab{};
     pc_item_clear(&a); pc_item_clear(&b); pc_item_clear(&ab);
     a.rarity = b.rarity = PC_RARITY_MAGIC; ab.rarity = PC_RARITY_RARE;
@@ -415,6 +542,7 @@ void run_recombination_solver_tests(const char* artifact_dir) {
         PC_CHECK(std::abs(row_mass - 1) < 1e-10);
     }
     run_checked_bridge_witnesses(request,solved);
+    run_preparation_witnesses(request,mods);
     auto cheaper_finish = request; cheaper_finish.acquisitions[2].total_cost_chaos = 2;
     const auto finished = solve_random_recomb_inventory(cheaper_finish);
     PC_CHECK(std::abs(finished.expected_cost_chaos - 2) < 1e-9 && finished.expected_recombinations == 0 &&

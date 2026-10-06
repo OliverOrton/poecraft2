@@ -38,6 +38,49 @@ model is sufficient to evaluate that model, not to claim verified game prices.
 Initial item costs are counted once as entry costs. Subsequent acquisition counts,
 recombination attempts and discards are separately returned for an audit.
 
+### Opt-in native retained-item Annul
+
+The isolated October 6 increment adds `preparation_actions = {Annul}` and a
+matching `preparation_economy` to the C++ request only. An empty list preserves
+the existing catalogue/recombine/discard grammar. Each legal Annul can act on
+either held physical item, pays the native `annul` key once, and retains every
+positive full-item removal outcome plus the other held item. Failed/no-op calls
+are not proposed. No output is conditioned on retaining desired modifiers.
+Missing, nonfinite, negative or differently identified prices refuse; the existing
+item/state/work caps, properness and numerical gates stay unchanged.
+
+This lets supplied ordinary-filler and multi-mod feeder alternatives compete
+with paid cleanup of their actual outputs. Acquisition costs are still complete
+caller declarations or the existing checked child's paid start plus full law;
+there is no automatic growing-feeder craft catalogue or new Ducat admission.
+`expected_preparations` audits primitive counts separately from child actions.
+The independent restricted Builder checker re-enumerates the removal law and
+reconciles total cost and acquisition/recombine/discard/child/preparation counts.
+Export moves the selected held item into `current`, applies Annul, then moves
+the actual result back; the second physical input is neither consumed nor copied.
+Successful checking requires a live goal item in a satisfied declared full-item
+output contract, rather than a goal elsewhere in inventory.
+Prepared export also requires the ordinary root session's canonical mapping,
+matching runtime slot-to-current movement; extra retained-session mappings refuse.
+
+This C++ increment passed header smoke and the two focused native selectors at
+source `a2c18955800ac87c9692ac416ad7d3978f8ff310`: 1,533 solver and 237 random-pair
+checks, zero failures. Six matched preparation-disabled/enabled policies passed
+independent paid export/check; four declared-price fixtures improved and the
+expensive-cleanup and clean-donor controls stayed unchanged. Exact identities,
+full-precision costs, obligations and cleanup are owned by the
+[living programme](../active/2026-10-03-recombination-solver/README.md#october-6-retained-item-annul-increment).
+This qualifies bounded native fixture behavior under the adopted proxy model.
+It does not prove a general feeder crafting route, filler superiority over clean
+donors, new blocking laws, live-game prices or a global optimum. Documentation-only
+finalization and the narrow integration preserve the tested code; hosted checks
+remain separate from this focused native fixture qualification.
+The public C request ABI, Python/worker request, UI, Current/Finder and packaged
+WASM do not expose or gain acceptance from it. Pair laws, physical A/B carrier
+selection, explicit order scenarios and metadata refusals remain unchanged.
+Spawn/roll-weight proxies remain an adopted estimated assumption, not verified
+current-game selection weights. Mixed-base inventory optimization stays held.
+
 ## Terminal observation and finite policy argument
 
 The existing bounded shared-goal parser and terminal observer decide success in
