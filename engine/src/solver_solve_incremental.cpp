@@ -1826,6 +1826,7 @@ bool SolveWork::Impl::continue_open_incremental_envelope() {
     if (try_begin_renewal_candidate_publication()) return true;
     if (begin_incremental_upper_policy_pass()) return true;
     if (continue_initial_candidate()) return true;
+    if (try_service_graph_only_missing_frontier()) return true;
     if (classify_incremental_alternatives()) {
         restart_incremental_optimization();
         return true;
@@ -1908,8 +1909,42 @@ bool SolveWork::Impl::advance_incremental_post_upper_scheduling() {
     return true;
 }
 
+bool SolveWork::Impl::try_service_graph_only_missing_frontier() {
+    // The failed assembly must be the eligible checkpoint just observed by
+    // continue_initial_candidate. A stale observation or an incompatible
+    // wrapper cannot lend authority to this scheduling handoff.
+    if (!last_graph_only_checkpoint.eligible ||
+        !last_graph_only_checkpoint.compatible ||
+        !graph_only_checkpoint_observation().safe_checkpoint ||
+        proof_handoff_requested || proof_handoff_started ||
+        incremental_dynamic_prepare_active || incremental_classification_active ||
+        incremental_post_upper_scheduling_active || pending_constructive_certificate ||
+        !output_incumbent ||
+        last_graph_only_checkpoint.active_identity != output_incumbent->portfolio_identity ||
+        last_graph_only_checkpoint.completed_rows != incremental_alternative_rows.size() ||
+        certified_incumbent_invalid_reason(*output_incumbent) != nullptr ||
+        incremental_anytime_policy_last_failure.find(
+            "missing_completed_row_and_certified_frontier") == std::string::npos ||
+        graph_only_support_handoffs >= 6 ||
+        graph_only_support_selected >= graph_only_support.size()) return false;
+    const auto remaining = static_cast<std::uint32_t>(
+        graph_only_support.size() - graph_only_support_selected);
+    if (!schedule_incremental_refinement(true, remaining)) return false;
+    ++graph_only_support_handoffs;
+    graph_only_support_rows_at_dispatch = 0;
+    for (const auto& observation : graph_only_support)
+        graph_only_support_rows_at_dispatch += observation.committed_rows;
+    graph_only_support_retry_pending = true;
+    focus_optimizing = false;
+    focused_lower_mode = false;
+    incremental_restricted_values_ready = false;
+    record_progress_event("service_queued", "checked_graph_missing_continuation",
+        output_incumbent->portfolio_identity);
+    return true;
+}
+
 bool SolveWork::Impl::schedule_incremental_refinement(
-        const bool force) {
+        const bool force, const std::uint32_t graph_only_missing_limit) {
     if (!incremental_action_generation ||
         incremental_envelope_closed ||
         incremental_refinement_active) {
@@ -1946,6 +1981,9 @@ bool SolveWork::Impl::schedule_incremental_refinement(
     // this batch with unrelated uncertainty. Requests are retired below;
     // ordinary Q-directed scheduling resumes when no eligible request remains.
     const bool has_missing_continuation = has_unresolved;
+    // This caller is bounded to actual named, unexpanded nonterminal cells.
+    // It must not reach the ordinary broad uncertainty/closure fallback.
+    if (graph_only_missing_limit != 0 && !has_missing_continuation) return false;
 
     const auto state_width =
         [&](const std::uint32_t state) {
@@ -2136,15 +2174,47 @@ bool SolveWork::Impl::schedule_incremental_refinement(
         ranked.size(),
         std::min<std::uint32_t>(
             remaining_capacity,
-            refinement_batch));
+            graph_only_missing_limit == 0 ? refinement_batch :
+                std::min(refinement_batch, graph_only_missing_limit)));
     if (batch == 0) return false;
     ranked.resize(batch);
 
+    std::array<std::vector<std::uint64_t>, 8> support_keys;
+    if (graph_only_missing_limit != 0) {
+        if (!output_incumbent || batch > graph_only_support.size() -
+                graph_only_support_selected) return false;
+        std::uint64_t key_bytes = 0;
+        for (std::size_t index = 0; index < batch; ++index) {
+            support_keys[index] = exact_abstract_state_key(calc.state(ranked[index]), 0);
+            key_bytes += support_keys[index].capacity() * sizeof(std::uint64_t);
+            if (check_solver_byte_cap_fast(key_bytes)) return false;
+        }
+    }
     record_progress_event("support_service_start", "refinement_batch_size=" + std::to_string(ranked.size()));
     std::vector<std::uint8_t> selected(state_count, 0);
     double selected_uncertainty = 0.0;
+    std::size_t support_index = 0;
     for (const std::uint32_t state : ranked) {
         selected[state] = 1;
+        if (graph_only_missing_limit != 0) {
+            auto& observation = graph_only_support.at(graph_only_support_selected++);
+            observation.state = state;
+            observation.checkpoint_identity = output_incumbent->portfolio_identity;
+            observation.goal = output_incumbent->goal_identity;
+            observation.economy = output_incumbent->economy_identity;
+            observation.action_vocabulary = output_incumbent->action_vocabulary_identity;
+            observation.caller_scope = output_incumbent->caller_scope_identity;
+            observation.artifact = output_incumbent->artifact_identity;
+            observation.graph_prefix = output_incumbent->graph_prefix_identity;
+            observation.source_generation = output_incumbent->source_generation;
+            observation.target_generation = output_incumbent->target_generation;
+            observation.selected_row_generation = transition_cache->rows.size();
+            const auto& key = support_keys[support_index++];
+            observation.coarse_key_words = static_cast<std::uint32_t>(key.size());
+            observation.coarse_key_complete = key.size() <= observation.coarse_key.size();
+            if (observation.coarse_key_complete)
+                std::copy(key.begin(), key.end(), observation.coarse_key.begin());
+        }
 
         selected_uncertainty = std::min(
             unbounded_priority,
@@ -2162,6 +2232,9 @@ bool SolveWork::Impl::schedule_incremental_refinement(
             }
         }
     }
+    // The fixed observations now own their copies. Release transient key
+    // allocations before the existing queue/refinement owner grows its data.
+    support_keys = {};
     /* A missing joint-policy frontier has been serviced once ordinary exact
      * refinement selects it. Retire that request at the selection boundary
      * instead of pinning the carrier at the head of every later automatic
@@ -3710,6 +3783,9 @@ void SolveWork::Impl::finalize_incremental_diagnostics() {
         incremental_anytime_policy_last_failure;
     diagnostics.last_graph_only_checkpoint = last_graph_only_checkpoint;
     diagnostics.last_upper_seed_refusal = last_upper_seed_refusal;
+    diagnostics.graph_only_support_handoffs = graph_only_support_handoffs;
+    diagnostics.graph_only_support_selected = graph_only_support_selected;
+    diagnostics.graph_only_support = graph_only_support;
     diagnostics.incremental_missing_frontier_discovered =
         incremental_missing_frontier_discovered;
     diagnostics.incremental_missing_frontier_priority_offers =

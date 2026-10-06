@@ -964,6 +964,11 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     std::string incremental_anytime_policy_last_failure;
     GraphOnlyCheckpointObservation last_graph_only_checkpoint;
     GraphOnlyCheckpointObservation last_upper_seed_refusal;
+    std::uint64_t graph_only_support_handoffs = 0;
+    std::uint32_t graph_only_support_selected = 0;
+    std::array<GraphOnlySupportObservation, 8> graph_only_support;
+    bool graph_only_support_retry_pending = false;
+    std::uint64_t graph_only_support_rows_at_dispatch = 0;
     GraphOnlyCheckpointObservation graph_only_checkpoint_observation() const;
     /* A joint upper proof can expose a stochastic successor whose incumbent
      * continuation is not valid for that carrier shape. Feed that concrete
@@ -3096,7 +3101,9 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
 
     std::vector<double> certified_incremental_lower_values();
 
-    bool schedule_incremental_refinement(bool force = false);
+    bool schedule_incremental_refinement(bool force = false,
+        std::uint32_t graph_only_missing_limit = 0);
+    bool try_service_graph_only_missing_frontier();
 
     bool schedule_warm_start_continuation_refinement();
 

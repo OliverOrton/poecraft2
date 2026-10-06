@@ -1486,6 +1486,7 @@ void SolveWork::Impl::run_focused_lower_unit() {
                  * lower policy need not release its named continuation to
                  * broad fringe expansion before those rows can be serviced. */
                 if (continue_initial_candidate()) return;
+                if (try_service_graph_only_missing_frontier()) return;
                 /*
                  * An incomplete lower policy is still a valid lower-bound
                  * snapshot. The high-impact experiment can independently

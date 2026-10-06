@@ -883,6 +883,27 @@ struct GraphOnlyCheckpointObservation {
     std::array<char, 96> active_compilation_provenance{};
 };
 
+// Bounded evidence from the ordinary exact expansion owner. Selection is
+// neither row completion nor a continuation certificate. Both fixed copies
+// are charged by sizeof(Impl) / sizeof(SolveDiagnostics).
+struct GraphOnlySupportObservation {
+    std::uint32_t state = kNoId;
+    std::uint64_t checkpoint_identity = 0;
+    std::uint64_t goal = 0, economy = 0, action_vocabulary = 0, caller_scope = 0;
+    std::uint64_t artifact = 0, graph_prefix = 0;
+    std::uint64_t source_generation = 0, target_generation = 0;
+    std::uint64_t selected_row_generation = 0;
+    std::array<std::uint64_t, 128> coarse_key{};
+    std::uint32_t coarse_key_words = 0;
+    bool coarse_key_complete = false;
+    bool expansion_started = false, expansion_complete = false;
+    bool first_row_admitted = false;
+    std::uint64_t committed_rows = 0;
+    std::uint64_t first_row = std::numeric_limits<std::uint64_t>::max();
+    std::uint32_t first_variant = kNoId, first_operator = kNoId;
+    double first_paid_cost = std::numeric_limits<double>::infinity();
+};
+
 struct SolveDiagnostics {
     /* Actions the solve planned without, and why. */
     std::vector<std::string> skipped_missing_price;
@@ -1110,6 +1131,9 @@ struct SolveDiagnostics {
     std::string incremental_anytime_policy_last_failure;
     GraphOnlyCheckpointObservation last_graph_only_checkpoint;
     GraphOnlyCheckpointObservation last_upper_seed_refusal;
+    std::uint64_t graph_only_support_handoffs = 0;
+    std::uint32_t graph_only_support_selected = 0;
+    std::array<GraphOnlySupportObservation, 8> graph_only_support;
     std::uint64_t incremental_missing_frontier_discovered = 0;
     std::uint64_t incremental_missing_frontier_priority_offers = 0;
     std::uint64_t incremental_missing_frontier_service_completions = 0;

@@ -2252,6 +2252,20 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
                     expanded_count >=
                         incremental_refinement_target_expanded) {
                     incremental_refinement_active = false;
+                    if (graph_only_support_retry_pending) {
+                        std::uint64_t committed_rows = 0;
+                        for (const auto& observation : graph_only_support)
+                            committed_rows += observation.committed_rows;
+                        // Retry the existing assembly owner once, only after
+                        // native row commitment changed its actual evidence.
+                        // Its complete-candidate checker slot is never reset.
+                        if (!result.diagnostics.resource_cap_hit &&
+                            committed_rows > graph_only_support_rows_at_dispatch)
+                            incremental_anytime_next_row_checkpoint = std::min(
+                                incremental_anytime_next_row_checkpoint,
+                                incremental_alternative_rows.size());
+                        graph_only_support_retry_pending = false;
+                    }
                     incremental_restricted_values_ready = false;
                     incremental_upper_policy_dirty = true;
                     begin_focused_lower_solve();

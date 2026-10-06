@@ -100,6 +100,12 @@ int main(int argc, char** argv) {
         std::printf("solver root prefix dependency probe: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
         return pctest::g_failures == 0 ? 0 : 1;
     }
+    if (argc > 1 && std::string(argv[1]) == "--solver-current-support-handoff-only") {
+        run_solver_integrity_tests("root-prefix-dependency-probe");
+        run_solver_integrity_tests("current-support-handoff");
+        std::printf("solver Current support handoff: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     if (argc > 1 && std::string(argv[1]) == "--solver-blocker-growth-only") {
         run_solver_growth_tests(true);
         std::printf("solver blocker growth tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);

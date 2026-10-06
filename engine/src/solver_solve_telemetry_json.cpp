@@ -3703,7 +3703,49 @@ std::string serialize_solver_telemetry(
         json += ",\"max_open\":" + std::to_string(
             diagnostics->incremental_missing_frontier_max_open);
         json += ",\"open\":" + std::to_string(
-            diagnostics->incremental_missing_frontier_open) + "}";
+            diagnostics->incremental_missing_frontier_open);
+        json += ",\"bounded_checked_graph_handoff\":{\"cell_limit\":8,\"handoff_limit\":6,\"handoffs\":" +
+            std::to_string(diagnostics->graph_only_support_handoffs);
+        json += ",\"selected\":" + std::to_string(diagnostics->graph_only_support_selected);
+        json += ",\"selection_is_completion\":false,\"continuation_authority\":false,\"cells\":[";
+        for (std::uint32_t index = 0; index < diagnostics->graph_only_support_selected; ++index) {
+            if (index) json += ',';
+            const auto& value = diagnostics->graph_only_support.at(index);
+            json += "{\"state\":" + std::to_string(value.state);
+            const auto identity = [&](const char* name, std::uint64_t word) {
+                json += ",\"" + std::string(name) + "\":\"" + std::to_string(word) + "\"";
+            };
+            identity("checkpoint_identity", value.checkpoint_identity);
+            identity("goal_identity", value.goal);
+            identity("economy_identity", value.economy);
+            identity("action_vocabulary_identity", value.action_vocabulary);
+            identity("caller_scope_identity", value.caller_scope);
+            identity("artifact_identity", value.artifact);
+            identity("graph_prefix_identity", value.graph_prefix);
+            identity("source_generation", value.source_generation);
+            identity("target_generation", value.target_generation);
+            identity("selected_row_generation", value.selected_row_generation);
+            json += ",\"coarse_key_words\":" + std::to_string(value.coarse_key_words);
+            json += std::string(",\"coarse_key_complete\":") + (value.coarse_key_complete ? "true" : "false");
+            json += ",\"coarse_parent\":0,\"coarse_key\":[";
+            if (value.coarse_key_complete) for (std::uint32_t word = 0; word < value.coarse_key_words; ++word) {
+                if (word) json += ',';
+                json += "\"" + std::to_string(value.coarse_key.at(word)) + "\"";
+            }
+            // A coarse carrier is not a materialized native pair or a checked
+            // controller entry. Do not manufacture either identity here.
+            json += "],\"physical_key\":null,\"controller_entry\":null";
+            json += std::string(",\"expansion_started\":") + (value.expansion_started ? "true" : "false");
+            json += std::string(",\"expansion_complete\":") + (value.expansion_complete ? "true" : "false");
+            json += ",\"committed_rows\":" + std::to_string(value.committed_rows);
+            json += ",\"first_row\":" + (value.first_row == std::numeric_limits<std::uint64_t>::max()
+                ? std::string("null") : std::to_string(value.first_row));
+            json += ",\"first_variant\":" + std::to_string(value.first_variant);
+            json += ",\"first_operator\":" + std::to_string(value.first_operator);
+            json += std::string(",\"first_row_admitted\":") + (value.first_row_admitted ? "true" : "false");
+            json += ",\"first_paid_cost\":" + telemetry_finite_json(value.first_paid_cost) + '}';
+        }
+        json += "]}}";
         json += ",\"remaining_action_envelope\":" +
                 std::to_string(
                     diagnostics->incremental_actions_unevaluated +

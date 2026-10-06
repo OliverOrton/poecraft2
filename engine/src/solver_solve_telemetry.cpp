@@ -2871,6 +2871,9 @@ SolveTelemetrySnapshot SolveWork::Impl::telemetry_snapshot(bool abandoned) const
             incremental_anytime_policy_last_failure;
         snapshot.diagnostics.last_graph_only_checkpoint = last_graph_only_checkpoint;
         snapshot.diagnostics.last_upper_seed_refusal = last_upper_seed_refusal;
+        snapshot.diagnostics.graph_only_support_handoffs = graph_only_support_handoffs;
+        snapshot.diagnostics.graph_only_support_selected = graph_only_support_selected;
+        snapshot.diagnostics.graph_only_support = graph_only_support;
         snapshot.diagnostics.incremental_missing_frontier_discovered =
             incremental_missing_frontier_discovered;
         snapshot.diagnostics.incremental_missing_frontier_priority_offers =

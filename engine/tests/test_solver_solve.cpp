@@ -16888,6 +16888,7 @@ void run_solver_proof_handoff_tests() {
 
 void run_solver_root_only_joint_service_tests();
 void run_solver_root_prefix_dependency_probe_tests();
+void run_solver_current_support_handoff_tests();
 
 void run_solver_integrity_tests(const char* case_name) {
     const std::string name = case_name;
@@ -16913,6 +16914,7 @@ void run_solver_integrity_tests(const char* case_name) {
     else if (name == "completed-policy-boundary") run_completed_policy_boundary_tests();
     else if (name == "root-only-joint-service") run_solver_root_only_joint_service_tests();
     else if (name == "root-prefix-dependency-probe") run_solver_root_prefix_dependency_probe_tests();
+    else if (name == "current-support-handoff") run_solver_current_support_handoff_tests();
     else throw std::invalid_argument("unknown solver integrity subcase");
 }
 
@@ -18551,7 +18553,8 @@ void run_graph_only_missing_entry_service_counterparts(
                 checked.evaluation.converged && checked.evaluation.cost_complete && checked.resource_cap.empty() &&
                 near(checked.evaluation.success_probability, 1, 1e-12) && near(checked.off_policy_probability, 0, 1e-12) &&
                 near(checked.exact_cost, baseline_checked_cost, 1e-8) && checked.strategy_json == root_graph &&
-                !checked.paired_default_only && checked.evaluation.continuation_upper.requested &&
+                checked.paired_default_only && checked.certification_strategy_json == root_graph &&
+                checked.evaluation.continuation_upper.requested &&
                 checked.evaluation.continuation_upper.members.size() == 1 && exact_root_available,
                 "saved root graph independently checks complete paid proper native support after mutation");
             require(checked.publication_peak_owned_bytes <= scoped.max_solver_owned_bytes,
@@ -19077,4 +19080,123 @@ void run_graph_only_missing_entry_service_counterparts(
 
 void run_solver_root_prefix_dependency_probe_tests() {
     run_graph_only_missing_entry_service_counterparts(std::chrono::steady_clock::now(), true);
+}
+
+void run_solver_current_support_handoff_tests() {
+    // Exercise the normal Current producers and step owner. No cache, policy,
+    // incumbent, missing request, certificate or phase is injected.
+    const auto started = std::chrono::steady_clock::now();
+    const auto require = [](bool condition, const char* reason) {
+        if (!condition) {
+            std::printf("Current support handoff failure: %s\n", reason);
+            std::fflush(stdout);
+        }
+        PC_CHECK(condition);
+        if (!condition) throw std::runtime_error(reason);
+    };
+    for (const unsigned fixture : {0u, 1u}) {
+        auto session = make_solve_session();
+        auto registry = build_action_registry(*session);
+        GoalSpec goal;
+        goal.rarity = PC_RARITY_RARE;
+        goal.automatic_candidates = true;
+        goal.terminal.extras = ExtraExplicitPolicy::Forbid;
+        for (const auto family : {100u, 102u, 103u, 104u}) {
+            GoalSlot slot; slot.family_id = family; slot.min_tier = 1;
+            goal.slots.push_back(slot);
+        }
+        std::vector<std::uint32_t> actions;
+        std::unordered_map<std::string, double> prices;
+        for (const auto* id : {"chaos", "annul", "exalt", "scour", "alchemy",
+                              "regal", "transmute", "alteration", "augmentation"}) {
+            actions.push_back(registry.index_by_id.at(id));
+            prices[id] = std::string_view(id) == "chaos" ? 100.0 : 1.0;
+        }
+        CalcContext calc(session, goal, registry, actions,
+            false, true, false, std::nullopt, {}, true);
+        pc_item_state start; pc_item_clear(&start); start.rarity = PC_RARITY_RARE;
+        SolveOptions options;
+        options.goal_progress_gated_reforges = true;
+        options.high_impact_executable_uppers = true;
+        options.allow_economic_restart = false;
+        options.state_certificate_control = false;
+        options.goal_proof_profile = GoalProofProfile::TargetNeutralZero;
+        options.native_continuation_search = NativeContinuationSearchMode::Ordinary;
+        options.max_states = options.max_discovered_states = options.max_expanded_states = 4096;
+        options.candidate_evaluation_limits.max_states = 4096;
+        options.max_solver_owned_bytes = 512ull * 1024 * 1024;
+        SolveWork owner(calc, start, prices, options);
+        auto& work = SolveWorkTestAccess::get(owner);
+        std::uint32_t units = 0;
+        bool finish_requested = false;
+        std::uint32_t selected_at_finish = 0;
+        double issued_cost = kInfinity;
+        const auto bounded = [&] {
+            require(++units <= 40000, "finite ordinary production work allowance");
+            require(std::chrono::steady_clock::now() - started < std::chrono::seconds(60),
+                "aggregate normal production deadline");
+            require(work.fast_estimated_owned_bytes() <= options.max_solver_owned_bytes,
+                "normal producer and exact owner share512MiB");
+            require(work.graph_only_support_selected <= 8 && work.graph_only_support_handoffs <= 6,
+                "additional service stays within its cumulative cell and handoff limits");
+            require(work.certified_global_lower_bound() == 0 &&
+                work.options.goal_proof_profile == GoalProofProfile::TargetNeutralZero,
+                "service does not promote TargetNeutralZero lower authority");
+        };
+        while (!owner.progress().done) {
+            bounded();
+            owner.step(1);
+            const auto* checked = work.best_current_certified_fallback();
+            if (checked && !std::isfinite(issued_cost)) issued_cost = checked->evaluated_policy_cost;
+            if (std::isfinite(issued_cost)) {
+                require(checked && work.certified_incumbent_invalid_reason(*checked) == nullptr &&
+                    checked->proper && checked->executable && checked->independently_certified &&
+                    checked->independently_evaluated && checked->evaluated_policy_cost <=
+                        issued_cost + 1e-8 && !checked->compiled_artifact.strategy_json.empty(),
+                    "ordinary native issuance retains a compatible checked nonworsening fallback");
+            }
+            bool actual_rows_complete = work.graph_only_support_selected != 0;
+            for (std::uint32_t index = 0; index < work.graph_only_support_selected; ++index) {
+                const auto& cell = work.graph_only_support.at(index);
+                const auto key = exact_abstract_state_key(calc.state(cell.state), 0);
+                require(cell.coarse_key_complete && cell.coarse_key_words == key.size() &&
+                    std::equal(key.begin(), key.end(), cell.coarse_key.begin()),
+                    "service observation contains the actual complete coarse carrier key");
+                actual_rows_complete = actual_rows_complete && cell.expansion_complete && cell.committed_rows != 0;
+                if (cell.committed_rows != 0) require(cell.expansion_started && cell.first_row_admitted &&
+                    cell.first_row < work.transition_cache->rows.size() && cell.first_variant != kNoId &&
+                    cell.first_operator != kNoId && std::isfinite(cell.first_paid_cost),
+                    "completed support records an admitted native row and paid resource variant");
+            }
+            if (!finish_requested && std::isfinite(issued_cost) &&
+                (fixture == 1 || (actual_rows_complete && !work.incremental_refinement_active))) {
+                finish_requested = true;
+                selected_at_finish = work.graph_only_support_selected;
+                owner.request_bounded_finish();
+            }
+            if (finish_requested) require(work.graph_only_support_selected == selected_at_finish,
+                "requested Finish cannot enqueue another support cell");
+        }
+        const auto snapshot = work.telemetry_snapshot(false);
+        const auto trace = work.progress_trace_json(0);
+        std::printf("CURRENT_SUPPORT_NORMAL fixture=%u units=%u issued=%.17g handoffs=%llu selected=%u "
+            "finish=%u cap=%u failure=%s\n", fixture, units, issued_cost,
+            static_cast<unsigned long long>(work.graph_only_support_handoffs),
+            work.graph_only_support_selected, finish_requested ? 1u : 0u,
+            work.result.diagnostics.resource_cap_hit ? 1u : 0u,
+            work.incremental_anytime_policy_last_failure.c_str());
+        std::printf("CURRENT_SUPPORT_NORMAL_TRACE %s\n", trace.c_str());
+        std::fflush(stdout);
+        require(valid_json_object(trace), "normal handoff telemetry is valid JSON");
+        require(snapshot.diagnostics.graph_only_support_selected == work.graph_only_support_selected &&
+            snapshot.diagnostics.graph_only_support_handoffs == work.graph_only_support_handoffs,
+            "live and exported support evidence agree");
+        require(finish_requested && std::isfinite(issued_cost), "normal producer issued a checked fallback");
+        if (fixture == 0) require(work.graph_only_support_handoffs > 0 && work.graph_only_support_selected > 0,
+            "ordinary Current construction demonstrates the production continuation handoff");
+        const auto result = owner.take_result();
+        require(result.policy_available && !result.refined_policy_artifact.strategy_json.empty() &&
+            std::isfinite(result.evaluated_policy_cost) && result.evaluated_policy_cost <= issued_cost + 1e-8,
+            "normal Finish exports its independently checked nonworsening strategy");
+    }
 }

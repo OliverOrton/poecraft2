@@ -2861,6 +2861,18 @@ std::pair<bool, std::uint64_t> SolveWork::Impl::append_sparse_row(
                 }
             }
         }
+        for (auto& observation : graph_only_support) {
+            if (observation.state != state) continue;
+            ++observation.committed_rows;
+            if (observation.first_row != std::numeric_limits<std::uint64_t>::max()) continue;
+            observation.first_row = stored_row_index;
+            observation.first_variant = variant_index;
+            observation.first_operator = appended_variant.operator_index;
+            observation.first_row_admitted = stored_row->admitted;
+            double paid_cost = 0.0;
+            if (priced_variant_cost(appended_variant, paid_cost))
+                observation.first_paid_cost = paid_cost;
+        }
         return {
             equivalent != nullptr,
             static_cast<std::uint64_t>(stored_row_index)};
@@ -3073,6 +3085,8 @@ bool SolveWork::Impl::expand_one_unit() {
             ++expanded_count;
             expansion_operator_cursor = 0;
             expansion_active = true;
+            for (auto& observation : graph_only_support)
+                if (observation.state == expansion_state) observation.expansion_started = true;
             expansion_prepared = false;
             expansion_is_incremental_alternative = false;
             expansion_appended_row =
@@ -4084,6 +4098,9 @@ bool SolveWork::Impl::expand_one_unit() {
         }
         if (completed) {
             expansion_active = false;
+            if (!row_resource_limited && !result.diagnostics.resource_cap_hit)
+                for (auto& observation : graph_only_support)
+                    if (observation.state == state) observation.expansion_complete = true;
             if (state == result.start_state) cheap_root_bootstrap_pending = false;
         }
         if (completed && !result.diagnostics.resource_cap_hit &&
