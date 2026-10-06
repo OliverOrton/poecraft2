@@ -176,13 +176,12 @@ struct SolveOptions {
      * state certificate. Certified partial transition graphs are never
      * retained as price-independent re-solve caches. */
     bool state_certificate_control = true;
-    /* Internal native lower treatment. WASM explicitly enables reuse; native
-     * and C ABI defaults stay separate. Prepare once per solve, within 32 MiB. */
-    // Private independent component. Neutral scope may prepare/consume this
-    // issuer while legacy clean tables and global exact closure remain gated.
+    /* Native lower preparation is selected by normal Current's API owner.
+     * Direct white-box callers may select it separately. Prepare once per solve
+     * within the existing 32 MiB proof and total solver-owned budgets. */
     bool native_retention_lower = false;
-    // Native-private Current issuer gate. Neither Finder nor a public option
-    // can grant neutral-scope component authority through the shared flag.
+    // Current admits only the issuer's qualified domains on a neutral solve.
+    // Finder clears this gate; it does not inherit Current's lower authority.
     bool current_scoped_retention = false;
     bool native_retention_profile = false; // sampled internal attribution only
     bool native_retention_numerical_reuse = false; // private matched experiment; no public activation
@@ -429,6 +428,7 @@ enum class SolveLowerBoundProvenance : std::uint8_t {
     ClosedIncrementalActionEnvelope,
     GlobalActionRelaxation,
     ExactPolicyClosure,
+    ScopedNativeRetention,
 };
 
 struct FocusedScheduleRoundTelemetry {
@@ -1483,6 +1483,7 @@ struct RetainedCompiledPolicyArtifact {
  * indexed by CalcContext state id; states never expanded (past the cap)
  * keep an infinite value and no policy action.
  */
+class PreparedPhaseSourceLower;
 struct SolveResult {
     bool converged = false;
     bool policy_available = false;
@@ -1491,6 +1492,7 @@ struct SolveResult {
     SolveGapTarget target_fired = SolveGapTarget::None;
     bool target_met = false;
     bool closure_unavailable_by_profile = false;
+    std::shared_ptr<const PreparedPhaseSourceLower> native_source_lower_certificate;
     double lower_bound = 0.0;
     bool global_lower_bound_certified = false;
     SolveLowerBoundProvenance lower_bound_provenance =
@@ -1561,6 +1563,8 @@ struct SolveLowerBoundAuthority {
  * incremental work may publish a separately proved goal-cover floor; without
  * that authority it retains the universal-zero fail-safe. A closed envelope
  * owns the stronger admitted-row solver proof. */
+double issued_native_source_lower(const SolveResult& result);
+
 SolveLowerBoundAuthority classify_public_lower_bound_authority(
     double lower_bound,
     SolvePolicyStatus policy_status,

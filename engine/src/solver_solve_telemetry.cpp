@@ -1,4 +1,5 @@
 #include "solver_solve_types.hpp"
+#include "solver_phase_lower.hpp"
 
 #include "solver_action_family_contract.hpp"
 #include "solver_quotient_proof.hpp"
@@ -2188,6 +2189,8 @@ std::uint64_t solve_result_owned_bytes(const SolveResult& result) {
     std::uint64_t bytes =
         sizeof(result) -
         kUpperPolicyProvenanceAccountingOffset;
+    if (result.native_source_lower_certificate)
+        bytes += result.native_source_lower_certificate->retained_owned_bytes();
     bytes += result.values.capacity() * sizeof(double);
     bytes += result.policy.capacity() * sizeof(PolicyOperatorRef);
     bytes += result.expanded.capacity() * sizeof(std::uint8_t);
@@ -2577,6 +2580,7 @@ SolveProgress SolveWork::Impl::progress() const {
                 incremental_action_generation,incremental_envelope_closed,
                 result.diagnostics.independent_goal_cover_lower_bound);
         }
+        value.lower_bound=std::max(value.lower_bound,issued_native_source_lower(result));
         if (std::isfinite(value.lower_bound) &&
             std::isfinite(value.upper_bound)) {
             value.absolute_optimality_gap = std::max(
@@ -2692,7 +2696,9 @@ void SolveWork::Impl::refresh_incumbent_portfolio_diagnostics(
     snapshot.independent_global_lower_certified = true;
     snapshot.independent_global_lower_provenance =
         snapshot.independent_global_lower > 0.0
-            ? SolveLowerBoundProvenance::GlobalActionRelaxation
+            ? (issued_native_source_lower(result) > 0.0 && !proof_capabilities().positive_global_lower
+                ? SolveLowerBoundProvenance::ScopedNativeRetention
+                : SolveLowerBoundProvenance::GlobalActionRelaxation)
             : SolveLowerBoundProvenance::
                   OpenIncrementalEnvelopeUniversalZero;
     snapshot.restricted_search_lower = diagnostics.focused_lower_bound;
@@ -3304,7 +3310,10 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
         if (finalized_result.has_value()) {
             bytes += solve_result_owned_bytes(*finalized_result) -
                 (sizeof(SolveResult) -
-                 kUpperPolicyProvenanceAccountingOffset);
+                  kUpperPolicyProvenanceAccountingOffset);
+            if (finalized_result->native_source_lower_certificate &&
+                finalized_result->native_source_lower_certificate->shares_owner(native_retention_potential.get()))
+                bytes -= finalized_result->native_source_lower_certificate->retained_owned_bytes();
         }
         /* Diagnostic samples are strictly bounded and are not graph-sized.
          * Keep their exact current allocation in both ledger paths. */
@@ -3599,7 +3608,10 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
         if (finalized_result.has_value()) {
             bytes += solve_result_owned_bytes(*finalized_result) -
                 (sizeof(SolveResult) -
-                 kUpperPolicyProvenanceAccountingOffset);
+                  kUpperPolicyProvenanceAccountingOffset);
+            if (finalized_result->native_source_lower_certificate &&
+                finalized_result->native_source_lower_certificate->shares_owner(native_retention_potential.get()))
+                bytes -= finalized_result->native_source_lower_certificate->retained_owned_bytes();
         }
         bytes += diagnostics_owned_bytes(result.diagnostics);
         return bytes;

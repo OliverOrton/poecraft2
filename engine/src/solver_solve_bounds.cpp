@@ -6,6 +6,18 @@ namespace solver {
 
 using namespace solve_detail;
 
+double solve_detail::issued_native_source_lower(const SolveResult& result) {
+    // Prices, registry and caller programme scope are immutable within a solve
+    // and were matched at issuance. Publication still checks the exact source;
+    // another result's scalar/root item does not acquire this authority.
+    if (!result.options.native_retention_lower || !result.options.native_retention_consume ||
+        !result.has_exact_start_item || !result.native_source_lower_certificate ||
+        (!goal_proof_capabilities(result.options.goal_proof_profile).positive_global_lower &&
+            !result.options.current_scoped_retention) ||
+        !result.native_source_lower_certificate->matches_source(result.exact_start_item)) return 0;
+    return result.native_source_lower_certificate->lower;
+}
+
 void SolveWork::Impl::prepare_native_retention_lower(const PhaseLowerQueryDiagnostic* diagnostic) {
     if (!native_retention_enabled()) return;
     prepare_goal_cover_cost();
@@ -127,6 +139,14 @@ CooperativeTask<bool> SolveWork::Impl::run_retention_setup(const PhaseLowerQuery
         peak_owned_bytes=std::max(peak_owned_bytes,estimated_owned_bytes_with_calc(calc.audited_estimated_owned_bytes())-cap+native_retention_peak_bytes);
         native_retention_live_bytes=prepared->memory_snapshot().total_bytes;
         native_retention_potential=std::move(prepared); // only after full checking
+        // The public root gets its own native certificate, never a copied
+        // working value. Preserve the all-member projection veto as well as
+        // the exact-source and complete request/price issuer guards.
+        const auto projected_root=project_native_retention_lower(result.start_state);
+        if (options.native_retention_consume && projected_root && *projected_root>0.0)
+            result.native_source_lower_certificate = native_retention_potential->whole_scope_source_certificate(
+                calc, prices, exact_start_item, options.consider_imprint_programs);
+        native_retention_live_bytes=native_retention_potential->memory_snapshot().total_bytes;
         auto& entry=contract(ProofPatternKind::NativeRetention);
         const bool early=native_retention_potential->preparation_stats.accepted_early_subsolution;
         entry.converged=!early;
@@ -151,6 +171,7 @@ CooperativeTask<bool> SolveWork::Impl::run_retention_setup(const PhaseLowerQuery
     } catch (const PhasePreparationCancelled&) {
         throw;
     } catch (const std::exception& e) {
+        result.native_source_lower_certificate.reset();
         native_retention_potential.reset(); native_retention_live_bytes=0;
         native_retention_refusal=e.what();
         contract(ProofPatternKind::NativeRetention).fallback_reason=native_retention_refusal;

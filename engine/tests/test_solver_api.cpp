@@ -3401,6 +3401,34 @@ void run_solver_native_continuation_api_tests(const char* artifact_dir) {
             PC_CHECK(std::find(indices.begin(),indices.end(),cleanup)==indices.end());
             pc_solver_destroy(dependency);
         }
+        // Actual C ABI default selection, without a native-retention diagnostic
+        // setter. Current queues only the qualified clean Rare source domain;
+        // Finder receives no Current source-lower authority through this owner.
+        for (const auto mode : {PC_SOLVER_MODE_CURRENT, PC_SOLVER_MODE_FINDER}) {
+            pc_solver_handle normal=nullptr;
+            PC_CHECK(pc_solver_create(session,one_side.c_str(),one_side.size(),&normal,&error)==PC_RESULT_OK);
+            if (!normal) continue;
+            pc_solve_options options{};
+            options.struct_size=sizeof(options); options.abi_version=PC_ABI_VERSION;
+            options.solve_profile=PC_SOLVE_PROFILE_CALCULATOR_PRODUCT_V1;
+            options.solver_mode=mode;
+            options.max_states=options.max_discovered_states=1000;
+            options.max_solver_owned_bytes=256ull<<20;
+            PC_CHECK(pc_solver_solve_begin(normal,&start,economy,&options,&error)==PC_RESULT_OK);
+            if (mode==PC_SOLVER_MODE_CURRENT) {
+                std::size_t length=0;
+                PC_CHECK(pc_solver_progress_trace(normal,0,nullptr,0,&length,&error)==PC_RESULT_OK);
+                std::string trace(length+256,'\0');
+                PC_CHECK(pc_solver_progress_trace(normal,0,trace.data(),trace.size(),&length,&error)==PC_RESULT_OK);
+                trace.resize(length);
+                const auto current=parse_solver_api_fixture(trace).at("current");
+                PC_CHECK(current.at("effective_options").at("retention_lower").as_bool());
+                PC_CHECK(current.at("effective_options").at("retention_reuse").as_bool());
+                PC_CHECK(current.at("setup_retention_ns").as_number()==0); // preparation is still lazy
+            }
+            pc_solver_solve_abandon(normal);
+            pc_solver_destroy(normal);
+        }
     }
     for (const bool legacy : {true, false}) {
         pc_solver_handle solver = nullptr;

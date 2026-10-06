@@ -4015,6 +4015,9 @@ std::string serialize_solver_telemetry(
         case SolveLowerBoundProvenance::ExactPolicyClosure:
             json += "exact_policy_closure";
             break;
+        case SolveLowerBoundProvenance::ScopedNativeRetention:
+            json += "scoped_native_retention";
+            break;
         }
         json += "\"";
         json += ",\"upper_bound\":";

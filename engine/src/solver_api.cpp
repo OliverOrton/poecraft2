@@ -1025,12 +1025,18 @@ solver::SolveOptions solve_options(
         solver::product_paid_root_foulborn_scope(*holder.calc, value);
     value.selective_completion_service =
         holder.selective_completion_service;
-    value.native_retention_lower = holder.native_retention_diagnostic != solver::NativeRetentionDiagnosticMode::Off;
-#if !defined(__EMSCRIPTEN__)
-    value.current_scoped_retention = value.native_retention_lower &&
-        requested_solver_mode(options) == PC_SOLVER_MODE_CURRENT;
-#endif
-    value.native_retention_numerical_reuse = holder.native_retention_diagnostic == solver::NativeRetentionDiagnosticMode::Reuse ||
+    const bool normal_current = requested_solver_mode(options) == PC_SOLVER_MODE_CURRENT;
+    const auto& goal = holder.calc->goal();
+    const bool source_domain = goal.rarity == PC_RARITY_RARE &&
+        goal.required_satisfied_slots() == goal.slots.size() &&
+        goal.terminal.extras == solver::ExtraExplicitPolicy::ForbidUnmatched &&
+        !goal.terminal.prefixes && !goal.terminal.suffixes;
+    value.native_retention_lower = (normal_current && source_domain) ||
+        holder.native_retention_diagnostic != solver::NativeRetentionDiagnosticMode::Off;
+    value.current_scoped_retention = normal_current;
+    value.native_retention_numerical_reuse =
+        (normal_current && source_domain && holder.native_retention_diagnostic == solver::NativeRetentionDiagnosticMode::Off) ||
+        holder.native_retention_diagnostic == solver::NativeRetentionDiagnosticMode::Reuse ||
         holder.native_retention_diagnostic == solver::NativeRetentionDiagnosticMode::CheckedTarget ||
         holder.native_retention_diagnostic == solver::NativeRetentionDiagnosticMode::ReuseUnconsumed;
     value.native_retention_consume = holder.native_retention_diagnostic != solver::NativeRetentionDiagnosticMode::ReuseUnconsumed;

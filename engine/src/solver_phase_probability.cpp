@@ -294,6 +294,38 @@ std::optional<QuotientLowerBoundary> PreparedPhasePotential::whole_scope_source_
     // no access to this issuer. This source lower bounds every legal Q/family.
     return QuotientLowerBoundary{0, exact_item_state_key(item), identity, *value, LowerEvidenceKind::IndependentLower};
 }
+std::shared_ptr<const PreparedPhaseSourceLower> PreparedPhasePotential::whole_scope_source_certificate(
+        const CalcContext& calc, const PhaseLowerPrices& prices, const pc_item_state& item, bool consider_imprint) const {
+    // This admission is independent of OrdinaryClean. It requires the complete
+    // paired-region, paid-first-exit and primitive/control construction; other
+    // preparations keep their existing local roles without public authority.
+    if (!joint_refinement || !retained_scour || continuation != PhaseContinuation::CoupledFresh ||
+        retention != PhaseRetention::AnnulNonempty || preparation_options.filter_modes != 3 ||
+        calc.goal().rarity != PC_RARITY_RARE ||
+        calc.goal().required_satisfied_slots() != calc.layout().slots.size() ||
+        calc.goal().terminal.extras != ExtraExplicitPolicy::ForbidUnmatched ||
+        calc.goal().terminal.prefixes || calc.goal().terminal.suffixes) return {};
+    const auto value = lookup(calc, prices, item, consider_imprint);
+    if (!value || !std::isfinite(*value) || *value < 0) return {};
+    return std::shared_ptr<const PreparedPhaseSourceLower>(new PreparedPhaseSourceLower(
+        shared_from_this(), exact_item_state_key(item), *value));
+}
+PreparedPhaseSourceLower::PreparedPhaseSourceLower(std::shared_ptr<const PreparedPhasePotential> owner,
+        StableKey source, double value)
+    : lower(value), owner_(std::move(owner)),
+      charge_(owner_->support_->store_->ledger(), ProofMemoryCategory::Certificate,
+          sizeof(PreparedPhaseSourceLower) + 2*sizeof(void*) + source.capacity()*sizeof(std::uint64_t)),
+      source_(std::move(source)) {}
+bool PreparedPhaseSourceLower::matches_source(const pc_item_state& item) const {
+    return source_ == exact_item_state_key(item);
+}
+bool PreparedPhaseSourceLower::compatible(const CalcContext& calc, const PhaseLowerPrices& prices,
+        const pc_item_state& item, bool consider_imprint) const {
+    return matches_source(item) && owner_->compatible(calc, prices, item, consider_imprint);
+}
+std::uint64_t PreparedPhaseSourceLower::retained_owned_bytes() const {
+    return owner_->memory_snapshot().total_bytes;
+}
 ProofMemorySnapshot PreparedPhasePotential::memory_snapshot() const { return support_->memory_snapshot(); }
 std::size_t PreparedPhasePotential::draw_count() const { return draws.size() + (reused_draw_owner ? reused_draw_owner->draw_count() : 0); }
 const CalcContext::NativeGoalDrawBound& PreparedPhasePotential::draw(std::size_t i) const {

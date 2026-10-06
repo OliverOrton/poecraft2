@@ -6762,13 +6762,14 @@ solve_detail::classify_public_lower_bound_authority(
     }
 
 double SolveWork::Impl::certified_global_lower_bound() const {
-        if (!proof_capabilities().positive_global_lower) return 0.0;
-        return globally_certified_action_envelope_lower_bound(
+        const double native = issued_native_source_lower(result);
+        if (!proof_capabilities().positive_global_lower) return native;
+        return std::max(native, globally_certified_action_envelope_lower_bound(
             result_statewise_values_rejected
                 ? 0.0 : result.diagnostics.focused_lower_bound,
             incremental_action_generation,
             incremental_envelope_closed,
-            result.diagnostics.independent_goal_cover_lower_bound);
+            result.diagnostics.independent_goal_cover_lower_bound));
     }
 
 SolveGapTarget SolveWork::Impl::satisfied_gap_target() const {

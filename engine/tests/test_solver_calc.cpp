@@ -5123,8 +5123,44 @@ void run_solver_scoped_lower_tests() {
     PC_CHECK(saved->preparation_stats.checked_source_minimum_action==bench);
     PC_CHECK(saved->preparation_stats.checked_source_minimum_cost==1 &&
         saved->preparation_stats.checked_source_minimum_rhs<=1);
-    PC_CHECK(work.certified_global_lower_bound()==0); // no public/profile flip
-    PC_CHECK(work.progress().lower_bound==0);
+    PC_CHECK(work.result.native_source_lower_certificate &&
+        work.result.native_source_lower_certificate->compatible(calc,prices,start,false));
+    PC_CHECK(work.certified_global_lower_bound()==root_lower);
+    PC_CHECK(work.progress().lower_bound==root_lower);
+    // Public authority is separate from the unchanged neutral profile. A
+    // copied working scalar, foreign source, changed price or Imprint scope
+    // cannot substitute for the checked native source certificate.
+    auto publication=work.result;
+    publication.lower_bound=123;
+    publication.upper_bound=10;
+    publication.policy_status=SolvePolicyStatus::BoundedFeasible;
+    publication.converged=true;
+    solve_detail::normalize_publication_result(publication);
+    PC_CHECK(publication.lower_bound==root_lower && !publication.converged);
+    PC_CHECK(publication.absolute_optimality_gap==10-root_lower);
+    publication.converged=true;
+    PC_CHECK(solve_detail::publication_invariant_invalid_reason(publication)!=nullptr);
+    publication.converged=false;
+    publication.upper_bound=root_lower;
+    solve_detail::normalize_publication_result(publication);
+    PC_CHECK(publication.lower_bound==root_lower && !publication.converged &&
+        publication.policy_status==SolvePolicyStatus::BoundedFeasible);
+    publication.upper_bound=10;
+    const auto certificate=publication.native_source_lower_certificate;
+    publication.native_source_lower_certificate.reset();
+    publication.lower_bound=123;
+    solve_detail::normalize_publication_result(publication);
+    PC_CHECK(publication.lower_bound==0);
+    publication.native_source_lower_certificate=certificate;
+    publication.exact_start_item.rarity=PC_RARITY_NORMAL;
+    solve_detail::normalize_publication_result(publication);
+    PC_CHECK(publication.lower_bound==0);
+    auto changed_prices=prices; changed_prices["fixture:finish"]=0.25;
+    PC_CHECK(!certificate->compatible(calc,changed_prices,start,false));
+    PC_CHECK(!saved->whole_scope_source_certificate(calc,changed_prices,start,false));
+    PC_CHECK(!saved->whole_scope_source_certificate(calc,prices,start,true));
+    PC_CHECK(!certificate->compatible(calc,prices,start,true));
+    PC_CHECK(solve_detail::solve_result_owned_bytes(work.result)>=certificate->retained_owned_bytes());
     PC_CHECK(saved->native_action_relations>=registry.actions.size());
     const auto finish = calc.outcomes(root,bench);
     const auto reset = calc.outcomes(root,scour);
@@ -5280,9 +5316,12 @@ void run_solver_scoped_lower_tests() {
     PC_CHECK(classify(true,false,false,false)==Status::Unresolved);
     choice_row.transition_count=1; choice_row.choice_count=0;
     work.options.native_retention_consume=false;
+    work.result.options.native_retention_consume=false;
     PC_CHECK(work.certified_incremental_lower_values()==std::vector<double>(calc.state_count(),0));
+    PC_CHECK(work.certified_global_lower_bound()==0 && work.progress().lower_bound==0);
     PC_CHECK(work.native_retention_potential==saved && saved->lookup(calc,prices,start,false).value()>0.9);
     work.options.native_retention_consume=true;
+    work.result.options.native_retention_consume=true;
     auto outside=start; outside.generic_influence_bits=1;
     PC_CHECK(work.native_retention_lower_value(calc.intern_item(outside))==0);
     auto retry=calc.state(root); retry.goal_progress_retry_basin=1;
@@ -5467,6 +5506,7 @@ void run_solver_scoped_lower_tests() {
         PC_CHECK(!refused.native_retention_refusal.empty() && refused.native_retention_live_bytes==0);
         if (negative==0) PC_CHECK(refused.native_retention_refusal.find("uncovered generated family")!=std::string::npos);
         PC_CHECK(refused.completion_proof_lower_value(refused.result.start_state)==0);
+        PC_CHECK(!refused.result.native_source_lower_certificate && refused.certified_global_lower_bound()==0);
         PC_CHECK(!saved->lookup(refused_calc,prices,start,false) || negative==3);
         if (negative==3) PC_CHECK(!saved->lookup(refused_calc,prices,start,true));
     }
@@ -5489,10 +5529,12 @@ void run_solver_scoped_lower_tests() {
     PC_CHECK(pending.completion_proof_lower_value(pending.result.start_state)==0);
     pending.retention_setup_task.reset(); // abandoned child destroys its owned proof state
     PC_CHECK(!pending.native_retention_potential);
+    PC_CHECK(!pending.result.native_source_lower_certificate && pending.certified_global_lower_bound()==0);
     Impl capped(calc,start,prices,options);
     capped.options.max_solver_owned_bytes=capped.estimated_owned_bytes_with_calc(calc.audited_estimated_owned_bytes())+(2ull<<20);
     while (!capped.advance_setup()) {}
     PC_CHECK(capped.native_retention_attempted && !capped.native_retention_potential && capped.native_retention_live_bytes==0);
+    PC_CHECK(!capped.result.native_source_lower_certificate && capped.certified_global_lower_bound()==0);
     auto ungated_options=options; ungated_options.current_scoped_retention=false;
     Impl ungated(calc,start,prices,ungated_options);
     while (!ungated.advance_setup()) {}
@@ -6392,6 +6434,9 @@ void run_solver_phase_lower_tests() {
         PC_CHECK(coarse.layout().junk_class_by_mod[6]==mixed_class);
     }
     static_assert(!std::is_constructible_v<PreparedPhaseRestartLower, QuotientLowerBoundary>);
+    static_assert(!std::is_default_constructible_v<PreparedPhaseSourceLower>);
+    static_assert(!std::is_constructible_v<PreparedPhaseSourceLower, QuotientLowerBoundary>);
+    static_assert(!std::is_constructible_v<PreparedPhaseSourceLower, double>);
     static_assert(!std::is_copy_constructible_v<PreparedPhaseRestartLower>);
     static_assert(!std::is_default_constructible_v<PreparedPhaseLowerView>);
     static_assert(!std::is_default_constructible_v<PhaseProgramLowerWitness>);

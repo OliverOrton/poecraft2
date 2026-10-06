@@ -781,12 +781,8 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         return capabilities;
     }
     bool native_retention_enabled() const {
-#if defined(__EMSCRIPTEN__)
-        return options.native_retention_lower && proof_capabilities().positive_global_lower;
-#else
         return options.native_retention_lower &&
             (proof_capabilities().positive_global_lower || options.current_scoped_retention);
-#endif
     }
     bool independent_retention_ready() const {
         // Only the checked native issuer installs this pointer. This is local

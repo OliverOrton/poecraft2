@@ -218,7 +218,7 @@ class ProofPatternManager {
                "native descriptor prices with downward arithmetic",
                "native integer event bounds and simultaneously checked projected dependencies",
                ProofPatternSolution::MonotoneSubsolution,
-               "opt_in_uniform_native_retention_potential"},
+                "qualified_uniform_native_retention_potential"},
           }} {
         ProofPatternContract& operator_contract = contract(
             ProofPatternKind::OperatorLower);

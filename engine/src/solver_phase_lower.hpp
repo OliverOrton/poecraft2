@@ -107,6 +107,7 @@ private:
     friend class PhaseLowerProducer;
     friend class PreparedPhasePotential;
     friend class PreparedPhaseRestartLower;
+    friend class PreparedPhaseSourceLower;
     PreparedPhaseLowerView(quotient::StableKey identity, std::vector<double> values,
         std::vector<PhasePrimitiveWitness> primitives, std::uint32_t families,
         std::uint8_t searing, std::uint8_t eater, bool original,
@@ -230,7 +231,8 @@ struct PhasePotentialRelation {
 /* Existing clean-table indexing, with an exact fractured carrier frame and
  * an optional separately indexed unfractured continuation region.
  * This is a private checked potential, never an exact native transition row. */
-class PreparedPhasePotential {
+class PreparedPhaseSourceLower;
+class PreparedPhasePotential : public std::enable_shared_from_this<PreparedPhasePotential> {
 public:
     const quotient::StableKey identity;
     const std::vector<double> values;
@@ -266,6 +268,8 @@ public:
     std::optional<double> lookup(const CalcContext&, const PhaseLowerPrices&, const pc_item_state&, bool consider_imprint) const;
     std::optional<quotient::QuotientLowerBoundary> whole_scope_source_lower(
         const CalcContext&, const PhaseLowerPrices&, const pc_item_state&, bool consider_imprint) const;
+    std::shared_ptr<const PreparedPhaseSourceLower> whole_scope_source_certificate(
+        const CalcContext&, const PhaseLowerPrices&, const pc_item_state&, bool consider_imprint) const;
     std::uint32_t projected_cell(const CalcContext&, const pc_item_state&) const;
     double projected_value(const CalcContext&, const pc_item_state&) const;
     quotient::ProofMemorySnapshot memory_snapshot() const;
@@ -274,6 +278,7 @@ public:
 private:
     friend class PhaseLowerProducer;
     friend class SolveWork;
+    friend class PreparedPhaseSourceLower;
     PreparedPhasePotential(std::shared_ptr<const PreparedPhaseLowerView>,
         std::vector<double>, PhaseLowerProposal, PhaseProposalRefusal,
         std::uint32_t mod, std::uint32_t mask, bool retained, double restart_lower,
@@ -291,6 +296,26 @@ private:
         unsigned p, unsigned s, bool fresh, unsigned crafted, unsigned jp, unsigned js) const;
     std::shared_ptr<const PreparedPhaseLowerView> support_;
     quotient::ScopedProofMemoryCharge charge_;
+};
+
+// Only the completely checked native producer can issue positive source
+// authority. Retain its full request/price evidence and exact source identity;
+// a diagnostic scalar or freely assembled quotient boundary cannot replace it.
+class PreparedPhaseSourceLower {
+public:
+    const double lower;
+    PreparedPhaseSourceLower(const PreparedPhaseSourceLower&) = delete;
+    PreparedPhaseSourceLower(PreparedPhaseSourceLower&&) = delete;
+    bool matches_source(const pc_item_state&) const;
+    bool compatible(const CalcContext&, const PhaseLowerPrices&, const pc_item_state&, bool consider_imprint) const;
+    std::uint64_t retained_owned_bytes() const;
+    bool shares_owner(const PreparedPhasePotential* owner) const { return owner_.get() == owner; }
+private:
+    friend class PreparedPhasePotential;
+    PreparedPhaseSourceLower(std::shared_ptr<const PreparedPhasePotential>, quotient::StableKey, double);
+    std::shared_ptr<const PreparedPhasePotential> owner_;
+    quotient::ScopedProofMemoryCharge charge_;
+    const quotient::StableKey source_;
 };
 
 class PhasePreparationCancelled final : public std::runtime_error {
