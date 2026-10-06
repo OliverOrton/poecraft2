@@ -3390,8 +3390,19 @@ void run_selective_completion_target_count_tests(bool cap_diagnosis = false) {
             PC_CHECK(observation.checked_cost == owned->evaluated_policy_cost);
             PC_CHECK(observation.graph_digest != 0 && observation.graph_bytes ==
                 owned->compiled_artifact.strategy_json.size());
-            PC_CHECK(observation.zero_target_repair_occupancy > 0);
-            PC_CHECK(work.passive_continuation.branch_witnesses[0].observed);
+            PC_CHECK(observation.census_complete && observation.positive_primary > 0);
+            if (target_count == 1) {
+                PC_CHECK(observation.zero_target_repair_occupancy > 0);
+                PC_CHECK(work.passive_continuation.branch_witnesses[0].observed);
+            } else {
+                // This unchanged native pool has suffix families104/105/106.
+                // Both104 and105 are requested here; only106 is junk. Native
+                // exclusion groups therefore cannot occupy three suffix slots
+                // with zero target goals. Preserve this negative, rather than
+                // invent a reached item or widen the component's native law.
+                PC_CHECK(observation.zero_target_repair_occupancy == 0);
+                PC_CHECK(!work.passive_continuation.branch_witnesses[0].observed);
+            }
             const auto& entries = owned->compiled_artifact.continuation_upper.policy_entries.entries;
             const auto reached = std::find_if(entries.begin(), entries.end(), [](const auto& entry) {
                 return entry.available() && entry.root_expected_visits > 0;
@@ -3419,6 +3430,17 @@ void run_selective_completion_target_count_tests(bool cap_diagnosis = false) {
                 auto& replay = work.passive_continuation.proposals[0];
                 replay.entries_scanned = replay.projection_refused = 0;
                 replay.positive_primary = replay.zero_target_repair_occupancy = 0;
+                // Direct service owns a retained checked bundle but has not
+                // installed an active ordinary incumbent. An unscoped missing
+                // observation must fail closed. Then supply that actual bundle
+                // as test-only active context BEFORE the mutation stamp.
+                PC_CHECK(!work.output_incumbent);
+                work.observe_passive_missing(target, 2, 7, kNoId, false);
+                auto unbound = work.passive_continuation;
+                work.observe_passive_native_matches(unbound);
+                PC_CHECK(unbound.latest.native_class_matches == 0);
+                PC_CHECK(unbound.missing_scope_mismatches > 0);
+                work.output_incumbent = *owned;
                 const auto calc_before = CalcContextPassiveObserverTestAccess::stamp(calc);
                 const auto telemetry_before = calc.telemetry();
                 const auto policy_before = work.policy_rows;
