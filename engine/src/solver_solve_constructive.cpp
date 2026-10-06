@@ -5621,15 +5621,26 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                         evaluated_choice_identity != prior_choice_identity) {
                         continue;
                     }
-                    /* Deliver a complete proper candidate before improvement
-                     * can select a cheaper row with unavailable continuations.
-                     * A root-only graph or rejected table cannot supply those
-                     * statewise tails. Ordinary strict improvement remains
-                     * active when the incumbent has statewise continuation
-                     * values; publication and native checking still own every
-                     * candidate's paid-support and cost authority. */
+                    /* A graph-only incumbent cannot supply statewise tails.
+                     * Deliver a cheaper proper proposal before improvement
+                     * can replace its rows with unavailable continuations.
+                     * Equal/expensive estimates still need improvement; they
+                     * must not consume admission on the unchanged baseline.
+                     * This comparison orders proposals only. Full publication
+                     * closure and native checking retain cost authority. */
+                    const double proposal_estimate =
+                        result.values.at(result.start_state);
+                    const double checked_upper =
+                        incumbent_portfolio.verified_executable_upper();
+                    const bool cheaper_graph_only_proposal =
+                        output_incumbent.has_value() &&
+                        !output_incumbent->has_statewise_upper_values() &&
+                        std::isfinite(checked_upper) &&
+                        std::isfinite(proposal_estimate) &&
+                        proposal_estimate >= 0.0 &&
+                        proposal_estimate < checked_upper;
                     if (output_incumbent.has_value() &&
-                        output_incumbent->has_statewise_upper_values()) {
+                        !cheaper_graph_only_proposal) {
                         bool improved = false;
                         while (!advance_policy_selection(improved)) {
                             if (check_solver_byte_cap_fast()) {
