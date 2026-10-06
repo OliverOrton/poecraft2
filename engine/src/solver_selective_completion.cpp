@@ -681,8 +681,19 @@ void SelectiveCompletionProducer::build() {
         graph.nodes[occupied_test].on_true = primary_branch;
     } else {
         graph.nodes[occupied_test].on_true = primary_branch;
-        graph.nodes[repair_test].on_true =
-            branch(secondary_, secondary_binding);
+        const auto repair_branch = branch(secondary_, secondary_binding);
+        // With no requested target goal, Annul cannot make progress: the
+        // controller must then pay for Chaos on the same held-side frame.
+        // Propose that native reroll directly. Full graph checking and every
+        // positive programme-entry validation still own acceptance and cost.
+        auto target_miss = primary_branch;
+        for (auto slot : side_slots_[target_side_]) {
+            const auto test = append(FinderControlKind::TestSlot, slot);
+            graph.nodes[test].on_true = repair_branch;
+            graph.nodes[test].on_false = target_miss;
+            target_miss = test;
+        }
+        graph.nodes[repair_test].on_true = target_miss;
     }
     candidate_ = SelectiveCompletionCandidate{
         std::move(graph), acquisition_action_, acquisition_price_, variant_};

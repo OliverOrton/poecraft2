@@ -19117,6 +19117,10 @@ void run_solver_root_prefix_dependency_probe_tests() {
 }
 
 void run_solver_current_support_handoff_tests() {
+    // Existing component coverage performs full native checking and reached-
+    // entry validation of one/two-target tails; it is separate from the normal
+    // construction and early-Finish cases below.
+    run_selective_completion_target_count_tests();
     run_dirty_terminal_debt_counterexample_tests();
     // Exercise closed-discovery/quotient publication and early Finish through
     // normal Current producers. This small complete domain need not encounter
