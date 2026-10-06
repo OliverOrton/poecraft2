@@ -321,7 +321,7 @@ assert.equal(compactList.querySelectorAll(".pc-mod-slot.is-empty").length, 0);
 assert.equal(compactList.querySelectorAll(".pc-mod-slot.is-filled").length, mutableFixture.prefixes.length);
 assert.match(compactList.textContent!, /Long example item name/);
 assert.match(compactList.textContent!, /iLvl 86/);
-assert.match(compactList.textContent!, /Actual influence: Shaper/);
+assert.ok(compactList.querySelector('[data-influence-context="actual"][aria-label="Actual influence: Shaper"]'));
 assert.match(compactList.textContent!, /10 to maximum Life/);
 assert.ok(compactList.querySelector(".pc-item-properties summary"));
 assert.ok(compactList.querySelector('[data-add-mod-side="suffix"]'));
