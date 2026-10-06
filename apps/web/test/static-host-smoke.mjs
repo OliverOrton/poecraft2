@@ -51,11 +51,11 @@ try {
             await page.waitForFunction(() => document.querySelector('pc-economy-selector')?.textContent.includes('Bundled snapshot'));
             if (smokeScope === 'recombination-calculator') {
                 try {
-                    const ui = await checkRecombinationCalculator(page, captureUiCheckpoint);
+                    const ui = await checkRecombinationCalculator(page, (page, name) => captureUiCheckpoint(page, name, {preserveViewport: true}));
                     assert.deepEqual(failures, []);
                     console.log(JSON.stringify({browser: browserType.name(), version: browser.version(),
                         channel: channel || 'pinned', base: build.base, build_id: build.build_id, scope: smokeScope, ui}));
-                } catch (error) {await captureUiCheckpoint(page, 'recombination-failure'); throw error;}
+                } catch (error) {await captureUiCheckpoint(page, 'recombination-failure', {preserveViewport: true}); throw error;}
                 continue;
             }
             // A narrow palette-only continuation reuses this server/profile and

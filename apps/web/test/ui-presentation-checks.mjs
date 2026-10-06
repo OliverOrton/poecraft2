@@ -133,17 +133,17 @@ export async function checkWorkbenchPresentation(page) {
 }
 
 /** Optional evidence capture during the existing smoke run, in its fresh profile. */
-export async function captureUiCheckpoint(page, name) {
+export async function captureUiCheckpoint(page, name, {preserveViewport = false} = {}) {
     const directory = process.env.POECRAFT_UI_CAPTURE_DIR;
     if (!directory) return;
     const selected = process.env.POECRAFT_UI_CAPTURE_ONLY?.split(',').map(value => value.trim());
     if (selected && !selected.includes(name)) return;
     await mkdir(directory, {recursive: true});
     const viewport = page.viewportSize();
-    await page.setViewportSize({width: 1536, height: 864});
+    if (!preserveViewport) await page.setViewportSize({width: 1536, height: 864});
     await page.evaluate(() => document.fonts.ready);
     await page.screenshot({path: resolve(directory, `${page.context().browser().browserType().name()}-${name}.png`)});
-    await page.setViewportSize(viewport);
+    if (!preserveViewport) await page.setViewportSize(viewport);
 }
 
 /** Exercise the shipped shared card in a real browser with a native-owned clone.

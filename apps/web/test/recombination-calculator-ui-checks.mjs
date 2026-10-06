@@ -134,13 +134,18 @@ export async function checkRecombinationCalculator(page, capture) {
 
     // Narrow stacking, usable cards/picker, and recovery retain separate inputs.
     await page.setViewportSize({width: 390, height: 844});
+    // Dockview uses ResizeObserver to update its panel's explicit dimensions.
+    await page.waitForFunction(() => document.querySelector('pc-recombination-calculator').clientWidth <= 390);
     const narrow = await host.evaluate(node => {
         const boxes = ['.pc-recomb-a', '.pc-recomb-b', '.pc-recomb-goal', '.pc-recomb-picker'].map(selector => {
             const box = node.querySelector(selector).getBoundingClientRect(); return {x: box.x, right: box.right, top: box.top};
         });
-        return {width: node.clientWidth, scroll: node.scrollWidth, boxes};
+        const overflow = [...node.querySelectorAll('*')].map(child => ({
+            tag: child.tagName, class: child.className, right: child.getBoundingClientRect().right,
+        })).filter(child => child.right > node.getBoundingClientRect().right + 1);
+        return {width: node.clientWidth, scroll: node.scrollWidth, boxes, overflow};
     });
-    assert.ok(narrow.scroll <= narrow.width + 1, 'Calculator has no horizontal mobile overflow');
+    assert.ok(narrow.scroll <= narrow.width + 1, `Calculator has no horizontal mobile overflow: ${JSON.stringify(narrow)}`);
     assert.ok(narrow.boxes.every(box => box.x >= 0 && box.right <= 391));
     assert.ok(narrow.boxes.every((box, index) => index === 0 || box.top > narrow.boxes[index - 1].top));
     await host.locator('.pc-recomb-goal').scrollIntoViewIfNeeded(); await capture(page, 'recombination-narrow-goal');
