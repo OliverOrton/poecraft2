@@ -123,6 +123,8 @@ export async function checkRecombinationCalculator(page, capture) {
     assert.equal(styles.background, 'rgb(230, 160, 120)'); assert.equal(styles.text, 'rgb(24, 24, 24)');
     assert.ok(styles.modWeights.length > 0 && styles.modWeights.every(weight => weight === '400'));
     await host.locator('[data-recomb-calculate]').focus();
+    await page.keyboard.press('Shift+Tab'); await page.keyboard.press('Tab');
+    assert.equal(await host.locator('[data-recomb-calculate]').evaluate(node => node === document.activeElement), true);
     assert.notEqual(await host.locator('[data-recomb-calculate]').evaluate(node => getComputedStyle(node).outlineStyle), 'none');
 
     // Narrow stacking, usable cards/picker, and recovery retain separate inputs.
