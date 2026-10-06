@@ -682,18 +682,22 @@ void SelectiveCompletionProducer::build() {
     } else {
         graph.nodes[occupied_test].on_true = primary_branch;
         const auto repair_branch = branch(secondary_, secondary_binding);
-        // With no requested target goal, Annul cannot make progress: the
-        // controller must then pay for Chaos on the same held-side frame.
-        // Propose that native reroll directly. Full graph checking and every
-        // positive programme-entry validation still own acceptance and cost.
-        auto target_miss = primary_branch;
-        for (auto slot : side_slots_[target_side_]) {
-            const auto test = append(FinderControlKind::TestSlot, slot);
-            graph.nodes[test].on_true = repair_branch;
-            graph.nodes[test].on_false = target_miss;
-            target_miss = test;
+        graph.nodes[repair_test].on_true = repair_branch;
+        // When every requested goal is required, Annul with zero target
+        // progress cannot reach the goal; Chaos follows on the held frame.
+        // Subset goals can instead need cleanup, so retain their repair.
+        // Full graph checking and every positive programme-entry validation
+        // still own acceptance and cost of the proposed direct reroll.
+        if (problem_.goal().required_satisfied_slots() == problem_.goal().slots.size()) {
+            auto target_miss = primary_branch;
+            for (auto slot : side_slots_[target_side_]) {
+                const auto test = append(FinderControlKind::TestSlot, slot);
+                graph.nodes[test].on_true = repair_branch;
+                graph.nodes[test].on_false = target_miss;
+                target_miss = test;
+            }
+            graph.nodes[repair_test].on_true = target_miss;
         }
-        graph.nodes[repair_test].on_true = target_miss;
     }
     candidate_ = SelectiveCompletionCandidate{
         std::move(graph), acquisition_action_, acquisition_price_, variant_};
