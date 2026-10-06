@@ -1,4 +1,4 @@
-# Selected handoff - October 5, 2026
+# Selected handoff - October 6, 2026
 
 ## Released product
 
@@ -20,6 +20,21 @@ Oliver approved its UI-only integration over `7eb16ac3`. LOCAL is released; eigh
 Library screenshots are saved across distinct 1536x864 and 1920x1080 captures,
 with a local metadata limitation in the receipts. Solver economics and
 mathematical authorities are unchanged by this presentation delta.
+
+## Qualified Current comparison gate
+
+The [Current representative comparison](docs/active/2026-10-06-current-regression/README.md)
+requires a declared complete cohort before matched checked-policy economics can
+pass. Missing, failed, canceled, refused, partial and duplicate evidence cannot
+disappear from release accounting. The four-file source checkpoint `bedb1191`
+passes 50 synthetic reporter checks after restoring exactly 15 unchanged tracked
+fixtures into its sparse checkout. The initial 47-pass/3-failure missing-input
+run and the successful retry remain separately pinned in the living record's
+[validation receipt](docs/active/2026-10-06-current-regression/checks/synthetic-20261006.json).
+Process identity and elevated CIM cleanup passed; LOCAL was released. Actual
+Current benchmark economics, policy gains and activation remain unmeasured.
+Hosted qualification and guarded main integration use the exact published head;
+experimental solver and scoped-lower work remain separate.
 
 ## Selected work: isolated solver causal and economic continuation
 

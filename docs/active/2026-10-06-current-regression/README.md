@@ -70,10 +70,30 @@ browser responsiveness or whole-release qualification. Native resource stops
 are completed bounded measurements where appropriate; watchdog censoring is
 not native exact closure. Existing exact-closure profiles remain separate.
 
-Validation requested: one finite synthetic batch for
-tools/ingest/tests/test_solver_reports.py, with a 120-second total deadline,
-through the parent/CI owner after LOCAL admission. It exercises symmetric and
-one-sided missing cases, missing files, failure/cancel/refusal, partial censoring,
-duplicates, identity/correctness mismatch, native expectation misses,
-unexpected IDs, valid complete control and CLI economics. No native build,
-solver, Simulator, full CI or dependency installation belongs to that batch.
+## Synthetic qualification
+
+Frozen source `bedb1191166ce02fdd90e11064b811b58b0dd5b4`, based directly on
+main `7252027c`, passes **50 tests in 2.00 seconds** in the parent-controlled
+retry of `tools/ingest/tests/test_solver_reports.py -q`. The unchanged qualified
+process owner, absolute selected Python and project PYTHONPATH enforced the
+120-second total test allowance with cleanup. Source and fixture pins remained
+unchanged; exact process identity and elevated CIM found no survivors. LOCAL
+was released at `2026-10-06T03:37:49.4976483Z`.
+
+The original invocation remains a negative: **47 passed, 3 failed** because the
+sparse checkout excluded archived research-series inputs. The repair restored
+exactly 14 named small tracked references and the specifically authorized
+21,470,786-byte preparation JSON from this source's Git objects. The trace was
+copied and hashed on disk, with no contents dumped into the conversation. No
+test, expected value, frozen price or runtime input was changed. The original
+failure and all 15 restored identities were checked again after the retry.
+The [compact receipt](checks/synthetic-20261006.json) pins both invocations and
+the fixture repair; full logs remain with the CI evidence owner on KIDS.
+
+This checks symmetric and one-sided missing cases, missing files,
+failure/cancel/refusal, partial censoring, duplicates, identity/correctness
+mismatch, native expectation misses, unexpected IDs, the valid complete control
+and CLI economics. It establishes synthetic reporter behavior. Actual native
+Current comparisons, solver economics, exact closure, public activation and
+whole-release quality remain unqualified by this batch. Integration requires
+passing hosted Windows and Solver knowledge checks on the exact published head.

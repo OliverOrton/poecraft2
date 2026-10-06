@@ -1,0 +1,208 @@
+{
+  "schema_version": "current_regression_synthetic_qualification_v1",
+  "source_head": "bedb1191166ce02fdd90e11064b811b58b0dd5b4",
+  "tree": "6ebbc569f023fba83f1c456a1ae5221346b4ea80",
+  "base_main": "7252027c80856628ed16734583bfc9d6e166458b",
+  "test_command": "python -m pytest tools/ingest/tests/test_solver_reports.py -q",
+  "selected_python": "C:\\Users\\Oliver\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+  "pythonpath": "tools/ingest;bindings/python",
+  "pytest_version": "9.0.2",
+  "total_test_allowance_seconds": 120,
+  "qualified_worker_sha256": "1f7978fa0cf43c331487ea57212286cbf92ff96141d379a901c4bd421d4aae92",
+  "first_invocation": {
+    "passed": 47,
+    "failed": 3,
+    "pytest_seconds": 1.1,
+    "failure": "ValueError: model saved-anchored-v1 missing input docs/archive/2026-09-04-free-value-bellman-research/native-goal.json",
+    "failed_test": "test_research_series_uses_original_predecessor_and_available_states[authored/reversed/prepended]",
+    "handoff_sha256": "306d728dc793fd1db3f5816f84ebc200bd56ac301599e08f6b93557f62a6147c",
+    "artifacts": {
+      "preflight.json": {
+        "sha256": "afc83b215c02e8215ef152085e11ef55ae8e3df3c5afc00eef05837970f9a23f",
+        "bytes": 4337
+      },
+      "started.json": {
+        "sha256": "a8436bc14e17becbadbdd3d163abba8b67f8ac01bb50e6c00dcf62392bd414e9",
+        "bytes": 162
+      },
+      "receipt.json": {
+        "sha256": "068a4d0bb73c0270aa52c8639963a318f268f9a54f029d925781a315e5c14d47",
+        "bytes": 1619
+      },
+      "qualification.json": {
+        "sha256": "9afd69990731367e81ecb7d6fd6188c6cdfca79c28f0d0f4c00392ee3abadf5c",
+        "bytes": 1927
+      },
+      "pytest.log": {
+        "sha256": "0d2e1088008bc0045a6bb20de9a770fcfac57cabb6e30ad6318b110529bb6a31",
+        "bytes": 9491
+      },
+      "final-cim.json": {
+        "sha256": "006459a43fbcfc592f1a26f03eab67343f6db20e7ee9ad3238b63f0fcb2ae980",
+        "bytes": 514
+      }
+    },
+    "cleanup_passed": true
+  },
+  "fixture_repair": {
+    "count": 15,
+    "small_count": 14,
+    "small_bytes": 262448,
+    "trace_bytes": 21470786,
+    "repair_sha256": "a0af44f662015566dd9115179ef0f8103699159521c2e0d7b342ec995abff4b7",
+    "exact_frozen_blobs": true,
+    "source_tests_expected_behavior_unchanged": true,
+    "trace_contents_dumped": false,
+    "fixtures": [
+      {
+        "path": "docs/archive/2026-09-04-free-value-bellman-research/native-economy.json",
+        "git_blob": "88573faf7f21cd752231155eaaebda9edf401430",
+        "bytes": 131287,
+        "sha256": "ca0bb782c7933fb2c72ddde3991c0aebf8c1d3e9c8dc5853796b54fffddf1992"
+      },
+      {
+        "path": "docs/archive/2026-09-04-free-value-bellman-research/native-goal.json",
+        "git_blob": "9dd39bdf1a3a75cde70bebd4bf772fbcb6d9a965",
+        "bytes": 2632,
+        "sha256": "ab2c5420a403b71852bd84da629814f331e01babaea0401b17620296fb5da1aa"
+      },
+      {
+        "path": "docs/archive/2026-09-04-free-value-bellman-research/native-identities.json",
+        "git_blob": "3a4331b5ca1ea14dd5ff078e1d3bec01516a4a75",
+        "bytes": 274,
+        "sha256": "e05053c72928d017a51701586513f60baf7f9c1e0db1d78ed8b33e0f73968375"
+      },
+      {
+        "path": "docs/archive/2026-09-04-uniform-phase-lower-certificates-v1/README.md",
+        "git_blob": "4c1092addc65a36f8a102872576aa355c50b50ae",
+        "bytes": 14420,
+        "sha256": "da196ff2c6dfc5ce249da7e3de98a7767648b65e83eaaf636e4f32277e74f05b"
+      },
+      {
+        "path": "docs/archive/2026-09-04-uniform-phase-lower-certificates-v1/reference.json",
+        "git_blob": "d148800a1f5fb0b0c6b247918ad36b3098c58983",
+        "bytes": 1213,
+        "sha256": "f7b7418e59582db95fbc784ed515fa4dcd36ceae645c4aea9af707928138bb59"
+      },
+      {
+        "path": "docs/archive/2026-09-05-native-metamod-first-exit-v1/comparison.json",
+        "git_blob": "4a726ec083c9e8dc90a1c075540e132d8aa09955",
+        "bytes": 14428,
+        "sha256": "faa12bdcfa3891d0c0e31f3c26a5b96a78efceae0a145c86118055d74f7287bf"
+      },
+      {
+        "path": "docs/archive/2026-09-05-native-metamod-first-exit-v1/ordinary-control.json",
+        "git_blob": "406ca0ce383f999cc412e292d8061ad1816f8b05",
+        "bytes": 1343,
+        "sha256": "d7a41674b4aebb013b799e083d2920884a258054c3daa2a6d015549f3023315e"
+      },
+      {
+        "path": "docs/archive/2026-09-05-native-metamod-first-exit-v1/ordinary-treatment.json",
+        "git_blob": "5786e96a11de896abb61a34606e25ec9b2a83cb2",
+        "bytes": 4309,
+        "sha256": "8fa39764f37a9509d0bd01123b4391900481671fd99617079e1b1c143f2c328c"
+      },
+      {
+        "path": "docs/archive/2026-09-05-native-metamod-first-exit-v1/provenance.json",
+        "git_blob": "32663ffa61e3c98efc77a6f2613902886ee8c7d5",
+        "bytes": 5809,
+        "sha256": "ae17b549b827463c0474818a4141cdf082974bf2b8efe684ae19ed88c4242836"
+      },
+      {
+        "path": "docs/archive/2026-09-05-native-metamod-first-exit-v1/README.md",
+        "git_blob": "84ce9a725778c0d02420a3329af72302eda53c47",
+        "bytes": 11424,
+        "sha256": "d894d8d5e069eeaa2e2694cfe4d6aa9e21de8cea0678e2ca7ee3340be5548313"
+      },
+      {
+        "path": "docs/archive/2026-09-05-native-metamod-first-exit-v1/reference.json",
+        "git_blob": "1bba01ae88e36a5f9eaf36dce0fc7d9a18c32c0c",
+        "bytes": 60186,
+        "sha256": "1c7e5a5c3f55884ae8e21bd6a268ee7c61090e519e3e170e38b6db81616327a0"
+      },
+      {
+        "path": "docs/archive/2026-09-07-checked-numerical-reuse-v1/ordinary-cold.json",
+        "git_blob": "9452251a82431d8131dd86f71457677b4314e645",
+        "bytes": 4643,
+        "sha256": "a41abd8795ccacd532ede768df4927d2f706726b33c23524b6237d44b4e232b5"
+      },
+      {
+        "path": "docs/archive/2026-09-07-checked-numerical-reuse-v1/ordinary-warm.json",
+        "git_blob": "8e699bfd606c614cd4fcaed06876f2aa297389dc",
+        "bytes": 4660,
+        "sha256": "e4f9f54f1f401f02df57171153e95b73d7c90c5318aee4fc90761a7c2e24a3f5"
+      },
+      {
+        "path": "docs/archive/2026-09-07-checked-numerical-reuse-v1/provenance.json",
+        "git_blob": "dfd5a9953853699ae1ce7fb489ffd065e9e904db",
+        "bytes": 5820,
+        "sha256": "fd19688502b470a9d7d932346ff123158edf12a0d96b9639d9499a68627bff4c"
+      },
+      {
+        "path": "docs/archive/2026-09-05-native-metamod-first-exit-v1/native.json",
+        "git_blob": "b7c3295462ef81e4f0f91664ac20309361a9de45",
+        "bytes": 21470786,
+        "sha256": "1ab31426155eafc8c062723057ffc46f963bad5eee0878e05ae7dd9270e76fc4"
+      }
+    ]
+  },
+  "retry": {
+    "passed": 50,
+    "failed": 0,
+    "pytest_seconds": 2.0,
+    "owned_process_seconds": 2.8494742999318987,
+    "handoff_sha256": "13c569c0b91afaa1f06ef9573f3ad11329b1f61149f61b4c5ded0128eae11e67",
+    "gates": {
+      "pytest_passed": true,
+      "within_total_test_budget": true,
+      "no_watchdog_cancel_or_cleanup_flags": true,
+      "original_identity_absent": true,
+      "head_tree_branch_unchanged": true,
+      "tracked_worktree_clean": true,
+      "all_four_files_unchanged": true,
+      "handoff_unchanged": true,
+      "qualified_owner_dependency_unchanged": true
+    },
+    "all_passed": true,
+    "all15_fixture_pins_preserved": true,
+    "original_failed_run_preserved": true,
+    "cleanup_passed": true,
+    "local_released_utc": "2026-10-06T03:37:49.4976483Z",
+    "artifacts": {
+      "preflight.json": {
+        "sha256": "afc83b215c02e8215ef152085e11ef55ae8e3df3c5afc00eef05837970f9a23f",
+        "bytes": 4337
+      },
+      "started.json": {
+        "sha256": "772c4ce93b1bc1b156d37b395526f4a48bfa3764e68ade27b3044152774b9049",
+        "bytes": 162
+      },
+      "receipt.json": {
+        "sha256": "fcc516cf3798d84d24a5f4c17cc5a01eb5e3f4203573fa1f2d080195422a1eb7",
+        "bytes": 1626
+      },
+      "qualification.json": {
+        "sha256": "9a7f133e6f1d7b050274eff984bccb0d2f366773b8d4fc0a22ddb264463fb400",
+        "bytes": 1273
+      },
+      "fixture-integrity.json": {
+        "sha256": "12f82a7aa9a7053826e29416d2b3d31975a66b63eb84f5b7b1efda79bc2b142f",
+        "bytes": 1127
+      },
+      "pytest.log": {
+        "sha256": "7116ac3497293d7c754206af7f1462da08f237d9db36d1c147a902d331e0b981",
+        "bytes": 101
+      },
+      "final-cim.json": {
+        "sha256": "4cf886140ba78036cd20181a51ae4c9237ae57c3ac7e9b2c25ba94dab2821059",
+        "bytes": 514
+      }
+    }
+  },
+  "evidence_owner": "KIDS: Codex/2026-10-04/task/ci-evidence/current-regression-synthetic* and current-regression-fixture-repair-20261006.json",
+  "evidence_scope": "Synthetic reporter correctness only; actual native Current economics, product gains, exact closure and activation remain unmeasured",
+  "native_runs": 0,
+  "builds": 0,
+  "browser_runs": 0,
+  "price_or_runtime_refresh": false
+}
