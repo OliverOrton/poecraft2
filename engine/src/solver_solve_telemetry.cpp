@@ -2874,6 +2874,9 @@ SolveTelemetrySnapshot SolveWork::Impl::telemetry_snapshot(bool abandoned) const
         snapshot.diagnostics.graph_only_support_handoffs = graph_only_support_handoffs;
         snapshot.diagnostics.graph_only_support_selected = graph_only_support_selected;
         snapshot.diagnostics.graph_only_support = graph_only_support;
+        snapshot.diagnostics.passive_continuation = passive_continuation;
+        if (phase == SolvePhase::Done)
+            observe_passive_native_matches(snapshot.diagnostics.passive_continuation);
         snapshot.diagnostics.incremental_missing_frontier_discovered =
             incremental_missing_frontier_discovered;
         snapshot.diagnostics.incremental_missing_frontier_priority_offers =
@@ -3025,7 +3028,7 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
             sizeof(*this) -
             kUpperPolicyProvenanceAccountingOffset -
             kIncumbentPortfolioAliasAccountingOffset +
-            calc_bytes;
+            calc_bytes + kPassiveContinuationScratchReserveBytes;
         if (selective_service_calc)
             bytes += selective_service_calc->fast_estimated_owned_bytes();
         if (selective_service_producer)
@@ -3322,7 +3325,7 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
             sizeof(*this) -
             kUpperPolicyProvenanceAccountingOffset -
             kIncumbentPortfolioAliasAccountingOffset +
-            calc_bytes;
+            calc_bytes + kPassiveContinuationScratchReserveBytes;
         bytes += setup_storage.live + setup_storage.reserved;
         if (retention_setup_task) bytes += retention_setup_task->frame_bytes() + sizeof(CooperativeTask<bool>::promise_type::AllocationHeader);
         if (goal_cover_task) bytes += goal_cover_task->frame_bytes() + sizeof(CooperativeTask<bool>::promise_type::AllocationHeader);

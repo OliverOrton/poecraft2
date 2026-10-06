@@ -71,10 +71,11 @@ bool same_resource_quantities(
 
 } // namespace
 
-std::vector<std::uint64_t> exact_abstract_state_key(
-        const AbstractState& state,
-        const std::uint32_t coarse_parent) {
-    std::vector<std::uint64_t> key{
+namespace {
+template<class Emit>
+void emit_exact_abstract_state_key(const AbstractState& state,
+        const std::uint32_t coarse_parent, Emit emit) {
+    const std::uint64_t initial[]{
         0x7063727374617433ull, /* "pcrstat3": corrected Scour law */
         coarse_parent,
         state.fractured_goal_mask,
@@ -93,35 +94,57 @@ std::vector<std::uint64_t> exact_abstract_state_key(
         state.fractured_metamod_flags,
         state.goal_progress_retry_basin,
     };
+    for (const auto word : initial) emit(word);
     for (const std::uint8_t status : state.slot_status) {
-        key.push_back(status);
+        emit(status);
     }
     for (const std::uint32_t token :
          state.goal_member_class_tokens) {
-        key.push_back(token);
+        emit(token);
     }
     const auto append_counts =
         [&](const CompactCountVector& counts) {
-            key.push_back(counts.size());
+            emit(counts.size());
             std::uint64_t nonzero = 0;
             for (std::size_t index = 0;
                  index < counts.size(); ++index) {
                 if (counts[index] != 0) ++nonzero;
             }
-            key.push_back(nonzero);
+            emit(nonzero);
             for (std::size_t index = 0;
                  index < counts.size(); ++index) {
                 const std::uint8_t value = counts[index];
                 if (value == 0) continue;
-                key.push_back(index);
-                key.push_back(value);
+                emit(index);
+                emit(value);
             }
         };
     append_counts(state.junk_counts);
     append_counts(state.fractured_junk_counts);
     append_counts(state.crafted_junk_counts);
     append_counts(state.fractured_crafted_junk_counts);
+}
+} // namespace
+
+std::vector<std::uint64_t> exact_abstract_state_key(
+        const AbstractState& state, const std::uint32_t coarse_parent) {
+    std::vector<std::uint64_t> key;
+    key.reserve(17); // Preserve the original initializer's allocation growth.
+    emit_exact_abstract_state_key(state, coarse_parent,
+        [&](const std::uint64_t word) { key.push_back(word); });
     return key;
+}
+
+std::size_t exact_abstract_state_key_into(const AbstractState& state,
+        const std::uint32_t coarse_parent, std::uint64_t* output,
+        const std::size_t capacity) {
+    std::size_t count = 0;
+    emit_exact_abstract_state_key(state, coarse_parent,
+        [&](const std::uint64_t word) {
+            if (count < capacity) output[count] = word;
+            ++count;
+        });
+    return count;
 }
 
 CountObservation temporary_bench_conflict_observation(

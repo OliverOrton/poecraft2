@@ -5408,6 +5408,7 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                         std::move(row_service_witness));
                 };
 
+            std::uint32_t passive_closure_stage = 0, passive_selection_round = 0;
             const auto rebuild_reachable =
                 [&](std::uint64_t& choice_identity) {
                     // Discover missing siblings of the SAME selected candidate
@@ -5417,6 +5418,7 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                     // existing refinement batch; finalization still stops at
                     // the first unavailable continuation.
                     std::uint32_t missing_count = 0;
+                    passive_incoming_count = 0;
                     const std::uint32_t missing_limit = require_resource_stop
                         ? 1 : std::max<std::uint32_t>(1,
                             anytime_scheduler.profile().q_refinement_batch);
@@ -5476,6 +5478,11 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                                                 .size());
                                 }
                                 if (missing_count++ == 0) {
+                                    observe_passive_missing(state, passive_closure_stage,
+                                        passive_selection_round,
+                                        state < certified_frontier_operators.size()
+                                            ? certified_frontier_operators[state] : kNoId,
+                                        certified_renewal.valid);
                                     attempt_failure =
                                         "missing_completed_row_and_certified_"
                                         "frontier:state=" +
@@ -5540,9 +5547,20 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                             transition_cache->rows.at(row_index);
                         mix(state);
                         mix(row_index);
-                        const auto route = [&](const std::uint32_t successor) {
+                        const auto route = [&](const std::uint32_t successor,
+                                const double probability, const std::uint64_t choice_group) {
                             if (successor >= state_count) return false;
                             if (!reachable[successor]) {
+                                PassiveIncomingObligation observation;
+                                observation.successor = successor; observation.source = state;
+                                observation.row = row_index; observation.probability = probability;
+                                observation.choice_group = choice_group;
+                                observation.observed_choice = choice_group != no_row;
+                                if (row_index < priced_rows.size()) {
+                                    observation.operator_index = priced_rows[row_index].operator_index;
+                                    observation.paid_cost = priced_rows[row_index].cost;
+                                }
+                                observe_passive_incoming(observation);
                                 walk.push_back(successor);
                             }
                             return true;
@@ -5555,8 +5573,8 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                                 0.0) {
                                 continue;
                             }
-                            if (!route(
-                                    transition_cache->successors.at(offset))) {
+                            if (!route(transition_cache->successors.at(offset),
+                                    transition_cache->probabilities.at(offset), no_row)) {
                                 return false;
                             }
                         }
@@ -5576,7 +5594,7 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                                 return false;
                             }
                             mix(selected);
-                            if (!route(selected)) return false;
+                            if (!route(selected, choice.probability, row.choice_offset + i)) return false;
                         }
                     }
                     result.expanded = materialized;
@@ -5594,6 +5612,8 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
             std::uint64_t prior_choice_identity = 0;
             for (std::size_t round = 0; round < maximum_rounds; ++round) {
                 std::uint64_t choice_identity = 0;
+                passive_selection_round = static_cast<std::uint32_t>(round);
+                passive_closure_stage = round == 0 ? 1u : 3u;
                 if (!rebuild_reachable(choice_identity)) break;
                 prior_reachable = reachable;
                 prior_choice_identity = choice_identity;
@@ -5616,6 +5636,7 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                             .fixed_policy_proper = true;
                     }
                     std::uint64_t evaluated_choice_identity = 0;
+                    passive_closure_stage = 2;
                     if (!rebuild_reachable(evaluated_choice_identity)) break;
                     if (reachable != prior_reachable ||
                         evaluated_choice_identity != prior_choice_identity) {

@@ -1909,6 +1909,281 @@ bool SolveWork::Impl::advance_incremental_post_upper_scheduling() {
     return true;
 }
 
+namespace {
+void passive_key(PassiveSemanticKey& out, const std::vector<std::uint64_t>& key) noexcept {
+    out.required = key.size();
+    out.complete = key.size() <= out.words.size();
+    if (out.complete) std::copy(key.begin(), key.end(), out.words.begin());
+}
+void passive_coarse_key(PassiveSemanticKey& out, const AbstractState& state) {
+    out.required = exact_abstract_state_key_into(state, 0, out.words.data(), out.words.size());
+    out.complete = out.required <= out.words.size();
+}
+template<std::size_t N>
+bool passive_text(std::array<char, N>& out, const std::string_view text) noexcept {
+    out.fill(0);
+    std::copy_n(text.data(), std::min(text.size(), N - 1), out.data());
+    return text.size() < N;
+}
+std::uint32_t passive_mask(const AbstractState& state, const std::size_t slots) noexcept {
+    std::uint32_t mask = 0;
+    for (std::size_t slot = 0; slot < slots && slot < state.slot_status.size(); ++slot)
+        if (state.slot_status[slot] == static_cast<std::uint8_t>(GoalSlotStatus::Satisfied))
+            mask |= 1u << slot;
+    return mask;
+}
+std::uint32_t passive_control_node(const std::string_view id) noexcept {
+    if (id.size() < 2 || id[0] != 'c') return kNoId;
+    std::uint32_t value = 0;
+    for (const char c : id.substr(1)) {
+        if (c < '0' || c > '9' || value > (kNoId - 9) / 10) return kNoId;
+        value = value * 10 + static_cast<unsigned>(c - '0');
+    }
+    return value;
+}
+void passive_witness(PassiveNativeEntryWitness& out, const StrategyPolicyEntryResult& entry,
+        const AbstractState& projected, const PassiveMissingContinuation& scope,
+        const double root_cost, const std::uint64_t candidate, const std::uint32_t proposal,
+        const std::size_t slots) {
+    out = {};
+    out.observed = true;
+    out.proposal = proposal;
+    out.candidate_identity = candidate;
+    out.goal = scope.goal; out.economy = scope.economy;
+    out.action_vocabulary = scope.action_vocabulary; out.caller_scope = scope.caller_scope;
+    out.artifact = scope.artifact; out.graph_prefix = scope.graph_prefix;
+    out.checked_root_cost = root_cost;
+    out.entry_cost = entry.exact_continuation_upper;
+    out.expected_visits = entry.root_expected_visits;
+    out.goal_mask = passive_mask(projected, slots);
+    out.entry_complete = entry.available();
+    out.graph_local = entry.graph_local;
+    out.primitive = entry.primitive_decision;
+    out.globally_routable = entry.globally_routable();
+    out.checkpoint_active = entry.checkpoint_active;
+    out.offer_active = entry.observed_offer_active;
+    out.node_complete = passive_text(out.node, entry.compiled_node_id);
+    out.global_node_complete = passive_text(out.global_node, entry.global_policy_target_node_id);
+    passive_key(out.item_key, entry.exact_item_identity);
+    passive_key(out.entry_key, entry.exact_entry_identity);
+    passive_key(out.programme_key, entry.selected_operator_identity);
+    passive_coarse_key(out.projected_coarse_key, projected);
+}
+} // namespace
+
+void SolveWork::Impl::observe_passive_incoming(const PassiveIncomingObligation& edge) noexcept {
+    // The table records existing positive routes; it never selects a row/choice.
+    if (!transition_cache || edge.successor >= calc.state_count() ||
+        (edge.successor < result.goal_states.size() && result.goal_states[edge.successor]) ||
+        (edge.successor < transition_cache->state_rows.size() &&
+         transition_cache->state_rows[edge.successor].count != 0)) return;
+    for (std::uint32_t i = 0; i < passive_incoming_count; ++i)
+        if (passive_incoming[i].successor == edge.successor) return;
+    if (passive_incoming_count == passive_incoming.size()) {
+        ++passive_continuation.incoming_omitted;
+        return;
+    }
+    passive_incoming[passive_incoming_count++] = edge;
+}
+
+void SolveWork::Impl::observe_passive_missing(const std::uint32_t state,
+        const std::uint32_t stage, const std::uint32_t round,
+        const std::uint32_t frontier, const bool renewal) noexcept {
+    auto& out = passive_continuation.latest;
+    out = {};
+    out.observed = true; out.state = state; out.stage = stage; out.selection_round = round;
+    out.attempt = incremental_anytime_policy_attempts;
+    out.goal_mask = satisfied_goal_mask_for_state(state);
+    out.native_frontier = frontier; out.renewal_available = renewal;
+    out.broad_expanded = state < expanded.size() && expanded[state];
+    out.handoffs = graph_only_support_handoffs; out.cells_used = graph_only_support_selected;
+    out.state_generation = calc.state_count();
+    if (transition_cache) {
+        out.row_generation = transition_cache->rows.size();
+        if (state < transition_cache->state_rows.size())
+            out.owner_rows = transition_cache->state_rows[state].count;
+    }
+    if (output_incumbent) {
+        const auto& current = *output_incumbent;
+        out.active_identity = current.portfolio_identity;
+        out.statewise_available = current.has_statewise_upper_values();
+        out.goal = current.goal_identity; out.economy = current.economy_identity;
+        out.action_vocabulary = current.action_vocabulary_identity;
+        out.caller_scope = current.caller_scope_identity; out.artifact = current.artifact_identity;
+        out.graph_prefix = current.graph_prefix_identity;
+    }
+    try {
+        passive_coarse_key(out.coarse_key, calc.state(state));
+        for (std::uint32_t i = 0; i < passive_incoming_count; ++i) {
+            if (passive_incoming[i].successor != state) continue;
+            out.incoming = passive_incoming[i]; out.incoming_known = true;
+            passive_coarse_key(out.incoming_coarse_key, calc.state(out.incoming.source));
+            break;
+        }
+    } catch (...) { out.coarse_key.complete = false; }
+    if (!passive_continuation.first.observed) passive_continuation.first = out;
+}
+
+void SolveWork::Impl::observe_passive_selective_candidate() noexcept {
+    if (!selective_service_candidate) return;
+    if (selective_service_orientation >= passive_continuation.proposals.size()) {
+        ++passive_continuation.proposals_omitted; return;
+    }
+    auto& out = passive_continuation.proposals[selective_service_orientation];
+    out = {}; out.observed = true;
+    out.graph_digest = 1469598103934665603ULL;
+    identity_mix_string(out.graph_digest, selective_service_graph);
+    out.graph_bytes = selective_service_graph.size();
+    out.variant = static_cast<std::uint32_t>(selective_service_candidate->variant);
+    const auto& graph = selective_service_candidate->control;
+    if (!graph.programs.empty()) out.held_mask = graph.programs.front().held_goal_mask;
+    const auto slots = calc.goal().slots.size();
+    if (slots < 32) out.target_mask = ((1u << slots) - 1) & ~out.held_mask;
+    // The authored first programme branch is primary; its optional direct node
+    // is consecutive. No operator getter or signature/interner is consulted.
+    for (std::size_t node = 0; node < graph.nodes.size(); ++node) {
+        if (graph.nodes[node].kind != FinderControlKind::RunNativeProgram) continue;
+        out.primary_nodes[0] = static_cast<std::uint32_t>(node);
+        if (node + 1 < graph.nodes.size() &&
+            graph.nodes[node + 1].kind == FinderControlKind::RunNativeProgram)
+            out.primary_nodes[1] = static_cast<std::uint32_t>(node + 1);
+        break;
+    }
+    if (selective_service_candidate->variant == SelectiveCompletionVariant::RerollVersusRepair)
+        for (std::size_t index = 0; index < graph.nodes.size(); ++index) {
+            const auto& node = graph.nodes[index];
+            if (node.kind != FinderControlKind::TestSideCountAtLeast ||
+                node.on_false >= graph.nodes.size()) continue;
+            const auto& occupied = graph.nodes[node.on_false];
+            // The actual repair guard falls through to its same-side count-one
+            // guard. A partial-held cleanup guard falls through to a slot test.
+            if (occupied.kind != FinderControlKind::TestSideCountAtLeast ||
+                (occupied.binding >> 8u) != (node.binding >> 8u) ||
+                (occupied.binding & 255u) != 1u || (node.binding & 255u) < 2u) continue;
+            out.target_side = node.binding >> 8u;
+            out.repair_threshold = node.binding & 255u;
+            out.repair_node = static_cast<std::uint32_t>(index);
+            break;
+        }
+    passive_text(out.disposition, "constructed_awaiting_native_check");
+}
+
+void SolveWork::Impl::observe_passive_selective_entries(const StrategyEvalResult& evaluated) noexcept {
+    if (selective_service_orientation >= passive_continuation.proposals.size()) return;
+    auto& out = passive_continuation.proposals[selective_service_orientation];
+    if (!out.observed) return;
+    out.checked = true; out.checked_cost = evaluated.total_expected_cost;
+    out.entries_total = evaluated.policy_entries.entries.size();
+    const auto began = std::chrono::steady_clock::now();
+    const auto deadline = began + std::chrono::milliseconds(10);
+    for (const auto& entry : evaluated.policy_entries.entries) {
+        if (out.entries_scanned == 8192 ||
+            (out.entries_scanned != 0 && (out.entries_scanned & 63u) == 0 && std::chrono::steady_clock::now() >= deadline)) break;
+        ++out.entries_scanned;
+        if (!entry.available() || !(entry.root_expected_visits > 0)) continue;
+        const auto node = passive_control_node(entry.compiled_node_id);
+        if (node != out.primary_nodes[0] && node != out.primary_nodes[1]) continue;
+        ++out.positive_primary;
+        if (out.variant != static_cast<std::uint32_t>(SelectiveCompletionVariant::RerollVersusRepair) ||
+            out.target_side > PC_SIDE_SUFFIX || out.repair_threshold == 0 ||
+            calc.goal().required_satisfied_slots() != calc.goal().slots.size()) continue;
+        try {
+            const auto projected = project_item(calc.session(), calc.layout(), entry.item);
+            const auto mask = passive_mask(projected, calc.goal().slots.size());
+            const auto count = out.target_side == PC_SIDE_PREFIX ? entry.item.prefix_count : entry.item.suffix_count;
+            const auto held_count = out.target_side == PC_SIDE_PREFIX ? entry.item.suffix_count : entry.item.prefix_count;
+            std::uint32_t held_goals = 0;
+            for (auto bits = out.held_mask; bits != 0; bits >>= 1u) held_goals += bits & 1u;
+            if ((mask & out.held_mask) != out.held_mask || (mask & out.target_mask) != 0 ||
+                count < out.repair_threshold ||
+                (calc.goal().terminal.extras == ExtraExplicitPolicy::ForbidUnmatched && held_count != held_goals)) continue;
+            ++out.zero_target_repair_occupancy;
+            for (auto& witness : passive_continuation.branch_witnesses) {
+                if (witness.observed) continue;
+                PassiveMissingContinuation scope;
+                if (output_incumbent) {
+                    scope.goal = output_incumbent->goal_identity; scope.economy = output_incumbent->economy_identity;
+                    scope.action_vocabulary = output_incumbent->action_vocabulary_identity;
+                    scope.caller_scope = output_incumbent->caller_scope_identity;
+                    scope.artifact = output_incumbent->artifact_identity;
+                    scope.graph_prefix = output_incumbent->graph_prefix_identity;
+                }
+                passive_witness(witness, entry, projected, scope, out.checked_cost, 0,
+                    selective_service_orientation, calc.goal().slots.size());
+                break;
+            }
+        } catch (...) { ++out.projection_refused; }
+    }
+    out.census_complete = out.entries_scanned == out.entries_total && out.projection_refused == 0;
+    passive_continuation.selective_scan_ns += static_cast<std::uint64_t>(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - began).count());
+}
+
+void SolveWork::Impl::observe_passive_native_matches(PassiveContinuationObservation& out) const noexcept {
+    if (!out.latest.observed || out.latest.state >= calc.state_count()) return;
+    out.first.native_class_matches = out.latest.native_class_matches = 0;
+    out.missing_witnesses = {};
+    out.missing_candidates = out.missing_entries_total = out.missing_entries_scanned = 0;
+    out.missing_projection_refused = 0;
+    out.missing_unverified_candidates = out.missing_scope_mismatches = out.missing_no_entry_candidates = 0;
+    out.missing_scan_performed = true; out.missing_scan_complete = true;
+    const auto began = std::chrono::steady_clock::now();
+    const auto deadline = began + std::chrono::milliseconds(10);
+    std::array<std::uint64_t, 6> seen{};
+    std::uint32_t seen_count = 0;
+    const auto examine = [&](const BoundedPolicyIncumbent& candidate) {
+        for (std::uint32_t i = 0; i < seen_count; ++i) if (seen[i] == candidate.portfolio_identity) return;
+        if (seen_count == seen.size()) { out.missing_scan_complete = false; return; }
+        seen[seen_count++] = candidate.portfolio_identity;
+        ++out.missing_candidates;
+        if (!candidate.independently_certified || !candidate.independently_evaluated ||
+            !candidate.proper || !candidate.executable) { ++out.missing_unverified_candidates; return; }
+        // These are observations, with original candidate scope retained.
+        // Scope or graph-prefix differences never gain reuse authority.
+        const bool same_scope = candidate.goal_identity == out.latest.goal &&
+            candidate.economy_identity == out.latest.economy &&
+            candidate.action_vocabulary_identity == out.latest.action_vocabulary &&
+            candidate.caller_scope_identity == out.latest.caller_scope && candidate.artifact_identity == out.latest.artifact;
+        if (!same_scope) ++out.missing_scope_mismatches;
+        // Dense item ids cannot be projected across a different artifact.
+        // Other request mismatches stay visible on passive class witnesses.
+        if (candidate.artifact_identity != out.latest.artifact) return;
+        const auto& entries = candidate.compiled_artifact.continuation_upper.policy_entries.entries;
+        if (entries.empty()) ++out.missing_no_entry_candidates;
+        out.missing_entries_total += entries.size();
+        for (const auto& entry : entries) {
+            if (out.missing_entries_scanned == 8192 ||
+                (out.missing_entries_scanned != 0 && (out.missing_entries_scanned & 63u) == 0 && std::chrono::steady_clock::now() >= deadline)) {
+                out.missing_scan_complete = false; break;
+            }
+            ++out.missing_entries_scanned;
+            if (!entry.available() || !(entry.root_expected_visits > 0)) continue;
+            try {
+                const auto projected = project_item(calc.session(), calc.layout(), entry.item);
+                if (out.first.observed && out.first.state < calc.state_count() &&
+                    projected == calc.state(out.first.state)) ++out.first.native_class_matches;
+                if (!(projected == calc.state(out.latest.state))) continue;
+                ++out.latest.native_class_matches;
+                for (auto& witness : out.missing_witnesses) {
+                    if (witness.observed) continue;
+                    passive_witness(witness, entry, projected, out.latest,
+                        candidate.evaluated_policy_cost, candidate.portfolio_identity, kNoId, calc.goal().slots.size());
+                    witness.goal = candidate.goal_identity; witness.economy = candidate.economy_identity;
+                    witness.action_vocabulary = candidate.action_vocabulary_identity;
+                    witness.caller_scope = candidate.caller_scope_identity; witness.artifact = candidate.artifact_identity;
+                    witness.graph_prefix = candidate.graph_prefix_identity;
+                    witness.request_scope_matches = same_scope;
+                    break;
+                }
+            } catch (...) { ++out.missing_projection_refused; out.missing_scan_complete = false; }
+        }
+    };
+    if (output_incumbent) examine(*output_incumbent);
+    for (const auto& candidate : incumbent_portfolio.retained()) examine(candidate);
+    out.missing_scan_ns = static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::steady_clock::now() - began).count());
+}
+
 bool SolveWork::Impl::try_service_graph_only_missing_frontier() {
     // The failed assembly must be the eligible checkpoint just observed by
     // continue_initial_candidate. A stale observation or an incompatible

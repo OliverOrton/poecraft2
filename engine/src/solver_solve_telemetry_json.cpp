@@ -221,6 +221,169 @@ std::string telemetry_hex_u64(const std::uint64_t value) {
     return buffer;
 }
 
+namespace {
+void append_passive_key(BoundedTelemetryJson& json, const PassiveSemanticKey& key) {
+    json += "{\"required_words\":" + std::to_string(key.required);
+    json += std::string(",\"complete\":") + (key.complete ? "true" : "false");
+    json += ",\"words\":";
+    if (!key.complete) json += "null";
+    else {
+        json += '[';
+        for (std::size_t i = 0; i < key.required; ++i) {
+            if (i) json += ',';
+            json += "\"" + std::to_string(key.words[i]) + "\"";
+        }
+        json += ']';
+    }
+    json += '}';
+}
+void append_passive_missing(BoundedTelemetryJson& json, const PassiveMissingContinuation& value) {
+    if (!value.observed) { json += "null"; return; }
+    json += "{\"state_namespace\":\"outer_calculator\",\"state\":" + std::to_string(value.state);
+    json += ",\"goal_mask\":" + std::to_string(value.goal_mask);
+    json += ",\"closure_invocation\":";
+    append_telemetry_json_string(json, value.stage == 1 ? "initial_selected_walk" :
+        value.stage == 2 ? "after_fixed_policy_evaluation" : "after_selection_round");
+    json += ",\"selection_round\":" + std::to_string(value.selection_round);
+    json += ",\"attempt\":" + std::to_string(value.attempt);
+    const auto word = [&](const char* name, const std::uint64_t v) {
+        json += ",\"" + std::string(name) + "\":\"" + std::to_string(v) + "\"";
+    };
+    word("active_identity", value.active_identity); word("goal_identity", value.goal);
+    word("economy_identity", value.economy); word("action_vocabulary_identity", value.action_vocabulary);
+    word("caller_scope_identity", value.caller_scope); word("artifact_identity", value.artifact);
+    word("graph_prefix_identity", value.graph_prefix);
+    word("row_generation", value.row_generation); word("state_generation", value.state_generation);
+    json += ",\"owner_rows\":" + std::to_string(value.owner_rows);
+    json += std::string(",\"broad_expanded\":") + (value.broad_expanded ? "true" : "false");
+    json += std::string(",\"statewise_available\":") + (value.statewise_available ? "true" : "false");
+    json += std::string(",\"renewal_certificate_present\":") + (value.renewal_available ? "true" : "false");
+    json += ",\"native_frontier\":" + (value.native_frontier == kNoId ? std::string("null") : std::to_string(value.native_frontier));
+    json += ",\"handoffs\":" + std::to_string(value.handoffs);
+    json += ",\"cells_used\":" + std::to_string(value.cells_used);
+    json += ",\"cell_limit\":8,\"native_class_matches\":" + std::to_string(value.native_class_matches);
+    json += ",\"coarse_parent\":0,\"coarse_key\":"; append_passive_key(json, value.coarse_key);
+    // No physical item or compiled incoming cursor is invented for a coarse walk.
+    json += ",\"selected_prefix_physical_item\":null,\"selected_prefix_controller_entry\":null";
+    json += ",\"incoming_obligation\":";
+    if (!value.incoming_known) json += "null";
+    else {
+        const auto& edge = value.incoming;
+        json += "{\"source\":" + std::to_string(edge.source);
+        json += ",\"row\":\"" + std::to_string(edge.row) + "\"";
+        json += ",\"operator\":" + std::to_string(edge.operator_index);
+        json += ",\"positive_probability\":" + telemetry_finite_json(edge.probability);
+        json += ",\"paid_row_cost\":" + telemetry_finite_json(edge.paid_cost);
+        json += std::string(",\"observed_choice\":") + (edge.observed_choice ? "true" : "false");
+        json += ",\"choice_group\":" + (edge.observed_choice ?
+            "\"" + std::to_string(edge.choice_group) + "\"" : std::string("null"));
+        json += ",\"source_coarse_key\":"; append_passive_key(json, value.incoming_coarse_key);
+        json += '}';
+    }
+    json += '}';
+}
+void append_passive_witness(BoundedTelemetryJson& json, const PassiveNativeEntryWitness& value) {
+    if (!value.observed) { json += "null"; return; }
+    json += "{\"origin\":\"actual_positive_native_policy_entry\",\"reuse_authority\":false";
+    json += ",\"class_match_proves_selected_prefix_physical_reachability\":false";
+    json += ",\"candidate_identity\":\"" + std::to_string(value.candidate_identity) + "\"";
+    json += ",\"proposal\":" + (value.proposal == kNoId ? std::string("null") : std::to_string(value.proposal));
+    json += ",\"goal_mask\":" + std::to_string(value.goal_mask);
+    const auto word = [&](const char* name, const std::uint64_t v) {
+        json += ",\"" + std::string(name) + "\":\"" + std::to_string(v) + "\"";
+    };
+    word("goal_identity", value.goal); word("economy_identity", value.economy);
+    word("action_vocabulary_identity", value.action_vocabulary);
+    word("caller_scope_identity", value.caller_scope); word("artifact_identity", value.artifact);
+    word("graph_prefix_identity", value.graph_prefix);
+    json += ",\"checked_root_cost\":" + telemetry_finite_json(value.checked_root_cost);
+    json += ",\"entry_cost\":" + telemetry_finite_json(value.entry_cost);
+    json += ",\"root_expected_visits\":" + telemetry_finite_json(value.expected_visits);
+    json += ",\"compiled_node\":"; append_telemetry_json_string(json, value.node.data());
+    json += std::string(",\"compiled_node_complete\":") + (value.node_complete ? "true" : "false");
+    json += ",\"global_policy_target_node\":"; append_telemetry_json_string(json, value.global_node.data());
+    json += std::string(",\"global_target_complete\":") + (value.global_node_complete ? "true" : "false");
+    const auto flag = [&](const char* name, const bool v) {
+        json += ",\"" + std::string(name) + "\":" + (v ? "true" : "false");
+    };
+    if (value.proposal == kNoId) flag("request_scope_matches_missing_obligation", value.request_scope_matches);
+    else json += ",\"request_scope_matches_missing_obligation\":null";
+    flag("entry_complete", value.entry_complete); flag("graph_local", value.graph_local);
+    flag("primitive", value.primitive); flag("globally_routable", value.globally_routable);
+    flag("checkpoint_active", value.checkpoint_active); flag("offer_active", value.offer_active);
+    json += ",\"exact_item_key\":"; append_passive_key(json, value.item_key);
+    json += ",\"exact_entry_key\":"; append_passive_key(json, value.entry_key);
+    json += ",\"programme_key\":"; append_passive_key(json, value.programme_key);
+    json += ",\"projected_coarse_key\":"; append_passive_key(json, value.projected_coarse_key);
+    json += '}';
+}
+void append_passive_continuation(BoundedTelemetryJson& json, const PassiveContinuationObservation& value) {
+    json += "{\"schema\":\"passive_continuation_relevance_v1\",\"continuation_authority\":false";
+    json += ",\"storage_bytes\":" + std::to_string(sizeof(PassiveContinuationObservation));
+    json += ",\"fixed_scratch_reserve_bytes\":" + std::to_string(kPassiveContinuationScratchReserveBytes);
+    json += ",\"incoming_table_limit\":128";
+    json += ",\"entry_scan_limit\":8192,\"scan_wall_limit_ms\":10,\"candidate_scan_limit\":6";
+    json += ",\"first_missing\":"; append_passive_missing(json, value.first);
+    json += ",\"latest_missing\":"; append_passive_missing(json, value.latest);
+    json += ",\"proposals\":[";
+    bool first = true;
+    for (std::size_t i = 0; i < value.proposals.size(); ++i) {
+        const auto& proposal = value.proposals[i]; if (!proposal.observed) continue;
+        if (!first) json += ','; first = false;
+        json += "{\"index\":" + std::to_string(i) + ",\"variant\":" + std::to_string(proposal.variant);
+        json += ",\"held_mask\":" + std::to_string(proposal.held_mask);
+        json += ",\"target_mask\":" + std::to_string(proposal.target_mask);
+        json += ",\"target_side\":" + (proposal.target_side == kNoId ? std::string("null") : std::to_string(proposal.target_side));
+        json += ",\"repair_threshold\":" + std::to_string(proposal.repair_threshold);
+        json += ",\"repair_compiled_node\":";
+        if (proposal.repair_node == kNoId) json += "null";
+        else append_telemetry_json_string(json, "c" + std::to_string(proposal.repair_node));
+        json += ",\"strategy_identity_digest\":\"" + std::to_string(proposal.graph_digest) + "\"";
+        json += ",\"strategy_identity_bytes\":" + std::to_string(proposal.graph_bytes);
+        json += ",\"primary_compiled_nodes\":[";
+        for (std::size_t node = 0; node < proposal.primary_nodes.size(); ++node) {
+            if (node) json += ',';
+            if (proposal.primary_nodes[node] == kNoId) json += "null";
+            else append_telemetry_json_string(json, "c" + std::to_string(proposal.primary_nodes[node]));
+        }
+        json += ']';
+        json += ",\"checked_cost\":" + telemetry_finite_json(proposal.checked_cost);
+        json += std::string(",\"checked\":") + (proposal.checked ? "true" : "false");
+        json += std::string(",\"validated\":") + (proposal.validated ? "true" : "false");
+        json += std::string(",\"census_complete\":") + (proposal.census_complete ? "true" : "false");
+        json += ",\"entries_total\":" + std::to_string(proposal.entries_total);
+        json += ",\"entries_scanned\":" + std::to_string(proposal.entries_scanned);
+        json += ",\"projection_refused\":" + std::to_string(proposal.projection_refused);
+        json += ",\"positive_primary_entries\":" + std::to_string(proposal.positive_primary);
+        json += ",\"zero_target_repair_occupancy_entries\":" + std::to_string(proposal.zero_target_repair_occupancy);
+        json += ",\"disposition\":"; append_telemetry_json_string(json, proposal.disposition.data());
+        json += '}';
+    }
+    json += "],\"branch_witnesses\":[";
+    for (std::size_t i = 0; i < value.branch_witnesses.size(); ++i) {
+        if (i) json += ','; append_passive_witness(json, value.branch_witnesses[i]);
+    }
+    json += "],\"matching_native_witnesses\":[";
+    for (std::size_t i = 0; i < value.missing_witnesses.size(); ++i) {
+        if (i) json += ','; append_passive_witness(json, value.missing_witnesses[i]);
+    }
+    json += "]";
+    json += ",\"incoming_table_omitted\":" + std::to_string(value.incoming_omitted);
+    json += ",\"proposals_omitted\":" + std::to_string(value.proposals_omitted);
+    json += std::string(",\"matching_scan_performed\":") + (value.missing_scan_performed ? "true" : "false");
+    json += std::string(",\"matching_scan_complete\":") + (value.missing_scan_complete ? "true" : "false");
+    json += ",\"matching_candidates\":" + std::to_string(value.missing_candidates);
+    json += ",\"matching_unverified_candidates\":" + std::to_string(value.missing_unverified_candidates);
+    json += ",\"matching_request_scope_mismatches\":" + std::to_string(value.missing_scope_mismatches);
+    json += ",\"matching_no_entry_candidates\":" + std::to_string(value.missing_no_entry_candidates);
+    json += ",\"matching_entries_total\":" + std::to_string(value.missing_entries_total);
+    json += ",\"matching_entries_scanned\":" + std::to_string(value.missing_entries_scanned);
+    json += ",\"matching_projection_refused\":" + std::to_string(value.missing_projection_refused);
+    json += ",\"matching_scan_ns\":" + std::to_string(value.missing_scan_ns);
+    json += ",\"selective_scan_ns\":" + std::to_string(value.selective_scan_ns) + '}';
+}
+} // namespace
+
 #if defined(__EMSCRIPTEN__) && defined(__clang__)
 // O3/LTO expands this observational formatter to an 840-KiB function. Its
 // first WASM call blocked synchronous abandonment for 3.36 s while the same
@@ -398,6 +561,9 @@ std::string serialize_solver_telemetry(
         json += ",\"proposal_index\":" + std::to_string(diagnostics->selective_completion_failure_proposal) + "}";
     }
     json += "}";
+    json += ",\"passive_continuation_relevance\":";
+    if (diagnostics == nullptr) json += "null";
+    else append_passive_continuation(json, diagnostics->passive_continuation);
     json += ",\"native_continuation_search\":";
     if (diagnostics == nullptr) json += "null";
     else append_telemetry_json_string(json, native_continuation_search_name(diagnostics->native_continuation_search));

@@ -996,7 +996,6 @@ AbstractState project_item(
         state.flags |= kFlagEldritchImplicit;
     }
 
-    std::vector<std::uint32_t> groups;
     const auto visit = [&](const pc_mod_slot& slot, int side) {
         const std::uint32_t mod = slot.mod_id;
         if (mod == PC_MOD_NONE || mod >= session.mod_count) return;
@@ -1018,7 +1017,6 @@ AbstractState project_item(
             }
         }
 
-        mod_groups(session, mod, groups);
         for (std::size_t s = 0; s < layout.slots.size(); ++s) {
             const ResolvedGoalSlot& goal_slot = layout.slots[s];
             const bool member =
@@ -1048,7 +1046,10 @@ AbstractState project_item(
                 }
                 continue;
             }
-            for (std::uint32_t group : groups) {
+            // Read the same session-owned group range without a scratch vector.
+            for (auto index = session.group_offsets[mod];
+                 index < session.group_offsets[mod + 1]; ++index) {
+                const auto group = session.group_ids[index];
                 if (sorted_contains(goal_slot.blocking_group_ids, group)) {
                     state.blocked_mask |= 1u << s;
                     break;

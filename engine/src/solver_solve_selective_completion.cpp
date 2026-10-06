@@ -44,6 +44,15 @@ void SolveWork::Impl::abandon_selective_completion_service(
         }
     }
     result.diagnostics.selective_completion_service_status = status;
+    if (selective_service_orientation < passive_continuation.proposals.size()) {
+        auto& observation = passive_continuation.proposals[selective_service_orientation];
+        if (observation.observed) {
+            observation.disposition.fill(0);
+            std::copy_n(disposition.data(),
+                std::min(disposition.size(), observation.disposition.size() - 1),
+                observation.disposition.data());
+        }
+    }
     selective_service_validator.reset();
     selective_service_checker.reset();
     selective_service_strategy.reset();
@@ -163,6 +172,7 @@ bool SolveWork::Impl::advance_selective_completion_service() {
             selective_service_graph = compile_finder_control_json(
                 *selective_service_calc, exact_start_item,
                 selective_service_candidate->control, options);
+            observe_passive_selective_candidate();
             const auto* old =
                 prune_and_select_certified_fallback();
             if (old != nullptr &&
@@ -280,6 +290,7 @@ bool SolveWork::Impl::advance_selective_completion_service() {
                     "refused_exact_graph_check", true);
                 return true;
             }
+            observe_passive_selective_entries(selective_service_checker->result());
             const std::uint64_t live =
                 fast_estimated_owned_bytes();
             if (live >= options.max_solver_owned_bytes) {
@@ -311,6 +322,8 @@ bool SolveWork::Impl::advance_selective_completion_service() {
             check_memory();
             if (!complete) return false;
             selective_service_validator.reset();
+            if (selective_service_orientation < passive_continuation.proposals.size())
+                passive_continuation.proposals[selective_service_orientation].validated = true;
             const double cost = selective_service_checker->result()
                 .total_expected_cost;
             ++result.diagnostics.selective_completion_service_checks;
@@ -404,6 +417,14 @@ bool SolveWork::Impl::advance_selective_completion_service() {
                 candidate.compiled_artifact.strategy_json);
             identity_mix(candidate.portfolio_identity,
                 candidate.caller_scope_identity);
+            for (auto& witness : passive_continuation.branch_witnesses)
+                if (witness.observed && witness.proposal == selective_service_orientation) {
+                    witness.candidate_identity = candidate.portfolio_identity;
+                    witness.goal = candidate.goal_identity; witness.economy = candidate.economy_identity;
+                    witness.action_vocabulary = candidate.action_vocabulary_identity;
+                    witness.caller_scope = candidate.caller_scope_identity; witness.artifact = candidate.artifact_identity;
+                    witness.graph_prefix = candidate.graph_prefix_identity;
+                }
             candidate.retained_owned_bytes =
                 incumbent_owned_bytes(candidate);
             if (const char* reason =

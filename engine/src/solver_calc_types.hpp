@@ -161,6 +161,11 @@ std::vector<std::uint64_t> exact_abstract_state_key(
     const AbstractState& state,
     std::uint32_t coarse_parent);
 
+/* Allocation-free canonical serialization. Returns the full required length;
+ * a length above capacity is incomplete evidence, never a reusable key. */
+std::size_t exact_abstract_state_key_into(const AbstractState& state,
+    std::uint32_t coarse_parent, std::uint64_t* output, std::size_t capacity);
+
 /* Collision-free semantic serialization of the live concrete item payload.
  * Dense mod/group ids are valid only inside the separately bound session and
  * artifact identity. Unused fixed-array storage is deliberately excluded. */
@@ -735,6 +740,7 @@ struct ConcreteRefill {
 GoalAssessment assess_terminal_goal(const GoalSpec&, const AbstractState&);
 
 class CalcContext {
+    friend struct CalcContextPassiveObserverTestAccess;
   public:
     // Calculator-only terminal projection from a concrete prepared base.
     // Does not add an action to the strategy registry or share its row cache.

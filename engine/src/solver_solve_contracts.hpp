@@ -904,6 +904,74 @@ struct GraphOnlySupportObservation {
     double first_paid_cost = std::numeric_limits<double>::infinity();
 };
 
+// Passive fixed storage only. No field is a policy/continuation authority.
+// Owner/result records are charged by sizeof(Impl)/sizeof(SolveResult).
+// A fixed reserve covers the extra terminal snapshot and projection scratch.
+struct PassiveSemanticKey {
+    std::array<std::uint64_t, 128> words{};
+    std::uint64_t required = 0;
+    bool complete = false;
+};
+struct PassiveIncomingObligation {
+    std::uint32_t successor = kNoId, source = kNoId, operator_index = kNoId;
+    std::uint64_t row = std::numeric_limits<std::uint64_t>::max();
+    std::uint64_t choice_group = std::numeric_limits<std::uint64_t>::max();
+    double probability = 0.0, paid_cost = std::numeric_limits<double>::infinity();
+    bool observed_choice = false;
+};
+struct PassiveMissingContinuation {
+    bool observed = false, incoming_known = false;
+    std::uint32_t state = kNoId, goal_mask = 0, stage = 0, selection_round = 0;
+    std::uint32_t owner_rows = 0, native_frontier = kNoId;
+    bool broad_expanded = false, statewise_available = false, renewal_available = false;
+    std::uint64_t active_identity = 0, goal = 0, economy = 0, action_vocabulary = 0;
+    std::uint64_t caller_scope = 0, artifact = 0, graph_prefix = 0;
+    std::uint64_t row_generation = 0, state_generation = 0, attempt = 0;
+    std::uint64_t handoffs = 0, cells_used = 0, native_class_matches = 0;
+    PassiveSemanticKey coarse_key, incoming_coarse_key;
+    PassiveIncomingObligation incoming;
+};
+struct PassiveNativeEntryWitness {
+    bool observed = false, node_complete = false, global_node_complete = false;
+    bool entry_complete = false, graph_local = false, primitive = false;
+    bool globally_routable = false, checkpoint_active = false, offer_active = false;
+    bool request_scope_matches = false;
+    std::uint32_t proposal = kNoId, goal_mask = 0;
+    std::uint64_t candidate_identity = 0, goal = 0, economy = 0, action_vocabulary = 0;
+    std::uint64_t caller_scope = 0, artifact = 0, graph_prefix = 0;
+    double checked_root_cost = std::numeric_limits<double>::infinity();
+    double entry_cost = std::numeric_limits<double>::infinity(), expected_visits = 0.0;
+    std::array<char, 64> node{}, global_node{};
+    PassiveSemanticKey item_key, entry_key, programme_key, projected_coarse_key;
+};
+struct PassiveSelectiveProposal {
+    bool observed = false, checked = false, validated = false, census_complete = false;
+    std::uint32_t variant = kNoId, held_mask = 0, target_mask = 0;
+    std::uint32_t target_side = kNoId, repair_threshold = 0, repair_node = kNoId;
+    std::array<std::uint32_t, 2> primary_nodes{kNoId, kNoId};
+    std::uint64_t graph_digest = 0, graph_bytes = 0;
+    std::uint64_t entries_total = 0, entries_scanned = 0, projection_refused = 0;
+    std::uint64_t positive_primary = 0, zero_target_repair_occupancy = 0;
+    double checked_cost = std::numeric_limits<double>::infinity();
+    std::array<char, 96> disposition{};
+};
+struct PassiveContinuationObservation {
+    PassiveMissingContinuation first, latest;
+    std::array<PassiveSelectiveProposal, 6> proposals;
+    std::array<PassiveNativeEntryWitness, 2> branch_witnesses, missing_witnesses;
+    std::uint64_t proposals_omitted = 0, incoming_omitted = 0;
+    std::uint64_t missing_candidates = 0, missing_entries_total = 0;
+    std::uint64_t missing_unverified_candidates = 0, missing_scope_mismatches = 0;
+    std::uint64_t missing_no_entry_candidates = 0;
+    std::uint64_t missing_entries_scanned = 0, missing_projection_refused = 0;
+    bool missing_scan_performed = false, missing_scan_complete = false;
+    std::uint64_t missing_scan_ns = 0, selective_scan_ns = 0;
+};
+
+inline constexpr std::uint64_t kPassiveContinuationScratchReserveBytes =
+    sizeof(PassiveContinuationObservation) + sizeof(PassiveNativeEntryWitness) +
+    2 * sizeof(PassiveMissingContinuation) + sizeof(AbstractState) + 512;
+
 struct SolveDiagnostics {
     /* Actions the solve planned without, and why. */
     std::vector<std::string> skipped_missing_price;
@@ -928,6 +996,7 @@ struct SolveDiagnostics {
     std::uint64_t selective_completion_failure_owned_bytes = 0;
     std::uint64_t selective_completion_failure_peak_owned_bytes = 0;
     std::uint32_t selective_completion_failure_proposal = 0;
+    PassiveContinuationObservation passive_continuation;
     PolicyRefinementTelemetry policy_refinement;
     std::uint32_t expanded_states = 0;
     std::uint32_t sweeps = 0;

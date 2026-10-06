@@ -967,6 +967,9 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     std::uint64_t graph_only_support_handoffs = 0;
     std::uint32_t graph_only_support_selected = 0;
     std::array<GraphOnlySupportObservation, 8> graph_only_support;
+    PassiveContinuationObservation passive_continuation;
+    std::array<PassiveIncomingObligation, 128> passive_incoming;
+    std::uint32_t passive_incoming_count = 0;
     bool graph_only_support_retry_pending = false;
     std::uint64_t graph_only_support_rows_at_dispatch = 0;
     GraphOnlyCheckpointObservation graph_only_checkpoint_observation() const;
@@ -1899,6 +1902,12 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         joint_anytime_attempt_lineage;
     std::uint64_t carrier_ladder_exact_boundary_private_wall_ns = 0;
     void refresh_selective_generation_caps();
+    void observe_passive_selective_candidate() noexcept;
+    void observe_passive_selective_entries(const StrategyEvalResult& evaluated) noexcept;
+    void observe_passive_missing(std::uint32_t state, std::uint32_t stage,
+        std::uint32_t round, std::uint32_t frontier, bool renewal) noexcept;
+    void observe_passive_incoming(const PassiveIncomingObligation& edge) noexcept;
+    void observe_passive_native_matches(PassiveContinuationObservation& out) const noexcept;
     bool advance_selective_completion_service();
     void abandon_selective_completion_service(const char* status, bool try_next_orientation = false);
     bool target_gap_stop = false;

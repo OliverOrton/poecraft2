@@ -43,6 +43,27 @@ struct SolveWorkTestAccess {
     static Impl& get(SolveWork& work) { return *work.impl_; }
 };
 
+// Raw test-only stamp: no accounting estimator/refresh or interner getter.
+struct CalcContextPassiveObserverTestAccess {
+    static std::array<std::uint64_t, 30> stamp(const CalcContext& calc) {
+        return {calc.states_.size(), calc.states_.capacity(),
+            calc.state_ids_by_hash_.size(), calc.state_ids_by_hash_.bucket_count(),
+            calc.operators_.size(), calc.operators_.capacity(),
+            calc.distribution_cache_.size(), calc.option_kernel_cache_.size(),
+            calc.reforge_cache_.size(), calc.option_kernel_templates_.size(),
+            calc.option_transition_templates_.size(), calc.option_operator_templates_.size(),
+            calc.owned_bytes_base_, calc.owned_bytes_dynamic_shallow_base_,
+            calc.owned_state_hash_collision_bytes_, calc.owned_state_local_operator_bytes_,
+            calc.owned_added_operator_nested_bytes_, calc.owned_distribution_payload_bytes_,
+            calc.owned_distribution_payload_refs_.size(), calc.owned_option_cache_payload_bytes_,
+            calc.owned_option_template_nested_bytes_, calc.owned_transition_template_nested_bytes_,
+            calc.owned_operator_template_nested_bytes_, calc.owned_reforge_payload_bytes_,
+            calc.retained_reforge_distribution_bytes_, calc.owned_bytes_ledger_initialized_,
+            calc.automatic_admission_context_key_bytes_, calc.inactive_automatic_admission_context_owned_bytes_,
+            calc.automatic_admission_reforge_scope_depth_, calc.state_local_automatic_admission_cursor_.has_value()};
+    }
+};
+
 } // namespace poecraft::solver
 
 namespace {
@@ -3364,6 +3385,86 @@ void run_selective_completion_target_count_tests(bool cap_diagnosis = false) {
             }
         }
         if (owned && !cap_diagnosis) {
+            const auto& observation = work.passive_continuation.proposals[0];
+            PC_CHECK(observation.observed && observation.checked && observation.validated);
+            PC_CHECK(observation.checked_cost == owned->evaluated_policy_cost);
+            PC_CHECK(observation.graph_digest != 0 && observation.graph_bytes ==
+                owned->compiled_artifact.strategy_json.size());
+            PC_CHECK(observation.zero_target_repair_occupancy > 0);
+            PC_CHECK(work.passive_continuation.branch_witnesses[0].observed);
+            const auto& entries = owned->compiled_artifact.continuation_upper.policy_entries.entries;
+            const auto reached = std::find_if(entries.begin(), entries.end(), [](const auto& entry) {
+                return entry.available() && entry.root_expected_visits > 0;
+            });
+            PC_CHECK(reached != entries.end());
+            if (reached != entries.end()) {
+                // Test-only setup interns an actual independently checked native
+                // item BEFORE the mutation stamp. It supplies no production tail.
+                const auto target = calc.intern_item(reached->item);
+                const auto expected = exact_abstract_state_key(calc.state(target), 0);
+                std::array<std::uint64_t, 128> fixed{};
+                const auto required = exact_abstract_state_key_into(calc.state(target), 0,
+                    fixed.data(), fixed.size());
+                PC_CHECK(required == expected.size() && required <= fixed.size());
+                PC_CHECK(std::equal(expected.begin(), expected.end(), fixed.begin()));
+                std::array<std::uint64_t, 3> guarded{0, 0, 0x91eabc55ull};
+                PC_CHECK(exact_abstract_state_key_into(calc.state(target), 0,
+                    guarded.data(), 2) == required);
+                PC_CHECK(guarded[2] == 0x91eabc55ull);
+                StrategyEvalResult observed_evaluation;
+                observed_evaluation.total_expected_cost = owned->evaluated_policy_cost;
+                observed_evaluation.policy_entries = owned->compiled_artifact.continuation_upper.policy_entries;
+                // Re-observe the already checked entries without a checker or
+                // any native work. Only observer counters may change.
+                auto& replay = work.passive_continuation.proposals[0];
+                replay.entries_scanned = replay.projection_refused = 0;
+                replay.positive_primary = replay.zero_target_repair_occupancy = 0;
+                const auto calc_before = CalcContextPassiveObserverTestAccess::stamp(calc);
+                const auto telemetry_before = calc.telemetry();
+                const auto policy_before = work.policy_rows;
+                const auto values_before = work.result.values;
+                const auto active_before = work.output_incumbent
+                    ? work.output_incumbent->portfolio_identity : 0;
+                std::vector<std::uint64_t> retained_before;
+                for (const auto& candidate : work.incumbent_portfolio.retained())
+                    retained_before.push_back(candidate.portfolio_identity);
+                work.observe_passive_selective_entries(observed_evaluation);
+                PC_CHECK(work.passive_continuation.proposals[0].entries_scanned > 0);
+                work.observe_passive_missing(target, 2, 7, kNoId, false);
+                auto passive = work.passive_continuation;
+                work.observe_passive_native_matches(passive);
+                PC_CHECK(passive.latest.coarse_key.complete);
+                PC_CHECK(passive.latest.native_class_matches > 0);
+                PC_CHECK(passive.missing_witnesses[0].observed);
+                PC_CHECK(passive.missing_witnesses[0].item_key.complete);
+                PC_CHECK(passive.missing_witnesses[0].entry_key.complete);
+                PC_CHECK(passive.latest.stage == 2 && passive.latest.selection_round == 7);
+                PC_CHECK(CalcContextPassiveObserverTestAccess::stamp(calc) == calc_before);
+                PC_CHECK(calc.telemetry().reforge_logical_work_v1 == telemetry_before.reforge_logical_work_v1);
+                PC_CHECK(calc.telemetry().reforge_frontier_work == telemetry_before.reforge_frontier_work);
+                PC_CHECK(calc.telemetry().automatic_admission_reforge_logical_work_v1 ==
+                    telemetry_before.automatic_admission_reforge_logical_work_v1);
+                PC_CHECK(work.policy_rows == policy_before && work.result.values == values_before);
+                PC_CHECK((work.output_incumbent ? work.output_incumbent->portfolio_identity : 0) == active_before);
+                std::vector<std::uint64_t> retained_after;
+                for (const auto& candidate : work.incumbent_portfolio.retained())
+                    retained_after.push_back(candidate.portfolio_identity);
+                PC_CHECK(retained_after == retained_before);
+                SolveResult wire = work.result;
+                wire.diagnostics.passive_continuation = passive;
+                const auto text = serialize_solver_telemetry(calc, &wire, nullptr, std::nullopt, nullptr);
+                const auto parsed = json::Parser(text.data(), text.size()).parse();
+                const auto* execution = parsed.find("execution");
+                const auto* census = execution ? execution->find("passive_continuation_relevance") : nullptr;
+                PC_CHECK(census != nullptr && census->find("continuation_authority") != nullptr);
+                if (census) {
+                    const auto* latest = census->find("latest_missing");
+                    PC_CHECK(latest != nullptr && latest->find("coarse_key") != nullptr);
+                    PC_CHECK(census->find("matching_native_witnesses") != nullptr);
+                }
+                std::printf("passive observer target=%u native_matches=%llu mutation_stamp_unchanged=1\n",
+                    target, static_cast<unsigned long long>(passive.latest.native_class_matches));
+            }
             // Reuse a genuinely issued complete bundle under the same request.
             // This component control exercises deduplication, not first issuance.
             Impl duplicate(calc, start, prices, options);
