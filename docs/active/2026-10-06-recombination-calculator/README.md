@@ -65,6 +65,16 @@ qualified artifact receipt, and engine/WASM source is unchanged from its
 
 ## Requested repair qualification
 
+The second granted gate on `ffc029ce053f68029556a719ca46026ac808bbbf`
+passes metadata (10.33s) and the same focused tests (23.02s), then stops at
+TypeScript (3.30s). The sole remaining diagnostic is test resolver control-flow
+narrowing after deleting the property; the component diagnostics are gone.
+The fixture now reads the asynchronously assigned resolver through a typed
+getter and asserts that returned value before calling it. Assertions and native
+odds are unchanged. Vite, package and render remain unrun. `gate-r2/` retains
+the failed receipt, clean process identities and elevated zero-survivor census;
+all eighteen hashes still match. LOCAL was released at 04:03:41 UTC.
+
 The source repair needs a new parent-granted finite supervised LOCAL batch,
 reusing the same compatible immutable WASM/runtime/dependencies:
 

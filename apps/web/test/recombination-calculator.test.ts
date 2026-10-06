@@ -70,6 +70,7 @@ access.busy = false; access.data = 1;
 access.inputs = new Map([["a", {snapshot: structuredClone(inputs[0])}], ["b", {snapshot: structuredClone(inputs[1])}]]);
 access.renderOdds = () => {};
 const delivery: {resolve?: (value: CalcResult) => void} = {};
+const readDelivery = (): ((value: CalcResult) => void) | undefined => delivery.resolve;
 let frozenGoal: CalculatorGoalSet | undefined;
 access.client = {...fake, recombinationCalculate: async (_pair: number, goal: CalculatorGoalSet) => {
     frozenGoal = structuredClone(goal);
@@ -88,8 +89,9 @@ for (const change of [
     delete delivery.resolve; closed.length = 0; handle = 0;
     access.calculate();
     for (let i = 0; i < 20 && !delivery.resolve; ++i) await Promise.resolve();
-    assert.ok(delivery.resolve, "Native calculation started");
-    change(); delivery.resolve(result); await Promise.all(access.calculations);
+    const release = readDelivery();
+    assert.ok(release, "Native calculation started");
+    change(); release(result); await Promise.all(access.calculations);
     assert.equal(access.result, null, "Edited, cancelled or disposed requests reject stale native odds");
     assert.equal(frozenGoal?.goals[0].goal.slots.length, 0, "Submitted goal is frozen");
     assert.ok(closed.includes("pair:5") && closed.includes("session:3"), "Stale calculation releases its owners");
