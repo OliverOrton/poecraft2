@@ -19108,7 +19108,14 @@ void run_solver_current_support_handoff_tests() {
         std::vector<std::uint32_t> actions;
         std::unordered_map<std::string, double> prices;
         for (const auto* id : {"chaos", "annul", "exalt", "scour", "alchemy",
-                              "regal", "transmute", "alteration", "augmentation"}) {
+                              "regal", "transmute", "alteration", "augment"}) {
+            const bool registered = registry.index_by_id.contains(id);
+            if (!registered) {
+                std::printf("CURRENT_SUPPORT_LOOKUP fixture=%u caller=action_list "
+                    "map=registry.index_by_id missing_key=%s\n", fixture, id);
+                std::fflush(stdout);
+            }
+            require(registered, "normal Current action list uses an existing registry key");
             actions.push_back(registry.index_by_id.at(id));
             prices[id] = std::string_view(id) == "chaos" ? 100.0 : 1.0;
         }
