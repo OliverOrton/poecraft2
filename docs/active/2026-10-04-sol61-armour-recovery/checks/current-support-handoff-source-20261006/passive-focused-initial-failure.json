@@ -1,0 +1,28 @@
+{
+  "source_head": "38ec68f83398442a7da9f5f018adf2869f832df7",
+  "implementation_source": "14cf997f25188fe789ec014c9e5e8d90b53b742c",
+  "engine_tree": "8c30a359f5d7754a7117093a757db63cda9f71e3",
+  "selector": "--solver-current-support-handoff-only",
+  "checks": 9844,
+  "failures": 10,
+  "assertion_failures": [
+    "FAIL C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_solver_solve.cpp:3437: passive.latest.native_class_matches > 0",
+    "FAIL C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_solver_solve.cpp:3438: passive.missing_witnesses[0].observed",
+    "FAIL C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_solver_solve.cpp:3439: passive.missing_witnesses[0].item_key.complete",
+    "FAIL C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_solver_solve.cpp:3440: passive.missing_witnesses[0].entry_key.complete",
+    "FAIL C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_solver_solve.cpp:3393: observation.zero_target_repair_occupancy > 0",
+    "FAIL C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_solver_solve.cpp:3394: work.passive_continuation.branch_witnesses[0].observed",
+    "FAIL C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_solver_solve.cpp:3437: passive.latest.native_class_matches > 0",
+    "FAIL C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_solver_solve.cpp:3438: passive.missing_witnesses[0].observed",
+    "FAIL C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_solver_solve.cpp:3439: passive.missing_witnesses[0].item_key.complete",
+    "FAIL C:/Users/Oliver/Documents/Codex/2026-10-04/task-3/poecraft2-solver-causal/engine/tests/test_solver_solve.cpp:3440: passive.missing_witnesses[0].entry_key.complete"
+  ],
+  "native_case_started": false,
+  "cleanup_clean": true,
+  "diagnosis": [
+    "direct-service fixture had no active scope; artifact mismatch correctly refused class matching",
+    "two-target native suffix pool has only one unmatched family, excluding zero-target three-affix occupancy"
+  ],
+  "production_observer_change_required": false,
+  "test_correction": "retain unbound refusal; establish actual checked incumbent before raw mutation stamp; require the impossible two-target branch to remain absent"
+}

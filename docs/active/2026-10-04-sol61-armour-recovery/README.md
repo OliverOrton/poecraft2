@@ -303,7 +303,7 @@ new tail, capacity widening, private210 or blind unchanged repeat precedes that
 gate. No heavy work or new execution owner was taken; lower has the next LOCAL.
 
 
-### Passive continuation observer - source ready, no execution
+### Passive continuation observer - qualified diagnostic, no saving
 
 Local source `14cf997f25188fe789ec014c9e5e8d90b53b742c` (engine
 `8c30a359f5d7754a7117093a757db63cda9f71e3`, production
@@ -317,11 +317,22 @@ No search/admission rule, service capacity, native checking or authority changes
 The [callee audit](checks/current-support-handoff-source-20261006/normal-frontier-relevance-audit.md#source-ready-passive-observer-and-callee-audit)
 records the allocation-free canonical projection/encoding and excludes mutating
 const accounting getters. Focused raw interner/cache/ledger/debit/policy/incumbent
-nonmutation and serialization assertions are added but UNRUN. Scoped diff check
-passes. Source is unbuilt, untested, unactivated and economically unmeasured.
-Lower owns LOCAL; no heavy work taken. After handoff, qualify exact source/max2
-jobs and five focused selectors, then one unchanged original Conquest diagnostic
-case. No further matched pair or speculative tail before that evidence. This
+nonmutation/key/serialization assertions now pass within12,968 focused checks
+at6a665dbc / engine8ff13ccc / unchanged14cf997f production. Initial fixture
+failure is preserved and corrected with unbound refusal, actual checked bundle
+scope before the stamp and unreachable two-target class negative; no native law
+or acceptance guard is weakened.
+
+[Qualification and original diagnostic](checks/current-support-handoff-source-20261006/passive-observer-qualification-and-diagnostic.md)
+return the same checked101311.35474896732/cap0/reconciled/success1/off-policy0.
+Proposal0 has330 positive zero-target entries but costs771410.903008549.
+Latest7941/mask27 fails that guard and lacks row/frontier after selection round2;
+all8 cells complete187 paid rows. Complete4-candidate/894-entry native census
+has no matching first868/latest7941 coarse class. Physical selected-prefix entry,
+historical admission and whole cause remain unavailable. LOCAL released23:25:51UTC,
+all9 stages clean, elevated native/windows0, before00UTC. No new pair/tail/heavy
+work or consumer activation. Separate branch source/docs/compact publication is
+parent-approved; no main merge/deployment/restart. This
 owner retains end-to-end repair responsibility and all prior negatives.
 
 ## Question and first gate

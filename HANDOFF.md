@@ -638,21 +638,26 @@ relevance evidence; lower owns LOCAL, no heavy work taken. All prior negatives,
 root/every-positive-entry/paid-support guards and source pins remain.
 
 
-Passive diagnostic source is now locally committed14cf997f25188fe789ec014c9e5e8d90b53b742c,
-engine8c30a359f5d7754a7117093a757db63cda9f71e3, production
-d29f002e47f869171d6958ff1d55007908f66e08. Existing owners expose bounded actual
-branch predicate occupancy, first/latest missing identity/incoming obligation
-and retained native item/programme/controller certificates with explicit scope
-mismatch/truncation. No search/admission/service-cap/authority change. Callee
-source audit excludes mutating const accounting getters; raw nonmutation/key/
-serialization assertions are added but UNRUN. Fixed storage/scratch is charged
-in both ledgers; scoped diff check passes. Unbuilt/untested/unactivated/unmeasured.
-Lower owns LOCAL. After parent handoff, qualify exact source/max2 jobs and the
-five focused selectors, then ONE unchanged original Conquest diagnostic case.
-No extra matched pair or speculative tail before this evidence. See the normal
-frontier audit's source-ready section; existing af measurements/negatives remain.
-This owner retains end-to-end repair responsibility. No push/merge/deployment.
+Passive observer production14cf997f is built and qualified at source
+6a665dbc2e022f3855e148fcf97062ff6d7b1c02 / engine
+8ff13ccc3205fa7905e8e8e2e2e126e96cd0d84f / production
+d29f002e47f869171d6958ff1d55007908f66e08. [Compact handoff](docs/active/2026-10-04-sol61-armour-recovery/checks/current-support-handoff-source-20261006/passive-observer-qualification-and-diagnostic.md)
+records two builds and12,968 focused checks/0 failures. Preserve first9,844/10
+fixture failure: absent active scope and unreachable two-target zero-goal class.
+Correction adds explicit refusal/impossible-class negatives and the real checked
+bundle before the mutation stamp; native law/checker/acceptance guards remain.
 
+Exactly one original Conquest diagnostic returns byte-identical checked
+101311.35474896732/cap0/reconciled/success1/off-policy0. Proposal0 has330 positive
+zero-target entries but cost771410.903008549; latest7941/mask27 fails its guard.
+Closure is after selection round2, row/frontier0 after8 cells complete187 paid
+rows. Complete4-candidate/894-entry native census has no matching first868/latest7941
+coarse class. No physical selected-prefix entry, historical admission, matched
+saving or global cause is established. LOCAL RELEASED23:25:51.878632UTC:
+all9 stages clean, elevated native/windows0. No more heavy work; cutoff00UTC.
+Parent-approved separate-branch source/docs/compact publication proceeds; no
+main write/merge/deployment/restart or Current/Finder/WASM activation. End-to-end
+repair ownership and all original negatives remain.
 
 Parent's automatic-service/zero-gate question is source-audited in the normal
 frontier audit. Existing native selective-service toggle is enable-only in the

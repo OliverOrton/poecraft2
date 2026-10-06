@@ -3,11 +3,17 @@
 The historical source-only audit below follows the qualified af483998 native
 Conquest negative (engine561a0b877154f9a5aa7520011f9fbd94351bb28e, production
 bf877b6713b3fe70cbd78c67ec21b8d28da6e823). The subsequently authorized passive
-observer is source-ready at 14cf997f25188fe789ec014c9e5e8d90b53b742c, engine
-8c30a359f5d7754a7117093a757db63cda9f71e3, production
-d29f002e47f869171d6958ff1d55007908f66e08. It is unbuilt, untested, unactivated
-and economically unmeasured. No new build, test, solver, browser, entry
-evaluation or LOCAL ownership was taken. Lower owns the heavy slot.
+observer production14cf997f is now built/tested at6a665dbc2e022f3855e148fcf97062ff6d7b1c02,
+engine8ff13ccc3205fa7905e8e8e2e2e126e96cd0d84f, production
+d29f002e47f869171d6958ff1d55007908f66e08. [Subsequent qualification and one
+original diagnostic](passive-observer-qualification-and-diagnostic.md) records12,968
+checks/0 failures, the retained initial fixture negative, complete native branch/
+entry census and identical101311.35474896732 returned cost. It refines7941's
+closure to after selection round2, spent8-cell allocation and no retained native
+coarse-class match. Earlier source-only limitations below describe their own
+af/source-ready stage; they are not retroactively qualified. LOCAL released
+23:25:51UTC: all9 stages clean/elevated native/windows0. No consumer activation,
+new matched saving, whole-search cause or historical admission is established.
 The evidence directory remains
 `C:\Users\Oliver\Documents\Codex\2026-10-04\task-3\current-repair-native-20261006`.
 `tail-frontier-relevance-projection.json` selects only named events and counters

@@ -1,0 +1,87 @@
+{
+  "utc": "2026-10-06T23:25:51.878632+00:00",
+  "source_head": "6a665dbc2e022f3855e148fcf97062ff6d7b1c02",
+  "implementation_source": "14cf997f25188fe789ec014c9e5e8d90b53b742c",
+  "engine_tree": "8ff13ccc3205fa7905e8e8e2e2e126e96cd0d84f",
+  "production_tree": "d29f002e47f869171d6958ff1d55007908f66e08",
+  "receipts": [
+    {
+      "file": "passive-conquest-diagnostic-receipt.json",
+      "sha256": "ecb452c666bfdf5b8328bb7e035b010e01aaaaf70817ed9acc9f3c46aa7874bc",
+      "exit_code": 0,
+      "clean": true,
+      "source_unchanged": true,
+      "owned_identity_checks": 2
+    },
+    {
+      "file": "passive-fixture-build-receipt.json",
+      "sha256": "6b999aa8fc9ebe5ed92938c69b7e74d3757051f693ecc1a6ff2b040ff48b9b43",
+      "exit_code": 0,
+      "clean": true,
+      "source_unchanged": true,
+      "owned_identity_checks": 10
+    },
+    {
+      "file": "passive-focused-current-support-handoff-receipt.json",
+      "sha256": "743e22ee701539e80d42b37579ea19693df359734744a2eaf13f49b2e5a0e520",
+      "exit_code": 1,
+      "clean": true,
+      "source_unchanged": true,
+      "owned_identity_checks": 2
+    },
+    {
+      "file": "passive-qualified-assertion-service-receipt.json",
+      "sha256": "de2656104403080f2d16c477204d44b93c5ecfacf18d1cdb07da55baf61a764e",
+      "exit_code": 0,
+      "clean": true,
+      "source_unchanged": true,
+      "owned_identity_checks": 2
+    },
+    {
+      "file": "passive-qualified-bounded-finish-receipt.json",
+      "sha256": "ec8bbae48f7327918badec644d64140bfa9534439b29d8db50c340c8f87c8e22",
+      "exit_code": 0,
+      "clean": true,
+      "source_unchanged": true,
+      "owned_identity_checks": 2
+    },
+    {
+      "file": "passive-qualified-current-support-handoff-receipt.json",
+      "sha256": "f152e0a2c2ce6f5db43f759cc726e51ffe3a4322eb619c9d2667210a56a92c50",
+      "exit_code": 0,
+      "clean": true,
+      "source_unchanged": true,
+      "owned_identity_checks": 2
+    },
+    {
+      "file": "passive-qualified-proof-handoff-receipt.json",
+      "sha256": "b93075dacd4131322b7da2974d6b96cf71dfbf0cec4b9e8539977d520bcdf2b6",
+      "exit_code": 0,
+      "clean": true,
+      "source_unchanged": true,
+      "owned_identity_checks": 2
+    },
+    {
+      "file": "passive-qualified-selected-fallback-receipt.json",
+      "sha256": "f1bd57639b686b4a9689d8c657c34e1df01de491149cfdca533fe6336e26e8bf",
+      "exit_code": 0,
+      "clean": true,
+      "source_unchanged": true,
+      "owned_identity_checks": 2
+    },
+    {
+      "file": "passive-source-build-receipt.json",
+      "sha256": "c2f7b5857808c444a6114e4612c62eaf35b73105bde22e2de4f1ee63757b2045",
+      "exit_code": 0,
+      "clean": true,
+      "source_unchanged": true,
+      "owned_identity_checks": 125
+    }
+  ],
+  "global_windows_after": [],
+  "elevated_native_processes": [],
+  "all_owned_stage_cleanup_clean": true,
+  "local_released": true,
+  "cutoff_utc": "2026-10-07T00:00:00Z",
+  "activated": false
+}

@@ -1,0 +1,55 @@
+{
+  "head": "6a665dbc2e022f3855e148fcf97062ff6d7b1c02",
+  "implementation_source": "14cf997f25188fe789ec014c9e5e8d90b53b742c",
+  "engine_tree": "8ff13ccc3205fa7905e8e8e2e2e126e96cd0d84f",
+  "production_tree": "d29f002e47f869171d6958ff1d55007908f66e08",
+  "test_binary_sha256": "a029ea42325c3053e1fda1c8454a6754016c0c8fa550b56df6473a74b1a70285",
+  "benchmark_sha256": "34b3f0e90096f4512e5a53d195cee7a878523368771da2b42e9f0f0c258e7a3e",
+  "fixture_only_correction": true,
+  "original_build_receipt": "passive-source-build-receipt.json",
+  "failed_initial_selector_receipt": "passive-focused-current-support-handoff-receipt.json",
+  "source_head": "6a665dbc2e022f3855e148fcf97062ff6d7b1c02",
+  "focused_selectors": 5,
+  "checks": 12968,
+  "failures": 0,
+  "runs": [
+    {
+      "selector": "--solver-current-support-handoff-only",
+      "checks": 9852,
+      "failures": 0,
+      "seconds": 0.3917376999743283,
+      "receipt": "passive-qualified-current-support-handoff-receipt.json"
+    },
+    {
+      "selector": "--solver-assertion-service-only",
+      "checks": 424,
+      "failures": 0,
+      "seconds": 0.10859900014474988,
+      "receipt": "passive-qualified-assertion-service-receipt.json"
+    },
+    {
+      "selector": "--solver-selected-fallback-only",
+      "checks": 2440,
+      "failures": 0,
+      "seconds": 1.8077501999214292,
+      "receipt": "passive-qualified-selected-fallback-receipt.json"
+    },
+    {
+      "selector": "--solver-proof-handoff-only",
+      "checks": 49,
+      "failures": 0,
+      "seconds": 0.5330748001579195,
+      "receipt": "passive-qualified-proof-handoff-receipt.json"
+    },
+    {
+      "selector": "--solver-bounded-finish-only",
+      "checks": 203,
+      "failures": 0,
+      "seconds": 0.1536624999716878,
+      "receipt": "passive-qualified-bounded-finish-receipt.json"
+    }
+  ],
+  "activated": false,
+  "new_economics_measured": false,
+  "utc": "2026-10-06T23:23:32.930415+00:00"
+}

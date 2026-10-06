@@ -21,17 +21,25 @@ qualification. [HANDOFF](../../HANDOFF.md) owns selected sequencing.
 
 ## Resumed Current ownership repair - October 6
 
-Latest selected source gate: passive observer14cf997f25188fe789ec014c9e5e8d90b53b742c
-(engine8c30a359f5d7754a7117093a757db63cda9f71e3, production
-d29f002e47f869171d6958ff1d55007908f66e08) is unbuilt/untested/unactivated/
-unmeasured. [Callee/source audit](../active/2026-10-04-sol61-armour-recovery/checks/current-support-handoff-source-20261006/normal-frontier-relevance-audit.md#source-ready-passive-observer-and-callee-audit)
-records fixed, charged storage/scratch and bounded physical/native/controller
-observations, with no search/admission/authority change or mutating accounting
-getter. Raw nonmutation/key/serialization assertions are source-ready only.
-Lower owns LOCAL; no heavy work taken. After handoff: exact max2-job qualification,
-five focused selectors, then ONE original Conquest diagnostic case. No new pair
-or tail before that evidence. All measurements below stay attached to their
-qualified older source; end-to-end repair remains owned here.
+Latest gate: [qualified passive observer and one original diagnostic](../active/2026-10-04-sol61-armour-recovery/checks/current-support-handoff-source-20261006/passive-observer-qualification-and-diagnostic.md).
+Source6a665dbc2e022f3855e148fcf97062ff6d7b1c02 / engine
+8ff13ccc3205fa7905e8e8e2e2e126e96cd0d84f preserves observer14cf997f production
+d29f002e47f869171d6958ff1d55007908f66e08. Two builds pass; five selectors pass
+12,968 checks/0 failures after a recorded fixture-scope/native-pool correction.
+The initial9,844-check/10-failure negative remains. Raw nonmutation, canonical
+key and serialization checks pass; native law and acceptance gates stay fixed.
+
+One unchanged Conquest Current/TargetNeutralZero diagnostic returns the same
+checked101311.35474896732 strategy/cap0/root success1/off-policy0/reconciled.
+Proposal0 has330 positive zero-target native entries but cost771410.903008549;
+latest7941/mask27 fails its guard. Closure is after selection round2, owner row/
+frontier0, after8 cells complete187 paid rows. The complete4-candidate/894-entry
+checked-portfolio census has no native coarse match for first868/latest7941.
+This local support/entry-coverage boundary precedes joint checking; same-scope
+historical admission, physical selected-prefix entry, whole cause and introducing
+commit remain unproved. LOCAL released23:25:51UTC: all9 stages clean, elevated
+native/windows0. Unactivated; no new pair, saving, tail or Finder/WASM release.
+Older measurements below retain their original source pins and negatives.
 
 Localb200aec9 preserves separately checked physical-root graph authority across
 parent quotienting and publication; ordinary statewise prefix gates remain.

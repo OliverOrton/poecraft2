@@ -176,10 +176,16 @@ entry or make a non-primitive programme usable by the current entry owner.
 Missing selected-prefix item/controller remains null. Native root checking,
 subsequent programme validation and retention disposition stay separate. The
 fixed observer/scratch is charged in both ledgers and calls no owner/interner/
-accounting estimator or native work. New raw nonmutation/serialization assertions
-are unrun: source ready, unbuilt/untested/unactivated/unmeasured. Only exact
-qualification and one original diagnostic case after LOCAL can advance this gate;
-no added scalar/table/lower authority, matched saving or speculative tail follows.
+accounting estimator or native work. Raw nonmutation/key/serialization assertions
+now pass within12,968 focused checks at6a665dbc/unchanged14cf997f production.
+[One original diagnostic](../active/2026-10-04-sol61-armour-recovery/checks/current-support-handoff-source-20261006/passive-observer-qualification-and-diagnostic.md)
+completes the4-candidate/894-entry census without a coarse match for first868 or
+latest7941; two candidates lack an entry table. Latest closure is after selection
+round2 with no owned row/frontier and all8 cells spent. Two positive branch
+witnesses remain graph-local, non-primitive programme entries without selected-
+prefix physical/controller correspondence or reuse authority. Root cost remains
+101311.35474896732. Initial fixture failure is retained; no new scalar/table/lower
+authority, matched saving or consumer activation follows.
 
 Current product scope recomputation re-enables selective service and forces
 TargetNeutralZero regardless of a false native enable bit. A service-only

@@ -1,0 +1,7 @@
+{
+  "utc": "2026-10-06T23:14:48.980972+00:00",
+  "native_stage_started_before_correction": false,
+  "reason": "Incorrect literal Ninja digest stopped preflight; actual digest matches prior qualified receipt",
+  "actual_and_prior_qualified_ninja_sha256": "5020138b3757035df9dca9a2243624d5810ffa6ae24444bd95f752cbd1b89123",
+  "head": "38ec68f83398442a7da9f5f018adf2869f832df7"
+}

@@ -11,16 +11,20 @@ provenance, not URLs or researcher-local paths.
 
 ## Current source and qualification boundary
 
-Current solver source14cf997f25188fe789ec014c9e5e8d90b53b742c, engine
-8c30a359f5d7754a7117093a757db63cda9f71e3, production
-d29f002e47f869171d6958ff1d55007908f66e08 is **unbuilt, untested, unactivated and
-economically unmeasured**. c58032c1 introduced the fixed passive observer;
+Current qualified source6a665dbc2e022f3855e148fcf97062ff6d7b1c02 / engine
+8ff13ccc3205fa7905e8e8e2e2e126e96cd0d84f preserves observer14cf997f production
+d29f002e47f869171d6958ff1d55007908f66e08. c58032c1 introduced the observer;
 14cf997f preserves it through completed export before SolveWork release.
-[Source readiness](passive-observer-source-readiness.json) and the
-[callee/source audit](normal-frontier-relevance-audit.md#source-ready-passive-observer-and-callee-audit)
-record the nonmutation audit, fixed charged storage/scratch and bounded scans.
-Added raw interner/cache/ledger/debit/policy/incumbent and key/serialization
-assertions are unrun. Scoped diff check passes; it is not compiler acceptance.
+[Qualification and original diagnostic](passive-observer-qualification-and-diagnostic.md)
+records **12,968 focused checks/0 failures**, raw nonmutation/key/serialization,
+the preserved initial fixture negative and one unchanged original Conquest run.
+[Qualified source](passive-source-qualified.json), [complete native observation](passive-continuation-observation.json),
+[finite classification](passive-finite-classification.json) and
+[native economics](passive-native-economics-projection.json) preserve all gates.
+Returned strategy/cost stays byte-identical101311.35474896732; no matched saving.
+Built/tested/native Current diagnostic measured; **unactivated**, Finder/WASM
+release untested. [Initial source readiness](passive-observer-source-readiness.json)
+remains a dated source-only stage; source audit and all prior negatives remain.
 
 Start with the [living programme](../../README.md),
 [canonical solver status](../../../../solver/current-status.md),
@@ -120,15 +124,17 @@ economics, Current/Finder/WASM release, lower authority or general dominance.
 
 ## Next gate and automatic-service question
 
-Lower currently holds LOCAL. Next authorized solver batch after parent handoff:
-exact-source max2-job HeaderSmoke/Tests/Benchmark, the same five focused selectors,
-then ONE original Conquest diagnostic case. No new matched pair or speculative
-tail before passive branch/missing-item/certificate/service-allocation evidence.
-Release with the existing owned-identity, elevated ErrorActionStop global native
-survivor and Terminal-window checks. All heavy execution AND cleanup must finish
-before2026-10-07 00:00UTC (Oct6,5pmVancouver); no heavy work00:00-05:00UTC.
-Parent owns evening connector-only research/discourse and subsequent LOCAL.
-This owner retains end-to-end continuation repair; no new task dispatch here.
+The authorized observer batch is complete. [LOCAL released](passive-local-release.json)
+2026-10-06 23:25:51.878632UTC: all9 stages clean, owned identities absent, elevated
+ErrorActionStop native/windows0. No heavy work00:00-05:00UTC. Predicate relevance
+(330 positive entries) belongs to an expensive proposal and fails at latest7941.
+Its after-selection-round2 closure lacks row/frontier after8 cells complete187
+paid rows;894 checked native entries provide no first/latest coarse match.
+The [gated programme](passive-observer-qualification-and-diagnostic.md#gated-programme-carried-forward)
+requires same-scope decision/physical-entry evidence before another tail and a
+same-binary dispatch-only control before a valid scheduling pair. Parent owns
+evening connector-only research/discourse and subsequent LOCAL. No additional
+pair, speculative tail or task dispatch is taken here.
 
 The [exact toggle audit](normal-frontier-relevance-audit.md#automatic-service-and-zero-gate-question---source-diagnosis-only)
 separates optional selective service, product programme scope, TargetNeutralZero

@@ -6,14 +6,14 @@
   "repository_visibility": "public",
   "remote_branch": "dot/sol61-solver-causal-20261005",
   "baseline": "7eb16ac3d63834fd5d3256ab42483f47d264b764",
-  "source_head": "14cf997f25188fe789ec014c9e5e8d90b53b742c",
-  "engine_tree": "8c30a359f5d7754a7117093a757db63cda9f71e3",
+  "source_head": "6a665dbc2e022f3855e148fcf97062ff6d7b1c02",
+  "engine_tree": "8ff13ccc3205fa7905e8e8e2e2e126e96cd0d84f",
   "production_tree": "d29f002e47f869171d6958ff1d55007908f66e08",
-  "observer_built": false,
-  "observer_tested": false,
+  "observer_built": true,
+  "observer_tested": true,
   "observer_activated": false,
-  "observer_measured_economics": false,
-  "latest_measured_source": "af48399842b056aa1c10bc27ba35d577270fe1b4",
+  "observer_measured_economics": true,
+  "latest_measured_source": "6a665dbc2e022f3855e148fcf97062ff6d7b1c02",
   "approval_evidence": {
     "assistant_request_utc": "2026-10-06T22:51:07Z",
     "user_approval_utc": "2026-10-06T22:51:38Z",
@@ -240,6 +240,170 @@
       "sha256": "1b46b0c4860943eec0ddb5cc6c1062982a809fb4795ea58471bfd4ea1c86b7c6",
       "projection_from_summary_receipts": true,
       "bulk_native_results_included": false
+    },
+    {
+      "file": "passive-baseline.json",
+      "bytes": 1063,
+      "sha256": "7037e52014aaad96b85bd74b8a05e3edbfbeaa688564a35e9704110634342008",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\passive-baseline.json"
+    },
+    {
+      "file": "passive-preflight-correction.json",
+      "bytes": 382,
+      "sha256": "cfe5263e82861a490b2df7898a9075f7f9c6e3c89dc7c70fb26035aa4362d421",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\passive-preflight-correction.json"
+    },
+    {
+      "file": "passive-source-build-preflight.json",
+      "bytes": 22415,
+      "sha256": "278638bf7fb21f6061ce5780d60fc5047e92ea1bb1f2351bd819a371ed7ede25",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\passive-source-build-preflight.json"
+    },
+    {
+      "file": "passive-source-build-receipt.json",
+      "bytes": 103029,
+      "sha256": "c2f7b5857808c444a6114e4612c62eaf35b73105bde22e2de4f1ee63757b2045",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\passive-source-build-receipt.json"
+    },
+    {
+      "file": "passive-focused-initial-failure.json",
+      "bytes": 2567,
+      "sha256": "6d1bc9a4a143fbbc0cba993d72718ce22e4770a32919c3b65a267c23c355023b",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\passive-focused-initial-failure.json"
+    },
+    {
+      "file": "passive-focused-current-support-handoff-receipt.json",
+      "bytes": 3432,
+      "sha256": "743e22ee701539e80d42b37579ea19693df359734744a2eaf13f49b2e5a0e520",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\passive-focused-current-support-handoff-receipt.json"
+    },
+    {
+      "file": "passive-fixture-build-preflight.json",
+      "bytes": 22415,
+      "sha256": "08628f9c5a31733ad039eb254a7c69adecfa15bc0e75182987a91e8816980d9c",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\passive-fixture-build-preflight.json"
+    },
+    {
+      "file": "passive-fixture-build-receipt.json",
+      "bytes": 11202,
+      "sha256": "6b999aa8fc9ebe5ed92938c69b7e74d3757051f693ecc1a6ff2b040ff48b9b43",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\passive-fixture-build-receipt.json"
+    },
+    {
+      "file": "passive-fixture-binary-pins.json",
+      "bytes": 638,
+      "sha256": "703135384f3d955101eebf0baaf55bce8922898b662fb2d9ea88d7c5f019aa2f",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\passive-fixture-binary-pins.json"
+    },
+    {
+      "file": "passive-source-qualified.json",
+      "bytes": 1988,
+      "sha256": "5f047a282a2f46163a5ffeee90c03d25781bb027c9ec9baa8e66df90c8e4f8b0",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\passive-source-qualified.json"
+    },
+    {
+      "file": "passive-focused-native-fixture-projection.json",
+      "bytes": 1216,
+      "sha256": "389e4f8602b1a794c941fe7c571a2c054ff22419c94283b33c10ae03dc562b7e",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\passive-focused-native-fixture-projection.json"
+    },
+    {
+      "file": "passive-diagnostic-inputs.json",
+      "bytes": 4700,
+      "sha256": "3941d917d877a35b5dd75191db7a6bfd372b082d3d307313aaee8625e8077c3d",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\passive-diagnostic-inputs.json"
+    },
+    {
+      "file": "passive-conquest-diagnostic-preflight.json",
+      "bytes": 23072,
+      "sha256": "e7057fe408b9525349b04fcab6eca921734e6681aa66b4e1d3faa1a2ee65aa29",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\passive-conquest-diagnostic-preflight.json"
+    },
+    {
+      "file": "passive-conquest-diagnostic-receipt.json",
+      "bytes": 4897,
+      "sha256": "ecb452c666bfdf5b8328bb7e035b010e01aaaaf70817ed9acc9f3c46aa7874bc",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\passive-conquest-diagnostic-receipt.json"
+    },
+    {
+      "file": "passive-continuation-observation.json",
+      "bytes": 20598,
+      "sha256": "ccfa662822fdd6fadd0fce957a3ffd6cd39f916206c3c705b4e075cd8a973fe2",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\passive-continuation-observation.json"
+    },
+    {
+      "file": "passive-native-economics-projection.json",
+      "bytes": 31091,
+      "sha256": "3a799a2a44b86b97ecac853edda4af8b9341dae361986223e8be1ee7adf9c03e",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\passive-native-economics-projection.json"
+    },
+    {
+      "file": "passive-finite-classification.json",
+      "bytes": 2938,
+      "sha256": "2b19d71c5b175748e9e86165cad7eff8db564bb7ed9300fbe796c0244d24f963",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\passive-finite-classification.json"
+    },
+    {
+      "file": "passive-local-release.json",
+      "bytes": 3013,
+      "sha256": "00022fa95caf0b0b9593f38b206f09fc1ce8127c813d4e8e15210f8dd4ed258f",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\passive-local-release.json"
+    },
+    {
+      "file": "passive-qualified-current-support-handoff-receipt.json",
+      "bytes": 3434,
+      "sha256": "f152e0a2c2ce6f5db43f759cc726e51ffe3a4322eb619c9d2667210a56a92c50",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\passive-qualified-current-support-handoff-receipt.json"
+    },
+    {
+      "file": "passive-qualified-assertion-service-receipt.json",
+      "bytes": 3428,
+      "sha256": "de2656104403080f2d16c477204d44b93c5ecfacf18d1cdb07da55baf61a764e",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\passive-qualified-assertion-service-receipt.json"
+    },
+    {
+      "file": "passive-qualified-selected-fallback-receipt.json",
+      "bytes": 4888,
+      "sha256": "f1bd57639b686b4a9689d8c657c34e1df01de491149cfdca533fe6336e26e8bf",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\passive-qualified-selected-fallback-receipt.json"
+    },
+    {
+      "file": "passive-qualified-proof-handoff-receipt.json",
+      "bytes": 4891,
+      "sha256": "b93075dacd4131322b7da2974d6b96cf71dfbf0cec4b9e8539977d520bcdf2b6",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\passive-qualified-proof-handoff-receipt.json"
+    },
+    {
+      "file": "passive-qualified-bounded-finish-receipt.json",
+      "bytes": 3425,
+      "sha256": "ec8bbae48f7327918badec644d64140bfa9534439b29d8db50c340c8f87c8e22",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\passive-qualified-bounded-finish-receipt.json"
+    },
+    {
+      "file": "passive-observer-qualification-and-diagnostic.md",
+      "bytes": 9459,
+      "sha256": "23e08e43fc29c11c6bf4ad21d3ee26604f7a558de9fa4c4c5159503aa219ae66",
+      "consumer_local_original": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\poecraft2-solver-causal\\docs\\active\\2026-10-04-sol61-armour-recovery\\checks\\current-support-handoff-source-20261006\\passive-observer-qualification-and-diagnostic.md",
+      "kind": "qualification_and_finite_causal_programme"
     }
-  ]
+  ],
+  "previous_publication_stage": {
+    "published_head": "38ec68f83398442a7da9f5f018adf2869f832df7",
+    "utc": "2026-10-06T22:59:21Z",
+    "observer_built": false,
+    "observer_tested": false,
+    "observer_measured_economics": false,
+    "source_head": "14cf997f25188fe789ec014c9e5e8d90b53b742c",
+    "engine_tree": "8c30a359f5d7754a7117093a757db63cda9f71e3",
+    "production_tree": "d29f002e47f869171d6958ff1d55007908f66e08"
+  },
+  "updated_at": "2026-10-06T23:27:59.461257+00:00",
+  "qualified_source_head": "6a665dbc2e022f3855e148fcf97062ff6d7b1c02",
+  "implementation_source": "14cf997f25188fe789ec014c9e5e8d90b53b742c",
+  "measurement_kind": "one original diagnostic case, not a new matched economic pair",
+  "test_binary_sha256": "a029ea42325c3053e1fda1c8454a6754016c0c8fa550b56df6473a74b1a70285",
+  "benchmark_sha256": "34b3f0e90096f4512e5a53d195cee7a878523368771da2b42e9f0f0c258e7a3e",
+  "focused_checks": 12968,
+  "focused_failures": 0,
+  "LOCAL_release_utc": "2026-10-06T23:25:51.878632+00:00"
 }

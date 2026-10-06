@@ -1458,9 +1458,16 @@ repair-occupancy class show predicate relevance, not a recovered preceding guard
 edge or matched saving. Incomplete scans/keys, unvalidated proposals and missing
 physical/controller items remain unavailable evidence. Fixed storage/scratch is
 charged in both ledgers; observer callees do not mutate owner/interner/accounting
-state. Source review/diff check only; new nonmutation assertions are unrun. One
-original diagnostic case after exact qualification/LOCAL is the next gate. No
-new native correspondence theorem, authority, tail or economic pair follows.
+state. Qualification at6a665dbc (unchanged14cf997f production) now passes12,968
+focused checks, including raw nonmutation/key/serialization; the initial fixture
+failure remains recorded. [One original diagnostic](../../active/2026-10-04-sol61-armour-recovery/checks/current-support-handoff-source-20261006/passive-observer-qualification-and-diagnostic.md)
+demonstrates330 positive zero-target entries in the expensive771410.9030 proposal.
+Latest7941/mask27 fails its guard; after selection round2 it has no owned row/
+frontier and all8 cells are spent. Complete894-entry current checked-portfolio
+census has no native coarse match for first868/latest7941. This is a scoped
+support/entry-coverage negative, not global native absence or historical admission.
+Returned Current cost remains101311.35474896732; no new native theorem, scalar/
+lower authority, matched saving, tail or release follows.
 
 The [automatic-service toggle audit](../../active/2026-10-04-sol61-armour-recovery/checks/current-support-handoff-source-20261006/normal-frontier-relevance-audit.md#automatic-service-and-zero-gate-question---source-diagnosis-only)
 separates TargetNeutralZero proof capability from the zero-progress reforge

@@ -1,0 +1,22 @@
+{
+  "utc": "2026-10-06T23:14:14.280176+00:00",
+  "head": "38ec68f83398442a7da9f5f018adf2869f832df7",
+  "implementation_source": "14cf997f25188fe789ec014c9e5e8d90b53b742c",
+  "engine_tree": "8c30a359f5d7754a7117093a757db63cda9f71e3",
+  "production_tree": "d29f002e47f869171d6958ff1d55007908f66e08",
+  "LOCAL_granted_by_parent": true,
+  "previous_owner_released": true,
+  "heavy_cutoff_utc": "2026-10-07T00:00:00+00:00",
+  "preserved_af_binaries": [
+    {
+      "file": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\af-qualified-poecraft_engine_tests.exe",
+      "sha256": "eaf659a3999b2f1b11b318d13f9be321046c45bd2694c5a054df49e849b6d286"
+    },
+    {
+      "file": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-04\\task-3\\current-repair-native-20261006\\af-qualified-poecraft_solver_benchmark.exe",
+      "sha256": "10734703510b15f1c5b6f4cd0ef0375d6b8e31eccbe70f77b1a6b6c20d430cb1"
+    }
+  ],
+  "windows": [],
+  "runner_sha256": "670a258e01ff30bcf12f66b1614cdf082c8f423dc328a0b4a4db9b17609dc74b"
+}

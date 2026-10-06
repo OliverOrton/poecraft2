@@ -1,0 +1,90 @@
+{
+  "schema": "passive_continuation_finite_classification_v1",
+  "source_head": "6a665dbc2e022f3855e148fcf97062ff6d7b1c02",
+  "implementation_source": "14cf997f25188fe789ec014c9e5e8d90b53b742c",
+  "result_sha256": "b5a76d20eba00084afd85c10cb25c2ce38e7943a45c46d4d75126ec1d714bb60",
+  "request_sha256": "b4812e0e73d575bc8ede944fcb5a7f7689e63202ff66a09f49d5cff851722ece",
+  "case_id": "sol61-trace-conquest5-currentmodel-120",
+  "diagnostic_only": true,
+  "branch_relevance": {
+    "proposal_index": 0,
+    "variant": "RerollVersusRepair",
+    "held_mask": 7,
+    "target_mask": 24,
+    "positive_primary_entries": 506,
+    "zero_target_repair_occupancy_entries": 330,
+    "native_entry_census_complete": true,
+    "checked_cost": 771410.903008549,
+    "disposition": "retained",
+    "preceding_guard_edge_recovered": false,
+    "matched_proposal_saving": null
+  },
+  "late_obligation": {
+    "state": 7941,
+    "goal_mask": 27,
+    "closure_invocation": "after_selection_round",
+    "selection_round": 2,
+    "owner_rows": 0,
+    "native_frontier": null,
+    "renewal_certificate_present": false,
+    "handoffs": 3,
+    "cells_used": 8,
+    "selected_prefix_physical_item": null,
+    "selected_prefix_controller_entry": null,
+    "held_goals_satisfied": 3,
+    "target_goals_satisfied": 24,
+    "modified_guard_can_match": false
+  },
+  "service_allocation": {
+    "selected_states": [
+      868,
+      869,
+      870,
+      880,
+      3989,
+      3990,
+      3991,
+      3992
+    ],
+    "cells": 8,
+    "handoffs": 3,
+    "all_cells_completed": true,
+    "committed_paid_rows": 187,
+    "no_unconditional_widening_authorized": true
+  },
+  "retained_native_correspondence": {
+    "matching_scan_complete": true,
+    "matching_candidates": 4,
+    "matching_unverified_candidates": 0,
+    "matching_request_scope_mismatches": 0,
+    "matching_no_entry_candidates": 2,
+    "matching_entries_total": 894,
+    "matching_entries_scanned": 894,
+    "matching_projection_refused": 0
+  },
+  "retained_native_correspondence_limits": {
+    "first_state_native_class_matches": 0,
+    "latest_state_native_class_matches": 0,
+    "matching_native_witnesses": [
+      null,
+      null
+    ],
+    "scope": "current active and retained independently checked candidates only; two candidates carry no programme-entry table",
+    "all_possible_native_or_historical_programmes_scanned": false,
+    "same_request_historical_85k_admission_demonstrated": false
+  },
+  "unavailable": [
+    "exact physical/controller entry of failed selected prefix",
+    "normal admitted historical85k policy with same scope",
+    "same-binary service-only off arm",
+    "matched proposal branch saving",
+    "whole-search cause and introducing commit"
+  ],
+  "authority": {
+    "continuation_authority": false,
+    "scalar_reuse_authority": false,
+    "new_lower_authority": false,
+    "private_proposal_activated": false,
+    "Current_Finder_WASM_release_activated": false
+  }
+}
