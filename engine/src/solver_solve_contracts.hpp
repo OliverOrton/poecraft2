@@ -178,7 +178,12 @@ struct SolveOptions {
     bool state_certificate_control = true;
     /* Internal native lower treatment. WASM explicitly enables reuse; native
      * and C ABI defaults stay separate. Prepare once per solve, within 32 MiB. */
+    // Private independent component. Neutral scope may prepare/consume this
+    // issuer while legacy clean tables and global exact closure remain gated.
     bool native_retention_lower = false;
+    // Native-private Current issuer gate. Neither Finder nor a public option
+    // can grant neutral-scope component authority through the shared flag.
+    bool current_scoped_retention = false;
     bool native_retention_profile = false; // sampled internal attribution only
     bool native_retention_numerical_reuse = false; // private matched experiment; no public activation
     bool native_retention_consume = true; // private causal ablation, same checked preparation

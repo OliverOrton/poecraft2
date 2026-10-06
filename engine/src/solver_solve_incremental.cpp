@@ -1187,7 +1187,16 @@ bool SolveWork::Impl::maybe_install_incremental_anytime_incumbent() {
 std::vector<double>
 SolveWork::Impl::certified_incremental_lower_values() {
     std::vector<double> lower(calc.state_count(), 0.0);
-    if (!proof_capabilities().positive_global_lower) return lower;
+    if (!proof_capabilities().positive_global_lower) {
+        // Rejected/restricted working vectors and focused snapshots are never
+        // read on neutral scope. Only the independent checked component may
+        // strengthen zero; unsupported physical/marker members still get zero.
+        if (independent_retention_ready())
+            for (std::uint32_t state = 0; state < lower.size(); ++state)
+                if (!calc.is_goal_state(calc.state(state)))
+                    lower[state] = native_retention_lower_value(state);
+        return lower;
+    }
     const bool has_focused_proof_snapshot =
         focused_lower_completion_proof_values.size() == lower.size();
     const bool full_action_envelope =
@@ -2285,6 +2294,63 @@ bool SolveWork::Impl::advance_incremental_classification() {
                     candidate.state < upper_values->size()
                 ? upper_values->at(candidate.state)
                 : kInfinity;
+        // The initial scoped consumer uses first-action lower transport only.
+        // The existing row evaluator eliminates self probability; do not
+        // interpret that repeated-row quantity as an unrestricted first-action
+        // lower on a neutral solve. Keep all such rows unresolved by this new
+        // retirement permission, including self within an observed choice.
+        bool scoped_retirement = independent_retention_ready() &&
+            incremental_classification_upper == IncrementalClassificationUpper::OutputIncumbent &&
+            output_incumbent.has_value() && output_incumbent->has_statewise_upper_values() &&
+            output_incumbent->independently_certified && output_incumbent->independently_evaluated &&
+            output_incumbent->proper && output_incumbent->executable &&
+            row.owner_state == candidate.state && (row.transition_count || row.choice_count) &&
+            row.self_probability == 0 && row.embedded_self_probability == 0;
+        for (std::uint32_t i = 0; scoped_retirement && i < row.transition_count; ++i)
+            scoped_retirement &= transition_cache->successors.at(row.transition_offset+i) != candidate.state;
+        for (std::uint32_t i = 0; scoped_retirement && i < row.choice_count; ++i) {
+            const auto& group = transition_cache->choices.at(row.choice_offset+i);
+            scoped_retirement &= !group.has_self;
+            for (std::uint32_t s = 0; scoped_retirement && s < group.successor_count; ++s)
+                scoped_retirement &= transition_cache->choice_successors.at(group.successor_offset+s) != candidate.state;
+        }
+        if (scoped_retirement) {
+            // Native stored coefficients define this row's numerical scope.
+            // Ordinary nearest-rounded Q remains useful for proposals, but
+            // the new retirement decision needs its own downward witness.
+            const auto down = [](double value) {
+                return value == 0 ? 0 : std::max(0.0, std::nextafter(value, 0.0));
+            };
+            const auto lower_at = [&](std::uint32_t state) {
+                const double value = state < incremental_classification_certified_lower.size()
+                    ? incremental_classification_certified_lower[state] : 0;
+                return std::isfinite(value) && value >= 0 ? value : 0;
+            };
+            const double price = priced_rows.at(candidate.row_index).cost;
+            scoped_retirement = std::isfinite(price) && price >= 0;
+            double lower_q = scoped_retirement ? down(price) : 0;
+            const auto accumulate = [&](double probability, double continuation) {
+                if (!std::isfinite(probability) || probability < 0 || probability > 1)
+                    return false;
+                lower_q = down(lower_q + down(down(probability)*continuation));
+                return true;
+            };
+            for (std::uint32_t i = 0; scoped_retirement && i < row.transition_count; ++i) {
+                const auto offset = row.transition_offset+i;
+                scoped_retirement = accumulate(transition_cache->probabilities.at(offset),
+                    lower_at(transition_cache->successors.at(offset)));
+            }
+            for (std::uint32_t i = 0; scoped_retirement && i < row.choice_count; ++i) {
+                const auto& group = transition_cache->choices.at(row.choice_offset+i);
+                if (!group.successor_count) { scoped_retirement = false; break; }
+                double best = kInfinity;
+                for (std::uint32_t s = 0; s < group.successor_count; ++s)
+                    best = std::min(best, lower_at(
+                        transition_cache->choice_successors.at(group.successor_offset+s)));
+                scoped_retirement = accumulate(group.probability, best);
+            }
+            if (scoped_retirement) candidate.lower_q = lower_q;
+        }
         if (std::isfinite(candidate.upper_q) &&
             candidate.upper_q < current_upper) {
             transition_cache->rows.at(candidate.row_index).admitted = true;
@@ -2298,7 +2364,7 @@ bool SolveWork::Impl::advance_incremental_classification() {
             incremental_classification_admitted = true;
             return false;
         }
-        if (proof_capabilities().lower_retirement &&
+        if ((proof_capabilities().lower_retirement || scoped_retirement) &&
             std::isfinite(current_upper) &&
             current_upper < kValueCeiling &&
             candidate.lower_q >= current_upper) {

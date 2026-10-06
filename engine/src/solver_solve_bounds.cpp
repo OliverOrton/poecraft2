@@ -7,7 +7,7 @@ namespace solver {
 using namespace solve_detail;
 
 void SolveWork::Impl::prepare_native_retention_lower(const PhaseLowerQueryDiagnostic* diagnostic) {
-    if (!proof_capabilities().positive_global_lower) return;
+    if (!native_retention_enabled()) return;
     prepare_goal_cover_cost();
     if (native_retention_attempted) return;
     {
@@ -20,11 +20,15 @@ void SolveWork::Impl::prepare_native_retention_lower(const PhaseLowerQueryDiagno
 }
 
 CooperativeTask<bool> SolveWork::Impl::run_retention_setup(const PhaseLowerQueryDiagnostic* diagnostic) {
-    if (!proof_capabilities().positive_global_lower) co_return true;
-    if (!options.native_retention_lower || native_retention_attempted) co_return true;
+    if (!native_retention_enabled() || native_retention_attempted) co_return true;
     native_retention_attempted = true;
     try {
         if (options.consider_imprint_programs) throw std::invalid_argument("unmodelled Imprint scope");
+        if (!proof_capabilities().positive_global_lower &&
+            (calc.goal().rarity != PC_RARITY_RARE ||
+             calc.goal().required_satisfied_slots() != calc.layout().slots.size() ||
+             calc.goal().terminal.extras != ExtraExplicitPolicy::ForbidUnmatched))
+            throw std::invalid_argument("scoped retention requires all-required clean Rare goal");
         unsigned fractures = 0;
         for (unsigned i=0;i<exact_start_item.prefix_count;++i) fractures += !!(exact_start_item.prefixes[i].flags&PC_MOD_SLOT_FRACTURED);
         for (unsigned i=0;i<exact_start_item.suffix_count;++i) fractures += !!(exact_start_item.suffixes[i].flags&PC_MOD_SLOT_FRACTURED);
@@ -55,8 +59,17 @@ CooperativeTask<bool> SolveWork::Impl::run_retention_setup(const PhaseLowerQuery
             throw std::length_error("native retention total reservation refused");
         native_retention_live_bytes = cap; // reserve before construction
         quotient::QuotientLowerBudget budget; budget.max_scratch_bytes = cap;
-        const auto mask_proposal = phase_lower_proposal(false);
-        const auto proposal = phase_lower_proposal(true);
+        const auto masks = std::uint32_t{1} << calc.layout().slots.size();
+        // A neutral solve supplies no legacy candidate. The independent
+        // producer/checker starts from zero and covers its full registry.
+        const auto mask_proposal = proof_capabilities().positive_global_lower
+            ? phase_lower_proposal(false)
+            : PhaseLowerProposal{PhaseTableRole::MaskCompletion, masks,
+                static_cast<std::uint32_t>(calc.goal().required_satisfied_slots()), std::vector<double>(masks, 0)};
+        const auto proposal = proof_capabilities().positive_global_lower
+            ? phase_lower_proposal(true)
+            : PhaseLowerProposal{PhaseTableRole::CleanCompletion, masks,
+                static_cast<std::uint32_t>(calc.goal().required_satisfied_slots()), std::vector<double>(3*masks*16, 0)};
         std::shared_ptr<const PreparedPhaseLowerView> support;
         {
             auto child = PhaseLowerProducer::prepare_work(calc,prices,exact_start_item,mask_proposal,budget);
@@ -628,13 +641,11 @@ bool SolveWork::Impl::advance_setup() {
     try {
     if (!proof_capabilities().positive_global_lower) {
         goal_cover_requested = false;
-        retention_setup_pending = false;
         goal_cover_stage = SetupStage::Disabled;
-        return true;
     }
     if (cheap_root_bootstrap_pending) return true;
-    if (!goal_cover_requested) return true;
-    if (goal_cover_stage == SetupStage::NotStarted) {
+    if (!goal_cover_requested && !retention_setup_pending) return true;
+    if (goal_cover_requested && goal_cover_stage == SetupStage::NotStarted) {
         setup_storage.owner = this;
         setup_storage.admit = [](void* owner, std::uint64_t bytes) {
             static_cast<Impl*>(owner)->admit_setup_bytes(bytes);

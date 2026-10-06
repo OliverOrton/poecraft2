@@ -171,6 +171,9 @@ PolicyFinderWork::PolicyFinderWork(
           limits.solve_profile == SolveProfile::CalculatorProductV1 && attempt_limit == 8 &&
           (limits.solve_profile_override_mask & PC_SOLVE_PROFILE_OVERRIDE_GOAL_PROGRESS_GATED_REFORGES) == 0),
       diagnostic_capture_(diagnostic_capture) {
+    // The scoped neutral lower issuer is Current-only, including direct C++
+    // callers. Retain the established OrdinaryClean diagnostic separately.
+    limits_.current_scoped_retention = false;
     if (session_ == nullptr) {
         throw std::invalid_argument("finder requires a session");
     }

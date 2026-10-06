@@ -10,7 +10,7 @@
 namespace poecraft::solver {
 using namespace quotient;
 namespace {
-constexpr std::uint64_t version = 0x50524f424c4f0006ull;
+constexpr std::uint64_t version = 0x50524f424c4f0007ull;
 using PreparationClock = std::chrono::steady_clock;
 std::uint64_t elapsed_ns(PreparationClock::time_point start) {
     return std::chrono::duration_cast<std::chrono::nanoseconds>(PreparationClock::now()-start).count();
@@ -363,6 +363,8 @@ solve_detail::CooperativeTask<std::shared_ptr<const PreparedPhasePotential>> Pha
         !std::isfinite(restart_boundary.lower) || restart_boundary.lower < 0)
         throw std::invalid_argument("restart needs matching existing exact-source lower evidence");
     if (consider_imprint) throw std::invalid_argument("unmodelled Imprint restore memory");
+    if (calc.goal().terminal.extras != ExtraExplicitPolicy::ForbidUnmatched)
+        throw std::invalid_argument("retention requires clean final semantics");
     for (auto i : calc.candidate_operators()) {
         const auto& op = calc.operators().at(i);
         if (op.kind == PlannerOperatorKind::FixedOption && op.option_kind == FixedOptionKind::ImprintRetry)
@@ -955,7 +957,12 @@ solve_detail::CooperativeTask<std::shared_ptr<const PreparedPhasePotential>> Pha
                     };
                     bool probabilistic = false, renewal = false;
                     unsigned preserved = c.mask, draws_per_side = 1;
-                    if (action.synthetic) {
+                    if (phase_primitive_needs_paid_exit(action)) {
+                        // Current-progress correspondence is deliberately
+                        // stopped here. No Foulborn/Dominance/companion law is
+                        // borrowed from an older ordinary pool relation.
+                        escape(PhaseRelationReason::UnsupportedEffect);
+                    } else if (action.synthetic) {
                         groups = {{0, mass, {coupled ? fresh_offset : grid+1}}};
                         reason = coupled ? PhaseRelationReason::NativeEffect : PhaseRelationReason::FixedIndependentBoundary;
                     } else if (type == ActionType::Fracture || special_escape || (!setup_filter && (action.sets_flags & kProtectionFlags)) ||

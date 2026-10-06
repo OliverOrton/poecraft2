@@ -5069,7 +5069,283 @@ void run_solver_calc_gated_equivalence_tests() {
     run_harvest_targeted_natural_regression();
 }
 
+void run_solver_scoped_lower_tests() {
+    using Impl = SolveWorkTestAccess::Impl;
+    using Status = Impl::IncrementalAlternativeRow::Status;
+    using namespace poecraft::solver::quotient;
+    // Independently solved native fixture. Empty Rare -> one clean requested
+    // affix by Bench costs 1. Every other root action costs 100, except Scour
+    // at 1/2, which leaves Normal and cannot finish before another paid action.
+    // Thus the native proper-policy optimum is exactly 1; no model is its oracle.
+    auto session = make_calc_session();
+    auto data = std::const_pointer_cast<DataImpl>(session->data);
+    for (unsigned mod=0; mod<session->mod_count; ++mod) {
+        data->mod_key_sid.push_back(data->strings.size());
+        data->strings.push_back("scoped-fixture-"+std::to_string(mod));
+    }
+    session->bench_mod_ids = {0};
+    session->flags[0] |= 1 << 1;
+    pc_bitset_clear(session->normal_random_roll_mask.data(), 0);
+    auto registry = build_action_registry(*session);
+    PhaseLowerPrices prices{{"fixture:other",100}, {"fixture:finish",1},
+        {"fixture:scour",0.5}, {"fixture:cheap",0.25}, {"fixture:new",0.125}};
+    for (auto& action : registry.actions) action.cost_keys = {"fixture:other"};
+    const auto bench = registry.index_by_id.at("bench:scoped-fixture-0");
+    const auto scour = registry.index_by_id.at("scour");
+    registry.actions[bench].cost_keys = {"fixture:finish"};
+    registry.actions[scour].cost_keys = {"fixture:scour"};
+    auto goal = family_goal_100(); goal.slots[0].min_tier = 2;
+    pc_item_state start{}; pc_item_clear(&start); start.rarity = PC_RARITY_RARE;
+    SolveOptions options; options.goal_proof_profile = GoalProofProfile::TargetNeutralZero;
+    options.consider_imprint_programs = false;
+    options.allow_economic_restart = false;
+    options.native_retention_lower = true;
+    options.current_scoped_retention = true;
+    options.max_solver_owned_bytes = 1ull << 30;
+    options.max_states=options.max_discovered_states=options.max_expanded_states=64;
+    CalcContext calc(session,goal,registry,{bench,scour});
+    Impl work(calc,start,prices,options);
+    PC_CHECK(!work.independent_retention_ready());
+    PC_CHECK(work.completion_proof_lower_value(work.result.start_state)==0);
+    unsigned slices=0;
+    while (!work.advance_setup()) { ++slices; }
+    PC_CHECK(slices>1 && work.native_retention_potential);
+    PC_CHECK(work.goal_cover_stage==Impl::SetupStage::Disabled && !work.goal_cover_cost_ready);
+    PC_CHECK(!work.proof_capabilities().positive_global_lower &&
+        !work.proof_capabilities().lower_retirement && !work.proof_capabilities().global_exact_closure);
+    if (!work.native_retention_potential) {
+        std::fprintf(stderr,"scoped lower refusal: %s\n",work.native_retention_refusal.c_str()); return;
+    }
+    const auto saved = work.native_retention_potential;
+    const auto root = work.result.start_state;
+    const auto root_lower = work.native_retention_lower_value(root);
+    PC_CHECK(root_lower>0.9 && root_lower<=1);
+    PC_CHECK(work.certified_global_lower_bound()==0); // no public/profile flip
+    PC_CHECK(work.progress().lower_bound==0);
+    PC_CHECK(saved->native_action_relations>=registry.actions.size());
+    const auto finish = calc.outcomes(root,bench);
+    const auto reset = calc.outcomes(root,scour);
+    PC_CHECK(finish.supported && finish.applicable && finish.entries.size()==1 && finish.choice_groups.empty());
+    PC_CHECK(reset.supported && reset.applicable && reset.entries.size()==1 && reset.choice_groups.empty());
+    if (finish.entries.size()!=1 || reset.entries.size()!=1) return;
+    const auto terminal=finish.entries.front().state, normal=reset.entries.front().state;
+    PC_CHECK(finish.entries.front().probability==1 && calc.is_goal_state(calc.state(terminal)));
+    PC_CHECK(reset.entries.front().probability==1 && !calc.is_goal_state(calc.state(normal)));
+    PC_CHECK(calc.state(normal).rarity==PC_RARITY_NORMAL);
+    PC_CHECK(work.native_retention_lower_value(normal)>1);
+    work.result.values.assign(calc.state_count(),123); // rejected working data cannot leak
+    work.result_statewise_values_rejected=true;
+    work.focused_lower_completion_proof_values.assign(calc.state_count(),456);
+    const auto lower=work.certified_incremental_lower_values();
+    PC_CHECK(lower[root]==root_lower && lower[terminal]==0 && lower[normal]>1);
+    // Install one COMPLETE deterministic native Scour row from the independently
+    // enumerated kernel. This fixture controls the consumer, not graph admission.
+    solve_detail::SparseRow row; row.owner_state=root; row.admitted=false;
+    row.transition_offset=work.transition_cache->successors.size(); row.transition_count=1;
+    const auto row_id=work.transition_cache->rows.size(); work.transition_cache->rows.push_back(row);
+    work.transition_cache->successors.push_back(normal); work.transition_cache->probabilities.push_back(1);
+    work.priced_rows.resize(row_id+1); work.priced_rows[row_id].operator_index=scour;
+    work.priced_rows[row_id].cost=0.5;
+    work.expanded.assign(calc.state_count(),1);
+    Impl::BoundedPolicyIncumbent incumbent;
+    // The native Bench kernel above independently witnesses root U=1, goal U=0.
+    // No finite upper at Normal is asserted or needed for source-row retirement.
+    incumbent.certified_upper_bound=incumbent.evaluated_policy_cost=1;
+    // Stand in for the checked issuer only at this consumer seam. These flags
+    // do not exercise or qualify graph admission; the native kernel and paid
+    // case analysis above are the separate oracle for the fixture's value.
+    incumbent.independently_certified=incumbent.independently_evaluated=true;
+    incumbent.proper=incumbent.executable=true;
+    incumbent.values.assign(calc.state_count(),kInfinity);
+    incumbent.values[root]=1; incumbent.values[terminal]=0;
+    const auto classify=[&](bool consumed, bool root_only, bool rejected, bool self,
+                            bool policy_upper=true) {
+        work.options.native_retention_consume=consumed;
+        auto boundary=incumbent; boundary.compiled_root_entry_only=root_only;
+        boundary.statewise_values_rejected=rejected; work.output_incumbent=boundary;
+        work.transition_cache->successors[row.transition_offset]=self ? root : normal;
+        auto& active_row=work.transition_cache->rows[row_id];
+        active_row.self_probability=active_row.embedded_self_probability=self ? 1 : 0;
+        active_row.self_probability_embedded=self;
+        Impl::IncrementalAlternativeRow alternative;
+        alternative.state=root; alternative.operator_index=scour; alternative.row_index=row_id;
+        work.incremental_alternative_rows={alternative}; work.incremental_classification_cursor=0;
+        work.incremental_classification_active=true; work.incremental_classification_reclassify_all=true;
+        work.incremental_classification_upper=policy_upper
+            ? Impl::IncrementalClassificationUpper::OutputIncumbent
+            : Impl::IncrementalClassificationUpper::ResultValues;
+        work.incremental_classification_certified_lower=work.certified_incremental_lower_values();
+        PC_CHECK(!work.advance_incremental_classification());
+        return work.incremental_alternative_rows.front().status;
+    };
+    PC_CHECK(classify(false,false,false,false)==Status::Unresolved);
+    PC_CHECK(classify(true,false,false,false)==Status::NonImproving); // concrete changed consumer
+    PC_CHECK(work.incremental_alternative_rows.front().lower_q>1);
+    PC_CHECK(static_cast<long double>(work.incremental_alternative_rows.front().lower_q)<=
+        0.5L+static_cast<long double>(lower[normal]));
+    PC_CHECK(classify(true,true,false,false)==Status::Unresolved); // root cost is not statewise
+    PC_CHECK(classify(true,false,true,false)==Status::Unresolved);
+    incumbent.proper=false;
+    PC_CHECK(classify(true,false,false,false)==Status::Unresolved); // no checked proper-policy issuer
+    incumbent.proper=true;
+    work.result_statewise_values_rejected=false;
+    work.result.values=incumbent.values;
+    PC_CHECK(classify(true,false,false,false,false)==Status::Unresolved); // working values are no policy issuer
+    work.result_statewise_values_rejected=true;
+    PC_CHECK(classify(true,false,false,true)==Status::Unresolved); // no forced-repeat lower promotion
+    // A choice's source return can be encoded by has_self, without a source
+    // entry in its successor array. It must receive the same conservative veto.
+    auto& choice_row=work.transition_cache->rows[row_id];
+    choice_row.transition_count=0; choice_row.choice_offset=work.transition_cache->choices.size();
+    choice_row.choice_count=1;
+    solve_detail::SparseChoiceGroup choice; choice.probability=1; choice.has_self=true;
+    choice.successor_offset=work.transition_cache->choice_successors.size(); choice.successor_count=1;
+    work.transition_cache->choices.push_back(choice); work.transition_cache->choice_successors.push_back(normal);
+    PC_CHECK(classify(true,false,false,false)==Status::Unresolved);
+    choice_row.transition_count=1; choice_row.choice_count=0;
+    work.options.native_retention_consume=false;
+    PC_CHECK(work.certified_incremental_lower_values()==std::vector<double>(calc.state_count(),0));
+    PC_CHECK(work.native_retention_potential==saved && saved->lookup(calc,prices,start,false).value()>0.9);
+    work.options.native_retention_consume=true;
+    auto outside=start; outside.generic_influence_bits=1;
+    PC_CHECK(work.native_retention_lower_value(calc.intern_item(outside))==0);
+    auto retry=calc.state(root); retry.goal_progress_retry_basin=1;
+    PC_CHECK(work.native_retention_lower_value(calc.intern_state(retry))==0);
+    auto repriced=prices; repriced["fixture:finish"]=0.25;
+    PC_CHECK(!saved->lookup(calc,repriced,start,false));
+
+    // Genuine probability/retention fixture. Start with one natural goal and
+    // one junk affix. Annul costs 1 and removes either with probability 1/2.
+    // On a miss, Annul the sole junk (1), then Bench the goal (1). Other laws
+    // cost 100; Scour (1/2) leaves Normal, requiring an expensive rarity change.
+    // Empty Rare has value 1, lone junk has value 2, and the root has value
+    // 1 + (1/2)*0 + (1/2)*2 = 2. A favorable-deletion oracle would give 1.
+    auto stochastic_registry=registry;
+    const auto annul=registry.index_by_id.at("annul");
+    stochastic_registry.actions[annul].cost_keys={"fixture:finish"};
+    auto stochastic_start=start;
+    place(&stochastic_start,0,1,10); place(&stochastic_start,1,5,20);
+    CalcContext stochastic_calc(session,goal,stochastic_registry,{bench,scour,annul});
+    const auto stochastic_root=stochastic_calc.intern_item(stochastic_start);
+    const auto loss=stochastic_calc.outcomes(stochastic_root,annul);
+    PC_CHECK(loss.supported && loss.applicable && loss.entries.size()==2 && loss.choice_groups.empty());
+    std::uint32_t missed=kNoId;
+    for (const auto& entry:loss.entries) {
+        PC_CHECK(entry.probability==0.5);
+        if (!stochastic_calc.is_goal_state(stochastic_calc.state(entry.state))) missed=entry.state;
+    }
+    PC_CHECK(missed!=kNoId);
+    if (missed!=kNoId) {
+        const auto clear=stochastic_calc.outcomes(missed,annul);
+        PC_CHECK(clear.supported && clear.entries.size()==1 && clear.entries.front().probability==1);
+        if (clear.entries.size()==1) {
+            const auto recover=stochastic_calc.outcomes(clear.entries.front().state,bench);
+            PC_CHECK(recover.supported && recover.entries.size()==1 && recover.entries.front().probability==1 &&
+                stochastic_calc.is_goal_state(stochastic_calc.state(recover.entries.front().state)));
+        }
+    }
+    Impl stochastic(stochastic_calc,stochastic_start,prices,options);
+    while (!stochastic.advance_setup()) {}
+    PC_CHECK(stochastic.native_retention_potential);
+    PC_CHECK(stochastic.native_retention_lower_value(stochastic.result.start_state)>1.9 &&
+        stochastic.native_retention_lower_value(stochastic.result.start_state)<=2);
+
+    // Newly admitted actual cheaper action: the SAME native Bench mechanics,
+    // a distinct priced registry operator. Exact optimum becomes 1/4. Complete
+    // registry coverage includes it even before local-family materialization.
+    auto cheaper_registry=registry; auto cheap=registry.actions[bench];
+    cheap.id="fixture:cheap-bench"; cheap.cost_keys={"fixture:cheap"};
+    const auto cheap_id=static_cast<std::uint32_t>(cheaper_registry.actions.size());
+    cheaper_registry.index_by_id[cheap.id]=cheap_id; cheaper_registry.actions.push_back(cheap);
+    CalcContext cheaper_calc(session,goal,cheaper_registry,{bench,scour,cheap_id});
+    PC_CHECK(!saved->lookup(cheaper_calc,prices,start,false));
+    Impl cheaper(cheaper_calc,start,prices,options); while (!cheaper.advance_setup()) {}
+    PC_CHECK(cheaper.native_retention_potential && cheaper.native_retention_lower_value(cheaper.result.start_state)>0);
+    PC_CHECK(cheaper.native_retention_lower_value(cheaper.result.start_state)<=0.25);
+    const auto cheap_finish=cheaper_calc.outcomes(cheaper.result.start_state,cheap_id);
+    PC_CHECK(cheap_finish.supported && cheap_finish.entries.size()==1 &&
+        cheap_finish.entries.front().probability==1 && cheaper_calc.is_goal_state(cheaper_calc.state(cheap_finish.entries.front().state)));
+
+    // New probability law is NOT aliased to old Exalt. Grant all goals in the
+    // support model and stop for its paid cost in the retention model.
+    auto newer_registry=registry; auto newer=registry.actions[registry.index_by_id.at("exalt")];
+    newer.id="fixture:new-law"; newer.params.type=ActionType::FoulbornExalt;
+    newer.cost_keys={"fixture:new"};
+    const auto newer_id=static_cast<std::uint32_t>(newer_registry.actions.size());
+    newer_registry.index_by_id[newer.id]=newer_id; newer_registry.actions.push_back(newer);
+    CalcContext newer_calc(session,goal,newer_registry,{bench,scour});
+    auto support=PhaseLowerProducer::prepare(newer_calc,prices,start,
+        {PhaseTableRole::MaskCompletion,2,1,std::vector<double>(2,0)});
+    PC_CHECK(support->primitives.size()==newer_registry.actions.size());
+    PC_CHECK(support->primitives[newer_id].priced && support->primitives[newer_id].reachable_goals==1 &&
+        support->primitives[newer_id].independent_paid_exit);
+    Impl newer_work(newer_calc,start,prices,options); while (!newer_work.advance_setup()) {}
+    PC_CHECK(newer_work.native_retention_potential && newer_work.native_retention_lower_value(newer_work.result.start_state)<=0.125);
+    PC_CHECK(newer_work.native_retention_lower_value(newer_work.result.start_state)>0);
+    auto companion_registry=registry; auto companion=newer;
+    companion.id="fixture:companion-exit"; companion.params.type=ActionType::Exalt;
+    companion.uses_companion_state=true; companion.cost_keys.clear();
+    companion_registry.index_by_id[companion.id]=companion_registry.actions.size();
+    companion_registry.actions.push_back(companion);
+    CalcContext companion_calc(session,goal,companion_registry,{bench,scour});
+    Impl companion_work(companion_calc,start,prices,options);
+    while (!companion_work.advance_setup()) {}
+    PC_CHECK(companion_work.native_retention_potential &&
+        companion_work.native_retention_lower_value(companion_work.result.start_state)==0);
+
+    // Uncovered generated family, coverage target, any-k and restore request:
+    // retain zero. A scope refusal cannot leave a partially installed vector.
+    for (unsigned negative=0; negative<4; ++negative) {
+        auto refused_goal=goal; auto refused_options=options;
+        if (negative==0) refused_goal.automatic_candidate_kind_mask |= 1u<<31;
+        if (negative==1) refused_goal.terminal.extras=ExtraExplicitPolicy::Allow;
+        if (negative==2) {
+            GoalSlot suffix; suffix.family_id=104; suffix.min_tier=1;
+            refused_goal.slots.push_back(suffix); refused_goal.min_satisfied_slots=1;
+        }
+        if (negative==3) refused_options.consider_imprint_programs=true;
+        CalcContext refused_calc(session,refused_goal,registry,{bench,scour});
+        Impl refused(refused_calc,start,prices,refused_options);
+        while (!refused.advance_setup()) {}
+        PC_CHECK(refused.native_retention_attempted && !refused.native_retention_potential);
+        PC_CHECK(!refused.native_retention_refusal.empty() && refused.native_retention_live_bytes==0);
+        if (negative==0) PC_CHECK(refused.native_retention_refusal.find("uncovered generated family")!=std::string::npos);
+        PC_CHECK(refused.completion_proof_lower_value(refused.result.start_state)==0);
+        PC_CHECK(!saved->lookup(refused_calc,prices,start,false) || negative==3);
+        if (negative==3) PC_CHECK(!saved->lookup(refused_calc,prices,start,true));
+    }
+    const auto unsafe=PhaseLowerProducer::prepare(calc,prices,start,
+        {PhaseTableRole::MaskCompletion,2,1,{1000,0}});
+    PC_CHECK(!unsafe->original_candidate_accepted && unsafe->values[0]<=1);
+    // Numeric proposal remains untrusted; interruption retains no partial
+    // support/certificate. This callback tests the existing native checkpoint.
+    QuotientLowerBudget cancelled; unsigned checkpoints=0;
+    cancelled.cancelled=[&] {return ++checkpoints>2;};
+    bool interrupted=false;
+    try { (void)PhaseLowerProducer::prepare(calc,prices,start,
+        {PhaseTableRole::MaskCompletion,2,1,std::vector<double>(2,1000)},cancelled); }
+    catch (const PhasePreparationCancelled&) {interrupted=true;}
+    PC_CHECK(interrupted);
+    PC_CHECK(saved->lookup(calc,prices,start,false).value()>0.9);
+    Impl pending(calc,start,prices,options);
+    (void)pending.advance_setup();
+    PC_CHECK(pending.retention_setup_task && !pending.native_retention_potential);
+    PC_CHECK(pending.completion_proof_lower_value(pending.result.start_state)==0);
+    pending.retention_setup_task.reset(); // abandoned child destroys its owned proof state
+    PC_CHECK(!pending.native_retention_potential);
+    Impl capped(calc,start,prices,options);
+    capped.options.max_solver_owned_bytes=capped.estimated_owned_bytes_with_calc(calc.audited_estimated_owned_bytes())+(2ull<<20);
+    while (!capped.advance_setup()) {}
+    PC_CHECK(capped.native_retention_attempted && !capped.native_retention_potential && capped.native_retention_live_bytes==0);
+    auto ungated_options=options; ungated_options.current_scoped_retention=false;
+    Impl ungated(calc,start,prices,ungated_options);
+    while (!ungated.advance_setup()) {}
+    PC_CHECK(!ungated.native_retention_attempted && !ungated.native_retention_potential);
+    PC_CHECK(!ungated.independent_retention_ready() && ungated.completion_proof_lower_value(ungated.result.start_state)==0);
+}
+
 void run_solver_phase_lower_tests() {
+    run_solver_scoped_lower_tests();
     using namespace poecraft::solver::quotient;
     const auto rejects = [](const auto& operation) {
         bool refused = false;

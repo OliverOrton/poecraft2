@@ -46,6 +46,9 @@ PhaseProbabilityInterval phase_weight_probability(std::uint64_t part, std::uint6
 double phase_two_exit_lower(double cost, PhaseProbabilityInterval probability,
                             double success, double failure);
 double phase_price_lower(const ActionDescriptor&, const PhaseLowerPrices&);
+// Unknown/new mechanics and companion-state actions receive only the paid
+// first-exit floor. This grants success afterward; it claims no native law.
+bool phase_primitive_needs_paid_exit(const ActionDescriptor&);
 
 // Arithmetic only: callers must prove distinct goals and conditional-history
 // authority. Each row is one goal's upper at the three possible draw positions.
@@ -76,6 +79,7 @@ struct PhasePrimitiveWitness {
     std::uint32_t reachable_goals = 0;
     double price_lower = 0;
     bool priced = false;
+    bool independent_paid_exit = false; // favorable full-goal grant; no native effect law
 };
 
 /* A checked pointwise expectation relaxation. It deliberately grants every

@@ -11,7 +11,7 @@
 namespace poecraft::solver {
 using namespace quotient;
 namespace {
-constexpr std::uint64_t version = 0x5048415345000002ull;
+constexpr std::uint64_t version = 0x5048415345000003ull;
 constexpr std::uint64_t maximum = 16ull << 20;
 double down(double x) { return x == 0 ? 0 : std::max(0.0, std::nextafter(x, 0.0)); }
 double up(double x) { return std::nextafter(x, std::numeric_limits<double>::infinity()); }
@@ -97,6 +97,12 @@ StableKey context_key(const CalcContext& calc, const PhaseLowerPrices& prices) {
         calc.goal().disabled_action_families, calc.layout().slots.size()};
     append(result, session.data->artifact_data_hash);
     append(result, session.data->artifact_game_data_hash);
+    result.push_back(static_cast<unsigned>(calc.goal().terminal.extras));
+    for (const auto& range : {calc.goal().terminal.prefixes, calc.goal().terminal.suffixes}) {
+        result.push_back(range.has_value());
+        result.push_back(range ? range->minimum : 0);
+        result.push_back(range ? range->maximum : 0);
+    }
     for (const auto& slot : calc.layout().slots) append(result, slot.satisfying_mask);
     // Registry and session are immutable within a CalcContext. Full descriptors
     // and full prices bind reuse; no hash equality or incumbent participates.
@@ -164,6 +170,12 @@ void grammar_coverage(const CalcContext& calc) {
     }
 }
 } // namespace
+
+bool phase_primitive_needs_paid_exit(const ActionDescriptor& action) {
+    const auto type = static_cast<int>(action.params.type);
+    return action.uses_companion_state || (!action.synthetic &&
+        (type < 0 || type > static_cast<int>(ActionType::RemoveCraftedModifiers)));
+}
 
 PhaseLowerProposal phase_completion_proposal(const std::vector<double>& acquisition,
         std::uint32_t required) {
@@ -282,16 +294,21 @@ solve_detail::CooperativeTask<std::shared_ptr<const PreparedPhaseLowerView>> Pha
     for (const auto& action : calc.registry().actions) {
         checkpoint(budget);
         co_await solve_detail::CooperativeCheckpoint{};
-        if (action.uses_companion_state || (!action.synthetic &&
-                (static_cast<int>(action.params.type) < 0 || static_cast<int>(action.params.type) > 25)))
-            throw std::invalid_argument("phase lower unknown primitive relation");
-        const auto reach = action_explicit_affix_reachable_mask(calc.session(), action, true);
         std::uint32_t goals = 0;
-        for (std::size_t slot = 0; slot < calc.layout().slots.size(); ++slot)
-            for (std::size_t word = 0; word < reach.size(); ++word)
-                if (reach[word] & calc.layout().slots[slot].satisfying_mask.at(word)) { goals |= 1u << slot; break; }
+        if (phase_primitive_needs_paid_exit(action)) {
+            // math: obligation CLM-0012 - Complete optimistic fallback, even
+            // for unmaterialized generated dependencies. Do not ask an older
+            // native reach producer to guess a newer law or a restore state.
+            goals = size - 1;
+        } else {
+            const auto reach = action_explicit_affix_reachable_mask(calc.session(), action, true);
+            for (std::size_t slot = 0; slot < calc.layout().slots.size(); ++slot)
+                for (std::size_t word = 0; word < reach.size(); ++word)
+                    if (reach[word] & calc.layout().slots[slot].satisfying_mask.at(word)) { goals |= 1u << slot; break; }
+        }
         const double cost = phase_price_lower(action, prices);
-        witnesses.push_back({action.id, goals, std::isfinite(cost) ? cost : 0, std::isfinite(cost)});
+        witnesses.push_back({action.id, goals, std::isfinite(cost) ? cost : 0, std::isfinite(cost),
+            phase_primitive_needs_paid_exit(action)});
         if (!std::isfinite(cost)) continue;
         const auto [it, inserted] = cheapest.emplace(goals, cost);
         if (!inserted) it->second = std::min(it->second, cost);

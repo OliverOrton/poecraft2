@@ -780,6 +780,20 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         if (result_statewise_values_rejected) capabilities.global_exact_closure = false;
         return capabilities;
     }
+    bool native_retention_enabled() const {
+#if defined(__EMSCRIPTEN__)
+        return options.native_retention_lower && proof_capabilities().positive_global_lower;
+#else
+        return options.native_retention_lower &&
+            (proof_capabilities().positive_global_lower || options.current_scoped_retention);
+#endif
+    }
+    bool independent_retention_ready() const {
+        // Only the checked native issuer installs this pointer. This is local
+        // lower authority; it never changes the profile's closure permission.
+        return native_retention_enabled() && options.native_retention_consume &&
+            static_cast<bool>(native_retention_potential);
+    }
     std::unordered_map<std::string, double> prices;
     SolveResult result;
     bool result_statewise_values_rejected = false;

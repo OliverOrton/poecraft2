@@ -197,6 +197,11 @@ int main(int argc, char** argv) {
         std::printf("solver phase-lower tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
         return pctest::g_failures == 0 ? 0 : 1;
     }
+    if (argc > 1 && std::string(argv[1]) == "--solver-scoped-lower-only") {
+        run_solver_scoped_lower_tests();
+        std::printf("solver scoped-lower tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     if (argc > 1 && std::string(argv[1]) == "--solver-selected-fallback-only") {
         run_solver_selected_fallback_tests();
         std::printf("solver selected-fallback tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);

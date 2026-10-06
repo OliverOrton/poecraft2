@@ -1026,6 +1026,10 @@ solver::SolveOptions solve_options(
     value.selective_completion_service =
         holder.selective_completion_service;
     value.native_retention_lower = holder.native_retention_diagnostic != solver::NativeRetentionDiagnosticMode::Off;
+#if !defined(__EMSCRIPTEN__)
+    value.current_scoped_retention = value.native_retention_lower &&
+        requested_solver_mode(options) == PC_SOLVER_MODE_CURRENT;
+#endif
     value.native_retention_numerical_reuse = holder.native_retention_diagnostic == solver::NativeRetentionDiagnosticMode::Reuse ||
         holder.native_retention_diagnostic == solver::NativeRetentionDiagnosticMode::CheckedTarget ||
         holder.native_retention_diagnostic == solver::NativeRetentionDiagnosticMode::ReuseUnconsumed;

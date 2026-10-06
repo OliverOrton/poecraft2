@@ -2560,6 +2560,7 @@ SolveProgress SolveWork::Impl::progress() const {
                 }
             }
             const bool exact_closed =
+                proof_capabilities().global_exact_closure &&
                 full_non_goal_closure && !target_gap_stop &&
                 !result.diagnostics.state_cap_hit &&
                 !result.diagnostics.resource_cap_hit &&
@@ -2571,7 +2572,7 @@ SolveProgress SolveWork::Impl::progress() const {
                 value.lower_bound = value.start_value_bound;
             }
         }
-        if (options.native_retention_lower) {
+        if (options.native_retention_lower && proof_capabilities().positive_global_lower) {
             value.lower_bound=globally_certified_action_envelope_lower_bound(value.lower_bound,
                 incremental_action_generation,incremental_envelope_closed,
                 result.diagnostics.independent_goal_cover_lower_bound);

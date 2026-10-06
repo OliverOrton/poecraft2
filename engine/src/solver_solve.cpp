@@ -684,8 +684,7 @@ SolveWork::Impl::Impl(
         goal_cover_requested = proof_capabilities().positive_global_lower &&
             (options.high_impact_executable_uppers ||
              options.native_retention_lower);
-        retention_setup_pending = proof_capabilities().positive_global_lower &&
-            options.native_retention_lower;
+        retention_setup_pending = native_retention_enabled();
         if (!proof_capabilities().positive_global_lower)
             goal_cover_stage = SetupStage::Disabled;
         result.diagnostics.solve_setup_ns = static_cast<std::uint64_t>(
