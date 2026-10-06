@@ -7,6 +7,268 @@ Oliver authorized this continuation at 2026-10-05 03:10 UTC, through
 `dot/sol61-solver-causal-20261005`; diverged research `040993ec` and
 review `4c9f078d` supply evidence, not a blanket merge.
 
+## Resumed Current repair - October 6
+
+Local repairb200aec9e1b971022878ac9a6f461f13af702149 (engine
+dc591b50b51d2df895fe51c1d8c60aee3798ce37) uses the existing initial checker
+to certify the exact physical root and retains the identical checked graph in
+its separate root-only role. Normal construction first demonstrated an ordinary
+wrapper compatibility loss when its completed exact quotient replaced458 rows
+with193 at unit1501. The repair preserves root authority without loosening
+ordinary prefix, typed-context, paid-support or shared-memory gates. A subsequent
+retained-only failure at unit1527 was a legitimate publication transfer; the
+corrected check follows the checked root certificate through publication and
+early Finish. The closed finite domain needs no missing continuation. Temporary
+diagnostic copies were removed; all original failed receipts remain.
+
+Canonical Ninja/max2 jobs with absolute Python and repaired launcher29ae/
+SHA670a258e qualified five selectors:12,754 checks, zero failures. Tests
+SHA cc6ba145be3b45d4333b4151fbea4d42d84c83ac20bf2adfc0e3c6e445505d4e;
+Benchmark SHA9d221727b02d29786877068200670238b064d38ef37e313ac188650700719ca6.
+The preserved read-only control96732 remains byte-verified.
+
+The fresh matched original Conquest pair is complete, same law3/request/prices/
+scope/TargetNeutralZero and120s Finish/1GiB/150s native/165s host. Both arms
+independently check and export101311.35474896732, success1/off-policy0,
+cap mask0, identical6557-byte strategy SHA
+d65787d11ad895d5925ce9dd4d0aefde483e53bc25df3a80a6a9dfe7a0d7e053. Saving0.
+Control122.286s; treatment122.384s. Treatment demonstrates one normal handoff,
+eight selected cells332–339, all native expansions complete,88 committed rows
+and admitted paid first variants. Selection is not continuation authority.
+Joint assembly37 attempts/0 successes (control36/0) still stops on missing
+completed row/certified frontier at state11810, mask16, owner rows0; full physical
+and controller identity are not inferred from that mask. The paid complete tail
+remains unresolved, so no cheaper checked challenger reaches retention/export.
+Whole-search cause and introducing commit remain unproved.
+
+Evidence and returned strategy are preserved in
+`C:\Users\Oliver\Documents\Codex\2026-10-04\task-3\current-repair-native-20261006`.
+The compact pair summary and stage receipts bind source/binaries/inputs and
+original negatives. LOCAL released2026-10-06T18:13:38.754637Z: elevated
+ErrorActionStop global native census0, Terminal windows0, every owned stage
+clean with exact identities absent. This owner retains end-to-end repair
+ownership. No Current/Finder/WASM activation, push, main merge or deployment.
+Next source-only gate is the actually uncovered complete paid tail after the
+eight-cell service, preserving existing ceilings and every-positive-entry checks.
+
+### Successor-support repair — qualified native negative
+
+Local source `353d93eeff76bfc43d72315e8386ed9d0c361fd1` (production change
+`0a9586e889649dbaaedf9a4197bcb6bd67bdcd87`; engine
+`faac715b4646c6c7c828e0d588abdd99c348b641`, production source
+`6a6d5e808e517a3dac426511771a9d4e40aaa2d7`) selects the next finite test from
+that negative. Source inspection finds that `select_joint_policy_seed_row`
+counts unavailable successors only before any incumbent object exists. Thus
+an object whose table is rejected or root-only disables that preference even
+though it provides no nonroot continuation values. This is a construction
+fact and a causal hypothesis for the measured failed assemblies, not a proven
+explanation of the entire Conquest search or its introducing commit.
+
+The existing assembly owner now passes its completion census to seed selection.
+When no statewise upper is available, rows whose positive exits already have
+eligible completed/priced native rows precede rows with uncovered exits; normal
+progress/cost preferences order each group. A nonzero owner row count alone is
+insufficient. All positive stochastic exits and positive observed-choice groups
+remain included. This one-step preference proves neither complete closure nor
+properness. The existing fixed-policy evaluation, strict publication closure,
+independent native checking, paid support, retention and export gates remain
+mandatory; no value table, root scalar or lower authority is restored. There is
+no new mode, candidate family, ledger allocation, runner or cap increase.
+
+Selection-only SSP checks are added to the existing focused selector, alongside
+its unchanged normal-construction quotient/early-Finish cases. They cover a tiny
+positive uncovered exit, a successor with an unfinished owner row, restored
+completed support and root-only/rejected-table versus statewise roles. The SSP
+is explicitly not a native crafting recipe or checked economic gain.
+
+**Status at preparation, before the next LOCAL grant:** source committed; scoped whitespace review passes. Unbuilt, untested,
+unactivated and economically unmeasured. Lower owns LOCAL; no heavy work was
+launched. The `b200aec9` five-selector qualification and tied matched pair stay
+attached to that exact older engine and binaries. The new ordering may still
+choose an improper closed loop or yield no cheaper controller; unchanged proof
+owners must reject either failure.
+
+**First finite batch after parent grants LOCAL:** repaired launcher `29ae` and
+canonical Ninja with at most two compiler jobs; build header smoke, Tests and
+Benchmark, run current-support-handoff plus assertion-service, selected-fallback,
+proof-handoff and bounded-finish selectors, then run the same original Conquest
+control/treatment request serially only if focused qualification passes. Preserve
+control `96732` and all existing receipts. Keep TargetNeutralZero, 120s Finish /
+1GiB / 150s native / 165s host per arm and existing eight-cell, six-candidate and
+two-new-entry ceilings. Report complete candidate/checker starts and the returned
+product strategy, not just serviced row counts. Release LOCAL immediately after
+owned-identity and elevated process/window checks; this owner keeps end-to-end
+repair responsibility. No unchanged repeat, private210 activation or release
+claim. The exact improved Bow request is still unverified.
+
+**Completed execution on `353d93ee`:** parent granted LOCAL after lower released.
+Canonical max2-job build passes in200.723s,127 owned identities absent; all five
+focused selectors pass12,829 checks/0 failures. Tests SHA
+`c94a988fd46c0f2e31747620ded9b701032fa0223c11cf66b2550cc24e915bbf`, Benchmark
+SHA`7d5f06514ee8a3fa043e74ac2aca345735f4f3a4f7fd5c4f3d1a38590fc49c28`.
+The original matched Conquest pair completes with identical inputs and both
+checked costs101311.35474896732, lower0, cap mask0, success1/off-policy0,
+identical6557-byte strategy SHA`d65787d11ad895d5925ce9dd4d0aefde483e53bc25df3a80a6a9dfe7a0d7e053`.
+Control122.603s/treatment122.288s; saving0. This qualifies C++ source behavior,
+not Current/Finder/WASM consumer activation or release economics.
+
+Treatment changes the construction/service path:3 handoffs,8 cells
+(868,869,870,880,3989-3992), all expansions complete,187 counted committed rows.
+All first committed variants are admitted and paid; complete coarse keys are
+recorded, while physical keys/controller entries remain unavailable. Joint
+assembly36 attempts/0 successes,42,580 completed rows, still refuses state7941,
+goal mask27, owner rows0, frontier uses0, renewal boundaries0/79. Control36/0,
+52,787 rows refuses state11735/mask16/0 rows/0/76. The changed paths and row
+counts are diagnostics, not evidence of a cheaper full tail or comparable net
+row productivity. Treatment upper passes40 requested/0 started/40 rejected,
+`seed_rejected_statewise_values_without_focused_fallback`. One-step support
+ordering is demonstrated in focused tests, but does not close this real search.
+Whole-search cause, introducing commit and physical identity at state7941 remain
+unproved. Preserve the earlier `b200aec9` eight-cell/88-row negative separately.
+
+Compact receipts in the same consumer-local evidence directory use prefix
+`support-`: `support-source-qualified.json`, `support-matched-pair-inputs.json`,
+`support-matched-pair-summary.json`, per-arm summaries/logs/receipts and returned
+strategy `support-conquest-treatment/strategies/sol61-trace-conquest5-currentmodel-120.strategy.json`.
+LOCAL released`2026-10-06T19:13:14.753879Z`, elevated global native census0,
+Terminal windows0, all8 owned stages clean and source unchanged. The owner
+retains end-to-end responsibility and has returned to source work.
+
+**Next ordinary source iteration, after release:**
+`9063c5fdf1443612ceba35b2ca3614c0361d30e3` (engine
+`7a7e8448a31a248db8dfd323dac908f8f21ec252`; production source
+`c510acf5db80f337d7a58b23b203c859d04a2c99`) corrects another object-presence
+guard in the same builder. After a proper fixed-policy evaluation, an incumbent
+without statewise values no longer forces further improvement before the
+complete proposal can reach publication. Existing strict improvement continues
+when statewise continuation values exist. Full native publication closure,
+properness, independent checking, comparison with the checked fallback, shared
+ledger, every positive entry and unchanged admission ceilings still decide
+acceptance. This is an evidence-selected source hypothesis, not proof that a
+complete candidate occurred before improvement in the measured Conquest arm.
+Unbuilt/untested/unactivated/unmeasured; scoped whitespace check passes. No heavy
+launch after release. Ready for the next parent-granted slot: the same max2-job
+qualification/focused batch, then the original pair if qualification passes;
+no unchanged source repeat or private210 activation.
+
+**Completed next slot — retain both failure and corrected result:** `9063c5fd`
+builds in14.695s, but focused Current support fails in2.012s. The actual owner
+queued an unchanged24-cost proper baseline before missing-tail service; the
+existing control assertion correctly rejects that dispatch. Root24 remains
+retained and valid; no Conquest arm ran on9063. Receipt/log and both binary pins
+remain, with preserved executables in `delivery-failed-9063-binaries`. No test
+assertion was removed or weakened.
+
+Ordinary correction `83906a6c94d35ac874eeaea3bc3b2a0ef49c8af6` (engine
+`8ccd00e9d966e1e6fafbd9c6ddba90bd6ec116e7`, production
+`ac7bafcc71e3fc2e4bbd24739cf2052c6fe11931`) only reserves early delivery for a
+proper graph-only proposal estimated cheaper than the retained checked upper.
+Equal/expensive estimates continue ordinary improvement. The comparison orders
+proposals and provides no native cost, lower or continuation authority. Build
+13.965s and all five focused selectors12,829 checks/0 failures pass. Tests SHA
+`87f11cb484ab7e5909766fe896afdb0656c64a1a066222d0fc36867281897709`; Benchmark
+SHA`506fff0d85f5126197da39cbdb8ebf388ce07b359ebd5e43285531b558742d28`.
+
+Its original matched Conquest pair again exports checked101311.35474896732 in
+both arms, success1/off-policy0, lower0, cap mask0, identical6557-byte strategy
+SHA`d65787d11ad895d5925ce9dd4d0aefde483e53bc25df3a80a6a9dfe7a0d7e053`.
+Control122.141s/treatment122.261s; saving0. Treatment diagnostics match353d93ee:
+3 handoffs,8 complete cells/187 counted paid rows,36 assemblies/0 successes,
+state7941/mask27 with owner rows0 and no certified frontier (0/79 renewal
+boundaries). Upper passes40 requested/0 started/40 rejected. Thus corrected
+delivery has not demonstrated a new completed candidate or moved this observed
+Conquest boundary. It does not prove that every failed attempt precedes fixed-
+policy evaluation; that attempt-stage history is not exposed by this summary.
+Whole-search cause, introducing commit and exact physical/controller entry at
+7941 remain unresolved. All prior distinct negatives and the root-authority
+correctness result remain.
+
+Same evidence directory, prefix `delivery-`: corrected qualification, immutable
+pair inputs, compact pair/arm summaries, logs/receipts and returned strategy
+`delivery-conquest-treatment/strategies/sol61-trace-conquest5-currentmodel-120.strategy.json`.
+LOCAL released`2026-10-06T20:20:33.876354Z`: elevated native census0, Terminal
+windows0, all10 owned stages clean (including the preserved failed qualification),
+source unchanged within each stage. No deployment, consumer activation or merge.
+
+**Next finite tail source — no heavy work after release:**
+`af48399842b056aa1c10bc27ba35d577270fe1b4` (proposal01109141 plus the
+all-required guard; engine `561a0b877154f9a5aa7520011f9fbd94351bb28e`, production
+`bf877b6713b3fe70cbd78c67ec21b8d28da6e823`) applies the supplied economic
+report's finite Annul→inevitableChaos comparison to the existing normal
+`RerollVersusRepair` complete-held candidate. When every requested goal is
+required, native requested-target-goal tests at the repair occupancy route zero
+target progress directly to the existing paid Chaos programme; any requested
+target goal retains the existing Annul programme. Subset-goal contracts keep
+the original repair path because cleanup without target progress may suffice.
+ Existing held-goal, dominance/frame, paid setup/cleanup/recovery,
+full original-root evaluation and every-positive-programme-entry validation
+remain mandatory. No new variant, candidate, row-service cell, entry budget,
+mode or runner is added. Growth already uses this requested-goal distinction.
+This is an economic proposal requiring native kernel/controller correspondence
+and full checking, not an accepted saving or whole-search repair. It retains
+the narrow complete-held domain and still does not admit historicalP0.
+
+The existing one/two-target component tests are included in the existing focused
+selector: complete native evaluation, reached-entry validation, deduplication
+and1000 previously approved native simulation trials remain separate from
+normal Current construction. Source only: unbuilt/untested/unactivated/
+unmeasured; scoped whitespace review passes. Ready for the next parent-granted
+max2-job qualification, expanded focused selector and the same original matched
+pair after qualification. Private210 remains default-off and deferred; exact
+improved Bow request remains unverified. Conditional economic work remains a
+bounded source probe alongside the unresolved main complete-tail boundary.
+
+### Bounded repair tail - qualified, no Conquest saving
+
+Parent granted the next LOCAL slot for `af48399842b056aa1c10bc27ba35d577270fe1b4`.
+Canonical Ninja/max2-job qualification passes in36.245s; all five focused
+selectors pass12,906 checks/0 failures. Tests SHA
+`eaf659a3999b2f1b11b318d13f9be321046c45bd2694c5a054df49e849b6d286`;
+Benchmark SHA`10734703510b15f1c5b6f4cd0ef0375d6b8e31eccbe70f77b1a6b6c20d430cb1`.
+Source/engine/production pins above remain unchanged throughout every stage.
+The existing one/two-target component fixtures complete native original-root
+checking and reached-programme-entry validation, retaining costs942.20959795000726
+and942.37761739992402 under their synthetic prices. These establish validity on
+those fixtures, not a matched saving, the Conquest economy or normal Current
+admission. The all-required-goals guard and subset-goal original repair remain.
+
+The fresh original Conquest pair completes: control122.330s, treatment122.241s;
+identical whole inputs, law3, prices/scope/TargetNeutralZero and120s Finish/1GiB/
+150s native/165s host. Both independently check and export101311.35474896732,
+lower0, cap mask0, complete cost reconciliation, success1/off-policy0. Saving0;
+the returned6557-byte strategies share SHA
+`d65787d11ad895d5925ce9dd4d0aefde483e53bc25df3a80a6a9dfe7a0d7e053`.
+No Current/Finder/WASM consumer activation or release claim follows.
+
+Native checker ownership is distinct from joint assembly. Both arms report
+selective-completion statusretained,3 checks, checked cost101311.35474896732.
+The input's `native_selective_completion_service=false` is not evidence that
+service was inactive: the constructor derives product scope and enables this
+owner independently. The receipt does not expose which candidate variant or
+runtime tail branch was reached. Treatment joint assembly still has36 attempts/
+0 successes,42,580 completed rows, last refusal
+`missing_completed_row_and_certified_frontier:state=7941:goal_mask=27:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/79`.
+Upper passes40 requested/0 started/40 rejected remain a separate census.
+Three handoffs select eight cells868,869,870,880,3989-3992; native expansion
+completes for all, with187 counted committed rows and admitted paid first
+variants. Full coarse keys are present; physical/controller entries remain
+unavailable. These diagnostics match the prior353/839 treatment, without
+proving every assembly attempt failed at the same stage or physical entry.
+
+Compact evidence in the existing consumer-local directory uses prefix `tail-`:
+`tail-source-qualified.json`, `tail-matched-pair-inputs.json`,
+`tail-matched-pair-summary.json`, `tail-native-service-projection.json`, stage
+logs/receipts and returned strategy
+`tail-conquest-treatment/strategies/sol61-trace-conquest5-currentmodel-120.strategy.json`.
+LOCAL released`2026-10-06T21:44:18.114453Z`: elevated ErrorActionStop global native
+census0, Terminal windows0, all8 owned stages clean and source unchanged, exact
+owned identities absent. This owner keeps end-to-end repair ownership and is
+source-only. No repeat on unchanged source, private210 activation, push, main
+merge or deployment. The next evidence gate must distinguish changed-tail
+reachability from the unresolved complete paid-tail support in normal joint
+construction. Whole-search cause, introducing commit and exact improved Bow
+request remain unproved; all earlier failures and tied comparisons remain.
+
 ## Question and first gate
 
 Identify the first demonstrated boundary in normal enumeration, admission,
@@ -618,3 +880,371 @@ for a compatible checked incumbent lacking statewise authority, preserving the
 existing builder's rejection of that table and every complete-support/checker/cap
 gate. This alternative is not applied or executed; improving a candidate against
 the costly primitive alone is not a win against the retained 101311 result.
+
+### Approved checked-graph capability extension, source frozen
+
+Oliver approves the focused extension and research-branch publication at 20:00
+UTC. Existing results/diagnosis checkpoint is committed locally at 14e75f8c;
+automatic approval review rejects its push for an unverified publication without
+trusted direct authorization in this execution context. No workaround or retry.
+
+Source fb59476f54601f81dc18a8bf2457d8eb7d3eb36b, engine
+51855004d3ce251253160d386558c428d25572e4, implements the same safe joint
+checkpoint/queue for a currently compatible independently checked graph lacking
+statewise authority, covering both root-only format and ordinary sticky-rejected
+tables. Focused seed/table/lower guards, native support, compiler/checker, paid
+scope, retained best fallback, one-shot checker and shared caps stay unchanged.
+Fixed owned observations export actual eligibility and active-versus-retained
+lineage through current telemetry. No new runner architecture.
+
+The [reviewed finite proposal](checks/checked-graph-joint-service-20261005/fixture-prerequisite-review.md)
+and [source/diff pins](checks/checked-graph-joint-service-20261005/ci-handoff.json)
+preserve all three old controls and add ordinary complete/missing-positive/cap
+cases plus actual unchecked/incompatible/stale refusals. The real checker must
+establish graph 13 while rejecting the deliberately perturbed unverified table
+14; no checked flags are fabricated. Root payload/scope identity is bound before
+checking to avoid aliasing the later ordinary capture. Constructor inactivity
+remains explicit and internal opening remains conditional. Source is unbuilt/
+untested: CI owns dependency-correct builds and parent LOCAL gates the one finite
+selector. Only success and a source-matched Benchmark unlock the newly approved
+one additional root, unchanged original 1 GiB/120/150/165 scope; allowance 0/1.
+Earlier 179 checks and matched negative retain their old source/economic limits.
+
+### Qualified graph-only service, matched product negative and closure follow-up
+
+The source checkpoint above subsequently receives matching CI/LOCAL acceptance:
+[six-case Tests receipt](checks/checked-graph-joint-native-20261005/summary.json)
+passes 429 checks, zero failures in 0.426 seconds, clean release 21:06:23 UTC.
+Root-only and ordinary rejected-table complete cases both independently check
+13-to-3; missing-positive/shared-cap controls retain 13 without checking an
+incomplete candidate. The constructor negative, sticky numerical veto, separate
+root fallback, invalid/stale provenance and live-ledger controls all remain.
+
+Matching Benchmark 96732e97 (15,166,266 bytes) passes 22 gates at fb59476f/51855004.
+Actual build: two header-dependent objects compiled, one target object reused;
+fragment-engine SHA is unchanged with proved fresh compilation/mtime, benchmark
+object SHA changes, all three and 72 unchanged archive objects enter the new link.
+The [one additional original Conquest Current invocation](checks/root-checked-graph-treatment-20261005/summary.json)
+finishes in 122.307 seconds with original scope/caps and TargetNeutralZero.
+Compatible graph-only product checkpoint and 36 attempts are now **activated**;
+zero complete joint successes and checked 101311.35474896732/byte-identical strategy
+mean **no measured economic recovery**. Independent evaluation is matched, proper,
+cost complete, success 1, zero off-policy mass/delta and solver cap mask 0. Upper
+seed service separately has 40 requests/refusals, zero starts. The checked fallback
+and released Bow/metamod gains remain untouched. No Finder/WASM/release claim.
+
+Clean release 21:17:37 UTC leaves original roots 2/2 and additional 1/1 spent.
+The complete new final receipt is [retained losslessly once](checks/root-checked-graph-treatment-20261005/receipt-retention.json),
+with raw runtime outputs locally ignored; no protected historical trace is read.
+No main merge, deployment, dev-server restart or further publication attempt occurs.
+
+Parent selects source/receipt follow-up. The [closure audit](checks/root-checked-graph-treatment-20261005/continuation-boundary-audit.md)
+locates outer state11735/mask16 at native 116.478 seconds, zero broad expansion/
+owned rows and no certified frontier. Exact physical/abstraction/control identity
+is absent, so it cannot be reconstructed from mask or borrowed from P0. All 76
+last requests remain open through bounded Finish; intervening saved samples show
+automatic synthesis. The graph-only failed-build branch returns before the direct
+exact-refinement handoff used without an incumbent. Counters named service-completions
+are selection/retirement, not completed rows. This is a supported ordering/service
+hypothesis and a demonstrated closure boundary, not a useful tail or whole cause.
+
+The [concrete finite falsification plan](checks/root-checked-graph-treatment-20261005/finite-service-falsification-plan.md)
+uses two native Magic-item counterparts with two genuine positive missing entries,
+preserves six old controls and derives paid complete policy predictions before
+actual checking. Its Tests-only source is now frozen at local
+87bf8020c7ecff2801898859026fecb39bbc0718, engine tree ad400977f0e59826c8b1ab887f0557c0935989f0.
+Only `engine/tests/test_solver_solve.cpp` changes in engine; production
+src/include/benchmark trees remain fb59476f and the six-case body is unchanged.
+The counterparts use actual ordinary owner service and ledger row completion,
+then separately test source retry cadence: ordinary completed rows do not advance
+the graph-only alternative-row checkpoint. Explicit existing assembly/checking
+and full paid independent checks at both actual positive entries isolate that
+condition without a production scheduling edit. Predicted 24-to-14.5 and both
+13.5 tails remain unbuilt/untested.
+
+[Frozen source prerequisites](checks/graph-only-missing-entry-source-20261005/fixture-prerequisite-review.md)
+and [Tests-only CI handoff](checks/graph-only-missing-entry-source-20261005/ci-handoff.json)
+carry exact source/diff/library/object/owner pins, required actual compile/link
+and native marker gates. Bounds remain 32 states/512 MiB/60 native/75 host,
+two genuine entries, unchanged qualified owner and no production/runner change.
+No local build/native has run at this checkpoint; parent serializes CI ownership,
+then grants native LOCAL only for a matching returned artifact. No unchanged
+Conquest rerun, private seed, stronger memory/lower or scalar root-entry reuse.
+
+The granted native control at 87bf8020/ad400977 with CI Tests 4cf5e6e8 (22 build
+gates) completes six old-control outputs, checked baseline 24, skipped immediate
+service, both paid Regal ledger rows and withheld retry, then fails explicit
+complete assembly in 0.450 seconds. [Retained negative](checks/graph-only-missing-entry-native-20261005/summary.json)
+has clean LOCAL release 22:22:40 UTC; exact final refusal was not printed. Case 7
+and challenger/entry checks remain unrun; 14.5 is unverified. No retry occurs.
+
+[Source-only assembly prerequisite audit](checks/graph-only-missing-entry-diagnostic-source-20261005/assembly-prerequisite-audit.md)
+identifies a changed premise: legal competing Annul rows lead to nonterminal
+Magic-empty, while graph-only builder improvement has no statewise frontier or
+capturable frozen resumable prefix. Completion of both Regal rows therefore
+does not prove the improved candidate's whole closure. This explanation is not
+the unlogged actual final reason or a production defect. Diagnostic-only local
+63bb3b23/tree520502e5 records the actual state/row inputs and full assembly failure
+before the unchanged acceptance assertion. Production and six controls remain
+unchanged; the [pinned Tests-only handoff](checks/graph-only-missing-entry-diagnostic-source-20261005/ci-handoff.json)
+is unbuilt/untested. No native retry, root or production correction is included.
+
+The granted diagnostic then uses CI Tests 1e575eac, 26 gates, at 63bb3b23/520502e5.
+[Its exact native negative](checks/graph-only-missing-entry-diagnostic-native-20261005/summary.json)
+identifies nonterminal Magic-empty outer state7 with no owned rows/frontier after
+both Regal rows complete; both paid Magic-entry Annul rows reach it at probability
+1. Input eight states/11 rows, statewise/resumable authority absent, no cap/checker.
+The unchanged assertion fails in 0.444 s; LOCAL releases 22:44:26 UTC cleanly.
+Case 7/challenger/entry checks remain unrun; 14.5 is unverified. This accepts the
+false two-row closure premise, not a production defect or economic recovery.
+
+Parent selects the [corrected finite counterpart](checks/graph-only-frontier-closure-source-20261005/fixture-prerequisite-review.md),
+frozen at f1ddac847ed6e121c2da6fd9e476697002b481f3, engine tree
+f8ea567f27f4f23ba4ac88996178b0810d7162e9. The original refusal is an intermediate
+check. Actual missing frontiers are recorded with full materialized physical/
+coarse/controller keys and incoming paid rows, then serviced through existing
+native owners. Ledger completion, selection retirement and automatic retry cadence
+are separate; no state number, action removal, row injection or numerical authority
+shortcut closes the witness. Bounds/no progress/unsupported closure report unresolved
+and fail; final complete assembly and independent whole-root/two-entry checks remain.
+Native captured cost must reconcile and strictly beat checked baseline 24; the paid
+14.5 fixed-controller reference and any actual delta are reported honestly.
+
+The [exact Tests-only CI handoff](checks/graph-only-frontier-closure-source-20261005/ci-handoff.json)
+pins source 612d37a1 (890,385 bytes), all current predecessor inputs, actual next
+compile/link/marker requirements and unchanged qualified f532 owner. Production
+src/include/benchmarks and old six controls remain unchanged. New source is unbuilt/
+untested; no build, native, root, Benchmark or publication has occurred for it.
+
+The subsequently granted f1dd finite run uses matching Tests 43d10e84 (27 CI
+gates). [Negative receipt](checks/graph-only-frontier-closure-native-20261005/summary.json) records actual additional Magic-empty
+Regal/Scour ExactRowComplete rows, then fails the compound active-identity/root-
+retention assertion in 0.401 s. Neither after-component was logged; final assembly,
+challenger/entry checks and case 7 remain unrun, and 14.5 is unverified. Clean
+LOCAL release is 23:09:46.0225689 UTC. [Reconciled source-only owner audit](checks/graph-only-owner-contract-source-20261005/owner-contract-audit.md)
+identifies two fixture assumptions: policy-only baseline rows have no native
+resource variants and cannot survive focused repricing; broader work.step may
+legitimately replace/queue/check a candidate while retaining checked fallback.
+The uncommitted test draft uses the native append owner, observes active/retained
+authority separately and preserves existing checker ownership plus all complete
+root/entry gates. Full pinned CI review is incorporated; parent selection of the
+ordinary-service control precedes freezing/building. Native append itself also owns
+fringe enqueueing omitted by policy-only append. Broad fallback can enqueue missing
+strict states; absent immediate handoff
+does not prove eventual service absence or a production defect. No new root,
+production change, consumer activation or improved economics is established.
+
+Parent now selects natural owner observation BEFORE the first explicit dispatch.
+[Frozen test-only checkpoint c4dffb18/09e3b8bd](checks/graph-only-natural-owner-source-20261005/fixture-prerequisite-review.md)
+uses native resource/enqueue/binding ownership, records actual queue/check events,
+preserves compatible checked nonworsening authority for the original physical root,
+and captures a valid checked active/retained complete controller without forcing an
+explicit-only path. Both actual positive entries still independently check complete
+paid recurring policies. Native resource variants and ordinary enqueueing omitted
+by the former policy-only fixture materially weaken the previous causal premise.
+Natural checked improvement, if observed, establishes existing capability; all
+costs/activation remain unmeasured until source-matched execution. Production and
+six original bodies remain fixed; source is frozen/unbuilt/untested, with no build,
+native or root grant. [Exact CI review handoff](checks/graph-only-natural-owner-source-20261005/ci-handoff.json)
+and [passive future product identity outline](checks/graph-only-natural-owner-source-20261005/passive-conquest-identity-outline.md)
+preserve state11735 identity as unresolved. The outline is unimplemented/unrun;
+no additional Conquest root or handoff-defect claim follows. Prior negatives remain.
+
+CI's c4dffb18 prerequisite review stopped before any build because matching a spent
+candidate identity incorrectly permitted re-emplacement after refusal. Production
+leaves that attempted slot spent when clearing the failed task/proof scratch.
+[Minimal corrected test checkpoint 7a02cec4/2d4c0ad0](checks/graph-only-owner-admission-source-20261005/fixture-prerequisite-review.md)
+drains existing work, starts a new owner check only when the slot is exactly zero,
+and treats a completed refusal/spent slot as a decisive negative. Pre/post-check
+identities, actual refusals/repeated starts and proof/reset lifecycle are observed;
+independent positive-entry proofs remain separate. All native ownership, normal-
+before-explicit service, exact-root authority and complete paid gates remain fixed.
+Source is frozen/unbuilt/untested pending [another CI prerequisite review](checks/graph-only-owner-admission-source-20261005/ci-handoff.json).
+No build, native/root run, production change or publication occurred. Earlier source
+reviews/native negatives and general mathematical/economic claim status remain.
+
+The [preserved7a02/2d4c native negative](checks/graph-only-authority-diagnostics-source-20261006/preserved-7a02-negative.json)
+uses matching Tests3df271e4 after25 CI review/build gates. All six controls complete;
+case6 independently checks baseline24 and exposes two positive missing ports.
+The normal-owner authority assertion then fails before explicit service, but its
+after-step state, exact invalid reason and failing unit index were not recorded.
+Latest snapshot is pre-service valid. Certificate loss and a production defect
+remain unproved; complete challenger, both entry checks and case7 are unreached.
+Native grant1/1 is spent; LOCAL released2026-10-06 00:16:17.2724105UTC with original
+PID88224/token absence and empty escalated CIM. Existing receipt bytes stay fixed.
+
+Parent pauses functional correction and selects only observability. Frozen
+[Tests-only4c036208/48d5370b diagnostic diff and control-flow checklist](checks/graph-only-authority-diagnostics-source-20261006/control-flow-checklist.md)
+emit/flush read-only candidate/certificate/current-binding and owner snapshots
+immediately after each post-baseline native owner step, before event/guard failure.
+The unchanged asserted root predicate is captured once, flushed and reused;
+all89 original acceptance expressions, setup, owner assignments/event order,
+six controls and limits remain.22 source gates and5 predecessor-artifact gates
+pass; source is **unbuilt, untested, unactivated** pending [CI prerequisite review](checks/graph-only-authority-diagnostics-source-20261006/ci-handoff.json).
+Private detached-evaluation identity is not directly exposed; logical retained
+views and actual pipeline status are recorded without inventing that identity.
+No build/native/root, production correction, assertion weakening or publication
+occurred. Reference14.5 remains unverified; checked Current Conquest economics
+remain101311.35474896732. General mathematical/economic claim status stays open.
+
+CI [stops4c036208 before build](checks/graph-only-diagnostic-purity-source-20261006/preserved-4c036208-CI-rejection.md):
+the diagnostic emitter's const fast_estimated_owned_bytes query increments mutable
+owned_byte_ledger_requests. This disproves the previous emitter-purity claim;
+its original frozen packet is preserved. CI otherwise verifies after-step flush,
+captured acceptance predicate, owner/event order and all six controls.
+[Minimal three-line Tests-only correction 7db9b98f/a0be05db](checks/graph-only-diagnostic-purity-source-20261006/transitive-purity-checklist.md)
+removes only that query and records live_owned_bytes=unavailable. Remaining calls
+are audited transitively as field reads/local key/hash/snapshot construction.
+No counter reset, production/acceptance/setup/event-order change or assumed
+ownership value hides the issue.16 source/artifact gates pass; source is
+**frozen/unbuilt/untested/unactivated**, pending [CI prerequisite review](checks/graph-only-diagnostic-purity-source-20261006/ci-handoff.json).
+Private detached identity remains unresolved.4c pre-build rejection,7a native
+negative and prior economic findings remain. No heavy/native/root or publication
+occurred; Current checked101311.35474896732 and unverified14.5 status stay fixed.
+
+Matching7db9/a0be Tests7c23d298 passes30 CI purity/build gates. Its sole
+[diagnostic native invocation](checks/graph-only-diagnostic-purity-native-20261006/summary.json) completes all six controls,
+checks case6 baseline24, then records the actual normal-owner failure:
+**graph_prefix_changed** at both active and retained-logical location0. Five
+returned-step snapshots/predicates show four1s then0. Captured prefix11032646483254399659
+remains; current prefix changes to6843342162333667524 as owned row0 variant_count
+changes1-to-2. This is an observed metadata/compatibility transition, not exclusive
+attribution among all hashed fields. Graph/payload identity, exact certification
+payload, available original-root member, checked cost24 and goal/economy/caller/
+vocabulary/artifact bindings remain. The physical root still matches. No pending
+checker, attempted slot or shared proof bytes appear; live owned bytes are explicitly
+unavailable and private detached identity remains unresolved. The predicate's0
+is flushed before its same-boolean assertion fails. Certificate loss, a production
+defect, whole-search cause and introducing commit remain unproved.
+
+Explicit service, complete challenger, both positive-entry checks and case7 are
+unreached; reference14.5 remains unverified. Native exits3221226505 in423.7954ms,
+without timeout/cancellation/survivor. PID33740/token33740:134357222284687543 is
+proved absent; escalated ErrorActionStop CIM is empty and LOCAL releases
+2026-10-06 01:04:19.1134820UTC. Native allowance1/1 is spent; no retry, root,
+Benchmark, production/source correction, publication or consumer activation
+occurred. Canonical docs retain this scoped fixture negative and all prior
+receipts, including7a's still-unobserved original after-state. Checked Current
+Conquest economics remain101311.35474896732 with no new measured gain.
+
+
+## Source-only prefix dependency review — October 6
+
+[Frozen source review](checks/graph-only-prefix-dependency-source-20261006/causal-review.md) and [source/receipt audit](checks/graph-only-prefix-dependency-source-20261006/source-audit.json).
+
+Source-only review at 7db9/a0be traces the queued-root native append:
+ordinary equivalent-kernel collapse still appends a resource variant, and the
+parent prefix hashes its count/offset/capacity. The root-only checker consumes
+copied graph bytes, a private exact native model and full typed context; it
+does not consume the parent variant arena. Its root-certificate checks pass
+before the generic retained wrapper returns graph_prefix_changed. This is
+conservative provenance invalidation; a production authority-lifetime defect
+remains unproved. Selected Scour/8 and cost10 do not identify the new variant's
+actual payload, which the receipt omits. The source predicts duplicate Scour;
+exclusive changed-field attribution and semantic equality are unmeasured.
+
+The proposed smallest probe captures all variant/prefix fields and independently
+rechecks the same original-root graph after the normal mutation, while expecting
+the unchanged retained predicate to reject. One candidate, at most two root
+checks, 32 states/shared512MiB/native60s/host75s and TargetNeutralZero remain the
+limits; it has not run and needs new parent LOCAL. A production claim additionally
+needs an actual supported native producer and legal mutation through retention
+and export. Complete7db native negative, 7a original unobserved after-state,
+4c purity rejection and prior negatives remain. Private detached identity remains
+unresolved. No C++/fixture/predicate change, build, native/root/Benchmark run,
+activation, publication or economic gain; Current Conquest stays101311.35474896732.
+
+## Implemented prefix dependency probe — October 6
+
+[Bounded prefix probe source](checks/graph-only-prefix-probe-source-20261006/README.md)
+is frozen at `ce4efa33471eb55756445e2ec367326cef6f9e57` / engine`5104c9931792d9c1a3743f4794671ef6c881435c`. Separate selector captures full
+before/after variant/prefix payloads and independently checks the saved root;
+the original wrapper still rejects. All89 legacy case6/7 guards, six controls,
+existing selectors and production trees are unchanged. Source-only, unbuilt,
+untested/unactivated: CI owns the build; parent coordinates one native invocation
+after qualification. One candidate/two root checks/32 states/shared512MiB/
+native60s-host75s/≤8 cells/aggregate10,000 units, TargetNeutralZero. Duplicate-only
+classification is conditional; neither result proves a production lifetime defect
+or licenses dropping the binding. Preserve all negatives. Follow a supported
+producer/path next, then focused correctness and a small justified real Current
+comparison after a coherent production change. No heavy work ran here.
+
+## Prefix probe result and production next step — October 6
+
+CE4/5104 CI-qualified [prefix probe native negative](checks/graph-only-prefix-probe-native-20261006/README.md)
+records exact duplicate Scour variants, unchanged kernel/routing/full context,
+and only captured row0 variant_count1→2. The saved root checker returns Complete,
+proper/executable/paid cost24, success1/off-policy0 and exact root member. The
+new probe then fails its incorrect !paired_default_only conjunct: the unchanged
+OriginalRootController success branch deliberately retains an identical
+certification graph and sets that flag true. Final guards/complete marker were
+unreached; no predicate correction or retry. LOCAL released03:25:33UTC, original
+identity absent/escalated census empty;1/1 spent. This is scoped fixture evidence,
+not a production lifetime defect or binding-removal justification. Next proposed
+production change is bounded handoff of actual checked-graph missing continuations
+through the existing exact owner, then focused production correctness and a small
+matched original Conquest Current control/treatment pair. No new root/Benchmark
+is run or granted by this record. Current cost101311.35474896732, unverified14.5,
+private identity limits and all earlier negatives remain; no consumer activation.
+
+## Bounded production continuation handoff - source freeze, October 6
+
+Local source `0ae56bc5ed60dd3968a968d46bfd77051b221dfa` / engine `bf0c7696ad236db42c185853e0259e38d176daf7` implements the parent-selected
+bounded handoff through the existing exact refinement owner. An eligible,
+compatible checked-graph assembly's named missing cells are selected before
+automatic preparation, cumulative maximum eight cells / six handoffs. Assembly
+can become due after actual native row commitment; the one-shot complete checker
+slot, prefix binding, properness, full paid support, identity and caller-scope
+gates remain. TargetNeutralZero is fixed. Selection, expansion start, committed
+rows and expansion completion are separately observable; missing physical or
+controller identity is explicitly unavailable. No root scalar becomes statewise
+or lower authority. The CE4 prefix test expectation is corrected only to the
+successful OriginalRootController pairing contract plus identical certification
+graph; the failed CE4 receipt and all earlier negatives remain intact.
+
+The focused selector `--solver-current-support-handoff-only` checks that contract
+and normal Current producers/stepping, requiring real handoff, native admitted
+paid rows, compatible checked fallback, Finish guard and checked strategy export.
+The [source packet](checks/current-support-handoff-source-20261006/README.md) is statically reviewed only: unbuilt/unrun,
+unactivated and unmeasured. Parent-coordinated CI (maximum two compiler jobs),
+exact-source Tests qualification and LOCAL are next gates. No heavy work or
+LOCAL lane was used here. After focused correctness passes and a qualified
+Benchmark, the parent authorizes one fresh serial original Conquest pair with
+unchanged law3/input/prices/scope/TargetNeutralZero, 120s Finish / 1 GiB /
+150s native / 165s host each. The qualified control Benchmark96732 is preserved
+read-only and byte-verified outside the build tree before overwrite.
+No new measured cost, returned treatment strategy, Current/Finder/WASM activation,
+root cause/introducing commit, or release claim follows. Current remains
+101311.35474896732; historical85970 is still a fixed-graph comparison,
+private210090 stays expensive/default-off/incomplete, and exact improved Bow
+request identity remains unavailable.
+
+## Current support build failure and compact API fix - October 6
+
+CI at0ae56bc5 reached compilation and failed on two new test references,
+without native/root runs or binary replacement; partial objects/archive and
+the failure receipt remain. CI cleanly released04:45:47UTC,200 identities
+absent/CIM0. [Compact source fix](checks/current-support-api-fix-source-20261006/README.md) `075b402e5da3d795c153b48ddb5390fccd5ad7f6` replaces only the nonexistent
+Forbid enum with actual ForbidUnmatched and take_result with actual finish().
+Definitions, terminal predicate and successful existing callers were checked;
+the intended no-unmatched-extra goal, finalized result ownership, every
+acceptance assertion and all production code remain. Static checks pass;
+unbuilt/unrun/unactivated/unmeasured. Parent CI can compile the changed test
+object first then resume the existing build, maximum two jobs. LOCAL unused;
+fresh original Conquest pair remains conditional and unspent, no new economics.
+
+## Normal Current registry lookup repair - October 6
+
+075 Tests/Benchmark compile and link; focused prefix contract completes, then
+the selector aborts on unordered_map::at with no normal-support result. The
+retained log has no key/stack, so exact dynamic throw site remains unproved.
+Source identifies a deterministic missing premise in the new pre-CalcContext
+action-list caller: augmentation is absent; actual Augment ID and price key
+are augment. [Minimal fix](checks/current-support-registry-fix-source-20261006/README.md) `0f29fe169f75958e87d316ec2af1dee4329ad71d` corrects that key, preserving native
+action/price1 and every assertion, and adds a narrow fail-closed missing-key
+diagnostic before the same lookup. Actual registry/default filtering/price
+definitions and successful callers were checked; production is unchanged.
+The original qualified075 artifacts/failed receipt and all negatives remain;
+CI release05:09:39UTC clean,58 identities absent/CIM0. New source is unbuilt,
+unrun, unactivated/unmeasured; LOCAL unused. Parent CI qualification/focused
+correctness remain gates. Both real Conquest arms are unspent, no new economics.

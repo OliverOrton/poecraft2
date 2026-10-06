@@ -134,6 +134,30 @@ native operation and graph bindings pass; it never silently fills a state table.
 
 ## Entry-scoped and class-scoped evidence
 
+The [normal quotient ownership repair](mathematics/policies.md#independent-root-artifact-quotient)
+atb200aec9 asks the existing initial checker for a physical-root continuation
+certificate. When the checked product and certification graph bytes are identical,
+retention may keep that graph in the existing root-only role, without parent
+decisions, nonroot finite values or row-generation bindings. Full typed context,
+exact root member, proper paid cost and shared temporary/retained memory gates
+still apply. The selected statewise output retains its original parent prefix
+and sticky rejection provenance. This separates immutable graph ownership from
+the graph-relative wrapper; it does not loosen the ordinary prefix predicate.
+Five focused native selectors pass12,754 checks. A closed tiny domain naturally
+needs no missing continuation; these checks qualify ownership and publication,
+not a positive service handoff or economic improvement.
+
+The [bounded repair-tail checkpoint](../active/2026-10-04-sol61-armour-recovery/README.md#bounded-repair-tail---qualified-no-conquest-saving)
+at af483998 passes full native one/two-target component checking and entry
+validation, but the original matched Conquest pair still exports101311.35474896732
+in both arms. Each native selective-completion owner performs3 checks and retains
+that same upper. Joint assembly36 attempts/0 successes and40 rejected seed
+requests are separate ownership counts; they do not mean that no native checker
+ran. Actual completed paid rows remain required at uncovered positive entries.
+Component validity, a service input flag or proposal estimates grant no new
+root scalar, statewise continuation or lower authority. Changed-tail branch
+reachability remains unavailable in this receipt.
+
 Compiler-authored graph-local declarations identify genuine native decisions in
 an immutable emitted graph. They bind full graph bytes, native operator semantics
 and observable control boundaries. Composition carries declarations through its

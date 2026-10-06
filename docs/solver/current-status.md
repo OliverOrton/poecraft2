@@ -19,7 +19,365 @@ qualification. [HANDOFF](../../HANDOFF.md) owns selected sequencing.
 
 ## Solver research and isolated October 5 causal continuation
 
-**Latest matched result (19:25:45 UTC): both original-root slots are spent.**
+## Resumed Current ownership repair - October 6
+
+Localb200aec9 preserves separately checked physical-root graph authority across
+parent quotienting and publication; ordinary statewise prefix gates remain.
+Five selectors pass12,754 checks. The matched original Conquest pair exports
+identical checked101311.35474896732 strategies/cap mask0: saving0. Treatment
+completes eight native service cells/88 committed rows, but37 joint assemblies
+still produce no complete challenger. [Living evidence](../active/2026-10-04-sol61-armour-recovery/README.md#resumed-current-repair---october-6)
+owns exact pins, original negatives and the uncovered paid-tail boundary.
+LOCAL released18:13:38UTC, elevated global native census0/Terminal windows0,
+all owned stages clean. This owner retains end-to-end work; no consumer activation.
+
+Source `353d93ee` builds and passes12,829 focused checks. Its fresh original
+Conquest pair also ties at101311.35474896732 with identical checked strategy/
+cap mask0. Treatment3 handoffs complete8 cells/187 counted rows, but36 assemblies
+produce no complete challenger; state7941/mask27 still lacks a paid tail.
+LOCAL released19:13:14UTC, elevated census0/windows0/all8 owned stages clean.
+Source9063 builds but its focused control rejects a queued unchanged24-cost
+baseline; receipts and binaries are preserved. Corrected `83906a6c` reserves
+early delivery for a cheaper proper estimate, passes12,829 checks, and again
+exports the identical101311.35474896732 Conquest strategy in both arms/cap0.
+Its diagnostics match353d93ee:3 handoffs/8 cells/187 paid rows,36 assemblies/0
+complete challengers. LOCAL released20:20:33UTC, elevated census0/windows0/all10
+stages clean. Source `af483998` adds direct paid native Chaos for an all-required
+complete-held repair tail with zero requested target progress; subset-goal
+cleanup keeps its original repair. It builds and passes12,906 focused checks,
+including full native one/two-target component validation. The fresh original
+Conquest pair again exports identical101311.35474896732 strategies/cap0, saving0.
+Both native selective-completion owners perform3 checks and retain that cost;
+treatment joint assembly remains36/0,3 handoffs/8 cells/187 paid committed rows.
+The input service flag is overridden by derived product scope; changed-tail
+variant/branch reachability is not exposed. The missing complete paid tail at
+state7941/mask27 remains unresolved. LOCAL released21:44:18UTC: elevated census0,
+windows0/all8 owned stages clean. No consumer activation. The living record owns
+exact pins, the native checker census and all distinct negatives.
+
+## Normal Current registry lookup repair - October 6
+
+075 Tests/Benchmark compile and link; focused prefix contract completes, then
+the selector aborts on unordered_map::at with no normal-support result. The
+retained log has no key/stack, so exact dynamic throw site remains unproved.
+Source identifies a deterministic missing premise in the new pre-CalcContext
+action-list caller: augmentation is absent; actual Augment ID and price key
+are augment. [Minimal fix](../active/2026-10-04-sol61-armour-recovery/checks/current-support-registry-fix-source-20261006/README.md) `0f29fe169f75958e87d316ec2af1dee4329ad71d` corrects that key, preserving native
+action/price1 and every assertion, and adds a narrow fail-closed missing-key
+diagnostic before the same lookup. Actual registry/default filtering/price
+definitions and successful callers were checked; production is unchanged.
+The original qualified075 artifacts/failed receipt and all negatives remain;
+CI release05:09:39UTC clean,58 identities absent/CIM0. New source is unbuilt,
+unrun, unactivated/unmeasured; LOCAL unused. Parent CI qualification/focused
+correctness remain gates. Both real Conquest arms are unspent, no new economics.
+
+## Current support build failure and compact API fix - October 6
+
+CI at0ae56bc5 reached compilation and failed on two new test references,
+without native/root runs or binary replacement; partial objects/archive and
+the failure receipt remain. CI cleanly released04:45:47UTC,200 identities
+absent/CIM0. [Compact source fix](../active/2026-10-04-sol61-armour-recovery/checks/current-support-api-fix-source-20261006/README.md) `075b402e5da3d795c153b48ddb5390fccd5ad7f6` replaces only the nonexistent
+Forbid enum with actual ForbidUnmatched and take_result with actual finish().
+Definitions, terminal predicate and successful existing callers were checked;
+the intended no-unmatched-extra goal, finalized result ownership, every
+acceptance assertion and all production code remain. Static checks pass;
+unbuilt/unrun/unactivated/unmeasured. Parent CI can compile the changed test
+object first then resume the existing build, maximum two jobs. LOCAL unused;
+fresh original Conquest pair remains conditional and unspent, no new economics.
+
+## Bounded production continuation handoff - source freeze, October 6
+
+Local source `0ae56bc5ed60dd3968a968d46bfd77051b221dfa` / engine `bf0c7696ad236db42c185853e0259e38d176daf7` implements the parent-selected
+bounded handoff through the existing exact refinement owner. An eligible,
+compatible checked-graph assembly's named missing cells are selected before
+automatic preparation, cumulative maximum eight cells / six handoffs. Assembly
+can become due after actual native row commitment; the one-shot complete checker
+slot, prefix binding, properness, full paid support, identity and caller-scope
+gates remain. TargetNeutralZero is fixed. Selection, expansion start, committed
+rows and expansion completion are separately observable; missing physical or
+controller identity is explicitly unavailable. No root scalar becomes statewise
+or lower authority. The CE4 prefix test expectation is corrected only to the
+successful OriginalRootController pairing contract plus identical certification
+graph; the failed CE4 receipt and all earlier negatives remain intact.
+
+The focused selector `--solver-current-support-handoff-only` checks that contract
+and normal Current producers/stepping, requiring real handoff, native admitted
+paid rows, compatible checked fallback, Finish guard and checked strategy export.
+The [source packet](../active/2026-10-04-sol61-armour-recovery/checks/current-support-handoff-source-20261006/README.md) is statically reviewed only: unbuilt/unrun,
+unactivated and unmeasured. Parent-coordinated CI (maximum two compiler jobs),
+exact-source Tests qualification and LOCAL are next gates. No heavy work or
+LOCAL lane was used here. After focused correctness passes and a qualified
+Benchmark, the parent authorizes one fresh serial original Conquest pair with
+unchanged law3/input/prices/scope/TargetNeutralZero, 120s Finish / 1 GiB /
+150s native / 165s host each. The qualified control Benchmark96732 is preserved
+read-only and byte-verified outside the build tree before overwrite.
+No new measured cost, returned treatment strategy, Current/Finder/WASM activation,
+root cause/introducing commit, or release claim follows. Current remains
+101311.35474896732; historical85970 is still a fixed-graph comparison,
+private210090 stays expensive/default-off/incomplete, and exact improved Bow
+request identity remains unavailable.
+
+CE4/5104 CI-qualified [prefix probe native negative](../active/2026-10-04-sol61-armour-recovery/checks/graph-only-prefix-probe-native-20261006/README.md)
+records exact duplicate Scour variants, unchanged kernel/routing/full context,
+and only captured row0 variant_count1→2. The saved root checker returns Complete,
+proper/executable/paid cost24, success1/off-policy0 and exact root member. The
+new probe then fails its incorrect !paired_default_only conjunct: the unchanged
+OriginalRootController success branch deliberately retains an identical
+certification graph and sets that flag true. Final guards/complete marker were
+unreached; no predicate correction or retry. LOCAL released03:25:33UTC, original
+identity absent/escalated census empty;1/1 spent. This is scoped fixture evidence,
+not a production lifetime defect or binding-removal justification. Next proposed
+production change is bounded handoff of actual checked-graph missing continuations
+through the existing exact owner, then focused production correctness and a small
+matched original Conquest Current control/treatment pair. No new root/Benchmark
+is run or granted by this record. Current cost101311.35474896732, unverified14.5,
+private identity limits and all earlier negatives remain; no consumer activation.
+
+
+[Bounded prefix probe source](../active/2026-10-04-sol61-armour-recovery/checks/graph-only-prefix-probe-source-20261006/README.md)
+is frozen at `ce4efa33471eb55756445e2ec367326cef6f9e57` / engine`5104c9931792d9c1a3743f4794671ef6c881435c`. Separate selector captures full
+before/after variant/prefix payloads and independently checks the saved root;
+the original wrapper still rejects. All89 legacy case6/7 guards, six controls,
+existing selectors and production trees are unchanged. Source-only, unbuilt,
+untested/unactivated: CI owns the build; parent coordinates one native invocation
+after qualification. One candidate/two root checks/32 states/shared512MiB/
+native60s-host75s/≤8 cells/aggregate10,000 units, TargetNeutralZero. Duplicate-only
+classification is conditional; neither result proves a production lifetime defect
+or licenses dropping the binding. Preserve all negatives. Follow a supported
+producer/path next, then focused correctness and a small justified real Current
+comparison after a coherent production change. No heavy work ran here.
+
+
+[Source-only prefix dependency review](../active/2026-10-04-sol61-armour-recovery/checks/graph-only-prefix-dependency-source-20261006/causal-review.md)
+
+Source-only review at 7db9/a0be traces the queued-root native append:
+ordinary equivalent-kernel collapse still appends a resource variant, and the
+parent prefix hashes its count/offset/capacity. The root-only checker consumes
+copied graph bytes, a private exact native model and full typed context; it
+does not consume the parent variant arena. Its root-certificate checks pass
+before the generic retained wrapper returns graph_prefix_changed. This is
+conservative provenance invalidation; a production authority-lifetime defect
+remains unproved. Selected Scour/8 and cost10 do not identify the new variant's
+actual payload, which the receipt omits. The source predicts duplicate Scour;
+exclusive changed-field attribution and semantic equality are unmeasured.
+
+The proposed smallest probe captures all variant/prefix fields and independently
+rechecks the same original-root graph after the normal mutation, while expecting
+the unchanged retained predicate to reject. One candidate, at most two root
+checks, 32 states/shared512MiB/native60s/host75s and TargetNeutralZero remain the
+limits; it has not run and needs new parent LOCAL. A production claim additionally
+needs an actual supported native producer and legal mutation through retention
+and export. Complete7db native negative, 7a original unobserved after-state,
+4c purity rejection and prior negatives remain. Private detached identity remains
+unresolved. No C++/fixture/predicate change, build, native/root/Benchmark run,
+activation, publication or economic gain; Current Conquest stays101311.35474896732.
+
+The matching native receipt and earlier milestones follow.
+
+
+Matching7db9/a0be Tests7c23d298 passes30 CI purity/build gates. Its sole
+[diagnostic native invocation](../active/2026-10-04-sol61-armour-recovery/checks/graph-only-diagnostic-purity-native-20261006/summary.json) completes all six controls,
+checks case6 baseline24, then records the actual normal-owner failure:
+**graph_prefix_changed** at both active and retained-logical location0. Five
+returned-step snapshots/predicates show four1s then0. Captured prefix11032646483254399659
+remains; current prefix changes to6843342162333667524 as owned row0 variant_count
+changes1-to-2. This is an observed metadata/compatibility transition, not exclusive
+attribution among all hashed fields. Graph/payload identity, exact certification
+payload, available original-root member, checked cost24 and goal/economy/caller/
+vocabulary/artifact bindings remain. The physical root still matches. No pending
+checker, attempted slot or shared proof bytes appear; live owned bytes are explicitly
+unavailable and private detached identity remains unresolved. The predicate's0
+is flushed before its same-boolean assertion fails. Certificate loss, a production
+defect, whole-search cause and introducing commit remain unproved.
+
+Explicit service, complete challenger, both positive-entry checks and case7 are
+unreached; reference14.5 remains unverified. Native exits3221226505 in423.7954ms,
+without timeout/cancellation/survivor. PID33740/token33740:134357222284687543 is
+proved absent; escalated ErrorActionStop CIM is empty and LOCAL releases
+2026-10-06 01:04:19.1134820UTC. Native allowance1/1 is spent; no retry, root,
+Benchmark, production/source correction, publication or consumer activation
+occurred. Canonical docs retain this scoped fixture negative and all prior
+receipts, including7a's still-unobserved original after-state. Checked Current
+Conquest economics remain101311.35474896732 with no new measured gain.
+
+
+
+**Earlier pre-build checkpoint; subsequent qualification and native result are recorded above.**
+
+CI [stops4c036208 before build](../active/2026-10-04-sol61-armour-recovery/checks/graph-only-diagnostic-purity-source-20261006/preserved-4c036208-CI-rejection.md):
+the diagnostic emitter's const fast_estimated_owned_bytes query increments mutable
+owned_byte_ledger_requests. This disproves the previous emitter-purity claim;
+its original frozen packet is preserved. CI otherwise verifies after-step flush,
+captured acceptance predicate, owner/event order and all six controls.
+[Minimal three-line Tests-only correction 7db9b98f/a0be05db](../active/2026-10-04-sol61-armour-recovery/checks/graph-only-diagnostic-purity-source-20261006/transitive-purity-checklist.md)
+removes only that query and records live_owned_bytes=unavailable. Remaining calls
+are audited transitively as field reads/local key/hash/snapshot construction.
+No counter reset, production/acceptance/setup/event-order change or assumed
+ownership value hides the issue.16 source/artifact gates pass; source is
+**frozen/unbuilt/untested/unactivated**, pending [CI prerequisite review](../active/2026-10-04-sol61-armour-recovery/checks/graph-only-diagnostic-purity-source-20261006/ci-handoff.json).
+Private detached identity remains unresolved.4c pre-build rejection,7a native
+negative and prior economic findings remain. No heavy/native/root or publication
+occurred; Current checked101311.35474896732 and unverified14.5 status stay fixed.
+
+
+
+The [preserved7a02/2d4c native negative](../active/2026-10-04-sol61-armour-recovery/checks/graph-only-authority-diagnostics-source-20261006/preserved-7a02-negative.json)
+uses matching Tests3df271e4 after25 CI review/build gates. All six controls complete;
+case6 independently checks baseline24 and exposes two positive missing ports.
+The normal-owner authority assertion then fails before explicit service, but its
+after-step state, exact invalid reason and failing unit index were not recorded.
+Latest snapshot is pre-service valid. Certificate loss and a production defect
+remain unproved; complete challenger, both entry checks and case7 are unreached.
+Native grant1/1 is spent; LOCAL released2026-10-06 00:16:17.2724105UTC with original
+PID88224/token absence and empty escalated CIM. Existing receipt bytes stay fixed.
+
+Parent pauses functional correction and selects only observability. Frozen
+[Tests-only4c036208/48d5370b diagnostic diff and control-flow checklist](../active/2026-10-04-sol61-armour-recovery/checks/graph-only-authority-diagnostics-source-20261006/control-flow-checklist.md)
+emit/flush read-only candidate/certificate/current-binding and owner snapshots
+immediately after each post-baseline native owner step, before event/guard failure.
+The unchanged asserted root predicate is captured once, flushed and reused;
+all89 original acceptance expressions, setup, owner assignments/event order,
+six controls and limits remain.22 source gates and5 predecessor-artifact gates
+pass; source is **unbuilt, untested, unactivated** pending [CI prerequisite review](../active/2026-10-04-sol61-armour-recovery/checks/graph-only-authority-diagnostics-source-20261006/ci-handoff.json).
+Private detached-evaluation identity is not directly exposed; logical retained
+views and actual pipeline status are recorded without inventing that identity.
+No build/native/root, production correction, assertion weakening or publication
+occurred. Reference14.5 remains unverified; checked Current Conquest economics
+remain101311.35474896732. General mathematical/economic claim status stays open.
+
+
+**Latest native Current result (LOCAL released 21:17:37 UTC): graph-only joint
+service activates; checked economics remain unchanged.** Source fb59476f, engine
+51855004, matching Benchmark 96732e97 (15,166,266 bytes), original Conquest inputs,
+law 3, TargetNeutralZero and 1 GiB/120/150/165-second scope return
+101311.35474896732 and a byte-identical control strategy. Independent evaluation
+matches: success 1, complete costs, off-policy mass 0, cost delta 0, cap mask 0.
+[Latest matched negative](../active/2026-10-04-sol61-armour-recovery/checks/root-checked-graph-treatment-20261005/summary.json)
+records 36 joint attempts, zero successes and 40 upper seed requests/refusals,
+zero starts. The last ordinary checked graph is eligible/compatible with a
+sticky-rejected table; the separate cheaper checked root fallback remains retained.
+The previous six-case native selector passes 429 checks, zero failures, with all
+old refusal/fallback/cap controls. This native Current activation is not Finder,
+WASM, release activation or economic recovery.
+
+The [continuation audit](../active/2026-10-04-sol61-armour-recovery/checks/root-checked-graph-treatment-20261005/continuation-boundary-audit.md)
+finds the last selected missing successor at outer state11735/mask16, no broad
+expansion or owned row. At 116.478 s it joins a 76-entry cohort that remains open
+through Finish; intervening saved samples report automatic synthesis, no new
+service-start event. Exact physical item/abstraction/controller-entry identity is
+absent from the receipt and cannot be inferred from the mask. The source's
+checked-graph failure branch bypasses the direct existing refinement handoff used
+without an incumbent. This supports a bounded service-ordering falsification,
+not proof of a useful complete tail or a common physical cause for all attempts.
+The counter named `service_completions` retires requests at selection, before
+native row completion. Original root slots 2/2 and additional allowance 1/1 are
+spent. No further root, publication or production change is authorized here.
+
+The next [finite falsification](../active/2026-10-04-sol61-armour-recovery/checks/root-checked-graph-treatment-20261005/finite-service-falsification-plan.md)
+is implemented only in Tests at local 87bf8020, engine tree ad400977. Production
+src/include/benchmark trees remain fb59476f; its six existing controls are
+unchanged. Two native missing-entry counterparts use the actual ordinary service
+owner, ledger row-completion assertions and independent complete paid checks at
+both positive entries, with TargetNeutralZero fixed. Source review identifies a
+second condition: newly completed ordinary rows do not advance the alternative-row
+checkpoint that retries graph-only assembly. The fixture distinguishes skipped
+handoff, actual service completion, retry cadence and explicit existing assembly.
+Predicted 24-to-14.5 and entry tails 13.5 are unbuilt/untested, not accepted costs.
+[Exact Tests-only CI handoff](../active/2026-10-04-sol61-armour-recovery/checks/graph-only-missing-entry-source-20261005/ci-handoff.json)
+requires actual changed-object compile/link and current dependency/artifact pins;
+the old Tests binary does not qualify this source. Parent serialized ownership
+precedes build; matching CI plus parent LOCAL precedes native. No production
+correction, new root or publication is included.
+
+The subsequently granted 87bf8020 finite control uses CI Tests 4cf5e6e8, 22 build
+gates. [Negative receipt](../active/2026-10-04-sol61-armour-recovery/checks/graph-only-missing-entry-native-20261005/summary.json)
+records all six old-control outputs, checked case-6 baseline 24, skipped immediate
+service, both truly completed paid Regal ledger rows and withheld retry cadence.
+Explicit complete assembly fails after 0.450 s; its exact final refusal was not
+logged. Case 7 and challenger/entry checks are unrun; 14.5 is unverified. LOCAL
+released 22:22:40 UTC with original identity proved absent and empty escalated CIM.
+
+[Source-only prerequisite audit](../active/2026-10-04-sol61-armour-recovery/checks/graph-only-missing-entry-diagnostic-source-20261005/assembly-prerequisite-audit.md)
+identifies an unjustified fixed-policy premise: ordinary service also admits legal
+Annul toward nonterminal Magic-empty, and incumbent-present builder improvement
+may select that unserviced continuation. Graph-only capture has no statewise
+frontier or frozen resumable prefix. This is a discriminating source explanation,
+not the unlogged final reason or a production defect. Diagnostic-only source
+63bb3b23/520502e5 prints actual row/state inputs/full refusal before the unchanged
+acceptance assertion; production and six controls remain unchanged. It is unbuilt/
+untested and no native retry is authorized here.
+
+The granted diagnostic at 63bb3b23/520502e5, Tests 1e575eac (26 CI gates), then
+records the exact additional missing native entry: [outer state7, Magic-empty](../active/2026-10-04-sol61-armour-recovery/checks/graph-only-missing-entry-diagnostic-native-20261005/summary.json),
+nonterminal, zero owned rows/frontier, reached by both paid Magic-entry Annul rows.
+The unchanged assertion fails in 0.444 s, no cap/checker. Case 7 and challenger
+checks remain unrun; LOCAL releases 22:44:26 UTC cleanly. This confirms insufficient
+closure after two Regal rows, not a production defect or verified 14.5.
+
+Parent-selected corrected test source f1ddac84/f8ea567f services every actually
+selected frontier through the existing ordinary exact owner within fixed 32-state/
+shared-512-MiB/60-native/75-host bounds. [Reviewed Tests-only handoff](../active/2026-10-04-sol61-armour-recovery/checks/graph-only-frontier-closure-source-20261005/fixture-prerequisite-review.md)
+preserves that intermediate refusal, full materialized physical/coarse/controller
+identity, completed paid ledger rows, independent final assembly/checking and both
+original positive-entry checks. Bounds/no progress/unsupported closure fail with an
+explicit unresolved outcome. The checked captured cost must reconcile and strictly
+beat baseline 24; the provisional 14.5 reference and delta are reported, not forced.
+Production and six controls remain fixed. New source is unbuilt/untested, with no
+native or root invocation authorized here; CI owns the dependency-correct Tests build.
+
+The subsequently granted f1dd finite run uses matching Tests 43d10e84 (27 CI
+gates). [Negative receipt](../active/2026-10-04-sol61-armour-recovery/checks/graph-only-frontier-closure-native-20261005/summary.json) records actual additional Magic-empty
+Regal/Scour ExactRowComplete rows, then fails the compound active-identity/root-
+retention assertion in 0.401 s. Neither after-component was logged; final assembly,
+challenger/entry checks and case 7 remain unrun, and 14.5 is unverified. Clean
+LOCAL release is 23:09:46.0225689 UTC. [Reconciled source-only owner audit](../active/2026-10-04-sol61-armour-recovery/checks/graph-only-owner-contract-source-20261005/owner-contract-audit.md)
+identifies two fixture assumptions: policy-only baseline rows have no native
+resource variants and cannot survive focused repricing; broader work.step may
+legitimately replace/queue/check a candidate while retaining checked fallback.
+The uncommitted test draft uses the native append owner, observes active/retained
+authority separately and preserves existing checker ownership plus all complete
+root/entry gates. Full pinned CI review is incorporated; parent selection of the
+ordinary-service control precedes freezing/building. Native append itself also owns
+fringe enqueueing omitted by policy-only append. Broad fallback can enqueue missing
+strict states; absent immediate handoff
+does not prove eventual service absence or a production defect. No new root,
+production change, consumer activation or improved economics is established.
+
+
+
+
+Parent now selects natural owner observation BEFORE the first explicit dispatch.
+[Frozen test-only checkpoint c4dffb18/09e3b8bd](../active/2026-10-04-sol61-armour-recovery/checks/graph-only-natural-owner-source-20261005/fixture-prerequisite-review.md)
+uses native resource/enqueue/binding ownership, records actual queue/check events,
+preserves compatible checked nonworsening authority for the original physical root,
+and captures a valid checked active/retained complete controller without forcing an
+explicit-only path. Both actual positive entries still independently check complete
+paid recurring policies. Native resource variants and ordinary enqueueing omitted
+by the former policy-only fixture materially weaken the previous causal premise.
+Natural checked improvement, if observed, establishes existing capability; all
+costs/activation remain unmeasured until source-matched execution. Production and
+six original bodies remain fixed; source is frozen/unbuilt/untested, with no build,
+native or root grant. [Exact CI review handoff](../active/2026-10-04-sol61-armour-recovery/checks/graph-only-natural-owner-source-20261005/ci-handoff.json)
+and [passive future product identity outline](../active/2026-10-04-sol61-armour-recovery/checks/graph-only-natural-owner-source-20261005/passive-conquest-identity-outline.md)
+preserve state11735 identity as unresolved. The outline is unimplemented/unrun;
+no additional Conquest root or handoff-defect claim follows. Prior negatives remain.
+
+
+
+CI's c4dffb18 prerequisite review stopped before any build because matching a spent
+candidate identity incorrectly permitted re-emplacement after refusal. Production
+leaves that attempted slot spent when clearing the failed task/proof scratch.
+[Minimal corrected test checkpoint 7a02cec4/2d4c0ad0](../active/2026-10-04-sol61-armour-recovery/checks/graph-only-owner-admission-source-20261005/fixture-prerequisite-review.md)
+drains existing work, starts a new owner check only when the slot is exactly zero,
+and treats a completed refusal/spent slot as a decisive negative. Pre/post-check
+identities, actual refusals/repeated starts and proof/reset lifecycle are observed;
+independent positive-entry proofs remain separate. All native ownership, normal-
+before-explicit service, exact-root authority and complete paid gates remain fixed.
+Source is frozen/unbuilt/untested pending [another CI prerequisite review](../active/2026-10-04-sol61-armour-recovery/checks/graph-only-owner-admission-source-20261005/ci-handoff.json).
+No build, native/root run, production change or publication occurred. Earlier source
+reviews/native negatives and general mathematical/economic claim status remain.
+
+**Earlier matched result (19:25:45 UTC): both original-root slots are spent.**
 CI-qualified native source/checkout 5a746193, engine 056f2570, Benchmark
 57ae44df (15,149,130 bytes) completes the exact prepared treatment in 122.216 s
 under the unchanged 120/150/165-second protocol. Checked Current cost remains
@@ -33,7 +391,8 @@ is observed. [Matched negative receipt](../active/2026-10-04-sol61-armour-recove
 preserves control/fallback continuity and clean LOCAL release, with no survivors.
 The conditional 179-check internal fixture did not prove normal product joint
 activation or economic recovery. Whole-search cause and introducing commit stay
-open. Earlier slot reservations below are historical; no additional root is authorized.
+open. This negative keeps its exact old source and scope; the later additional
+root result above does not retroactively change it.
 
 The selected source-only [lineage audit](../active/2026-10-04-sol61-armour-recovery/checks/root-treatment-20261005/incumbent-lineage-audit.md)
 finds a representation gap: a separately checked ordinary primitive graph retains
@@ -46,7 +405,22 @@ All 33 per-call identities/flags/compatibility are unlogged. A graph-only capabi
 predicate covering either unavailable-value representation is source-supported
 only when the existing certified-incumbent validator passes; the sticky veto,
 complete paid support, existing checker/caps and final cheapest-graph selection
-must remain. No implementation or execution of that alternative is selected here.
+must remain. This was the source-supported, then-unapplied alternative; its later
+qualification and product service activation are recorded above.
+
+Subsequent explicit Oliver approval at 20:00 UTC selects that focused extension.
+Local source fb59476f / engine 51855004 implements capability-based graph-only
+eligibility and fixed owned diagnostics; the six-case fixture preserves old
+controls and independently checks the ordinary rejected-table role with separate
+fallback and invalid/stale guards. [Reviewed proposal/pins](../active/2026-10-04-sol61-armour-recovery/checks/checked-graph-joint-service-20261005/fixture-prerequisite-review.md)
+were initially unbuilt/untested. Subsequent source-matched Tests acceptance
+passes 429/429 checks and matching Benchmark/link provenance passes 22/22 gates.
+Two header-dependent objects compiled, one target object reused; all three and
+72 unchanged archive objects were consumed by the actual link. The additional
+original-budget root is now completed, allowance 1/1, as recorded above.
+Evidence checkpoint 14e75f8c is
+local; automatic approval review blocks the exact research-branch push, with no
+bypass or further publication retry. No economic gain or consumer release is claimed.
 
 Oliver selected the [four-report causal/economic continuation](../active/2026-10-04-sol61-armour-recovery/README.md)
 at 03:10 UTC on October 5, with a 12:00 UTC execution deadline. It starts from

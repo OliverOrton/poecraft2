@@ -1037,9 +1037,127 @@ It does not repair the rejected table or grant arbitrary-entry continuation
 values. The native complete-policy builder must keep its existing statewise
 frontier guard closed for that table and check every positive successor before
 adoption. Relabeling an ordinary graph as root-only would violate the latter's
-placeholder/binding contract. The smallest source-supported predicate/queue
-alternative is unapplied and untested; any claimed economic gain must beat the
+placeholder/binding contract. At that audit the predicate/queue alternative was
+unapplied and untested; any claimed economic gain must beat the
 best compatible checked 101311 graph, not merely the much dearer preferred graph.
+
+Oliver subsequently selects this capability-based extension. Source fb59476f
+implements it at the same scheduling/checker owner, with fixed owned observations
+of every eligibility subguard and current-versus-retained identities. Its new
+ordinary-role fixture obtains sticky rejection from actual independent checking
+of a native graph against a perturbed **unverified** estimate, rather than setting
+verification flags by hand. All prior root-only controls and normal-constructor
+negative remain required. [Source/prerequisite review](../../active/2026-10-04-sol61-armour-recovery/checks/checked-graph-joint-service-20261005/fixture-prerequisite-review.md)
+was initially unbuilt/untested. Its matching native selector subsequently passes
+429 checks across six cases: complete native tails check 13-to-3 in both roles,
+missing-support/cap controls preserve 13 without a complete candidate, and the
+independently obtained sticky veto and separate checked fallback survive. The
+normal-constructor negative remains conditional fixture evidence.
+
+The matching native Current root at fb59476f/51855004 then demonstrates actual
+graph-only checkpoint compatibility and 36 joint attempts, but no complete new
+joint candidate or economic improvement: checked 101311.35474896732 remains
+byte-identical to control. [Boundary audit](../../active/2026-10-04-sol61-armour-recovery/checks/root-checked-graph-treatment-20261005/continuation-boundary-audit.md)
+records the last missing outer state11735/mask16 with no owned completed row or
+certified frontier. The rejected-table guard correctly supplies no numerical
+boundary there. A proper checked root graph proves only its bound entry; an
+arbitrary successor requires an exact physical/control entry mapping and a
+complete checked paid controller, or newly completed native rows. Mask equality
+or a root scalar does not prove that mapping. This receipt has no physical state
+or incoming controller cursor for 11735, so no reusable tail at that entry is
+accepted.
+
+Source distinguishes scheduling from proof: `continue_initial_candidate()`
+bypasses direct missing-entry refinement after a checked-graph build fails,
+whereas its no-incumbent branch invokes that existing owner. Actual last-cohort
+requests remain open during automatic synthesis until bounded Finish. The
+`service_completions` diagnostic counts selection/retirement, not completed rows
+or entry certificates. A second source distinction concerns retry: the graph-only
+checkpoint counts `incremental_alternative_rows`, and missing-support failure sets
+its next checkpoint to that count plus one. New ordinary completed rows can supply
+the required entry evidence without increasing this separate count. Exact service
+dispatch therefore does not alone demonstrate a subsequent assembly/check.
+
+The [finite native falsification](../../active/2026-10-04-sol61-armour-recovery/checks/root-checked-graph-treatment-20261005/finite-service-falsification-plan.md)
+keeps every positive successor, paid recovery, sticky veto, one-shot checking,
+fallback ownership and TargetNeutralZero fixed. Test-only source 87bf8020 preserves
+all six controls and adds two real native missing-entry counterparts. It asserts
+actual ordinary ledger row completion, separately observes retry refusal, then
+uses explicit existing assembly/checking and complete checks at both physical
+entries. The direct interventions grant no production scheduling authority.
+The predicted 24-to-14.5 composed cost and 13.5 entry tails remain unbuilt/untested.
+[Source prerequisites and exact CI pins](../../active/2026-10-04-sol61-armour-recovery/checks/graph-only-missing-entry-source-20261005/fixture-prerequisite-review.md)
+grant no numerical authority or useful product tail. Production is unchanged;
+earlier negatives, original pins, whole-search/introducing-commit uncertainty and
+general claim status remain.
+
+The 87bf8020 finite control subsequently demonstrates baseline 24, both actual
+Regal ledger completions and withheld retry, then refuses explicit complete
+assembly; it never reaches challenger or entry checking. [Prerequisite audit](../../active/2026-10-04-sol61-armour-recovery/checks/graph-only-missing-entry-diagnostic-source-20261005/assembly-prerequisite-audit.md)
+distinguishes that refusal from two-row availability. The ordinary owner admits
+all legal actions at each entry, including Annul toward nonterminal Magic-empty.
+The builder may improve its initial policy over those rows before publication;
+each selected new positive successor still requires owned complete rows or a
+compatible certified frontier. Neither zero working value nor the checked root
+graph supplies that frontier. This graph-only role also fails the statewise
+precondition for frozen resumable-prefix capture. A fixed paid-controller cost
+prediction therefore does not imply closure or delivery by this builder.
+
+The exact final refusal was not recorded. Diagnostic-only source 63bb3b23 preserves
+the acceptance assertion and logs its actual inputs/failure; it is unbuilt/unrun.
+14.5 and both 13.5 entry claims remain unverified, case 7 remains unrun, and no
+production defect or correction is inferred merely from the fixture's failure.
+
+The subsequently granted 63bb3b23 diagnostic observes an additional positive
+Magic-empty successor with no completed row/frontier after both Regal rows are
+complete. Paid Annul from each original Magic entry reaches it with probability
+1. [Exact native negative](../../active/2026-10-04-sol61-armour-recovery/checks/graph-only-missing-entry-diagnostic-native-20261005/summary.json)
+therefore falsifies the two-row closure premise in this fixture. No checker or
+cost-14.5 result is reached. The general obligation is closure of all selected
+positive physical/control successors, including those introduced by improvement
+over other completed legal native rows.
+
+The parent-selected [corrected finite source](../../active/2026-10-04-sol61-armour-recovery/checks/graph-only-frontier-closure-source-20261005/fixture-prerequisite-review.md)
+retains this as an intermediate negative, then services actual named native
+frontiers through existing owners under fixed bounds. Full materialized physical
+and coarse keys, controller scope, incoming paid rows and actual ledger completion
+bind each request; selection counters and a zero working value supply no proof.
+Only complete assembly plus independent cost/properness checking at the root and
+both original entries can establish a delivered feasible improvement. Exhausted
+bounds or unavailable support remain unresolved and cannot pass that gate.
+
+For the declared complete native baseline, R=1+0.5(11+R) gives reference R=13.
+The proposed paid Regal entry is 0.5+R=13.5; the original Annul composition is
+1+0.5(13.5)+0.5(13.5)=14.5. Additional legal Magic-empty continuation can change
+the selected controller: its equal-weight Regal reference is 0.5+0.5*24=12.5,
+making either entry's Annul route 1+12.5=13.5. These source-derived references are
+not checked arbitrary-entry authority. Test-only f1ddac84 remains unbuilt/unrun;
+its final captured cost and both physical entry costs require complete native
+independent reconciliation and a checked strict improvement over retained 24.
+No production correspondence theorem, whole-search cause or product economics
+is accepted from the new source.
+
+The subsequent [f1dd finite negative](../../active/2026-10-04-sol61-armour-recovery/checks/graph-only-frontier-closure-native-20261005/summary.json)
+completes additional native Regal/Scour rows but fails a compound authority
+assertion before final assembly/checking. It establishes no 14.5 upper. The
+[source-only contract audit](../../active/2026-10-04-sol61-armour-recovery/checks/graph-only-owner-contract-source-20261005/owner-contract-audit.md)
+separates active candidate identity from compatible checked root authority. A
+new selected candidate is not an evaluated policy; retained nonworsening authority
+must survive while complete paid checking is pending. Native row certificates
+also need the actual resource-variant ownership consumed by repricing: injecting
+a direct fixture price does not preserve captured graph-prefix compatibility.
+This prerequisite applies to test construction, not a new upper issuer. The
+failed run did not record after-prefix/compatibility values, so its exact failed
+component remains unmeasured. Broad focused fallback may subsequently enqueue
+missing strict states; the isolated immediate call does not prove eventual
+absence. General native correspondence, whole-search cause and checked consumer
+economics remain open. The draft correction is uncommitted/unbuilt/untested and
+awaits parent selection of the natural-service control; all previous negatives
+remain evidence. Native append also owns positive fringe enqueueing that the
+policy-only fixture omitted. The physical root key and actual checked baseline
+cost, current compatibility and retained/active checked graph authority now define
+preservation; an exact old portfolio slot or active identity does not.
+
 
 <a id="cost-only-entry-service"></a>
 ### A cost-only proposal at an actual verified entry
@@ -1090,3 +1208,265 @@ its required compiler boundary.
 ### Narrow cleanup correspondence
 
 [Recovery](../../active/2026-09-29-metamod-recovery/README.md) reuses complete-programme/first-exit correspondence: Protected Scour pays Bench then Scour, observing after both; terminal crafted cleanup pays native remove-all crafts once. Complete exit mass/resources are retained. A nonterminal Bow row needs its compatible tail before supplying a root upper. Finder re-enters acquisition with the persistent item, checks held goals and side occupancy/craft capacity, and independently re-admits every positive exact reached programme entry.
+
+Parent now selects natural owner observation BEFORE the first explicit dispatch.
+[Frozen test-only checkpoint c4dffb18/09e3b8bd](../../active/2026-10-04-sol61-armour-recovery/checks/graph-only-natural-owner-source-20261005/fixture-prerequisite-review.md)
+uses native resource/enqueue/binding ownership, records actual queue/check events,
+preserves compatible checked nonworsening authority for the original physical root,
+and captures a valid checked active/retained complete controller without forcing an
+explicit-only path. Both actual positive entries still independently check complete
+paid recurring policies. Native resource variants and ordinary enqueueing omitted
+by the former policy-only fixture materially weaken the previous causal premise.
+Natural checked improvement, if observed, establishes existing capability; all
+costs/activation remain unmeasured until source-matched execution. Production and
+six original bodies remain fixed; source is frozen/unbuilt/untested, with no build,
+native or root grant. [Exact CI review handoff](../../active/2026-10-04-sol61-armour-recovery/checks/graph-only-natural-owner-source-20261005/ci-handoff.json)
+and [passive future product identity outline](../../active/2026-10-04-sol61-armour-recovery/checks/graph-only-natural-owner-source-20261005/passive-conquest-identity-outline.md)
+preserve state11735 identity as unresolved. The outline is unimplemented/unrun;
+no additional Conquest root or handoff-defect claim follows. Prior negatives remain.
+
+CI's c4dffb18 prerequisite review stopped before any build because matching a spent
+candidate identity incorrectly permitted re-emplacement after refusal. Production
+leaves that attempted slot spent when clearing the failed task/proof scratch.
+[Minimal corrected test checkpoint 7a02cec4/2d4c0ad0](../../active/2026-10-04-sol61-armour-recovery/checks/graph-only-owner-admission-source-20261005/fixture-prerequisite-review.md)
+drains existing work, starts a new owner check only when the slot is exactly zero,
+and treats a completed refusal/spent slot as a decisive negative. Pre/post-check
+identities, actual refusals/repeated starts and proof/reset lifecycle are observed;
+independent positive-entry proofs remain separate. All native ownership, normal-
+before-explicit service, exact-root authority and complete paid gates remain fixed.
+Source is frozen/unbuilt/untested pending [another CI prerequisite review](../../active/2026-10-04-sol61-armour-recovery/checks/graph-only-owner-admission-source-20261005/ci-handoff.json).
+No build, native/root run, production change or publication occurred. Earlier source
+reviews/native negatives and general mathematical/economic claim status remain.
+
+The [preserved7a02/2d4c native negative](../../active/2026-10-04-sol61-armour-recovery/checks/graph-only-authority-diagnostics-source-20261006/preserved-7a02-negative.json)
+uses matching Tests3df271e4 after25 CI review/build gates. All six controls complete;
+case6 independently checks baseline24 and exposes two positive missing ports.
+The normal-owner authority assertion then fails before explicit service, but its
+after-step state, exact invalid reason and failing unit index were not recorded.
+Latest snapshot is pre-service valid. Certificate loss and a production defect
+remain unproved; complete challenger, both entry checks and case7 are unreached.
+Native grant1/1 is spent; LOCAL released2026-10-06 00:16:17.2724105UTC with original
+PID88224/token absence and empty escalated CIM. Existing receipt bytes stay fixed.
+
+Parent pauses functional correction and selects only observability. Frozen
+[Tests-only4c036208/48d5370b diagnostic diff and control-flow checklist](../../active/2026-10-04-sol61-armour-recovery/checks/graph-only-authority-diagnostics-source-20261006/control-flow-checklist.md)
+emit/flush read-only candidate/certificate/current-binding and owner snapshots
+immediately after each post-baseline native owner step, before event/guard failure.
+The unchanged asserted root predicate is captured once, flushed and reused;
+all89 original acceptance expressions, setup, owner assignments/event order,
+six controls and limits remain.22 source gates and5 predecessor-artifact gates
+pass; source is **unbuilt, untested, unactivated** pending [CI prerequisite review](../../active/2026-10-04-sol61-armour-recovery/checks/graph-only-authority-diagnostics-source-20261006/ci-handoff.json).
+Private detached-evaluation identity is not directly exposed; logical retained
+views and actual pipeline status are recorded without inventing that identity.
+No build/native/root, production correction, assertion weakening or publication
+occurred. Reference14.5 remains unverified; checked Current Conquest economics
+remain101311.35474896732. General mathematical/economic claim status stays open.
+
+CI [stops4c036208 before build](../../active/2026-10-04-sol61-armour-recovery/checks/graph-only-diagnostic-purity-source-20261006/preserved-4c036208-CI-rejection.md):
+the diagnostic emitter's const fast_estimated_owned_bytes query increments mutable
+owned_byte_ledger_requests. This disproves the previous emitter-purity claim;
+its original frozen packet is preserved. CI otherwise verifies after-step flush,
+captured acceptance predicate, owner/event order and all six controls.
+[Minimal three-line Tests-only correction 7db9b98f/a0be05db](../../active/2026-10-04-sol61-armour-recovery/checks/graph-only-diagnostic-purity-source-20261006/transitive-purity-checklist.md)
+removes only that query and records live_owned_bytes=unavailable. Remaining calls
+are audited transitively as field reads/local key/hash/snapshot construction.
+No counter reset, production/acceptance/setup/event-order change or assumed
+ownership value hides the issue.16 source/artifact gates pass; source is
+**frozen/unbuilt/untested/unactivated**, pending [CI prerequisite review](../../active/2026-10-04-sol61-armour-recovery/checks/graph-only-diagnostic-purity-source-20261006/ci-handoff.json).
+Private detached identity remains unresolved.4c pre-build rejection,7a native
+negative and prior economic findings remain. No heavy/native/root or publication
+occurred; Current checked101311.35474896732 and unverified14.5 status stay fixed.
+
+Matching7db9/a0be Tests7c23d298 passes30 CI purity/build gates. Its sole
+[diagnostic native invocation](../../active/2026-10-04-sol61-armour-recovery/checks/graph-only-diagnostic-purity-native-20261006/summary.json) completes all six controls,
+checks case6 baseline24, then records the actual normal-owner failure:
+**graph_prefix_changed** at both active and retained-logical location0. Five
+returned-step snapshots/predicates show four1s then0. Captured prefix11032646483254399659
+remains; current prefix changes to6843342162333667524 as owned row0 variant_count
+changes1-to-2. This is an observed metadata/compatibility transition, not exclusive
+attribution among all hashed fields. Graph/payload identity, exact certification
+payload, available original-root member, checked cost24 and goal/economy/caller/
+vocabulary/artifact bindings remain. The physical root still matches. No pending
+checker, attempted slot or shared proof bytes appear; live owned bytes are explicitly
+unavailable and private detached identity remains unresolved. The predicate's0
+is flushed before its same-boolean assertion fails. Certificate loss, a production
+defect, whole-search cause and introducing commit remain unproved.
+
+Explicit service, complete challenger, both positive-entry checks and case7 are
+unreached; reference14.5 remains unverified. Native exits3221226505 in423.7954ms,
+without timeout/cancellation/survivor. PID33740/token33740:134357222284687543 is
+proved absent; escalated ErrorActionStop CIM is empty and LOCAL releases
+2026-10-06 01:04:19.1134820UTC. Native allowance1/1 is spent; no retry, root,
+Benchmark, production/source correction, publication or consumer activation
+occurred. Canonical docs retain this scoped fixture negative and all prior
+receipts, including7a's still-unobserved original after-state. Checked Current
+Conquest economics remain101311.35474896732 with no new measured gain.
+
+<a id="root-artifact-parent-prefix-lifetime"></a>
+### Root artifact authority and parent prefix lifetime
+
+The [October 6 source review](../../active/2026-10-04-sol61-armour-recovery/checks/graph-only-prefix-dependency-source-20261006/causal-review.md)
+separates two implemented obligations. A root-only continuation certificate is
+bound to the exact checked graph, full native context and exact physical entry.
+The retained fallback wrapper additionally binds the captured parent graph
+prefix. Passing the first obligation does not imply passing the second.
+Source requires both; native7db observes the first pass and the second reject
+with graph_prefix_changed as row0 variant_count grows1-to-2.
+
+The prefix includes row variant count/offset/capacity and selected price/choice
+fields. Equivalent native kernels can carry different resource variants, so
+kernel or total-cost equality alone cannot authorize a graph-relative reuse.
+An exact duplicate resource variant would change count without changing the
+paid controller semantics, but the actual second payload is not recorded.
+The root-only checker uses a separate exact model and copied graph/economy,
+not that parent arena. Conservative overbinding is a possible availability
+concern; the synthetic cache/expanded/queue arrangement does not prove an
+actual supported producer loses a required checked bound at retention/export.
+
+The unrun finite probe records full payload/prefix differences and directly
+rechecks the same root graph, preserving the current rejection predicate.
+No parent statewise/lower authority follows, no predicate relaxation is accepted,
+and no native economic or general program-correspondence claim is promoted.
+All original negatives and the unverified14.5 reference remain.
+
+The [ce4 native counterpart](../../active/2026-10-04-sol61-armour-recovery/checks/graph-only-prefix-probe-native-20261006/README.md)
+now records full exact duplicate Scour payloads and unchanged native kernel,
+routing, typed context and physical root. Only row0 variant_count changes among
+all captured prefix fields; the wrapper rejects while a fresh independent root
+checker returns Complete at24 with full paid proper support. This establishes
+the distinction between checked root artifact and broader wrapper binding in
+the synthetic fixture. The full selector is still a negative: its new assertion
+incorrectly negates the owner's intentional paired_default_only flag for an
+identical certification graph. Later guards are unrun and original receipts are
+not backfilled. Neither the measurements nor an eventual test correction proves
+a supported production lifetime defect or sound removal of the prefix guard.
+No parent statewise/lower authority or economic claim follows.
+
+<a id="independent-root-artifact-quotient"></a>
+### Independently checked graph through parent quotienting
+
+The [resumed normal Current check](../../active/2026-10-04-sol61-armour-recovery/README.md#resumed-current-repair---october-6)
+demonstrates a different lifetime boundary from the earlier injected duplicate
+variant fixture. Ordinary discovery issues a checked graph at31984.615384614921;
+its completed all-action behavioral quotient then replaces458 rows with193.
+The active and retained ordinary wrappers remain present but fail their captured
+prefix identity. This is a supported normal-construction compatibility loss in
+that finite model, not proof of the Conquest whole-search cause or introducing
+commit. The unchanged original failed receipts remain retained.
+
+An exact quotient preserves the abstract optimization problem; it does not keep
+old row indices, prefixes or copied statewise policies valid. Conversely, a
+fixed independently checked paid controller from its exact physical root has no
+dependency on a later parent row arena, provided graph bytes and the full native
+goal, economy, action vocabulary, caller scope, data and terminal context remain
+compatible. Those are distinct authority roles. No root scalar supplies an
+uncovered continuation or lower bound.
+
+Sourceb200aec9 requests the existing checker's physical-root continuation entry,
+then may retain the same checked graph in the existing root-only role. That role
+has no parent decisions, nonroot finite values, row binding or parent generation;
+the original statewise output keeps its original prefix and sticky rejection
+provenance. Exact graph/certification bytes, full typed context, the available
+physical-root member and paid checked cost remain required. The shared byte
+ledger must admit both temporary ownership and retention. This does not relax
+the ordinary wrapper's prefix predicate or issue a certificate from mere cost
+equality. Five focused selectors pass12,754 checks with no failures. Publication
+may move the checked artifact out of the retained container; the normal check
+follows its physical-root certificate through that transfer and early Finish.
+The closed finite model has no missing continuation and proves no positive
+service handoff or real-request saving. TargetNeutralZero remains fixed.
+
+The fresh matched original Conquest pair now exports the same checked
+101311.35474896732 graph in both arms, cap mask0. The treatment completes eight
+native support cells/88 committed rows, then still lacks a complete continuation
+at its next assembly boundary (37 attempts/0 successes). Local paid row delivery
+is not a complete proper controller or checked economic advantage. The living
+record binds those measured native identities and preserves all negatives.
+
+A later source inspection finds that first-policy seed ordering considers
+unavailable successors only while no incumbent object exists. An object whose
+value table is rejected or root-only still has no nonroot continuation authority.
+Source `353d93ee` therefore uses the assembly completion census to prefer rows
+with eligible completed/priced immediate successors in that role. An owner row
+count alone is insufficient, and every positive exit stays in the comparison.
+This is one-step proposal ordering, not a closed-policy proof: a completed
+successor row may itself lack a tail or belong to an improper cycle. Complete
+closure, properness and independent native checking still own acceptance. The
+repair's five focused selectors later pass12,829 checks. Its original matched
+Conquest pair ties at101311.35474896732 despite3 handoffs/8 complete cells/187
+counted committed rows;36 assemblies still have no complete challenger. Thus
+one-step successor support does not establish an executable tail or economic
+gain. The later source-only `9063c5fd` uses continuation capability for delivery
+before further improvement after proper fixed-policy evaluation. Publication
+still requires full native closure/checking and comparison with the checked
+fallback; a proper coarse policy is not an independently executable strategy.
+The9063 follow-up's focused control later rejects admission of an unchanged
+24-cost baseline. Correction83906a6c uses the fixed-policy estimate only to
+order early delivery of potentially cheaper proper proposals; equal/expensive
+estimates continue improvement. It passes12,829 focused checks but its matched
+Conquest pair again ties101311.35474896732, with unchanged353d93ee construction
+metrics and no complete challenger. This validates a dispatch contract, not
+new economics or proof of the first failed attempt stage. Neither source fact
+proves the whole Conquest cause or supplies a lower bound.
+
+Sourceaf483998 (proposal01109141 plus its all-required guard) applies the finite
+Annul-to-inevitable-Chaos proposal in the existing complete-held RerollVersusRepair
+controller when all goals are required and no requested target goal is present.
+Subset-goal contracts retain their original repair, since cleanup without target
+progress can otherwise suffice. Requested-goal, native held-side/frame and paid
+setup/cleanup/recovery semantics must agree; full native kernel/controller
+correspondence must justify any claim that direct Chaos replaces post-Annul
+Chaos. Root scalar equality or coarse goal-mask equality cannot establish it.
+Full graph checking and every positive programme entry remain mandatory.
+
+The matching build and12,906 focused checks pass. One/two-target component
+fixtures pass native original-root and reached-entry validation, with retained
+synthetic-price costs942.20959795000726 and942.37761739992402. There is no matched
+component control, so these are validity evidence rather than demonstrated
+savings or a general stochastic dominance theorem. The original matched
+Conquest pair exports identical checked101311.35474896732 strategies/cap0.
+Both native selective-completion owners report3 checks/statusretained, while
+joint assembly36/0 still lacks complete paid support at7941/mask27. The normal
+receipt does not expose the changed branch's reachability or that entry's full
+physical/controller identity. No new domain, historicalP0 admission, global
+cause, numerical lower authority, consumer activation or private210 activation
+follows. [The living checkpoint](../../active/2026-10-04-sol61-armour-recovery/README.md#bounded-repair-tail---qualified-no-conquest-saving)
+keeps exact pins, checker ownership, unchanged gates and every prior negative.
+
+<a id="bounded-checked-graph-support-service"></a>
+### Bounded checked-graph support service
+
+The [parent-selected source change](../../active/2026-10-04-sol61-armour-recovery/checks/current-support-handoff-source-20261006/README.md)
+`0ae56bc5ed60dd3968a968d46bfd77051b221dfa` changes scheduling correspondence only. A just-attempted, compatible,
+independently checked graph checkpoint may transfer its actual named unexpanded
+nonterminal continuations to the existing exact row owner, within cumulative
+eight-cell / six-handoff limits. No unrelated uncertainty padding is selected by
+that bounded caller. A committed native row can make the next ordinary joint
+assembly checkpoint due; geometric cadence otherwise remains and the complete
+checker slot is not reset. Existing wrapper/prefix and all typed-context,
+positive-support, properness, executable cost, ownership and scope gates remain.
+
+This neither proves a continuation at selection nor makes a root-only scalar a
+statewise upper. Passive coarse keys and first native row/variant/cost evidence
+are observational; unavailable physical/control entries remain unavailable.
+TargetNeutralZero and every-positive-entry checking obligations carry forward.
+The root probe now expects the owner's successful identical certification graph
+pairing flag, with all its other guards intact. The original failed selector
+receipt is unchanged. Normal production tests and a matched Current comparison
+are still unrun; there is no new mathematical endpoint or economic gain, no
+supported production lifetime defect, and no safe binding-removal conclusion.
+
+The0ae CI build fails before native execution on two new test API names.
+[Correction `075b402e5da3d795c153b48ddb5390fccd5ad7f6`](../../active/2026-10-04-sol61-armour-recovery/checks/current-support-api-fix-source-20261006/README.md)
+uses actual ForbidUnmatched (reject unmatched extras) and finish (move finalized
+result after completion), preserving the intended predicate, result ownership,
+all assertions and production code. This is source correspondence only, unbuilt
+and unrun; no mathematical/economic endpoint or native acceptance is added.
+
+075 qualification now completes the corrected scoped prefix contract, then the
+normal producer selector aborts before any normal-support result. Its original
+exact throw site is unproved from the log. [Source repair `0f29fe169f75958e87d316ec2af1dee4329ad71d`](../../active/2026-10-04-sol61-armour-recovery/checks/current-support-registry-fix-source-20261006/README.md)
+corrects the independently demonstrated absent augmentation registry lookup to
+actual augment (same native action and price1), with a named fail-closed lookup
+guard. All acceptance/authority gates and production code remain; new source
+is unbuilt/unrun and adds no normal service, retention/export or economic proof.
