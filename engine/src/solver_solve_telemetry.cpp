@@ -2875,7 +2875,7 @@ SolveTelemetrySnapshot SolveWork::Impl::telemetry_snapshot(bool abandoned) const
         snapshot.diagnostics.graph_only_support_selected = graph_only_support_selected;
         snapshot.diagnostics.graph_only_support = graph_only_support;
         snapshot.diagnostics.passive_continuation = passive_continuation;
-        if (phase == SolvePhase::Done)
+        if (phase == SolvePhase::Done && !passive_continuation.missing_scan_performed)
             observe_passive_native_matches(snapshot.diagnostics.passive_continuation);
         snapshot.diagnostics.incremental_missing_frontier_discovered =
             incremental_missing_frontier_discovered;

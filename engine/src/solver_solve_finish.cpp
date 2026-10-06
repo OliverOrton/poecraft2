@@ -6369,6 +6369,10 @@ void SolveWork::Impl::begin_publication_pipeline() {
                 return;
             }
         }
+        // Freeze passive certificate observations before publication moves
+        // incumbent artifacts. Only fixed diagnostic records are written.
+        observe_passive_native_matches(passive_continuation);
+        result.diagnostics.passive_continuation = passive_continuation;
         phase = SolvePhase::Refining;
         finalization_task.emplace(run_publication_pipeline());
     }

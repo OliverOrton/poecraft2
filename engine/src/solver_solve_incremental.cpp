@@ -4061,6 +4061,7 @@ void SolveWork::Impl::finalize_incremental_diagnostics() {
     diagnostics.graph_only_support_handoffs = graph_only_support_handoffs;
     diagnostics.graph_only_support_selected = graph_only_support_selected;
     diagnostics.graph_only_support = graph_only_support;
+    diagnostics.passive_continuation = passive_continuation;
     diagnostics.incremental_missing_frontier_discovered =
         incremental_missing_frontier_discovered;
     diagnostics.incremental_missing_frontier_priority_offers =
