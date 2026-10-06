@@ -5298,9 +5298,37 @@ void run_solver_scoped_lower_tests() {
     stochastic_registry.actions[annul].cost_keys={"fixture:finish"};
     auto stochastic_start=start;
     place(&stochastic_start,0,1,10); place(&stochastic_start,1,5,20);
-    CalcContext stochastic_calc(session,goal,stochastic_registry,{bench,scour,annul});
+    // Bench/Scour/Annul cannot generate suffix 5. Without an observed-start
+    // member mask, this narrow calculator has no class for that existing junk:
+    // projection retains its suffix count, but materialization cannot restore
+    // the affix. That is a refused carrier, not a favorable Annul distribution.
+    CalcContext omitted_start_member(session,goal,stochastic_registry,{bench,scour,annul});
+    const auto omitted_root=omitted_start_member.intern_item(stochastic_start);
+    PC_CHECK(omitted_start_member.layout().junk_class_by_mod[5]==kNoId);
+    PC_CHECK(omitted_start_member.state(omitted_root).prefix_count==1 &&
+        omitted_start_member.state(omitted_root).suffix_count==1 &&
+        omitted_start_member.layout().junk_classes.empty());
+    pc_item_state omitted_materialization{};
+    PC_CHECK(!omitted_start_member.materialize(omitted_root,omitted_materialization));
+    const auto omitted_loss=omitted_start_member.outcomes(omitted_root,annul);
+    PC_CHECK(!omitted_loss.supported && omitted_loss.applicable &&
+        omitted_loss.entries.empty() && omitted_loss.choice_groups.empty());
+    // Retain the actual initial members without adding a generation action or
+    // changing any price/native law. Automatic product goals already preserve
+    // every ordinary affix; this explicit fixture supplies the existing hook.
+    std::vector<std::uint64_t> observed_start_members(session->words,0);
+    pc_bitset_set(observed_start_members.data(),1);
+    pc_bitset_set(observed_start_members.data(),5);
+    CalcContext stochastic_calc(session,goal,stochastic_registry,{bench,scour,annul},
+        false,true,false,std::nullopt,{},false,observed_start_members);
     const auto stochastic_root=stochastic_calc.intern_item(stochastic_start);
+    PC_CHECK(stochastic_calc.layout().junk_class_by_mod[5]!=kNoId);
+    pc_item_state stochastic_materialization{};
+    PC_CHECK(stochastic_calc.materialize(stochastic_root,stochastic_materialization));
     const auto loss=stochastic_calc.outcomes(stochastic_root,annul);
+    if (!(loss.supported && loss.applicable && loss.entries.size()==2 && loss.choice_groups.empty()))
+        std::fprintf(stderr,"scoped stochastic Annul: supported=%d applicable=%d entries=%zu choices=%zu\n",
+            loss.supported,loss.applicable,loss.entries.size(),loss.choice_groups.size());
     PC_CHECK(loss.supported && loss.applicable && loss.entries.size()==2 && loss.choice_groups.empty());
     std::uint32_t missed=kNoId;
     for (const auto& entry:loss.entries) {
@@ -5320,8 +5348,17 @@ void run_solver_scoped_lower_tests() {
     Impl stochastic(stochastic_calc,stochastic_start,prices,options);
     while (!stochastic.advance_setup()) {}
     PC_CHECK(stochastic.native_retention_potential != nullptr);
-    PC_CHECK(stochastic.native_retention_lower_value(stochastic.result.start_state)>1.9 &&
-        stochastic.native_retention_lower_value(stochastic.result.start_state)<=2);
+    // Independent proper-policy oracle: empty Rare -> Bench costs 1; lone
+    // junk -> Annul then Bench costs 2. Root Annul therefore costs exactly
+    // 1 + 0.5*0 + 0.5*(1+1) = 2. Bench preserves junk, Scour requires a
+    // subsequent >=100 rarity action, and every other law costs >=100.
+    constexpr double stochastic_oracle=1+0.5*0+0.5*(1+1);
+    static_assert(stochastic_oracle==2);
+    const double stochastic_lower=stochastic.native_retention_lower_value(stochastic.result.start_state);
+    if (!(stochastic_lower>1.9 && stochastic_lower<=stochastic_oracle))
+        std::fprintf(stderr,"scoped stochastic lower: actual=%.17g oracle=%.17g refusal=%s\n",
+            stochastic_lower,stochastic_oracle,stochastic.native_retention_refusal.c_str());
+    PC_CHECK(stochastic_lower>1.9 && stochastic_lower<=stochastic_oracle);
 
     // Newly admitted actual cheaper action: the SAME native Bench mechanics,
     // a distinct priced registry operator. Exact optimum becomes 1/4. Complete
