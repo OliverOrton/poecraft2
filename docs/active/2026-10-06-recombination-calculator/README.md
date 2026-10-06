@@ -1,6 +1,6 @@
 # Authored random recombination calculator
 
-## Layout repair selected; qualification pending
+## Layout repair qualified; parent visual review pending
 
 Oliver rejected the delivered visual fit at **04:43:10 UTC**: the desktop odds
 table and full cards pushed the actual mods/picker below the fold, and mobile
@@ -8,7 +8,7 @@ captures started mid-card. Parent holds UI main integration. Earlier behavioral
 qualification and Library previews describe the older source, not visual
 acceptance of the repair. Existing images/receipts are preserved.
 
-Source repair `4c932d9fd336174d6c418242a5e475dc4b495c34` opts into compact shared
+Qualified source `5b51c1b9bfe7d5f8ca6397328f43044a7ff364b3` opts into compact shared
 ItemCards, retains base/level/rarity/influences and full affix text, summarizes
 empty capacity, and leaves advanced properties collapsible. Odds and Calculate
 occupy one compact strip; carrier, attempt and model details expand on demand.
@@ -21,19 +21,56 @@ shared. No API, native mechanics, optimizer, dependency, data or price change.
 
 The shared card's compact mode is opt-in; default cards retain their stable full
 slot presentation. The existing functional native/base/stale/picker/keyboard
-checks remain. New browser acceptance requires native-authored six-affix A/B and
+checks remain. The passed browser gate uses native-authored six-affix A/B and
 goal, all input affixes visible inside their scrollports at **1536×864** and
 **1366×768**, visible goal affixes/picker controls/odds together, reachable final
 goal tiers through internal scrolling, closed carrier details and actual mobile
-top/selector behavior. Four earlier functional captures plus two populated
-desktop and two mobile captures are planned for pixel inspection.
+top/selector behavior. Four functional captures plus two populated desktop and
+two mobile captures were saved and inspected locally. Goal rows beyond the
+available desktop height remain reachable in the goal's internal scrollport;
+mobile uses normal vertical scrolling for the selected card and picker.
 
-**Built/tested/rendered for this repair: unrun.** Only source review and
-`git diff --check` have completed while CI owns LOCAL. A finite supervised batch
-is requested from parent, using compatible immutable WASM and the existing
-qualified owner, with metadata/focused tests/TypeScript/Vite/package/Chrome and
-cleanup. No further product changes are planned unless that gate finds an
-actual failure. Parent owns subsequent visual review, publication and main/CI.
+**Built/tested/rendered: passed at the exact source above. Parent visual
+acceptance and main integration: pending, HOLD.** The preserved finite batch
+passes metadata (10.52s), six focused tests including real WASM (23.24s),
+TypeScript (3.45s), Vite (3.52s), immutable packaging (2.39s), and Chrome (3.66s).
+The receipt is [layout-qualification.json](layout-qualification.json); logs and
+eight PNGs are retained in `out/recombination-calculator/gate-layout-fit-r4-supervised/`.
+Build ID: `fc9fb78df7f6358b9240c284111315d9f2d89d0c60f250b9dfb01b3875c573c0`.
+
+LOCAL was released at **05:38:32 UTC**. All six original stage identities are
+proved absent, stage cleanup flags are clear, and the elevated ownership-scoped
+CIM census returns zero. Parent later attributed ghost Terminal windows to the
+old detached `f532376a` launcher used by this historical batch. The stage/CIM
+evidence does not establish absence of all Terminal hosts. CI owns that audit.
+Any future heavy execution must use the repaired worker at commit `29ae95cf`,
+SHA256 `670a258e01ff30bcf12f66b1614cdf082c8f423dc328a0b4a4db9b17609dc74b`,
+and a fresh parent reservation. No heavy execution ran during closeout.
+
+Fresh previews from this qualified source are saved in Library, version 0:
+
+| Preview | Captured UTC | Library file |
+| --- | --- | --- |
+| Six-affix desktop, 1536x864 | 05:38:18.949197 | `libfile_468a22422020819186bbf2b60b82b355` |
+| Six-affix desktop, 1366x768 | 05:38:19.042402 | `libfile_cd362d9279148191affdb9a42dca2bde` |
+| Mobile overview, 390x844 | 05:38:19.119169 | `libfile_7c5ea51ae8f481919672a10de5a5ac6b` |
+
+The current upload helper failed before preparation because its hosted-app
+connection was unavailable. Parent's approved direct create fallback saved all
+three in one ordered call. Each cloud result is confirmed; Windows
+`os.setxattr` prevents local metadata writeback. Identities and unchanged PNG
+hashes are retained in the receipt. There were no duplicate cloud uploads.
+Earlier bad-layout Library files remain rejected and are not these previews.
+
+The layout attempts retain their original logs: r1 fixed a test querying
+influence text instead of its accessibility label; r2/r3 exposed the last input
+affix outside the 1366px scrollport. Combining header controls and tightening
+compact spacing fixed that fit without smaller type or weaker assertions. The
+first r4 launch stopped at sandboxed Node's `spawnSync git EPERM`; the unchanged
+source then passed under the authorized supervisor. Original identities and
+ownership-scoped cleanup were checked after each attempt. Immutable input and
+earlier capture hashes agree before/after. Parent owns visual acceptance and
+main/CI integration; source closeout changes only docs and receipts.
 
 ## Earlier behavioral qualification (visually rejected)
 
@@ -64,8 +101,8 @@ frozen data/prices are untouched. Parent owns main publication and CI gating.
 `+ Recombination` opens a dedicated workspace document. Input A left and B right
 use independent native sessions and shared editable ItemCards; one goal sits
 above the shared modifier picker. Tabs, buttons, outlined cards and picker text
-identify the edit target. Narrow calculator views stack A, B, goal and picker;
-odds occupy their own section. The existing charcoal/ember tokens, normal-weight
+identify the edit target. Narrow views show an A/Goal/B overview, the selected
+card, then the picker; odds occupy a compact action strip. The charcoal/ember tokens, normal-weight
 modifier copy, influence display and shared geometry are retained.
 
 Native atomic editing authors the inputs. The existing read-only random pair/goal
@@ -87,9 +124,9 @@ Provisional spawn weights, omitted unverified upgrades, unobserved numerical
 rolls/property scope, exceptional-pair refusal and unknown gold/dust costs remain
 explicit. There is no API blocker for the supported authored-pair calculator.
 
-## Qualification and identities
+## Earlier qualification and identities (superseded visual fit)
 
-Final passed receipt: [navigation-qualification.json](navigation-qualification.json).
+Earlier passed receipt: [navigation-qualification.json](navigation-qualification.json).
 Original detailed logs are retained locally in
 `out/recombination-calculator/gate-navigation-final/`. The unchanged focused/TS
 qualification and earlier artifact remain in [qualification.json](qualification.json)

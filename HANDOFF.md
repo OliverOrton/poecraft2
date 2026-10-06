@@ -26,14 +26,20 @@ mathematical authorities are unchanged by this presentation delta.
 Oliver separately selected the [authored two-item recombination calculator](docs/active/2026-10-06-recombination-calculator/README.md)
 in a fresh isolated session from main `7252027c`. Its page and existing pair-API
 integration pass focused real-WASM tests and TypeScript at `dd942153`; the earlier
-`abab3f60` build/browser gate also passes. Oliver rejected its actual visual fit
-at 04:43:10 UTC, so parent holds UI main integration. Layout repair `4c932d9f`
-uses compact opt-in shared cards, a compact odds/action strip, independently
-scrolling desktop panels and a logical mobile A/B/Goal overview. Source is
-implemented; focused tests, TypeScript, build and six-affix rendered fit checks
-for the repair are unrun until parent reserves LOCAL. Parent owns main/CI gating
-and HANDOFF reconciliation. The optimizer, frozen inputs and normal checkout
-are untouched; earlier captures/receipts remain evidence of their earlier source.
+`abab3f60` build/browser gate also passes. Oliver rejected that visual fit at
+04:43:10 UTC. Revised layout source `5b51c1b9` passes focused real-WASM tests,
+TypeScript, build, packaging and Chrome, including six-affix input visibility at
+1536x864/1366x768 and logical mobile selection/stacking. Eight preserved captures
+were inspected locally; fresh desktop/mobile Library previews and the exact
+[layout receipt](docs/active/2026-10-06-recombination-calculator/layout-qualification.json)
+are ready for parent review. Main integration remains HOLD until that review.
+LOCAL was released at 05:38:32 UTC with original stage absence and zero
+ownership-scoped CIM matches. Parent later identified the historical detached
+launcher as the ghost-window cause; that census does not clear all Terminal
+hosts. CI owns the host audit, and future heavy runs require repaired worker
+`29ae95cf` plus a new reservation. Closeout runs no heavy job. Parent owns main/CI
+gating and HANDOFF reconciliation. Optimizer, frozen inputs and the normal
+checkout remain untouched; rejected earlier previews are preserved separately.
 
 Oliver resumed the coordinated work at 09:00 Vancouver on October 5. The
 [published solver record at `734f6722`](https://github.com/OliverOrton/poecraft2/blob/734f67228be0c6fa3262f656f41cb7d625cc57db/docs/active/2026-10-04-sol61-armour-recovery/README.md)
