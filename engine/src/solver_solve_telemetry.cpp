@@ -2382,6 +2382,8 @@ std::string SolveWork::Impl::progress_trace_json(std::uint64_t after_sequence) c
         ",\"retention_lower\":" + boolean(options.native_retention_lower) +
         ",\"retention_reuse\":" + boolean(options.native_retention_numerical_reuse) +
         ",\"retention_consume\":" + boolean(options.native_retention_consume) +
+        ",\"independent_cover\":" + boolean(independent_cover_enabled()) +
+        ",\"independent_cover_consume\":" + boolean(options.independent_cover_consume) +
         ",\"high_impact_uppers\":" + boolean(options.high_impact_executable_uppers) +
         ",\"goal_progress_gated_reforges\":" + boolean(options.goal_progress_gated_reforges) +
         ",\"paid_root_foulborn_salvage_v2\":" + boolean(options.paid_root_foulborn_salvage) +
@@ -2580,7 +2582,7 @@ SolveProgress SolveWork::Impl::progress() const {
                 incremental_action_generation,incremental_envelope_closed,
                 result.diagnostics.independent_goal_cover_lower_bound);
         }
-        value.lower_bound=std::max(value.lower_bound,issued_native_source_lower(result));
+        value.lower_bound=std::max(value.lower_bound,issued_independent_source_lower(result));
         if (std::isfinite(value.lower_bound) &&
             std::isfinite(value.upper_bound)) {
             value.absolute_optimality_gap = std::max(
@@ -2696,8 +2698,8 @@ void SolveWork::Impl::refresh_incumbent_portfolio_diagnostics(
     snapshot.independent_global_lower_certified = true;
     snapshot.independent_global_lower_provenance =
         snapshot.independent_global_lower > 0.0
-            ? (issued_native_source_lower(result) > 0.0 && !proof_capabilities().positive_global_lower
-                ? SolveLowerBoundProvenance::ScopedNativeRetention
+            ? (issued_independent_source_lower(result) > 0.0 && !proof_capabilities().positive_global_lower
+                ? independent_source_lower_provenance(result)
                 : SolveLowerBoundProvenance::GlobalActionRelaxation)
             : SolveLowerBoundProvenance::
                   OpenIncrementalEnvelopeUniversalZero;

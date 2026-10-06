@@ -5069,7 +5069,390 @@ void run_solver_calc_gated_equivalence_tests() {
     run_harvest_targeted_natural_regression();
 }
 
+void run_solver_independent_cover_tests() {
+    using Impl = SolveWorkTestAccess::Impl;
+    const auto fixture = [] {
+        auto session = make_calc_session();
+        auto data = std::const_pointer_cast<DataImpl>(session->data);
+        for (unsigned mod = 0; mod < session->mod_count; ++mod) {
+            data->mod_key_sid.push_back(data->strings.size());
+            data->strings.push_back("cover-fixture-" + std::to_string(mod));
+        }
+        return session;
+    };
+    const auto selected_options = [] {
+        SolveOptions options;
+        options.goal_proof_profile = GoalProofProfile::TargetNeutralZero;
+        options.current_independent_cover = true;
+        options.consider_imprint_programs = false;
+        options.allow_economic_restart = false;
+        options.max_states = options.max_discovered_states = options.max_expanded_states = 128;
+        options.max_solver_owned_bytes = 64ull << 20;
+        return options;
+    };
+    const auto complete_setup = [](Impl& work) {
+        unsigned slices = 0;
+        while (!work.advance_setup()) { ++slices; PC_CHECK(slices < 100000); if (slices >= 100000) break; }
+    };
+    auto session = fixture();
+    session->bench_mod_ids = {0};
+    session->flags[0] |= 1u << 1;
+    pc_bitset_clear(session->normal_random_roll_mask.data(), 0);
+    auto registry = build_action_registry(*session);
+    for (auto& action : registry.actions) action.cost_keys = {"cover:other"};
+    const auto bench = registry.index_by_id.at("bench:cover-fixture-0");
+    const auto scour = registry.index_by_id.at("scour");
+    registry.actions[bench].cost_keys = {"cover:finish"};
+    registry.actions[scour].cost_keys = {"cover:scour"};
+    PhaseLowerPrices prices{{"cover:other",100}, {"cover:finish",1}, {"cover:scour",.5}};
+    auto goal = family_goal_100(); goal.slots[0].min_tier = 2;
+    pc_item_state empty{}; pc_item_clear(&empty); empty.rarity = PC_RARITY_RARE;
+    auto options = selected_options();
+    CalcContext calc(session,goal,registry,{bench,scour});
+    Impl work(calc,empty,prices,options);
+    PC_CHECK(work.completion_proof_lower_value(work.result.start_state) == 0);
+    complete_setup(work);
+    const auto root = work.result.start_state;
+    const auto lower = work.independent_cover_lower_value(root);
+    PC_CHECK(lower > .999999 && lower <= 1);
+    PC_CHECK(work.goal_cover_universal_committed && work.goal_cover_cost_ready);
+    PC_CHECK(!work.goal_cover_carrier_committed && !work.goal_cover_clean_committed);
+    PC_CHECK(work.clean_goal_cover_cost.empty() && work.carrier_goal_progress_cost.empty() &&
+        work.bounded_gain_goal_progress_cost.empty() && !work.native_retention_potential);
+    PC_CHECK(!work.proof_capabilities().positive_global_lower &&
+        !work.proof_capabilities().lower_retirement && !work.proof_capabilities().global_exact_closure);
+    PC_CHECK(solve_detail::issued_universal_source_lower(work.result) == lower);
+    PC_CHECK(work.certified_global_lower_bound() == lower);
+    PC_CHECK(work.operator_proof_lower_value(root,scour) > 1.49 &&
+        work.operator_proof_lower_value(root,scour) <= 1.5);
+    const auto native_finish = calc.outcomes(root,bench);
+    PC_CHECK(native_finish.supported && sums_to_one(native_finish));
+    for (const auto& exit : native_finish.entries) PC_CHECK(calc.is_goal_state(calc.state(exit.state)));
+    // Descriptor retirement requires an intact compatible statewise issuer.
+    // The complete deterministic native Bench law is the independent U=1
+    // oracle; structural issuer flags here test the consumer seam only.
+    if (native_finish.entries.size() == 1) {
+        Impl retirement(calc,empty,prices,options); complete_setup(retirement);
+        const auto terminal = native_finish.entries.front().state;
+        solve_detail::SparseRow row; row.owner_state = root;
+        row.transition_offset = retirement.transition_cache->successors.size(); row.transition_count = 1;
+        const auto row_id = retirement.transition_cache->rows.size();
+        retirement.transition_cache->rows.push_back(row);
+        retirement.transition_cache->successors.push_back(terminal);
+        retirement.transition_cache->probabilities.push_back(1);
+        retirement.priced_rows.resize(row_id+1);
+        retirement.priced_rows[row_id].operator_index = bench; retirement.priced_rows[row_id].cost = 1;
+        Impl::BoundedPolicyIncumbent upper;
+        upper.graph_row_count = retirement.transition_cache->rows.size();
+        upper.graph_priced_row_count = retirement.priced_rows.size();
+        upper.graph_successor_count = retirement.transition_cache->successors.size();
+        upper.graph_probability_count = retirement.transition_cache->probabilities.size();
+        upper.graph_choice_count = retirement.transition_cache->choices.size();
+        upper.graph_choice_successor_count = retirement.transition_cache->choice_successors.size();
+        upper.graph_choice_option_count = retirement.transition_cache->choice_options.size();
+        upper.graph_prefix_identity = retirement.incumbent_graph_prefix_identity(
+            upper.graph_row_count,upper.graph_priced_row_count,upper.graph_successor_count,
+            upper.graph_probability_count,upper.graph_choice_count,upper.graph_choice_successor_count,
+            upper.graph_choice_option_count);
+        upper.source_generation = upper.graph_row_count; upper.target_generation = calc.state_count();
+        upper.certified_upper_bound = upper.evaluated_policy_cost = 1;
+        upper.independently_certified = upper.independently_evaluated = upper.proper = upper.executable = true;
+        upper.values.assign(calc.state_count(),kInfinity); upper.values[root] = 1; upper.values[terminal] = 0;
+        upper.goal_identity = retirement.goal_identity(); upper.economy_identity = retirement.economy_identity();
+        upper.caller_scope_identity = retirement.caller_scope_identity(); upper.artifact_identity = retirement.artifact_identity();
+        upper.action_vocabulary_size = retirement.operators.size();
+        upper.action_vocabulary_identity = retirement.action_vocabulary_prefix_identity(upper.action_vocabulary_size);
+        upper.policy_materialized = true; upper.policy.assign(calc.state_count(),PolicyOperatorRef{});
+        upper.policy[root] = PolicyOperatorRef{bench};
+        upper.policy_rows.assign(calc.state_count(),std::numeric_limits<std::uint64_t>::max());
+        upper.policy_rows[root] = row_id; upper.policy_reachable.assign(calc.state_count(),0);
+        upper.policy_reachable[root] = upper.policy_reachable[terminal] = 1;
+        upper.compiled_artifact.strategy_json = "independent-cover-native-Bench-consumer-fixture";
+        upper.compilation_provenance = "structural_consumer_fixture_native_kernel_oracle";
+        PC_CHECK(retirement.certified_incumbent_invalid_reason(upper) == nullptr);
+        retirement.incremental_certified_upper_values.assign(calc.state_count(),0); // stale working scalar
+        PC_CHECK(!retirement.retire_unmaterialized_by_operator_proof(root,scour));
+        retirement.output_incumbent = upper; retirement.output_incumbent->compiled_root_entry_only = true;
+        PC_CHECK(!retirement.retire_unmaterialized_by_operator_proof(root,scour));
+        retirement.output_incumbent = upper; retirement.output_incumbent->statewise_values_rejected = true;
+        PC_CHECK(!retirement.retire_unmaterialized_by_operator_proof(root,scour));
+        retirement.output_incumbent = upper; retirement.result_statewise_values_rejected = true;
+        PC_CHECK(!retirement.retire_unmaterialized_by_operator_proof(root,scour));
+        retirement.result_statewise_values_rejected = false; retirement.options.independent_cover_consume = false;
+        PC_CHECK(!retirement.retire_unmaterialized_by_operator_proof(root,scour));
+        retirement.options.independent_cover_consume = true;
+        PC_CHECK(retirement.retire_unmaterialized_by_operator_proof(root,scour));
+    }
+    // Every nested legacy owner and every restricted graph vector is poisoned.
+    // Only the separately committed support cover can feed neutral proof.
+    work.clean_goal_cover_cost.assign(3 * 2 * 16,5000);
+    work.carrier_goal_progress_cost.assign(6,6000);
+    work.bounded_gain_goal_progress_cost.assign(6,7000);
+    work.strict_clean_goal_cover_cost.assign(calc.state_count(),8000);
+    work.envelope_bellman_lower = 9000;
+    work.goal_cover_carrier_committed = work.goal_cover_clean_committed = true;
+    work.carrier_priced_first_step_actions = {{scour,4000}};
+    work.result.values.assign(calc.state_count(),10000);
+    work.focused_lower_completion_proof_values.assign(calc.state_count(),11000);
+    work.result.diagnostics.focused_lower_bound = 12000;
+    work.result.diagnostics.independent_goal_cover_lower_bound = 13000;
+    work.incremental_envelope_closed = true;
+    work.result_statewise_values_rejected = true;
+    PC_CHECK(work.completion_proof_lower_value(root) == lower);
+    PC_CHECK(work.certified_incremental_lower_values().at(root) == lower);
+    PC_CHECK(work.certified_global_lower_bound() == lower);
+    PC_CHECK(work.progress().lower_bound == lower);
+    PC_CHECK(work.operator_proof_lower_value(root,scour) <= 1.5);
+    work.result.lower_bound = 15000; work.result.closure_unavailable_by_profile = true;
+    work.result.converged = true;
+    solve_detail::normalize_publication_result(work.result);
+    PC_CHECK(work.result.lower_bound == lower && !work.result.converged);
+    auto mismatched = work.result; mismatched.exact_start_item.rarity = PC_RARITY_MAGIC;
+    PC_CHECK(solve_detail::issued_universal_source_lower(mismatched) == 0);
+    mismatched = work.result; mismatched.options.independent_cover_consume = false;
+    PC_CHECK(solve_detail::issued_universal_source_lower(mismatched) == 0);
+    auto marker = calc.state(root); marker.goal_progress_retry_basin = 1;
+    const auto marker_id = calc.intern_state(marker);
+    PC_CHECK(work.independent_cover_lower_value(marker_id) == 0 &&
+        work.operator_proof_lower_value(marker_id,scour) == 0);
+    // Prepare exactly the same evidence without any selected consumption.
+    auto control_options = options; control_options.independent_cover_consume = false;
+    Impl control(calc,empty,prices,control_options); complete_setup(control);
+    PC_CHECK(control.goal_cover_cost == work.goal_cover_cost);
+    PC_CHECK(control.result.universal_source_lower_certificate->lower == lower);
+    PC_CHECK(control.completion_proof_lower_value(control.result.start_state) == 0 &&
+        control.operator_proof_lower_value(control.result.start_state,scour) == 0 &&
+        control.certified_global_lower_bound() == 0);
+    auto changed_prices = prices; changed_prices["cover:finish"] = .125;
+    Impl repriced(calc,empty,changed_prices,options); complete_setup(repriced);
+    PC_CHECK(repriced.certified_global_lower_bound() > .1249 && repriced.certified_global_lower_bound() <= .125);
+    // An abandoned staged coroutine must issue no partial positive proof.
+    Impl pending(calc,empty,prices,options); (void)pending.advance_setup();
+    PC_CHECK(pending.goal_cover_task && !pending.goal_cover_universal_committed);
+    pending.goal_cover_task.reset();
+    PC_CHECK(!pending.result.universal_source_lower_certificate && pending.certified_global_lower_bound() == 0);
+    Impl capped(calc,empty,prices,options);
+    capped.options.max_solver_owned_bytes = capped.fast_estimated_owned_bytes() + 1;
+    bool cap_refused = false;
+    try { complete_setup(capped); } catch (const SolverResourceLimit&) { cap_refused = true; }
+    PC_CHECK(cap_refused && !capped.goal_cover_universal_committed &&
+        !capped.result.universal_source_lower_certificate);
+    auto imprint_options = options; imprint_options.consider_imprint_programs = true;
+    Impl imprint(calc,empty,prices,imprint_options); complete_setup(imprint);
+    PC_CHECK(!imprint.independent_cover_ready() && imprint.certified_global_lower_bound() == 0);
+
+    // W2: a protected cleanup exists before the constructor materializes it.
+    // Prefix lock + Scour costs .02; the intentionally incomplete debt list
+    // contains only Chaos at .2. The support cover returns zero for held goals.
+    {
+        auto s = fixture(); auto data = std::const_pointer_cast<DataImpl>(s->data);
+        data->metamod_prefixes_locked_code = 3;
+        s->metamod_type[7] = 3; s->flags[7] |= 1u << 1; s->bench_mod_ids = {7};
+        pc_bitset_clear(s->normal_random_roll_mask.data(),7);
+        auto r = build_action_registry(*s);
+        for (auto& action : r.actions) action.cost_keys = {"cover:other"};
+        const auto lock = r.index_by_id.at("bench:cover-fixture-7");
+        const auto clear = r.index_by_id.at("scour");
+        const auto chaos = r.index_by_id.at("chaos");
+        r.actions[lock].cost_keys = {"cover:lock"};
+        r.actions[clear].cost_keys = {"cover:clear"};
+        r.actions[chaos].cost_keys = {"cover:acquire"};
+        PhaseLowerPrices p{{"cover:other",100},{"cover:lock",.01},{"cover:clear",.01},{"cover:acquire",.2}};
+        auto g = family_goal_100(); g.slots.push_back(GoalSlot{});
+        g.slots[1].family_id = 103; g.slots[1].min_tier = 1;
+        g.automatic_candidates = true;
+        g.automatic_candidate_kind_mask = automatic_candidate_kind_bit(AutomaticCandidateKind::ProtectedMetamod);
+        pc_item_state dirty = empty; place(&dirty,0,0,10); place(&dirty,0,4,13); place(&dirty,1,5,20);
+        CalcContext c(s,g,r,{chaos}); Impl w(c,dirty,p,options); complete_setup(w);
+        const auto before = c.candidate_operators().size();
+        const auto held = w.result.start_state;
+        PC_CHECK(w.completion_proof_lower_value(held) == 0);
+        w.goal_cover_carrier_committed = true; w.carrier_priced_first_step_actions = {{chaos,.2}};
+        PC_CHECK(w.carrier_terminal_debt_lower_value(held) == .2);
+        PC_CHECK(w.completion_proof_lower_value(held) == 0);
+        const auto locked = c.outcomes(held,lock);
+        PC_CHECK(locked.supported && sums_to_one(locked));
+        for (const auto& step : locked.entries) {
+            const auto cleaned = c.outcomes(step.state,clear);
+            PC_CHECK(cleaned.supported && sums_to_one(cleaned));
+            for (const auto& exit : cleaned.entries) PC_CHECK(c.is_goal_state(c.state(exit.state)));
+        }
+        PC_CHECK(c.candidate_operators().size() == before);
+        AutomaticAdmissionLimits limits; limits.prices = &p; limits.consider_imprint_programs = false;
+        limits.max_solver_owned_bytes = 64ull << 20; limits.max_state_action_rows = 10000; limits.max_transitions = 100000;
+        const auto batch = c.admit_state_local_automatic_candidates(held,limits);
+        bool observed = false;
+        for (const auto& candidate : batch.decisions) {
+            if (!candidate.admitted || candidate.kind != AutomaticCandidateKind::ProtectedMetamod) continue;
+            const auto& planner = c.operators()[candidate.operator_index];
+            if (planner.option_kind != FixedOptionKind::ProtectedSide || planner.followup_action != clear) continue;
+            PC_CHECK(w.ensure_priced_operator(candidate.operator_index));
+            const double floor = w.operator_proof_lower_value(held,candidate.operator_index);
+            PC_CHECK(floor > .019999 && floor <= .02);
+            const auto exits = c.outcomes(held,candidate.operator_index);
+            PC_CHECK(exits.supported && sums_to_one(exits));
+            for (const auto& exit : exits.entries) PC_CHECK(c.is_goal_state(c.state(exit.state)));
+            observed = true;
+        }
+        PC_CHECK(observed);
+        // The same authored option retains only its mandatory first lock,
+        // rather than pretending every conditional programme quantity is paid.
+        auto authored_goal = g; authored_goal.automatic_candidates = false;
+        FixedOptionSpec authored; authored.kind = FixedOptionKind::ProtectedSide;
+        authored.side = PC_SIDE_PREFIX; authored.action_id = "scour";
+        authored_goal.fixed_options = {authored};
+        CalcContext authored_calc(s,authored_goal,r,{},false,false);
+        Impl authored_work(authored_calc,dirty,p,options); complete_setup(authored_work);
+        const auto authored_index = static_cast<std::uint32_t>(r.actions.size());
+        const double authored_floor = authored_work.operator_proof_lower_value(authored_work.result.start_state,authored_index);
+        PC_CHECK(authored_floor > .009999 && authored_floor <= .01);
+    }
+    // A prepared Fracture carrier skips the listed Chaos preparation. Native
+    // execution pays one Fracture, so the authored first-action lower must use
+    // the conditional-only path instead of charging the expensive preparation.
+    {
+        auto s = fixture(); auto r = build_action_registry(*s);
+        for (auto& action : r.actions) action.cost_keys = {"cover:other"};
+        const auto fracture = r.index_by_id.at("fracture");
+        r.actions[fracture].cost_keys = {"cover:fracture"};
+        PhaseLowerPrices p{{"cover:other",100},{"cover:fracture",.125}};
+        auto g = family_goal_100();
+        FixedOptionSpec authored; authored.kind = FixedOptionKind::FracturePrepare;
+        authored.program_action_ids = {"chaos"}; authored.carrier_goal_slot = 0;
+        g.fixed_options = {authored};
+        pc_item_state ready = empty; ready.searing_exarch_tier = 1;
+        for (unsigned mod : {0u,3u,5u,6u})
+            place(&ready,s->gen_type[mod],mod,s->primary_group[mod]);
+        CalcContext c(s,g,r,{},false,false);
+        Impl w(c,ready,p,options); complete_setup(w);
+        const auto authored_index = static_cast<std::uint32_t>(r.actions.size());
+        const auto& kernel = c.option_kernel(w.result.start_state,authored_index);
+        PC_CHECK(kernel.supported && kernel.legal && kernel.entry_continues);
+        PC_CHECK(kernel.expected_primitive_actions == 1);
+        double carrier_probability = 0;
+        for (const auto& exit : kernel.exits)
+            if (c.state(exit.state).fractured_goal_mask & 1u) carrier_probability += exit.probability;
+        PC_CHECK(near(carrier_probability,.25));
+        const double floor = w.operator_proof_lower_value(w.result.start_state,authored_index);
+        PC_CHECK(floor > .1249 && floor <= .125);
+    }
+    // W3: a1 blocks F, alternative a2 blocks F/H; B's physical Exalt
+    // probability from held a1 is one. Support never unions hypothetical
+    // blockers into a probability numerator, and the bad legacy helper stays
+    // outside every selected maximum.
+    {
+        auto s = fixture();
+        s->group_ids.insert(s->group_ids.begin()+2,13);
+        for (std::size_t i=2;i<s->group_offsets.size();++i) ++s->group_offsets[i];
+        pc_bitset_set(s->group_masks[13].data(),1);
+        pc_bitset_zero(s->normal_random_roll_mask.data(),s->words);
+        for (unsigned mod : {0u,1u,4u}) pc_bitset_set(s->normal_random_roll_mask.data(),mod);
+        auto r = build_action_registry(*s); for (auto& a : r.actions) a.cost_keys = {"cover:other"};
+        const auto exalt = r.index_by_id.at("exalt"); r.actions[exalt].cost_keys = {"cover:draw"};
+        PhaseLowerPrices p{{"cover:other",100},{"cover:draw",1}};
+        auto g = family_goal_100(); g.slots[0].min_tier=2; g.slots.push_back(GoalSlot{});
+        g.slots[1].family_id=103; g.slots[1].min_tier=1;
+        pc_item_state held = empty; place(&held,0,0,10);
+        CalcContext c(s,g,r,{exalt},false,true,true,std::nullopt,{},false,{},true);
+        Impl w(c,held,p,options); complete_setup(w);
+        const auto native = c.outcomes(w.result.start_state,exalt);
+        PC_CHECK(native.supported && sums_to_one(native));
+        PC_CHECK(near(native.slot_satisfied_probability[1],1));
+        PC_CHECK(c.optimistic_goal_draw_probability(w.result.start_state,exalt,1,1,0,0) == 0);
+        PC_CHECK(w.completion_proof_lower_value(w.result.start_state) > .999 &&
+            w.completion_proof_lower_value(w.result.start_state) <= 1);
+        PC_CHECK(w.operator_proof_lower_value(w.result.start_state,exalt) <= 1);
+    }
+    // W4: newly drawn heavy junk is removed from later denominators. Native
+    // pool exhaustion acquires both targets with probability one. The selected
+    // cover grants their support for one purchase without using the bad cap.
+    {
+        auto s = fixture(); auto data = std::const_pointer_cast<DataImpl>(s->data);
+        pc_bitset_zero(s->normal_random_roll_mask.data(),s->words);
+        for (unsigned mod : {0u,3u,4u}) pc_bitset_set(s->normal_random_roll_mask.data(),mod);
+        data->spawn_weights[0]=data->spawn_weights[4]=1; data->spawn_weights[3]=998;
+        s->base_spawn_weight[0]=s->base_spawn_weight[4]=1; s->base_spawn_weight[3]=998;
+        s->base_roll_weight = s->base_spawn_weight;
+        auto r = build_action_registry(*s); for (auto& a : r.actions) a.cost_keys = {"cover:other"};
+        const auto chaos = r.index_by_id.at("chaos"); r.actions[chaos].cost_keys = {"cover:refill"};
+        PhaseLowerPrices p{{"cover:other",100},{"cover:refill",1}};
+        auto g = family_goal_100(); g.slots.push_back(GoalSlot{});
+        g.slots[1].family_id=103; g.slots[1].min_tier=1;
+        CalcContext c(s,g,r,{chaos},false,true,true,std::nullopt,{},false,{},true);
+        Impl w(c,empty,p,options); complete_setup(w);
+        const auto native = c.outcomes(w.result.start_state,chaos);
+        PC_CHECK(native.supported && sums_to_one(native));
+        for (const auto& exit : native.entries) {
+            PC_CHECK(c.assess_goal_state(c.state(exit.state)).requested_coverage);
+            PC_CHECK(w.independent_cover_lower_value(exit.state) == 0);
+        }
+        PC_CHECK(6.0/(1000*999) < .000007);
+        PC_CHECK(w.completion_proof_lower_value(w.result.start_state) > .999 &&
+            w.completion_proof_lower_value(w.result.start_state) <= 1);
+        // Fresh-base positivity is not the support authority for changing tags.
+        // Use a separate immutable invocation: never mutate an issued proof's
+        // law context merely to exercise the dynamic-tag support distinction.
+        auto changed_tags = fixture();
+        pc_bitset_clear(changed_tags->positive_spawn_weight_mask.data(),0);
+        auto tag_registry = build_action_registry(*changed_tags);
+        for (auto& action : tag_registry.actions) action.cost_keys = {"cover:other"};
+        const auto tag_chaos = tag_registry.index_by_id.at("chaos");
+        tag_registry.actions[tag_chaos].cost_keys = {"cover:refill"};
+        PC_CHECK(!pc_bitset_test(action_explicit_affix_reachable_mask(*changed_tags,tag_registry.actions[tag_chaos]).data(),0));
+        PC_CHECK(pc_bitset_test(action_explicit_affix_reachable_mask(*changed_tags,tag_registry.actions[tag_chaos],true).data(),0));
+        CalcContext tag_calc(changed_tags,g,tag_registry,{tag_chaos});
+        Impl tag_work(tag_calc,empty,p,options); complete_setup(tag_work);
+        PC_CHECK((tag_work.action_goal_reach_mask(tag_chaos) & 1u) != 0);
+    }
+    // Existing any-k terminal conversion uses the union with held goals.
+    // Overlapping member slots remain a native input refusal, not a new
+    // independent-cover domain accepted through representative matching.
+    {
+        auto g = goal; g.slots.push_back(GoalSlot{});
+        g.slots[1].family_id = 103; g.slots[1].min_tier = 1; g.min_satisfied_slots = 1;
+        CalcContext c(session,g,registry,{bench,scour});
+        Impl w(c,empty,prices,options); complete_setup(w);
+        PC_CHECK(w.certified_global_lower_bound() > .999 && w.certified_global_lower_bound() <= 1);
+        pc_item_state held = empty; place(&held,0,4,13);
+        PC_CHECK(w.independent_cover_lower_value(c.intern_item(held)) == 0);
+        auto overlap = goal; overlap.slots.push_back(goal.slots.front());
+        bool rejected = false;
+        try { CalcContext invalid(session,overlap,registry,{bench,scour}); }
+        catch (const std::exception&) { rejected = true; }
+        PC_CHECK(rejected);
+    }
+    // Opaque/companion roles get full optimistic support for their paid
+    // price. They are not omitted just because the old reach helper is empty.
+    {
+        auto r = registry; const auto opaque = r.index_by_id.at("exalt");
+        r.actions[opaque].uses_companion_state = true;
+        r.actions[opaque].cost_keys = {"cover:opaque"};
+        auto p = prices; p["cover:opaque"] = .125;
+        CalcContext c(session,goal,r,{bench,scour});
+        Impl w(c,empty,p,options); complete_setup(w);
+        PC_CHECK(w.certified_global_lower_bound() > .1249 && w.certified_global_lower_bound() <= .125);
+        PC_CHECK(w.action_goal_reach_mask(opaque) == 1);
+    }
+    // Exact Restart uses only the fresh universal cover. A poisoned shaped
+    // continuation must not enter the nested maximum on neutral scope.
+    {
+        const auto restart = registry.index_by_id.at("restart");
+        auto reset_options = options; reset_options.allow_economic_restart = true;
+        pc_item_state dirty = empty; place(&dirty,0,0,10,PC_MOD_SLOT_CRAFTED); place(&dirty,1,5,20);
+        CalcContext c(session,goal,registry,{bench,scour,restart});
+        Impl w(c,dirty,prices,reset_options); complete_setup(w);
+        PC_CHECK(w.ensure_priced_operator(restart));
+        w.replacement_recovery_operator_index = restart;
+        w.clean_goal_cover_cost.assign(3 * 2 * 16,1e6); w.goal_cover_clean_committed = true;
+        w.carrier_goal_progress_cost.assign(6,1e6); w.goal_cover_carrier_committed = true;
+        const double immediate = w.operators.at(w.priced_operator_position.at(restart)).cost;
+        const double floor = w.operator_proof_lower_value(w.result.start_state,restart);
+        PC_CHECK(floor > immediate + .999 && floor <= immediate + 1);
+    }
+}
+
 void run_solver_scoped_lower_tests() {
+    run_solver_independent_cover_tests();
     using Impl = SolveWorkTestAccess::Impl;
     using Status = Impl::IncrementalAlternativeRow::Status;
     using namespace poecraft::solver::quotient;

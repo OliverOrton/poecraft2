@@ -1,5 +1,6 @@
 #include "solver_solve_types.hpp"
 #include "solver_phase_lower.hpp"
+#include <cfenv>
 
 namespace poecraft {
 namespace solver {
@@ -16,6 +17,28 @@ double solve_detail::issued_native_source_lower(const SolveResult& result) {
             !result.options.current_scoped_retention) ||
         !result.native_source_lower_certificate->matches_source(result.exact_start_item)) return 0;
     return result.native_source_lower_certificate->lower;
+}
+
+double solve_detail::issued_universal_source_lower(const SolveResult& result) {
+    const auto& certificate = result.universal_source_lower_certificate;
+    if (!result.options.current_independent_cover || !result.options.independent_cover_consume ||
+        !result.has_exact_start_item || !certificate ||
+        !exact_item_equal(certificate->source, result.exact_start_item) ||
+        !std::isfinite(certificate->lower) || certificate->lower < 0 ||
+        certificate->lower >= kValueCeiling) return 0;
+    return certificate->lower;
+}
+
+double solve_detail::issued_independent_source_lower(const SolveResult& result) {
+    return std::max(issued_native_source_lower(result), issued_universal_source_lower(result));
+}
+
+SolveLowerBoundProvenance solve_detail::independent_source_lower_provenance(const SolveResult& result) {
+    const double native = issued_native_source_lower(result);
+    const double cover = issued_universal_source_lower(result);
+    return native > 0 && native >= cover ? SolveLowerBoundProvenance::ScopedNativeRetention :
+        cover > 0 ? SolveLowerBoundProvenance::ScopedUniversalCover :
+        SolveLowerBoundProvenance::TargetNeutralUniversalZero;
 }
 
 void SolveWork::Impl::prepare_native_retention_lower(const PhaseLowerQueryDiagnostic* diagnostic) {
@@ -341,9 +364,13 @@ std::uint32_t SolveWork::Impl::action_goal_reach_mask(
             action_index >= calc.registry().actions.size()) {
             return 0;
         }
+        if (independent_cover_enabled() &&
+            (phase_primitive_needs_paid_exit(calc.registry().actions.at(action_index)) ||
+             (calc.registry().actions.at(action_index).synthetic && calc.registry().actions.at(action_index).id != "restart")))
+            return (1u << calc.layout().slots.size()) - 1u;
         const std::vector<std::uint64_t> reachable =
-            action_explicit_affix_reachable_mask(
-                session, calc.registry().actions.at(action_index));
+            action_explicit_affix_reachable_mask(session, calc.registry().actions.at(action_index),
+                independent_cover_enabled());
         std::uint32_t mask = 0;
         for (std::uint32_t slot = 0;
              slot < calc.layout().slots.size(); ++slot) {
@@ -669,7 +696,7 @@ void SolveWork::Impl::admit_setup_bytes(std::uint64_t additional) {
 
 bool SolveWork::Impl::advance_setup() {
     try {
-    if (!proof_capabilities().positive_global_lower) {
+    if (!proof_capabilities().positive_global_lower && !independent_cover_enabled()) {
         goal_cover_requested = false;
         goal_cover_stage = SetupStage::Disabled;
     }
@@ -756,7 +783,7 @@ bool SolveWork::Impl::advance_setup() {
 }
 
 void SolveWork::Impl::prepare_goal_cover_cost() {
-    if (!proof_capabilities().positive_global_lower) return;
+    if (!proof_capabilities().positive_global_lower && !independent_cover_enabled()) return;
     // Explicit blocking diagnostics only. Passive lower reads cannot call it.
     goal_cover_requested = true;
     while (goal_cover_stage == SetupStage::NotStarted || goal_cover_stage == SetupStage::Preparing)
@@ -764,6 +791,16 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
 }
 
 CooperativeTask<bool> SolveWork::Impl::run_goal_cover_setup() {
+        if (independent_cover_enabled()) {
+            auto cheap = [&] {
+                CooperativeFrameAdmission admission(this, [](void* owner, std::size_t bytes) {
+                    static_cast<Impl*>(owner)->admit_setup_bytes(bytes);
+                });
+                return run_universal_cover_setup();
+            }();
+            while (!cheap.resume()) co_await CooperativeCheckpoint{};
+            co_return cheap.take_result();
+        }
         std::uint32_t setup_units = 0;
         auto slice_started = std::chrono::steady_clock::now();
         const auto slice_due = [&] {
@@ -3092,6 +3129,156 @@ CooperativeTask<bool> SolveWork::Impl::run_goal_cover_setup() {
         co_return true;
     }
 
+double SolveWork::Impl::independent_primitive_price_lower(const std::uint32_t action) const {
+    if (action >= calc.registry().actions.size()) return kInfinity;
+    const double exact_price = phase_price_lower(calc.registry().actions[action], prices);
+    if (!std::isfinite(exact_price)) return kInfinity;
+    // The native primitive prefix has the same registry indices. Retain both
+    // exact-resource downward pricing and the actual nearest-rounded native
+    // row-price model; the proof purchase must not exceed either authority.
+    if (action >= calc.operators().size()) return 0;
+    const auto& primitive = calc.operators()[action];
+    if (primitive.kind != PlannerOperatorKind::Primitive || primitive.primitive_action != action) return 0;
+    double native = 0;
+    for (const auto& [key, quantity] : primitive.resource_quantities) {
+        const auto found = prices.find(key);
+        if (found == prices.end() || !std::isfinite(found->second) || found->second < 0 ||
+            !std::isfinite(quantity) || quantity < 0) return kInfinity;
+        native += quantity * found->second;
+    }
+    if (!std::isfinite(native)) return 0;
+    return std::min(exact_price, native == 0 ? 0 : std::max(0.0, std::nextafter(native, 0.0)));
+}
+
+CooperativeTask<bool> SolveWork::Impl::run_universal_cover_setup() {
+    // The existing probability-free acquisition cover, committed separately
+    // before any disabled probability/TerminalDebt/envelope preparation.
+    // This grants perfect retention, any reachable subset and free structural
+    // setup/cleanup. It never estimates a conditional draw probability.
+    SetupStorage::Reservation contract_strings(setup_storage, 1024);
+    auto selected = contract(ProofPatternKind::UniversalCover);
+    const auto refuse = [&](const char* reason) {
+        selected.fallback_reason = reason;
+        selected.start_contribution = 0;
+        contract(ProofPatternKind::UniversalCover) = selected;
+    };
+    if (!independent_cover_enabled() || std::fegetround() != FE_TONEAREST ||
+        calc.layout().slots.size() >= 31) {
+        refuse("unsupported_independent_cover_context"); co_return true;
+    }
+    static_assert(static_cast<unsigned>(FixedOptionKind::TerminalCraftedCleanup) == 9);
+    static_assert(static_cast<unsigned>(AutomaticCandidateKind::CraftedCleanup) == 11);
+    if (calc.goal().automatic_candidate_kind_mask & ~kAllAutomaticCandidateKindsMask) {
+        refuse("uncovered_generated_family"); co_return true;
+    }
+    // All generated productions use registry primitives and program_has_prices
+    // before native admission. Check static/authored productions as well. A
+    // restore-bearing programme is not a physical-state continuation proof.
+    for (const auto index : calc.candidate_operators()) {
+        co_await CooperativeCheckpoint{};
+        const auto& op = calc.operators().at(index);
+        if ((op.kind != PlannerOperatorKind::Primitive && op.kind != PlannerOperatorKind::FixedOption) ||
+            (op.kind == PlannerOperatorKind::FixedOption &&
+             (static_cast<unsigned>(op.option_kind) > 9 || op.option_kind == FixedOptionKind::ImprintRetry))) {
+            refuse("uncovered_or_restore_programme"); co_return true;
+        }
+        const auto runtime = planner_operator_runtime_semantics(op, calc.registry());
+        if (runtime.execution_paths.empty()) {
+            refuse("missing_native_programme_semantics"); co_return true;
+        }
+        bool wrapper_priced = true;
+        for (const auto& [key, quantity] : op.resource_quantities) {
+            const auto found = prices.find(key);
+            wrapper_priced &= std::isfinite(quantity) && quantity >= 0 &&
+                found != prices.end() && std::isfinite(found->second) && found->second >= 0;
+        }
+        if (wrapper_priced) for (const auto action : runtime.action_dependencies) {
+            if (action >= calc.registry().actions.size() ||
+                !std::isfinite(independent_primitive_price_lower(action))) {
+                refuse("priced_programme_has_unpriced_dependency"); co_return true;
+            }
+        }
+    }
+    const auto mask_count = std::uint32_t{1} << calc.layout().slots.size();
+    SetupVector<double> acquisition(mask_count, kInfinity);
+    acquisition[0] = 0;
+    SetupVector<double> costs;
+    SetupVector<std::uint32_t> reaches;
+    costs.reserve(calc.registry().actions.size());
+    reaches.reserve(calc.registry().actions.size());
+    std::uint64_t priced_count = 0, opaque_count = 0;
+    for (std::uint32_t action = 0; action < calc.registry().actions.size(); ++action) {
+        co_await CooperativeCheckpoint{};
+        const auto& descriptor = calc.registry().actions[action];
+        const double cost = independent_primitive_price_lower(action);
+        if (!std::isfinite(cost)) continue;
+        ++priced_count;
+        // Include every retained finite-price primitive, including dependency
+        // roles and not-yet-materialized automatic families. Permission stays
+        // unchanged; adding auxiliary purchases can only weaken this cover.
+        const bool opaque = phase_primitive_needs_paid_exit(descriptor) ||
+            (descriptor.synthetic && descriptor.id != "restart");
+        opaque_count += opaque;
+        reaches.push_back(opaque ? mask_count - 1 : action_goal_reach_mask(action));
+        costs.push_back(cost);
+    }
+    std::uint32_t units = 0;
+    for (std::uint32_t mask = 0; mask < mask_count; ++mask) {
+        if (!std::isfinite(acquisition[mask])) continue;
+        for (std::size_t action = 0; action < reaches.size(); ++action) {
+            const auto missing = reaches[action] & ~mask;
+            for (auto subset = missing; subset; subset = (subset - 1) & missing) {
+                const auto produced = mask | subset;
+                // Directed addition is confined to proof arithmetic. All native
+                // costs/laws and runtime quantities remain unchanged.
+                const auto sum = acquisition[mask] + costs[action];
+                const auto candidate = sum == 0 ? 0 : std::max(0.0, std::nextafter(sum, 0.0));
+                acquisition[produced] = std::min(acquisition[produced], candidate);
+                if (++units >= 2048) { units = 0; co_await CooperativeCheckpoint{}; }
+            }
+        }
+    }
+    // Copy overlaps staged storage and is admitted by the existing setup owner.
+    admit_setup_bytes(acquisition.size() * sizeof(double));
+    goal_cover_cost.assign(acquisition.begin(), acquisition.end());
+    initialize_owned_bytes_ledger();
+    selected.residual = 0;
+    selected.solution_sweeps = 1;
+    selected.converged = true;
+    selected.fallback_reason = "complete_probability_free_registry_cover";
+    selected.refinement_trace = "priced_registry=" + std::to_string(priced_count) +
+        ";opaque_support_escape=" + std::to_string(opaque_count) + ";all_item_tag_signatures=true";
+    goal_cover_universal_committed = true;
+    goal_cover_cost_ready = true;
+    const auto root = result.start_state;
+    double source_lower = root < calc.state_count() && !calc.state(root).goal_progress_retry_basin
+        ? optimistic_completion_cost(satisfied_goal_mask_for_state(root)) : 0;
+    if (!std::isfinite(source_lower) || source_lower < 0 || source_lower >= kValueCeiling) source_lower = 0;
+    selected.start_contribution = source_lower;
+    contract(ProofPatternKind::UniversalCover) = std::move(selected);
+    // Issuance is independent of consumption. The prepared-unconsumed arm has
+    // identical immutable evidence and preparation, but no positive consumer.
+    result.universal_source_lower_certificate = UniversalCoverSourceLower{exact_start_item, source_lower};
+    result.diagnostics.independent_goal_cover_lower_bound = options.independent_cover_consume ? source_lower : 0;
+    co_return true;
+}
+
+double SolveWork::Impl::independent_cover_lower_value(const std::uint32_t state) const {
+    if (!independent_cover_ready() || state >= calc.state_count() ||
+        calc.state(state).goal_progress_retry_basin) return 0;
+    const double value = optimistic_completion_cost(satisfied_goal_mask_for_state(state));
+    return std::isfinite(value) && value >= 0 && value < kValueCeiling ? value : 0;
+}
+
+double SolveWork::Impl::independent_completion_lower_value(const std::uint32_t state) {
+    if (state >= calc.state_count()) return 0;
+    return select_maximum({
+        {ProofPatternKind::UniversalCover, {independent_cover_lower_value(state)}, independent_cover_ready()},
+        {ProofPatternKind::NativeRetention, {independent_retention_ready() ? native_retention_lower_value(state) : 0},
+            independent_retention_ready()},
+    }, kValueCeiling).lower.value;
+}
+
 std::uint32_t SolveWork::Impl::satisfied_goal_mask_for_state(
         const std::uint32_t state) const {
         std::uint32_t mask = 0;
@@ -3117,7 +3304,7 @@ double SolveWork::Impl::optimistic_completion_cost(
         const bool clean_carrier ,
         const std::uint8_t carrier_rarity ,
         const std::uint8_t carrier_prefixes ,
-        const std::uint8_t carrier_suffixes ) {
+        const std::uint8_t carrier_suffixes ) const {
         const std::uint32_t required =
             calc.goal().required_satisfied_slots();
         const std::uint32_t satisfied_count =

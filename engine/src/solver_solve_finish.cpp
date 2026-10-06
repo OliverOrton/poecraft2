@@ -285,8 +285,8 @@ const char* solve_detail::publication_invariant_invalid_reason(
          result.policy_status == SolvePolicyStatus::Exact ||
          result.termination == SolveTermination::ExactClosed ||
          !std::isfinite(result.lower_bound) || result.lower_bound < 0.0 ||
-         result.lower_bound > issued_native_source_lower(result))) {
-        return "target-neutral proof profile published positive lower or exact closure";
+         result.lower_bound > issued_independent_source_lower(result))) {
+        return "target-neutral proof profile published unissued lower or exact closure";
     }
     const bool finite_upper = std::isfinite(result.upper_bound);
     const bool has_artifact =
@@ -345,7 +345,7 @@ const char* solve_detail::verified_publication_loss_invalid_reason(
 
 void solve_detail::normalize_publication_result(SolveResult& result) {
     if (result.closure_unavailable_by_profile) {
-        result.lower_bound = issued_native_source_lower(result);
+        result.lower_bound = issued_independent_source_lower(result);
         result.converged = false;
     }
     if (!std::isfinite(result.upper_bound)) {
@@ -366,11 +366,11 @@ void solve_detail::normalize_publication_result(SolveResult& result) {
                 : 0.0;
     }
     if (result.policy_status != SolvePolicyStatus::Exact &&
-        !(issued_native_source_lower(result) > 0.0 &&
-          result.lower_bound <= issued_native_source_lower(result)) &&
+        !(issued_independent_source_lower(result) > 0.0 &&
+          result.lower_bound <= issued_independent_source_lower(result)) &&
         std::abs(result.upper_bound - result.lower_bound) <= tolerance) {
         /* A bounded label alone cannot authorize equality. An independently
-         * issued native source lower retains its bound without changing the
+         * issued independent source lower retains its bound without changing the
          * profile's Exact status or global closure permissions. */
         result.lower_bound = 0.0;
     }
@@ -5953,11 +5953,11 @@ SolveWork::Impl::run_publication_pipeline() {
                 lower_authority.globally_certified;
             result.lower_bound_provenance = lower_authority.provenance;
         } else {
-            const double native = issued_native_source_lower(result);
+            const double native = issued_independent_source_lower(result);
             result.lower_bound = std::min(result.lower_bound, native);
             result.global_lower_bound_certified = true;
             result.lower_bound_provenance = result.lower_bound > 0.0
-                ? SolveLowerBoundProvenance::ScopedNativeRetention
+                ? independent_source_lower_provenance(result)
                 : SolveLowerBoundProvenance::TargetNeutralUniversalZero;
         }
         // Refinement classifiers may have replaced the initial scope label.

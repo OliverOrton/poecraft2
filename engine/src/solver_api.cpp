@@ -1032,10 +1032,14 @@ solver::SolveOptions solve_options(
         goal.terminal.extras == solver::ExtraExplicitPolicy::ForbidUnmatched &&
         !goal.terminal.prefixes && !goal.terminal.suffixes;
     value.native_retention_lower = (normal_current && source_domain) ||
-        holder.native_retention_diagnostic != solver::NativeRetentionDiagnosticMode::Off;
+        (holder.native_retention_diagnostic != solver::NativeRetentionDiagnosticMode::Off &&
+         holder.native_retention_diagnostic != solver::NativeRetentionDiagnosticMode::CoverUnconsumed);
     value.current_scoped_retention = normal_current;
+    value.current_independent_cover = normal_current;
+    value.independent_cover_consume = holder.native_retention_diagnostic != solver::NativeRetentionDiagnosticMode::CoverUnconsumed;
     value.native_retention_numerical_reuse =
-        (normal_current && source_domain && holder.native_retention_diagnostic == solver::NativeRetentionDiagnosticMode::Off) ||
+        (normal_current && source_domain && (holder.native_retention_diagnostic == solver::NativeRetentionDiagnosticMode::Off ||
+            holder.native_retention_diagnostic == solver::NativeRetentionDiagnosticMode::CoverUnconsumed)) ||
         holder.native_retention_diagnostic == solver::NativeRetentionDiagnosticMode::Reuse ||
         holder.native_retention_diagnostic == solver::NativeRetentionDiagnosticMode::CheckedTarget ||
         holder.native_retention_diagnostic == solver::NativeRetentionDiagnosticMode::ReuseUnconsumed;
@@ -1455,7 +1459,7 @@ pc_result solver::create_solver_with_goal_terminal_diagnostic(
 pc_result solver::configure_solver_native_retention_diagnostic(
         pc_solver_handle handle, NativeRetentionDiagnosticMode mode, pc_error_info* out_error, double checked_target) {
     if (!handle || handle->solve_work || handle->solved.has_value() ||
-        (mode!=NativeRetentionDiagnosticMode::Off && mode!=NativeRetentionDiagnosticMode::Cold && mode!=NativeRetentionDiagnosticMode::Reuse && mode!=NativeRetentionDiagnosticMode::CheckedTarget && mode!=NativeRetentionDiagnosticMode::ReuseUnconsumed) ||
+        (mode!=NativeRetentionDiagnosticMode::Off && mode!=NativeRetentionDiagnosticMode::Cold && mode!=NativeRetentionDiagnosticMode::Reuse && mode!=NativeRetentionDiagnosticMode::CheckedTarget && mode!=NativeRetentionDiagnosticMode::ReuseUnconsumed && mode!=NativeRetentionDiagnosticMode::CoverUnconsumed) ||
         !std::isfinite(checked_target) || checked_target<0 ||
         ((mode==NativeRetentionDiagnosticMode::CheckedTarget) != (checked_target>0))) {
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "native retention diagnostic requires an idle unsolved handle and known mode");

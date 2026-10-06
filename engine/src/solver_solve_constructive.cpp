@@ -6762,7 +6762,7 @@ solve_detail::classify_public_lower_bound_authority(
     }
 
 double SolveWork::Impl::certified_global_lower_bound() const {
-        const double native = issued_native_source_lower(result);
+        const double native = issued_independent_source_lower(result);
         if (!proof_capabilities().positive_global_lower) return native;
         return std::max(native, globally_certified_action_envelope_lower_bound(
             result_statewise_values_rejected

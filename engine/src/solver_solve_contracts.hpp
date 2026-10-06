@@ -183,6 +183,10 @@ struct SolveOptions {
     // Current admits only the issuer's qualified domains on a neutral solve.
     // Finder clears this gate; it does not inherit Current's lower authority.
     bool current_scoped_retention = false;
+    // Independent probability-free support only; never enables parent-graph
+    // values, legacy probability patterns or Exact closure on neutral scope.
+    bool current_independent_cover = false;
+    bool independent_cover_consume = true; // same preparation, causal ablation
     bool native_retention_profile = false; // sampled internal attribution only
     bool native_retention_numerical_reuse = false; // private matched experiment; no public activation
     bool native_retention_consume = true; // private causal ablation, same checked preparation
@@ -429,6 +433,7 @@ enum class SolveLowerBoundProvenance : std::uint8_t {
     GlobalActionRelaxation,
     ExactPolicyClosure,
     ScopedNativeRetention,
+    ScopedUniversalCover,
 };
 
 struct FocusedScheduleRoundTelemetry {
@@ -1484,6 +1489,12 @@ struct RetainedCompiledPolicyArtifact {
  * keep an infinite value and no policy action.
  */
 class PreparedPhaseSourceLower;
+// Invocation-local committed source evidence. Native law, goal, registry and
+// prices are immutable in that invocation; this is not a portable/cache import.
+struct UniversalCoverSourceLower {
+    pc_item_state source{};
+    double lower = 0.0;
+};
 struct SolveResult {
     bool converged = false;
     bool policy_available = false;
@@ -1493,6 +1504,7 @@ struct SolveResult {
     bool target_met = false;
     bool closure_unavailable_by_profile = false;
     std::shared_ptr<const PreparedPhaseSourceLower> native_source_lower_certificate;
+    std::optional<UniversalCoverSourceLower> universal_source_lower_certificate;
     double lower_bound = 0.0;
     bool global_lower_bound_certified = false;
     SolveLowerBoundProvenance lower_bound_provenance =
@@ -1564,6 +1576,9 @@ struct SolveLowerBoundAuthority {
  * that authority it retains the universal-zero fail-safe. A closed envelope
  * owns the stronger admitted-row solver proof. */
 double issued_native_source_lower(const SolveResult& result);
+double issued_universal_source_lower(const SolveResult& result);
+double issued_independent_source_lower(const SolveResult& result);
+SolveLowerBoundProvenance independent_source_lower_provenance(const SolveResult& result);
 
 SolveLowerBoundAuthority classify_public_lower_bound_authority(
     double lower_bound,

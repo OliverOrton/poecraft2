@@ -790,6 +790,18 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         return native_retention_enabled() && options.native_retention_consume &&
             static_cast<bool>(native_retention_potential);
     }
+    bool independent_cover_enabled() const {
+        return options.current_independent_cover &&
+            !proof_capabilities().positive_global_lower && !session.is_cluster() &&
+            !options.consider_imprint_programs &&
+            calc.goal().rarity == PC_RARITY_RARE &&
+            calc.goal().terminal.extras == ExtraExplicitPolicy::ForbidUnmatched &&
+            !calc.goal().terminal.prefixes && !calc.goal().terminal.suffixes;
+    }
+    bool independent_cover_ready() const {
+        return independent_cover_enabled() && options.independent_cover_consume &&
+            goal_cover_universal_committed;
+    }
     std::unordered_map<std::string, double> prices;
     SolveResult result;
     bool result_statewise_values_rejected = false;
@@ -2847,6 +2859,10 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     solve_detail::CooperativeTask<bool> run_retention_setup(const struct PhaseLowerQueryDiagnostic* diagnostic);
     void admit_setup_bytes(std::uint64_t bytes);
     solve_detail::CooperativeTask<bool> run_goal_cover_setup();
+    solve_detail::CooperativeTask<bool> run_universal_cover_setup();
+    double independent_cover_lower_value(std::uint32_t state) const;
+    double independent_completion_lower_value(std::uint32_t state);
+    double independent_primitive_price_lower(std::uint32_t action) const;
     void prepare_native_retention_lower(const struct PhaseLowerQueryDiagnostic* diagnostic = nullptr);
     double native_retention_lower_value(std::uint32_t state);
     std::optional<double> project_native_retention_lower(std::uint32_t state) const;
@@ -2867,7 +2883,7 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         const bool clean_carrier = false,
         const std::uint8_t carrier_rarity = PC_RARITY_NORMAL,
         const std::uint8_t carrier_prefixes = 0,
-        const std::uint8_t carrier_suffixes = 0);
+        const std::uint8_t carrier_suffixes = 0) const;
 
     bool clean_goal_cover_eligible(const std::uint32_t state) const;
 

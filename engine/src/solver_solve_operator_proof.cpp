@@ -126,28 +126,41 @@ double SolveWork::Impl::operator_proof_lower_value(
         const std::int32_t position =
             priced_operator_position[operator_index];
         if (position < 0) return kInfinity;
-        if (!proof_capabilities().positive_global_lower) return 0.0;
+        if (!proof_capabilities().positive_global_lower && !independent_cover_ready()) return 0.0;
         const PlannerOperator& planner =
             calc.operators().at(operator_index);
         double immediate =
             operators.at(static_cast<std::size_t>(position)).cost;
         if (planner.kind == PlannerOperatorKind::FixedOption &&
             planner.automatic_kind == AutomaticCandidateKind::None) {
-            /* Gate 6 builds the complete optimistic program automaton, while
-             * Gate 7 owns activating it as a pruning consumer. Preserve the
-             * established guaranteed-first-step lower at this boundary. */
-            if (planner.primitive_program.empty()) return -kInfinity;
-            immediate = 0.0;
-            for (const std::string& key :
-                 calc.registry().actions.at(
-                     planner.primitive_program.front()).cost_keys) {
-                const auto found = prices.find(key);
-                if (found == prices.end() ||
-                    !std::isfinite(found->second) ||
-                    found->second < 0.0) {
-                    return -kInfinity;
+            if (!proof_capabilities().positive_global_lower) {
+                // Preparation can be skipped on a conditional entry (for
+                // example Fracture at an already acquired carrier). The first
+                // listed preparation is not a guaranteed paid first step.
+                const auto runtime = planner_operator_runtime_semantics(planner, calc.registry());
+                immediate = kInfinity;
+                for (const auto& path : runtime.execution_paths) {
+                    immediate = std::min(immediate, path.empty() ? 0.0 :
+                        independent_primitive_price_lower(path.front().action));
                 }
-                immediate += found->second;
+                if (!std::isfinite(immediate)) return -kInfinity;
+            } else {
+                /* Gate 6 builds the complete optimistic program automaton,
+                 * while Gate 7 owns activating it as a pruning consumer.
+                 * Preserve the established first-step lower on that branch. */
+                if (planner.primitive_program.empty()) return -kInfinity;
+                immediate = 0.0;
+                for (const std::string& key :
+                     calc.registry().actions.at(
+                         planner.primitive_program.front()).cost_keys) {
+                    const auto found = prices.find(key);
+                    if (found == prices.end() ||
+                        !std::isfinite(found->second) ||
+                        found->second < 0.0) {
+                        return -kInfinity;
+                    }
+                    immediate += found->second;
+                }
             }
         } else if (planner.kind == PlannerOperatorKind::FixedOption) {
             /* State-local automatic operators are published only after their
@@ -162,6 +175,22 @@ double SolveWork::Impl::operator_proof_lower_value(
         }
         if (!std::isfinite(immediate) || immediate < 0.0) {
             return -kInfinity;
+        }
+        if (!proof_capabilities().positive_global_lower) {
+            if (state >= calc.state_count() || calc.state(state).goal_progress_retry_basin ||
+                calc.is_goal_state(calc.state(state))) return 0;
+            // This branch deliberately never calls the carrier/debt maximum,
+            // the shaped Restart table or a graph-dependent prepared floor.
+            // Grant every held goal perfect retention and all constituent
+            // support under every item-tag signature; choices can only be
+            // weaker than this optimistic union.
+            const auto mask = operator_index == replacement_recovery_operator_index ? 0u :
+                satisfied_goal_mask_for_state(state) | planner_goal_reach_mask(operator_index);
+            const double possible = optimistic_completion_cost(mask);
+            const double continuation = std::isfinite(possible) && possible >= 0 && possible < kValueCeiling
+                ? possible : 0;
+            const double sum = immediate + continuation;
+            return sum == 0 ? 0 : std::max(0.0, std::nextafter(sum, 0.0));
         }
         if (operator_index == replacement_recovery_operator_index) {
             /* Restart has one exact successor: a fresh Normal carrier with
@@ -2244,7 +2273,18 @@ bool SolveWork::Impl::retire_unmaterialized_by_operator_proof(
         operator_index >= calc.operators().size()) {
         return false;
     }
-    const double upper = incremental_certified_upper_values[state];
+    double upper = incremental_certified_upper_values[state];
+    if (!proof_capabilities().lower_retirement) {
+        // Descriptor floors do not eliminate self probability. They may use a
+        // compatible checked local upper directly, never a root-only scalar or
+        // rejected/stale parent working vector.
+        if (!independent_cover_ready() || result_statewise_values_rejected || !output_incumbent ||
+            !output_incumbent->has_statewise_upper_values() || !output_incumbent->independently_certified ||
+            !output_incumbent->independently_evaluated || !output_incumbent->proper || !output_incumbent->executable ||
+            certified_incumbent_invalid_reason(*output_incumbent) != nullptr ||
+            state >= output_incumbent->values.size()) return false;
+        upper = output_incumbent->values[state];
+    }
     if (!std::isfinite(upper) || upper < 0.0 || upper >= kValueCeiling) {
         return false;
     }
@@ -2280,7 +2320,7 @@ bool SolveWork::Impl::retire_unmaterialized_by_operator_proof(
 }
 
 void SolveWork::Impl::retire_certified_unmaterialized_obligations() {
-    if (!proof_capabilities().lower_retirement) return;
+    if (!proof_capabilities().lower_retirement && !independent_cover_ready()) return;
     struct Candidate {
         std::uint32_t state = kNoId;
         std::uint32_t operator_index = kNoId;

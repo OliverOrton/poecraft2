@@ -4018,6 +4018,9 @@ std::string serialize_solver_telemetry(
         case SolveLowerBoundProvenance::ScopedNativeRetention:
             json += "scoped_native_retention";
             break;
+        case SolveLowerBoundProvenance::ScopedUniversalCover:
+            json += "scoped_universal_cover";
+            break;
         }
         json += "\"";
         json += ",\"upper_bound\":";

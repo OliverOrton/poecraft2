@@ -681,11 +681,11 @@ SolveWork::Impl::Impl(
             !calc.is_goal_state(calc.state(result.start_state)) &&
             satisfied_goal_mask_for_state(result.start_state) != 0;
         // Preserve the ordinary lazy proof dependency and early root caps.
-        goal_cover_requested = proof_capabilities().positive_global_lower &&
-            (options.high_impact_executable_uppers ||
-             options.native_retention_lower);
+        goal_cover_requested = independent_cover_enabled() ||
+            (proof_capabilities().positive_global_lower &&
+             (options.high_impact_executable_uppers || options.native_retention_lower));
         retention_setup_pending = native_retention_enabled();
-        if (!proof_capabilities().positive_global_lower)
+        if (!proof_capabilities().positive_global_lower && !independent_cover_enabled())
             goal_cover_stage = SetupStage::Disabled;
         result.diagnostics.solve_setup_ns = static_cast<std::uint64_t>(
             std::chrono::duration_cast<std::chrono::nanoseconds>(

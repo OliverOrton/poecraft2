@@ -4264,7 +4264,8 @@ CaseResult run_case(
                 throw std::runtime_error(api_error("configure dirty guidance treatment",configured,error));
         }
         if (!native_retention_diagnostic.empty()) {
-            const auto mode=native_retention_diagnostic=="reuse-unconsumed" ? poecraft::solver::NativeRetentionDiagnosticMode::ReuseUnconsumed :
+            const auto mode=native_retention_diagnostic=="cover-unconsumed" ? poecraft::solver::NativeRetentionDiagnosticMode::CoverUnconsumed :
+                native_retention_diagnostic=="reuse-unconsumed" ? poecraft::solver::NativeRetentionDiagnosticMode::ReuseUnconsumed :
                 native_retention_diagnostic=="checked" ? poecraft::solver::NativeRetentionDiagnosticMode::CheckedTarget :
                 native_retention_diagnostic=="reuse" ? poecraft::solver::NativeRetentionDiagnosticMode::Reuse :
                 poecraft::solver::NativeRetentionDiagnosticMode::Cold;
@@ -6772,11 +6773,11 @@ Arguments parse_arguments(int argc, char** argv) {
         ((args.native_dirty_guidance=="execution-count") != (args.native_execution_action_price>0)))
         throw std::runtime_error("execution-count requires a finite positive native execution action price; other modes require zero");
     if (!args.native_retention_diagnostic.empty() &&
-        ((args.native_retention_diagnostic!="cold" && args.native_retention_diagnostic!="reuse" && args.native_retention_diagnostic!="checked" && args.native_retention_diagnostic!="reuse-unconsumed") ||
+        ((args.native_retention_diagnostic!="cold" && args.native_retention_diagnostic!="reuse" && args.native_retention_diagnostic!="checked" && args.native_retention_diagnostic!="reuse-unconsumed" && args.native_retention_diagnostic!="cover-unconsumed") ||
          args.case_id.empty() || args.validate_only || args.fragment_shadow_only ||
          args.resumable_joint_policy_continuation_diagnostic || args.verified_policy_alternative_shadow_diagnostic ||
          !args.development_checkpoint_save.empty() || !args.development_checkpoint_load.empty()))
-        throw std::runtime_error("native retention diagnostic requires cold|reuse|checked, one ordinary case, no checkpoint or other diagnostic");
+        throw std::runtime_error("native retention diagnostic requires cold|reuse|checked|reuse-unconsumed|cover-unconsumed, one ordinary case, no checkpoint or other diagnostic");
     if (!std::isfinite(args.native_retention_target_lower) || args.native_retention_target_lower<0 ||
         ((args.native_retention_diagnostic=="checked") != (args.native_retention_target_lower>0)))
         throw std::runtime_error("checked retention requires a finite positive --native-retention-target-lower; other modes require zero");

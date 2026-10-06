@@ -174,6 +174,7 @@ PolicyFinderWork::PolicyFinderWork(
     // The scoped neutral lower issuer is Current-only, including direct C++
     // callers. Retain the established OrdinaryClean diagnostic separately.
     limits_.current_scoped_retention = false;
+    limits_.current_independent_cover = false;
     if (session_ == nullptr) {
         throw std::invalid_argument("finder requires a session");
     }

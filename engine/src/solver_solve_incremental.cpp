@@ -1191,10 +1191,10 @@ SolveWork::Impl::certified_incremental_lower_values() {
         // Rejected/restricted working vectors and focused snapshots are never
         // read on neutral scope. Only the independent checked component may
         // strengthen zero; unsupported physical/marker members still get zero.
-        if (independent_retention_ready())
+        if (independent_retention_ready() || independent_cover_ready())
             for (std::uint32_t state = 0; state < lower.size(); ++state)
                 if (!calc.is_goal_state(calc.state(state)))
-                    lower[state] = native_retention_lower_value(state);
+                    lower[state] = independent_completion_lower_value(state);
         return lower;
     }
     const bool has_focused_proof_snapshot =
@@ -2299,7 +2299,7 @@ bool SolveWork::Impl::advance_incremental_classification() {
         // interpret that repeated-row quantity as an unrestricted first-action
         // lower on a neutral solve. Keep all such rows unresolved by this new
         // retirement permission, including self within an observed choice.
-        bool scoped_retirement = independent_retention_ready() &&
+        bool scoped_retirement = (independent_retention_ready() || independent_cover_ready()) &&
             incremental_classification_upper == IncrementalClassificationUpper::OutputIncumbent &&
             output_incumbent.has_value() && output_incumbent->has_statewise_upper_values() &&
             output_incumbent->independently_certified && output_incumbent->independently_evaluated &&

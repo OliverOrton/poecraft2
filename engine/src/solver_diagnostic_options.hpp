@@ -77,7 +77,7 @@ pc_result create_solver_with_goal_terminal_diagnostic(
     pc_solver_handle* out_solver,
     pc_error_info* out_error);
 
-enum class NativeRetentionDiagnosticMode { Off, Cold, Reuse, CheckedTarget, ReuseUnconsumed };
+enum class NativeRetentionDiagnosticMode { Off, Cold, Reuse, CheckedTarget, ReuseUnconsumed, CoverUnconsumed };
 // Same ordinary consumer, native benchmark only. No public ABI/profile flag.
 pc_result configure_solver_native_retention_diagnostic(pc_solver_handle handle,
     NativeRetentionDiagnosticMode mode, pc_error_info* out_error, double checked_target = 0);
